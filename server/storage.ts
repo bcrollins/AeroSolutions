@@ -1,8 +1,6 @@
 import { 
   users, type User, type InsertUser,
   contactSubmissions, type Contact, type InsertContact,
-  clientInputs, type ClientInput, type InsertClientInput,
-  projects, type Project, type InsertProject, 
   clientPreviews, type ClientPreview, type InsertClientPreview,
   subscriptionPlans, type SubscriptionPlan, type InsertSubscriptionPlan,
   userSubscriptions, type UserSubscription, type InsertUserSubscription,
@@ -22,12 +20,10 @@ import {
   logs, bug_reports, platform_compatibility_issues,
   type Log, type InsertLog, 
   type BugReport, type InsertBugReport,
-  type PlatformCompatibilityIssue, type InsertPlatformCompatibilityIssue,
-  portfolioItems, type PortfolioItem, type InsertPortfolioItem
+  type PlatformCompatibilityIssue, type InsertPlatformCompatibilityIssue
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gt, lt, sql, desc, asc, ilike, or } from "drizzle-orm";
-import { portfolioMethods } from "./methods/portfolioMethods";
 
 // Extend the interface with needed CRUD methods
 export interface IStorage {
@@ -41,37 +37,16 @@ export interface IStorage {
   validateUserCredentials(username: string, password: string): Promise<User | undefined>;
   updateUserVerification(userId: number, verified: boolean): Promise<User>;
   
-  // Portfolio methods
-  getAllPortfolioItems(): Promise<PortfolioItem[]>;
-  getFeaturedPortfolioItems(limit?: number): Promise<PortfolioItem[]>;
-  getPortfolioItemById(id: number): Promise<PortfolioItem | undefined>;
-  getPortfolioItemsByIndustry(industryType: string): Promise<PortfolioItem[]>;
-  createPortfolioItem(data: InsertPortfolioItem): Promise<PortfolioItem>;
-  updatePortfolioItem(id: number, data: Partial<PortfolioItem>): Promise<PortfolioItem>;
-  deletePortfolioItem(id: number): Promise<boolean>;
-  
-  // User onboarding methods (kept for backward compatibility)
-  createUserOnboarding(onboarding: any): Promise<any>;
-  getUserOnboarding(userId: number): Promise<any | undefined>;
-  updateUserOnboarding(userId: number, data: Partial<any>): Promise<any>;
+  // User onboarding methods
+  createUserOnboarding(onboarding: InsertUserOnboarding): Promise<UserOnboarding>;
+  getUserOnboarding(userId: number): Promise<UserOnboarding | undefined>;
+  updateUserOnboarding(userId: number, data: Partial<InsertUserOnboarding>): Promise<UserOnboarding>;
   getOnboardingCompletionRate(): Promise<{ completed: number, total: number, rate: number }>;
   generatePersonalizedOnboarding(userId: number, businessType: string): Promise<string>;
   
   // Contact methods
   createContactSubmission(contact: InsertContact): Promise<Contact>;
   getContactSubmissions(): Promise<Contact[]>;
-  
-  // Client input methods
-  createClientInput(clientInput: InsertClientInput): Promise<ClientInput>;
-  getClientInputs(status?: string): Promise<ClientInput[]>;
-  getClientInput(id: number): Promise<ClientInput | undefined>;
-  updateClientInputStatus(id: number, status: string): Promise<ClientInput>;
-  
-  // Project methods
-  createProject(project: InsertProject): Promise<Project>;
-  getProject(id: number): Promise<Project | undefined>;
-  getProjectByClientInputId(clientInputId: number): Promise<Project | undefined>;
-  updateProject(id: number, data: Partial<Project>): Promise<Project>;
   
   // Client Preview methods
   createClientPreview(preview: InsertClientPreview): Promise<ClientPreview>;
@@ -189,27 +164,9 @@ export interface IStorage {
   incrementIssueOccurrence(id: number): Promise<void>;
   getPlatformIssuesByPlatform(platform: string): Promise<PlatformCompatibilityIssue[]>;
   analyzeCompatibilityIssues(): Promise<{ summary: any, issues: PlatformCompatibilityIssue[] }>;
-  
-  // Portfolio methods
-  getAllPortfolioItems(): Promise<PortfolioItem[]>;
-  getFeaturedPortfolioItems(limit?: number): Promise<PortfolioItem[]>;
-  getPortfolioItemById(id: number): Promise<PortfolioItem | undefined>;
-  getPortfolioItemsByIndustry(industry: string): Promise<PortfolioItem[]>;
-  createPortfolioItem(item: InsertPortfolioItem): Promise<PortfolioItem>;
-  updatePortfolioItem(id: number, data: Partial<PortfolioItem>): Promise<PortfolioItem>;
-  deletePortfolioItem(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
-  // Portfolio methods - implemented using the portfolioMethods utility
-  getAllPortfolioItems = portfolioMethods.getAllPortfolioItems;
-  getFeaturedPortfolioItems = portfolioMethods.getFeaturedPortfolioItems;
-  getPortfolioItemById = portfolioMethods.getPortfolioItemById;
-  getPortfolioItemsByIndustry = portfolioMethods.getPortfolioItemsByIndustry;
-  createPortfolioItem = portfolioMethods.createPortfolioItem;
-  updatePortfolioItem = portfolioMethods.updatePortfolioItem;
-  deletePortfolioItem = portfolioMethods.deletePortfolioItem;
-
   // User methods
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -335,59 +292,6 @@ export class DatabaseStorage implements IStorage {
   
   async getContactSubmissions(): Promise<Contact[]> {
     return await db.select().from(contactSubmissions);
-  }
-  
-  // Client input methods
-  async createClientInput(clientInput: InsertClientInput): Promise<ClientInput> {
-    const [newClientInput] = await db.insert(clientInputs).values(clientInput).returning();
-    return newClientInput;
-  }
-  
-  async getClientInputs(status?: string): Promise<ClientInput[]> {
-    if (status) {
-      return await db.select().from(clientInputs).where(eq(clientInputs.status, status));
-    }
-    return await db.select().from(clientInputs);
-  }
-  
-  async getClientInput(id: number): Promise<ClientInput | undefined> {
-    const [clientInput] = await db.select().from(clientInputs).where(eq(clientInputs.id, id));
-    return clientInput;
-  }
-  
-  async updateClientInputStatus(id: number, status: string): Promise<ClientInput> {
-    const [updatedClientInput] = await db.update(clientInputs)
-      .set({ 
-        status, 
-        updatedAt: new Date() 
-      })
-      .where(eq(clientInputs.id, id))
-      .returning();
-    return updatedClientInput;
-  }
-  
-  // Project methods
-  async createProject(project: InsertProject): Promise<Project> {
-    const [newProject] = await db.insert(projects).values(project).returning();
-    return newProject;
-  }
-  
-  async getProject(id: number): Promise<Project | undefined> {
-    const [project] = await db.select().from(projects).where(eq(projects.id, id));
-    return project;
-  }
-  
-  async getProjectByClientInputId(clientInputId: number): Promise<Project | undefined> {
-    const [project] = await db.select().from(projects).where(eq(projects.clientInputId, clientInputId));
-    return project;
-  }
-  
-  async updateProject(id: number, data: Partial<Project>): Promise<Project> {
-    const [updatedProject] = await db.update(projects)
-      .set({ ...data, updatedAt: new Date() })
-      .where(eq(projects.id, id))
-      .returning();
-    return updatedProject;
   }
   
   // Client Preview methods

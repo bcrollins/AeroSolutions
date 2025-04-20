@@ -2,7 +2,7 @@ import express, { type Express, type Response, type NextFunction } from "express
 import { Request as ExpressRequest } from "express-serve-static-core";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertContactSchema, insertClientInputSchema } from "@shared/schema";
+import { insertContactSchema } from "@shared/schema";
 import { z } from "zod";
 import { generateCopilotResponse } from "./utils/grokai";
 import NodeCache from 'node-cache';
@@ -48,7 +48,6 @@ import socialMediaRouter from './routes/socialMedia';
 import marketingCampaignsRouter from './routes/marketingCampaigns';
 import seoRouter from './routes/seo';
 import priceOptimizationRouter from './routes/priceOptimization';
-import { portfolioRouter } from './routes/portfolio';
 import bugMonitoringRouter from './routes/bugMonitoring';
 import brandConsistencyRouter from './routes/brandConsistency';
 import platformCompatibilityRouter from './routes/platformCompatibility';
@@ -196,7 +195,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/sentiment', sentimentRouter);
   app.use('/api/abtesting', abTestingRouter);
   app.use('/api/targeted-ads', targetedAdsRouter);
-  app.use('/api/portfolio', portfolioRouter);
   
   // Test xAI API endpoint - public endpoint, no auth required
   app.get('/api/test-xai', async (req: Request, res: Response) => {
@@ -547,243 +545,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         message: "Failed to process contact submission",
-        error: errorMessage
-      });
-    }
-  });
-
-  // Client input submission endpoint
-  app.post("/api/client-input", [
-    // Express-validator validations
-    body('businessName')
-      .notEmpty().withMessage('Business name is required')
-      .isLength({ min: 2, max: 100 }).withMessage('Business name must be between 2 and 100 characters')
-      .trim(),
-    body('industry')
-      .notEmpty().withMessage('Industry is required')
-      .isLength({ min: 2, max: 50 }).withMessage('Industry must be between 2 and 50 characters')
-      .trim(),
-    body('designPreferences')
-      .notEmpty().withMessage('Design preferences are required')
-      .isObject().withMessage('Design preferences must be an object'),
-    body('designPreferences.colorScheme')
-      .notEmpty().withMessage('Color scheme preference is required')
-      .isString().withMessage('Color scheme preference must be a string'),
-    body('designPreferences.style')
-      .notEmpty().withMessage('Design style preference is required')
-      .isString().withMessage('Design style preference must be a string'),
-    body('projectDescription')
-      .notEmpty().withMessage('Project description is required')
-      .isLength({ min: 10, max: 2000 }).withMessage('Project description must be between 10 and 2000 characters')
-      .trim(),
-    body('contactEmail')
-      .notEmpty().withMessage('Contact email is required')
-      .isEmail().withMessage('Must be a valid email address')
-      .normalizeEmail(),
-    body('budget')
-      .optional()
-      .isString().withMessage('Budget must be a string'),
-    body('timeline')
-      .optional()
-      .isString().withMessage('Timeline must be a string')
-  ], async (req: Request, res: Response) => {
-    try {
-      // Check for validation errors
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid client input data",
-          errors: errors.array()
-        });
-      }
-      
-      // Parse and validate the client input data using Zod schema
-      try {
-        const clientInputData = insertClientInputSchema.parse(req.body);
-        
-        // Associate with user if authenticated
-        const userId = req.isAuthenticated() ? req.user.id : null;
-        
-        // Store client input submission
-        const clientInput = await storage.createClientInput({
-          ...clientInputData,
-          userId,
-          status: 'new',
-          assignedTo: null
-        });
-        
-        // Log successful submission
-        console.log(`Client input submission received for ${clientInputData.businessName} (${clientInputData.contactEmail})`);
-        
-        // In a production app, notify administrators via email, Slack, etc.
-        
-        // Generate website mockup using the client input data
-        try {
-          // Import the mockup generator utility
-          const { generateWebsiteMockup } = await import('./utils/mockupGenerator');
-          console.log(`Generating mockup for ${clientInputData.businessName}...`);
-          
-          // Generate the mockup
-          const mockupData = await generateWebsiteMockup(clientInput);
-          
-          // Store the generated mockup as a project
-          const project = await storage.createProject({
-            clientInputId: clientInput.id,
-            name: `${clientInputData.businessName} Website`,
-            description: mockupData.description || `Website mockup for ${clientInputData.businessName}`,
-            htmlContent: mockupData.html,
-            cssContent: mockupData.css,
-            jsContent: mockupData.js || '',
-            status: 'draft',
-            createdAt: new Date(),
-            updatedAt: new Date()
-          });
-          
-          // Update client input status to processed
-          await storage.updateClientInputStatus(clientInput.id, 'processed');
-          
-          console.log(`Mockup generated and stored for ${clientInputData.businessName}`);
-          
-          // Send successful response with submission data and project info
-          res.status(201).json({
-            success: true,
-            message: "Project details received and mockup generated!",
-            data: {
-              id: clientInput.id,
-              businessName: clientInput.businessName,
-              industry: clientInput.industry,
-              status: 'processed',
-              projectId: project.id,
-              createdAt: clientInput.createdAt
-            },
-            timestamp: new Date().toISOString()
-          });
-        } catch (mockupError) {
-          console.error("Error generating mockup:", mockupError);
-          
-          // Still return success for the client input submission
-          res.status(201).json({
-            success: true,
-            message: "Project details received. We'll be in touch soon!",
-            data: {
-              id: clientInput.id,
-              businessName: clientInput.businessName,
-              industry: clientInput.industry,
-              status: clientInput.status,
-              createdAt: clientInput.createdAt,
-              mockupStatus: 'failed'
-            },
-            timestamp: new Date().toISOString()
-          });
-        }
-      } catch (validationError) {
-        if (validationError instanceof z.ZodError) {
-          return res.status(400).json({
-            success: false,
-            message: "Invalid client input data",
-            errors: validationError.errors.map(err => ({
-              path: err.path.join('.'),
-              message: err.message
-            }))
-          });
-        }
-        throw validationError; // Re-throw if it's not a ZodError
-      }
-    } catch (error) {
-      console.error("Client input submission error:", error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-      
-      res.status(500).json({
-        success: false,
-        message: "Failed to process client input submission",
-        error: errorMessage
-      });
-    }
-  });
-
-  // API endpoint to get a project by ID
-  app.get("/api/projects/:id", async (req: Request, res: Response) => {
-    try {
-      const projectId = parseInt(req.params.id);
-      
-      if (isNaN(projectId)) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid project ID"
-        });
-      }
-      
-      const project = await storage.getProject(projectId);
-      
-      if (!project) {
-        return res.status(404).json({
-          success: false,
-          message: "Project not found"
-        });
-      }
-      
-      // Return the project data
-      res.status(200).json({
-        success: true,
-        data: project
-      });
-    } catch (error) {
-      console.error("Error fetching project:", error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-      
-      res.status(500).json({
-        success: false,
-        message: "Failed to fetch project",
-        error: errorMessage
-      });
-    }
-  });
-  
-  // API endpoint to get a project by client input ID
-  app.get("/api/client-inputs/:id/project", async (req: Request, res: Response) => {
-    try {
-      const clientInputId = parseInt(req.params.id);
-      
-      if (isNaN(clientInputId)) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid client input ID"
-        });
-      }
-      
-      // First check if the client input exists
-      const clientInput = await storage.getClientInput(clientInputId);
-      
-      if (!clientInput) {
-        return res.status(404).json({
-          success: false,
-          message: "Client input not found"
-        });
-      }
-      
-      // Find the project associated with this client input
-      const project = await storage.getProjectByClientInputId(clientInputId);
-      
-      if (!project) {
-        return res.status(404).json({
-          success: false,
-          message: "No project found for this client input"
-        });
-      }
-      
-      // Return the project data
-      res.status(200).json({
-        success: true,
-        data: project
-      });
-    } catch (error) {
-      console.error("Error fetching project by client input ID:", error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-      
-      res.status(500).json({
-        success: false,
-        message: "Failed to fetch project",
         error: errorMessage
       });
     }

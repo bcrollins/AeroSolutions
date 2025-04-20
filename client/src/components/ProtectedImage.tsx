@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Shield } from 'lucide-react';
 
-export interface ProtectedImageProps {
+interface ProtectedImageProps {
   src: string;
   alt: string;
   className?: string;
   watermark?: boolean;
   showProtectionIndicator?: boolean;
-  fallback?: string;
 }
 
 /**
@@ -21,11 +20,9 @@ const ProtectedImage: React.FC<ProtectedImageProps> = ({
   alt,
   className = '',
   watermark = false,
-  showProtectionIndicator = false,
-  fallback
+  showProtectionIndicator = false
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [hasError, setHasError] = useState(false);
   
   // Prevent right-click context menu
   const preventContextMenu = useCallback((e: React.MouseEvent) => {
@@ -43,37 +40,21 @@ const ProtectedImage: React.FC<ProtectedImageProps> = ({
       const img = new Image();
       img.onload = () => {
         setIsLoaded(true);
-        setHasError(false);
-      };
-      img.onerror = () => {
-        setHasError(true);
-        setIsLoaded(false);
       };
       img.src = src;
     }
-
-    return () => {
-      setIsLoaded(false);
-      setHasError(false);
-    };
   }, [src]);
-  
-  // Determine which image source to use
-  const imageSrc = hasError && fallback ? fallback : src;
   
   return (
     <div className="relative inline-block">
       <img
-        src={imageSrc}
+        src={src}
         alt={alt}
         className={`${className} select-none`}
         onContextMenu={preventContextMenu}
         onDragStart={preventDragStart}
-        onError={fallback ? () => setHasError(true) : undefined}
         style={{
-          // @ts-ignore - WebkitUserDrag is a valid property, but not in the TypeScript definition
           WebkitUserDrag: 'none',
-          // @ts-ignore - userDrag is a valid property, but not in the TypeScript definition
           userDrag: 'none',
           MozUserSelect: 'none',
           WebkitUserSelect: 'none',

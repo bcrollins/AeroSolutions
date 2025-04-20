@@ -176,28 +176,12 @@ router.post('/login', [
   body('password').notEmpty().withMessage('Password is required')
 ], validateRequest("Invalid login data"), async (req: Request, res: Response) => {
   try {
-    const { username, password } = req.body;
 
-    // Import the login logger here to avoid circular dependencies
-    const { logLoginAttempt, isIPLockedOut } = await import('../utils/loginLogger');
-    
-    // Check if the IP is locked out due to too many failed attempts
-    const ip = req.ip || req.socket.remoteAddress || 'unknown';
-    if (isIPLockedOut(ip)) {
-      logLoginAttempt(req, username, false, 'IP temporarily locked out');
-      
-      return res.status(429).json({
-        success: false,
-        message: "Too many failed login attempts. Please try again later."
-      });
-    }
+    const { username, password } = req.body;
 
     // Find user
     const user = await storage.getUserByUsername(username);
     if (!user) {
-      // Log failed login attempt - user not found
-      logLoginAttempt(req, username, false, 'User not found');
-      
       return res.status(401).json({
         success: false,
         message: "Invalid username or password"
@@ -207,39 +191,19 @@ router.post('/login', [
     // Verify password
     const isValidPassword = verifyPassword(password, user.password);
     if (!isValidPassword) {
-      // Log failed login attempt - invalid password
-      logLoginAttempt(req, username, false, 'Invalid password');
-      
       return res.status(401).json({
         success: false,
         message: "Invalid username or password"
       });
     }
 
-    // Check if user is verified (if verification is required)
-    if (user.isVerified === false) {
-      // Log failed login attempt - account not verified
-      logLoginAttempt(req, username, false, 'Account not verified');
-      
-      return res.status(401).json({
-        success: false,
-        message: "Account not verified. Please check your email for verification instructions."
-      });
-    }
-
-    // Generate JWT token with only necessary user information
+    // Generate JWT token
     const token = generateToken(user);
 
     // Update last login time
-    await storage.updateUser(user.id, { 
-      lastLoginAt: new Date(),
-      lastLoginIP: req.ip || req.socket.remoteAddress || 'unknown'
-    });
+    await storage.updateUser(user.id, { lastLoginAt: new Date() });
 
-    // Log successful login
-    logLoginAttempt(req, username, true);
-
-    // Return success response with filtered user data
+    // Return success response
     return res.status(200).json({
       success: true,
       message: "Login successful",
@@ -257,23 +221,9 @@ router.post('/login', [
     });
   } catch (error) {
     console.error('Login error:', error);
-    
-    // Log error during login
-    try {
-      const { logLoginAttempt } = await import('../utils/loginLogger');
-      logLoginAttempt(
-        req, 
-        req.body?.username || 'unknown', 
-        false, 
-        `System error: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
-    } catch (logError) {
-      console.error('Error logging login attempt:', logError);
-    }
-    
     return res.status(500).json({
       success: false,
-      message: "Login failed due to a system error",
+      message: "Login failed",
       error: error instanceof Error ? error.message : "Unknown error"
     });
   }
