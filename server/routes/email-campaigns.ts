@@ -7,10 +7,7 @@ import { OpenAI } from 'openai';
 import { grokApi } from '../grok';
 import * as authUtils from '../utils/auth';
 
-// Use xAI as the primary suggestion engine with OpenAI as fallback
-const useXai = process.env.XAI_API_KEY ? true : false;
-
-// Setup OpenAI client as fallback
+// Setup OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -237,7 +234,7 @@ router.delete('/:id', authUtils.authMiddleware, async (req: Request, res: Respon
 });
 
 /**
- * Generate campaign suggestions using xAI or OpenAI
+ * Generate campaign suggestions using OpenAI
  */
 async function generateCampaignSuggestions(industry: string, campaignType: string) {
   try {
@@ -267,34 +264,25 @@ async function generateCampaignSuggestions(industry: string, campaignType: strin
     
     Format the response as a JSON array with objects containing fields: subjectLine, content, callToAction, bestTimeToSend`;
     
-    // Use xAI if available, otherwise fallback to OpenAI
-    if (useXai) {
-      const response = await grokApi.generateJson(prompt, 
-        "You are an expert email marketing specialist helping businesses create effective email campaigns", 
-        "grok-3-mini"
-      );
-      return response;
-    } else {
-      // Fallback to OpenAI
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-        messages: [
-          {
-            role: "system",
-            content: "You are an expert email marketing specialist helping businesses create effective email campaigns"
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        response_format: { type: "json_object" }
-      });
-      
-      // Parse JSON response
-      const content = completion.choices[0].message.content;
-      return JSON.parse(content || "[]");
-    }
+    // Use OpenAI API
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert email marketing specialist helping businesses create effective email campaigns"
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      response_format: { type: "json_object" }
+    });
+    
+    // Parse JSON response
+    const content = completion.choices[0].message.content;
+    return JSON.parse(content || "[]");
   } catch (error) {
     console.error("Error generating campaign suggestions:", error);
     // Return a fallback response if AI generation fails
