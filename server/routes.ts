@@ -9,7 +9,7 @@ import NodeCache from 'node-cache';
 import { body, query, param, validationResult } from 'express-validator';
 import { generateToken, authMiddleware } from './utils/auth';
 import { getPublishableKey, createPaymentIntent, createStripeCustomer, createSubscription, getSubscription, cancelSubscription, handleWebhookEvent } from './utils/stripe';
-import { callXAI, generateText, analyzeImage, generateJson } from './utils/xaiClient';
+import { callXAI as callOpenAI, generateText, analyzeImage, generateJson } from './utils/xaiClient';
 import { grokApi } from './grok';
 import subscriptionRouter from './routes/subscription';
 import marketplaceRouter from './routes/marketplace';
@@ -196,25 +196,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/abtesting', abTestingRouter);
   app.use('/api/targeted-ads', targetedAdsRouter);
   
-  // Test xAI API endpoint - public endpoint, no auth required
+  // Test OpenAI API endpoint - public endpoint, no auth required
   app.get('/api/test-xai', async (req: Request, res: Response) => {
     try {
-      console.log("Testing xAI API connection...");
-      const response = await callXAI('/chat/completions', {
-        model: 'grok-3-mini',
-        messages: [{ role: 'user', content: 'Hello, Grok! Tell me about Elevion web development company.' }],
+      console.log("Testing OpenAI API connection...");
+      const response = await callOpenAI('/chat/completions', {
+        model: 'gpt-4o',
+        messages: [{ role: 'user', content: 'Hello! Tell me about a web development company.' }],
       });
-      console.log("xAI API call successful!");
+      console.log("OpenAI API call successful!");
       res.json({
         success: true,
-        message: 'xAI API test successful',
+        message: 'OpenAI API test successful',
         data: response
       });
     } catch (error: any) {
-      console.error("xAI API test failed:", error);
+      console.error("OpenAI API test failed:", error);
       res.status(500).json({ 
         success: false,
-        message: 'xAI API test failed', 
+        message: 'OpenAI API test failed', 
         error: error.message 
       });
     }
@@ -259,8 +259,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           prompt = 'Generate creative content for a web development company blog post.';
       }
       
-      const response = await callXAI('/chat/completions', {
-        model: 'grok-3-latest',
+      const response = await callOpenAI('/chat/completions', {
+        model: 'gpt-4o',
         messages: [{ role: 'user', content: prompt }],
         response_format: contentType === 'blog-ideas' ? { type: 'json_object' } : undefined
       });

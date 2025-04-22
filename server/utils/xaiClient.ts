@@ -11,7 +11,7 @@ let apiTotalCalls = 0;
 let lastApiError: any = null;
 
 // Function to call OpenAI endpoints
-export async function callXAI(endpoint: string, data: any) { // Function name kept for backward compatibility
+export async function callXAI(endpoint: string, data: any) { // Using OpenAI API
   try {
     if (!process.env.OPENAI_API_KEY) {
       throw new Error('OpenAI API key (OPENAI_API_KEY) environment variable is not set');
@@ -516,8 +516,7 @@ export async function analyzeUserDataChanges(oldData: any, newData: any) {
 }
 
 export default {
-  callElevionAI: callXAI, // Kept for backward compatibility (routes using old name)
-  callOpenAI: callXAI, // New recommended name
+  callOpenAI: callXAI, // Primary function name
   generateText,
   generateJson,
   analyzeImage,
