@@ -14,7 +14,7 @@ const responseCache = new NodeCache({
 });
 
 // System prompt is stored as a constant to avoid regenerating it for each request
-const SYSTEM_PROMPT = `You are the Elevion Tech Assistant, an AI assistant powered by Grok AI for Elevion, a premier web development company. 
+const SYSTEM_PROMPT = `You are the Elevion Tech Assistant, an AI assistant powered by OpenAI for Elevion, a premier web development company. 
 Your role is to help users understand Elevion's services and how the company can help with their web development needs.
 
 About Elevion:
@@ -52,15 +52,15 @@ function generateCacheKey(input: string): string {
 }
 
 /**
- * Generates a response for the copilot feature using Elevion AI's Grok API with caching and optimized performance
+ * Generates a response for the copilot feature using OpenAI API with caching and optimized performance
  * @param userMessage The message from the user
  * @returns A response from the AI assistant
  */
 export async function generateCopilotResponse(userMessage: string): Promise<string> {
-  // Ensure Elevion AI API key is available
-  if (!process.env.XAI_API_KEY) {
-    console.error("Missing XAI_API_KEY in environment variables");
-    throw new Error("Elevion AI Grok API key not configured");
+  // Ensure OpenAI API key is available
+  if (!process.env.OPENAI_API_KEY) {
+    console.error("Missing OPENAI_API_KEY in environment variables");
+    throw new Error("OpenAI API key not configured");
   }
   
   try {
@@ -89,39 +89,29 @@ export async function generateCopilotResponse(userMessage: string): Promise<stri
     }
     
     // Log request attempt (without revealing full message for privacy)
-    console.log(`Generating Grok AI response for message starting with: "${sanitizedMessage.substring(0, 20)}..."`);
+    console.log(`Generating OpenAI response for message starting with: "${sanitizedMessage.substring(0, 20)}..."`);
     
     // Use performance.now() for more accurate timing
     const startTime = performance.now();
     
     // Make the API call with appropriate error handling
     try {
-      const response = await grokApi.createChatCompletion([
-        {
-          role: "system",
-          content: SYSTEM_PROMPT
-        },
-        {
-          role: "user",
-          content: sanitizedMessage
-        }
-      ], {
-        model: "grok-3-latest",
-        max_tokens: 250,
+      const aiResponse = await grokApi.generateText({
+        prompt: sanitizedMessage,
+        systemPrompt: SYSTEM_PROMPT,
+        model: "gpt-4o",
+        maxTokens: 250,
         temperature: 0.7
       });
       
       // Log timing information with more precision
       const duration = performance.now() - startTime;
-      console.log(`Generated Grok AI response in ${duration.toFixed(2)}ms`);
+      console.log(`Generated OpenAI response in ${duration.toFixed(2)}ms`);
       
       // Validate the response
-      if (!response.choices || response.choices.length === 0 || !response.choices[0].message) {
-        throw new Error("Invalid response format from Grok API");
+      if (!aiResponse) {
+        throw new Error("Invalid response format from OpenAI API");
       }
-      
-      const aiResponse = response.choices[0].message.content || 
-        "I'm sorry, I couldn't generate a response. Please try again.";
       
       // Cache the successful response
       responseCache.set(cacheKey, aiResponse);
@@ -130,19 +120,19 @@ export async function generateCopilotResponse(userMessage: string): Promise<stri
     } catch (apiError: any) {
       // Enhanced error handling with more specific error messages
       if (apiError.response?.status === 429) {
-        console.error("Grok rate limit exceeded:", apiError);
+        console.error("OpenAI rate limit exceeded:", apiError);
         throw new Error("AI service is currently handling many requests. Please try again in a moment.");
       } else if (apiError.response?.status === 401) {
-        console.error("Grok authentication error:", apiError);
+        console.error("OpenAI authentication error:", apiError);
         throw new Error("AI service authentication failed. Please contact support.");
       } else if (apiError.response?.status === 403) {
-        console.error("Grok permission error:", apiError);
+        console.error("OpenAI permission error:", apiError);
         throw new Error("Request blocked by AI service policy. Please try a different query.");
       } else if (apiError.response?.status === 500 || apiError.response?.status === 503) {
-        console.error("Grok server error:", apiError);
+        console.error("OpenAI server error:", apiError);
         throw new Error("AI service is temporarily unavailable. Please try again later.");
       } else if (apiError.code === 'ECONNRESET' || apiError.code === 'ETIMEDOUT') {
-        console.error("Grok connection error:", apiError);
+        console.error("OpenAI connection error:", apiError);
         throw new Error("Connection to AI service timed out. Please check your network and try again.");
       }
       
@@ -151,7 +141,7 @@ export async function generateCopilotResponse(userMessage: string): Promise<stri
     }
   } catch (error: any) {
     // Log the error with appropriate context
-    console.error("Error generating Grok AI response:", error);
+    console.error("Error generating OpenAI response:", error);
     
     // Clean and structured error propagation
     throw new Error(

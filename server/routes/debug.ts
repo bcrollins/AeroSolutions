@@ -6,7 +6,7 @@ const router = express.Router();
 
 /**
  * Debug code endpoint
- * Analyzes code snippets for errors using Grok AI
+ * Analyzes code snippets for errors using OpenAI
  */
 router.post('/code', async (req, res) => {
   const { code } = req.body;
@@ -19,16 +19,20 @@ router.post('/code', async (req, res) => {
   }
   
   try {
-    const response = await callXAI('/chat/completions', {
-      model: 'grok-3-latest',
-      messages: [{ 
-        role: 'user', 
-        content: `Debug this code and suggest fixes. Focus on JavaScript/TypeScript errors, 
-        potential performance issues, and security vulnerabilities. Format your response with 
-        markdown for code blocks and clear section headers:
-        
-        ${code}` 
-      }],
+    const prompt = `Debug this code and suggest fixes. Focus on JavaScript/TypeScript errors, 
+    potential performance issues, and security vulnerabilities. Format your response with 
+    markdown for code blocks and clear section headers:
+    
+    ${code}`;
+    
+    const systemPrompt = "You are an expert code reviewer and debugger specializing in JavaScript and TypeScript.";
+    
+    const response = await callXAI('/v1/chat/completions', {
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt }
+      ],
     });
     
     res.json({ 
@@ -56,7 +60,7 @@ router.post('/code', async (req, res) => {
 
 /**
  * Analyze debug trends endpoint
- * Uses Grok AI to analyze debug logs for trends
+ * Uses OpenAI to analyze debug logs for trends
  */
 router.post('/analyze-trends', async (req, res) => {
   try {
@@ -72,16 +76,20 @@ router.post('/analyze-trends', async (req, res) => {
     
     const logData = rows.map(log => `[${log.level}] [${log.created_at}] ${log.message}`).join('\n');
     
-    const response = await callXAI('/chat/completions', {
-      model: 'grok-3-latest',
-      messages: [{ 
-        role: 'user', 
-        content: `Analyze these debug logs for trends and patterns. Identify common errors, 
-        potential issues, and suggest possible solutions. Format your response with clear 
-        section headers and bullet points:
-        
-        ${logData}` 
-      }],
+    const prompt = `Analyze these debug logs for trends and patterns. Identify common errors, 
+    potential issues, and suggest possible solutions. Format your response with clear 
+    section headers and bullet points:
+    
+    ${logData}`;
+    
+    const systemPrompt = "You are an expert system debugger who specializes in analyzing application logs to identify patterns and potential issues.";
+    
+    const response = await callXAI('/v1/chat/completions', {
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt }
+      ],
     });
     
     res.json({ 
