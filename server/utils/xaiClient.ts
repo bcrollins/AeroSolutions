@@ -1,9 +1,8 @@
 import OpenAI from 'openai';
 
-// Initialize the OpenAI client with the Elevion AI API configuration
+// Initialize the OpenAI client
 const openai = new OpenAI({
-  baseURL: 'https://api.x.ai/v1',
-  apiKey: process.env.XAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 // For debugging API issues, track API success rate
@@ -11,25 +10,69 @@ let apiSuccessCount = 0;
 let apiTotalCalls = 0;
 let lastApiError: any = null;
 
-// Function to call Elevion AI endpoints directly
+// Function to call OpenAI endpoints
 export async function callXAI(endpoint: string, data: any) { // Function name kept for backward compatibility
   try {
-    if (!process.env.XAI_API_KEY) {
-      throw new Error('Elevion AI API key (XAI_API_KEY) environment variable is not set');
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OpenAI API key (OPENAI_API_KEY) environment variable is not set');
     }
-
-    // Remove leading slash if present
-    const path = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
     
     // Track API call attempt
     apiTotalCalls++;
     
-    // Make API call directly using the OpenAI instance
-    const response = await openai.request({
-      method: 'POST',
-      path,
-      body: data,
-    });
+    let response;
+    
+    // Handle different endpoint types for OpenAI API
+    if (endpoint === '/chat/completions' || endpoint === 'chat/completions') {
+      // Handle chat completions
+      response = await openai.chat.completions.create({
+        model: data.model || 'gpt-4o',
+        messages: data.messages,
+        max_tokens: data.max_tokens,
+        temperature: data.temperature,
+        top_p: data.top_p,
+        frequency_penalty: data.frequency_penalty,
+        presence_penalty: data.presence_penalty,
+        response_format: data.response_format
+      });
+    } 
+    else if (endpoint === '/images/generations' || endpoint === 'images/generations') {
+      // Handle image generation
+      response = await openai.images.generate({
+        model: data.model || 'dall-e-3',
+        prompt: data.prompt,
+        n: data.n || 1,
+        size: data.size || '1024x1024',
+        quality: data.quality || 'standard',
+      });
+    } 
+    else if (typeof endpoint === 'string' && !endpoint.startsWith('/')) {
+      // Handle simple text prompts
+      response = await openai.chat.completions.create({
+        model: data.model || 'gpt-4o',
+        messages: [{ role: 'user', content: endpoint }],
+        max_tokens: data.max_tokens || 500,
+        temperature: data.temperature || 0.7
+      });
+    } 
+    else {
+      // Generic fallback for other API endpoints
+      console.warn(`Using generic OpenAI API request for endpoint: ${endpoint}`);
+      response = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          { 
+            role: 'system', 
+            content: 'You are a helpful AI assistant providing information based on the following request.'
+          },
+          { 
+            role: 'user', 
+            content: typeof data === 'string' ? data : JSON.stringify(data)
+          }
+        ],
+        max_tokens: 500
+      });
+    }
 
     // Track successful call
     apiSuccessCount++;
@@ -38,7 +81,7 @@ export async function callXAI(endpoint: string, data: any) { // Function name ke
   } catch (error) {
     // Track and log the error
     lastApiError = error;
-    console.error('Elevion AI API call error:', error);
+    console.error('OpenAI API call error:', error);
     
     // Log detailed diagnostic information
     console.error(`API Stats - Success: ${apiSuccessCount}/${apiTotalCalls} (${Math.round(apiSuccessCount/apiTotalCalls*100)}%)`);
@@ -63,7 +106,7 @@ const responseCache = new Map<string, {timestamp: number, response: string}>();
 const jsonResponseCache = new Map<string, {timestamp: number, response: any}>();
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
-// Helper function to generate text using Elevion AI models
+// Helper function to generate text using OpenAI models
 export async function generateText(prompt: string, options: {
   model?: string;
   maxTokens?: number;
@@ -73,7 +116,7 @@ export async function generateText(prompt: string, options: {
 } = {}) {
   try {
     const {
-      model = 'grok-3-mini',
+      model = 'gpt-4o',
       maxTokens = 1000,
       temperature = 0.7,
       systemPrompt,
@@ -161,7 +204,7 @@ export async function generateText(prompt: string, options: {
   }
 }
 
-// Helper function to generate structured JSON using Elevion AI models
+// Helper function to generate structured JSON using OpenAI models
 export async function generateJson<T>(prompt: string, options: {
   model?: string;
   maxTokens?: number;
@@ -171,7 +214,7 @@ export async function generateJson<T>(prompt: string, options: {
 } = {}): Promise<T> {
   try {
     const {
-      model = 'grok-3-mini',
+      model = 'gpt-4o',
       maxTokens = 1000,
       temperature = 0.7,
       systemPrompt = 'You are a helpful assistant that responds with JSON only. Format your response as a valid JSON object.',
@@ -282,7 +325,7 @@ export async function generateJson<T>(prompt: string, options: {
 // Cache for image analysis responses
 const imageAnalysisCache = new Map<string, {timestamp: number, response: string}>();
 
-// Function to analyze image with Elevion AI vision models
+// Function to analyze image with OpenAI vision models
 export async function analyzeImage(imageBase64: string, prompt: string, options: {
   model?: string;
   maxTokens?: number;
@@ -290,7 +333,7 @@ export async function analyzeImage(imageBase64: string, prompt: string, options:
 } = {}) {
   try {
     const {
-      model = 'grok-2-vision-1212',
+      model = 'gpt-4o',
       maxTokens = 1000,
       fallbackResponse
     } = options;
