@@ -223,13 +223,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Testing OpenAI API connection...");
       const response = await callOpenAI('/chat/completions', {
         model: 'gpt-4o',
-        messages: [{ role: 'user', content: 'Hello! Tell me about a web development company.' }],
+        messages: [{ role: 'user', content: 'Say hello in one word.' }],
+        max_tokens: 10,
+        temperature: 0.2
       });
       console.log("OpenAI API call successful!");
       res.json({
         success: true,
         message: 'OpenAI API test successful',
-        data: response
+        data: response.choices?.[0]?.message?.content || 'No content returned'
       });
     } catch (error: any) {
       console.error("OpenAI API test failed:", error);
