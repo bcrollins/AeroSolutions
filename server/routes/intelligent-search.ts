@@ -1,12 +1,12 @@
 import express from 'express';
 import { db } from '../db';
-import { callXAI } from '../utils/xaiClient';
+import { openaiApi } from '../utils/grok';
 
 const router = express.Router();
 
 /**
  * Semantic search endpoint
- * Uses Elevion AI to perform intelligent semantic search on website content
+ * Uses OpenAI to perform intelligent semantic search on website content
  */
 router.post('/semantic', async (req, res) => {
   const { query, filters = {}, limit = 10 } = req.body;
@@ -73,13 +73,11 @@ router.post('/semantic', async (req, res) => {
       
       Relevance score should be between 0 and 1, with 1 being perfectly relevant.`;
     
-    const response = await callXAI('/chat/completions', {
-      model: 'grok-3-latest',
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' }
+    const content = await openaiApi.generateJson({
+      prompt,
+      model: 'gpt-4o',
+      temperature: 0.3
     });
-    
-    const content = JSON.parse(response.choices[0].message.content);
     
     res.json({ 
       success: true, 
@@ -135,7 +133,7 @@ router.post('/natural-language-query', async (req, res) => {
       Content: ${row.content.substring(0, 500)}...
     `).join('\n\n');
     
-    const prompt = `You are an AI assistant for a web development company called Elevion. 
+    const prompt = `You are an AI assistant for a web development company. 
       A user has asked the following question: "${question}"
       
       Based on the following content from our website, provide a helpful, accurate, and concise answer.
@@ -145,14 +143,15 @@ router.post('/natural-language-query', async (req, res) => {
       Context from website:
       ${context}`;
     
-    const response = await callXAI('/chat/completions', {
-      model: 'grok-3-latest',
-      messages: [{ role: 'user', content: prompt }]
+    const answer = await openaiApi.generateText({
+      prompt,
+      model: 'gpt-4o',
+      temperature: 0.7
     });
     
     res.json({ 
       success: true, 
-      answer: response.choices[0].message.content
+      answer
     });
   } catch (error: any) {
     console.error('Natural language query failed:', error);
@@ -202,17 +201,15 @@ router.post('/entity-recognition', async (req, res) => {
         "intent": "information/purchase/support/other"
       }`;
     
-    const response = await callXAI('/chat/completions', {
-      model: 'grok-3-latest',
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' }
+    const analysis = await openaiApi.generateJson({
+      prompt,
+      model: 'gpt-4o',
+      temperature: 0.3
     });
-    
-    const content = JSON.parse(response.choices[0].message.content);
     
     res.json({ 
       success: true, 
-      analysis: content
+      analysis
     });
   } catch (error: any) {
     console.error('Entity recognition failed:', error);
@@ -285,17 +282,15 @@ router.post('/faq-matching', async (req, res) => {
         "suggested_followup_questions": ["question1", "question2"]
       }`;
     
-    const response = await callXAI('/chat/completions', {
-      model: 'grok-3-latest',
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' }
+    const result = await openaiApi.generateJson({
+      prompt,
+      model: 'gpt-4o',
+      temperature: 0.3
     });
-    
-    const content = JSON.parse(response.choices[0].message.content);
     
     res.json({ 
       success: true, 
-      result: content
+      result
     });
   } catch (error: any) {
     console.error('FAQ matching failed:', error);
