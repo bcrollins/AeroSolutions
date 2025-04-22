@@ -96,13 +96,14 @@ export async function generateCopilotResponse(userMessage: string): Promise<stri
     
     // Make the API call with appropriate error handling
     try {
-      const aiResponse = await grokApi.generateText({
-        prompt: sanitizedMessage,
-        systemPrompt: SYSTEM_PROMPT,
-        model: "gpt-4o",
-        maxTokens: 250,
-        temperature: 0.7
-      });
+      const aiResponse = await grokApi.generateText(
+        sanitizedMessage, 
+        SYSTEM_PROMPT, 
+        {
+          max_tokens: 250,
+          temperature: 0.7
+        }
+      );
       
       // Log timing information with more precision
       const duration = performance.now() - startTime;

@@ -81,10 +81,10 @@ Remember that Elevion specializes in web development with these core services:
     try {
       // First attempt - use OpenAI gpt-4o for best quality responses
       const aiResponse = await grokApi.generateText(
-        message,
-        businessSystemPrompt,
+        message, 
+        businessSystemPrompt, 
         { 
-          temperature: 0.7,
+          temperature: 0.7, 
           max_tokens: 800 
         }
       );
