@@ -29,11 +29,11 @@ const openai = new OpenAI({
 });
 
 // OpenAIApi class for interaction with OpenAI
-class GrokApi {
+class OpenAIApi {
   // Generate text based on a prompt
   async generateText({
     prompt,
-    model = 'grok-2-mini',
+    model = 'gpt-4o',
     maxTokens = 1500,
     temperature = 0.7,
     systemPrompt = 'You are a helpful, precise, and advanced AI assistant.',
@@ -41,11 +41,11 @@ class GrokApi {
     try {
       const messages = [
         {
-          role: 'system',
+          role: 'system' as const,
           content: systemPrompt,
         },
         {
-          role: 'user',
+          role: 'user' as const,
           content: prompt,
         },
       ];
@@ -58,16 +58,16 @@ class GrokApi {
       });
 
       return response.choices[0].message.content || '';
-    } catch (error) {
-      console.error('Error generating text with Grok API:', error);
-      throw new Error(`Failed to generate text: ${error.message}`);
+    } catch (error: any) {
+      console.error('Error generating text with OpenAI API:', error);
+      throw new Error(`Failed to generate text: ${error?.message || 'Unknown error'}`);
     }
   }
 
   // Generate structured JSON data
   async generateJson<T>({
     prompt,
-    model = 'grok-2-mini',
+    model = 'gpt-4o',
     maxTokens = 1500,
     temperature = 0.3,
     systemPrompt = 'You are a helpful, precise AI assistant. Respond to the prompt with properly structured JSON.',
@@ -75,11 +75,11 @@ class GrokApi {
     try {
       const messages = [
         {
-          role: 'system',
+          role: 'system' as const,
           content: systemPrompt,
         },
         {
-          role: 'user',
+          role: 'user' as const,
           content: prompt,
         },
       ];
@@ -94,16 +94,16 @@ class GrokApi {
 
       const content = response.choices[0].message.content || '{}';
       return JSON.parse(content) as T;
-    } catch (error) {
-      console.error('Error generating JSON with Grok API:', error);
+    } catch (error: any) {
+      console.error('Error generating JSON with OpenAI API:', error);
       
       // Return empty object structure for graceful fallback
-      if (error.message.includes('parse')) {
+      if (error?.message?.includes('parse')) {
         console.error('Parsing error. Raw content:', error.message);
         return {} as T;
       }
       
-      throw new Error(`Failed to generate JSON: ${error.message}`);
+      throw new Error(`Failed to generate JSON: ${error?.message || 'Unknown error'}`);
     }
   }
 
@@ -111,21 +111,21 @@ class GrokApi {
   async analyzeImage(
     base64Image: string,
     prompt: string,
-    model = 'grok-2-vision-1212'
+    model = 'gpt-4o'
   ): Promise<string> {
     try {
       const response = await openai.chat.completions.create({
         model,
         messages: [
           {
-            role: 'user',
+            role: 'user' as const,
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: prompt,
               },
               {
-                type: 'image_url',
+                type: 'image_url' as const,
                 image_url: {
                   url: `data:image/jpeg;base64,${base64Image}`,
                 },
@@ -137,12 +137,14 @@ class GrokApi {
       });
 
       return response.choices[0].message.content || '';
-    } catch (error) {
-      console.error('Error analyzing image with Grok API:', error);
-      throw new Error(`Failed to analyze image: ${error.message}`);
+    } catch (error: any) {
+      console.error('Error analyzing image with OpenAI API:', error);
+      throw new Error(`Failed to analyze image: ${error?.message || 'Unknown error'}`);
     }
   }
 }
 
 // Export singleton instance
-export const grokApi = new GrokApi();
+export const openaiApi = new OpenAIApi();
+// For backward compatibility, also export as grokApi
+export const grokApi = openaiApi;
