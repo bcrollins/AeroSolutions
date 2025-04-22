@@ -497,7 +497,7 @@ Focus on key web performance metrics like page load time, TTFB, FCP, LCP, and CL
 Provide insights that would be valuable for optimizing the website.
 `;
 
-        const response = await callXAI('/chat/completions', {
+        const response = await callOpenAI('/chat/completions', {
           model: 'grok-3-mini',
           messages: [{ role: 'user', content: prompt }],
           max_tokens: 1000
@@ -670,7 +670,7 @@ Provide insights that would be valuable for optimizing the website.
       const analysisData = `USER SESSIONS:\n${sessionData}\n\nCONTENT VIEWS:\n${contentData}`;
       
       // Call xAI API to analyze behavior patterns
-      const response = await callXAI('/chat/completions', {
+      const response = await callOpenAI('/chat/completions', {
         model: 'grok-3',
         messages: [
           {
@@ -765,7 +765,7 @@ Provide insights that would be valuable for optimizing the website.
       
       try {
         // Call Grok API for analysis
-        const grokPromise = callXAI('/chat/completions', {
+        const grokPromise = callOpenAI('/chat/completions', {
           model: 'grok-3',
           messages: [
             { 
@@ -1089,7 +1089,7 @@ For client ID ${clientId}, we've analyzed ${metrics.length} website metrics reco
         };
 
         // Call xAI for analysis
-        aiAnalysis = await callXAI(
+        aiAnalysis = await callOpenAI(
           `Analyze the following client website engagement data: ${JSON.stringify(analysisData)}. 
           Identify 3 key insights about user engagement patterns. Also suggest 2 specific actions the client could take to improve engagement.
           Focus on trends, anomalies, and actionable recommendations. Keep the analysis concise, about 250 words maximum.`,
@@ -1312,7 +1312,7 @@ For client ID ${clientId}, we've analyzed ${metrics.length} website metrics reco
           topSources: sortedSources.slice(0, 5)
         };
 
-        const aiResponse = await callXAI({
+        const aiResponse = await callOpenAI({
           model: "grok-2-1212",
           messages: [
             {

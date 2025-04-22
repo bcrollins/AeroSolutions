@@ -64,7 +64,7 @@ export const registerFeedRoutes = (app: express.Express) => {
       
       // Call xAI to rank posts
       try {
-        const response = await callXAI('/chat/completions', {
+        const response = await callOpenAI('/chat/completions', {
           model: 'grok-3-mini',
           messages: [{ 
             role: 'user', 
@@ -168,7 +168,7 @@ export const registerFeedRoutes = (app: express.Express) => {
       
       try {
         // Call xAI to rank and personalize feed
-        const response = await callXAI('/chat/completions', {
+        const response = await callOpenAI('/chat/completions', {
           model: 'grok-3-mini',
           messages: [{ 
             role: 'user', 
@@ -412,7 +412,7 @@ export const registerFeedRoutes = (app: express.Express) => {
       
       try {
         // Call xAI to generate a post suggestion
-        const response = await callXAI('/chat/completions', {
+        const response = await callOpenAI('/chat/completions', {
           model: 'grok-3-mini',
           messages: [{ 
             role: 'user', 
@@ -478,7 +478,7 @@ export const registerFeedRoutes = (app: express.Express) => {
       
       // Call xAI to analyze the engagement metrics
       try {
-        const response = await callXAI('/chat/completions', {  
+        const response = await callOpenAI('/chat/completions', {  
           model: 'grok-3',  
           messages: [{ 
             role: 'user', 

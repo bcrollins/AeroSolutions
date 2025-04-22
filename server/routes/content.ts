@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { body, query, validationResult } from 'express-validator';
 import { db } from '../db';
-import { callXAI, generateText, generateJson } from '../utils/xaiClient';
+import { callOpenAI, generateText, generateJson } from '../utils/xaiClient';
 import { sql, desc, eq, like } from 'drizzle-orm';
 import { contents } from '@shared/schema';
 import { v4 as uuidv4 } from 'uuid';
@@ -116,7 +116,7 @@ Format using HTML tags for proper styling. The content will be displayed in a we
 The content should be factually accurate, informative, and provide real value to the audience. Avoid generic platitudes or overly broad statements. Focus on specific, actionable insights relevant to ${industry} businesses.`;
 
     try {
-      const response = await callXAI('/chat/completions', {
+      const response = await callOpenAI('/chat/completions', {
         model: 'grok-3',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 2500,

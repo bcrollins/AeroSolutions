@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
-import { callXAI, generateText, generateJson } from '../utils/xaiClient';
+import { callOpenAI, generateText, generateJson } from '../utils/xaiClient';
 import { db } from '../db';
 import { uiElementInteractions, websiteEngagement, websiteMetrics } from '@shared/schema';
 import { sql, desc, eq, and, like, gte, lte } from 'drizzle-orm';
@@ -56,7 +56,7 @@ router.post('/onboarding-message', [
     Format as a JSON object with "subject" and "message" fields.`;
 
     try {
-      const response = await callXAI('/chat/completions', {
+      const response = await callOpenAI('/chat/completions', {
         model: 'grok-3-mini',
         messages: [{ role: 'user', content: prompt }],
         response_format: { type: 'json_object' },
@@ -210,7 +210,7 @@ router.post('/generate-faq', [
     Format as a JSON array of objects with "question" and "answer" fields.`;
 
     try {
-      const response = await callXAI('/chat/completions', {
+      const response = await callOpenAI('/chat/completions', {
         model: 'grok-3-mini',
         messages: [{ role: 'user', content: prompt }],
         response_format: { type: 'json_object' },
@@ -492,7 +492,7 @@ router.post('/analyze-feedback', [
     };
     
     try {
-      const response = await callXAI('/chat/completions', {
+      const response = await callOpenAI('/chat/completions', {
         model: 'grok-3-mini',
         messages: [{ role: 'user', content: prompt }],
         response_format: { type: 'json_object' },
@@ -709,7 +709,7 @@ router.post('/generate-persona', [
     };
     
     try {
-      const response = await callXAI('/chat/completions', {
+      const response = await callOpenAI('/chat/completions', {
         model: 'grok-3-mini',
         messages: [{ role: 'user', content: prompt }],
         response_format: { type: 'json_object' },

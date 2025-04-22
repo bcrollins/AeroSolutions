@@ -1,5 +1,5 @@
 import { storage } from '../storage';
-import { callXAI, generateJson, generateText } from './xaiClient';
+import { callOpenAI, generateJson, generateText } from './xaiClient';
 import fs from 'fs';
 import path from 'path';
 import { Logger } from '../middlewares/logger';

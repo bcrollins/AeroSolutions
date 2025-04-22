@@ -2,7 +2,7 @@ import { db } from '../db';
 import { performance_logs, performance_metrics, performance_recommendations } from '@shared/schema';
 import { eq, desc, and, gte, lte, sql } from 'drizzle-orm';
 import NodeCache from 'node-cache';
-import { callXAI, generateJson } from './xaiClient';
+import { callOpenAI, generateJson } from './xaiClient';
 
 // Cache for performance data (5 minute TTL, check period 1 minute)
 const performanceCache = new NodeCache({
@@ -442,7 +442,7 @@ export async function generatePerformanceReport(
       .orderBy(desc(performance_recommendations.priority));
     
     // Use XAI to generate an executive summary
-    const executiveSummary = await callXAI('/chat/completions', {
+    const executiveSummary = await callOpenAI('/chat/completions', {
       model: 'grok-3-latest',
       messages: [
         {

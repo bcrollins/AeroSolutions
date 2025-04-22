@@ -9,7 +9,7 @@ import NodeCache from 'node-cache';
 import { body, query, param, validationResult } from 'express-validator';
 import { generateToken, authMiddleware } from './utils/auth';
 import { getPublishableKey, createPaymentIntent, createStripeCustomer, createSubscription, getSubscription, cancelSubscription, handleWebhookEvent } from './utils/stripe';
-import { callXAI as callOpenAI, generateText, analyzeImage, generateJson } from './utils/xaiClient';
+import { callOpenAI, generateText, analyzeImage, generateJson } from './utils/xaiClient';
 import { pool } from './db';
 import { grokApi } from './grok';
 import subscriptionRouter from './routes/subscription';

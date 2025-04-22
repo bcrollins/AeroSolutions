@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
-import { callXAI, generateText } from '../utils/xaiClient';
+import { callOpenAI, generateText } from '../utils/xaiClient';
 import { db } from '../db';
 
 const router = Router();
@@ -51,7 +51,7 @@ router.post('/competitor-analysis', [
     
     Format the analysis as a JSON object with appropriate sections.`;
 
-    const response = await callXAI('/chat/completions', {
+    const response = await callOpenAI('/chat/completions', {
       model: 'grok-3-mini',
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
@@ -122,7 +122,7 @@ router.post('/market-trends', [
     
     Format as a JSON object with appropriate sections, backed by available data up to your training cutoff.`;
 
-    const response = await callXAI('/chat/completions', {
+    const response = await callOpenAI('/chat/completions', {
       model: 'grok-3-mini',
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
@@ -198,7 +198,7 @@ router.post('/business-case', [
     
     Format as a JSON document with appropriate sections. Make all financial projections realistic for the industry.`;
 
-    const response = await callXAI('/chat/completions', {
+    const response = await callOpenAI('/chat/completions', {
       model: 'grok-3-mini',
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
@@ -277,7 +277,7 @@ router.post('/prioritize-features', [
     
     Format as a JSON object with appropriate sections.`;
 
-    const response = await callXAI('/chat/completions', {
+    const response = await callOpenAI('/chat/completions', {
       model: 'grok-3-mini',
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
@@ -358,7 +358,7 @@ router.post('/optimize-pricing', [
     
     Format as a JSON object with appropriate sections. All prices should reflect the 60% below market rate positioning.`;
 
-    const response = await callXAI('/chat/completions', {
+    const response = await callOpenAI('/chat/completions', {
       model: 'grok-3-mini',
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
@@ -440,7 +440,7 @@ router.post('/optimize-conversion', [
     
     Format as a JSON object with appropriate sections. Ensure all recommendations are data-driven and actionable.`;
 
-    const response = await callXAI('/chat/completions', {
+    const response = await callOpenAI('/chat/completions', {
       model: 'grok-3-mini',
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
@@ -523,7 +523,7 @@ router.post('/generate-proposal', [
     Format as a complete, professional proposal in JSON format with appropriate sections.
     Emphasize Elevion's free mockup service and payment only after design approval.`;
 
-    const response = await callXAI('/chat/completions', {
+    const response = await callOpenAI('/chat/completions', {
       model: 'grok-3-mini',
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
@@ -601,7 +601,7 @@ router.post('/competitive-edge', [
     
     Format as a JSON object with appropriate sections. Focus on realistic, actionable advantages that Elevion can deliver at 60% below market rates.`;
 
-    const response = await callXAI('/chat/completions', {
+    const response = await callOpenAI('/chat/completions', {
       model: 'grok-3-mini',
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
@@ -681,7 +681,7 @@ router.post('/roi-calculator', [
     Format as a complete JSON calculator model with variables, formulas, and sample calculations.
     Ensure all calculations are realistic for this business type and based on industry standards.`;
 
-    const response = await callXAI('/chat/completions', {
+    const response = await callOpenAI('/chat/completions', {
       model: 'grok-3-mini',
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
@@ -760,7 +760,7 @@ router.post('/analyze-scope', [
     Format as a complete, professional scope document in JSON format with appropriate sections.
     Include realistic estimates based on Elevion's web development capabilities.`;
 
-    const response = await callXAI('/chat/completions', {
+    const response = await callOpenAI('/chat/completions', {
       model: 'grok-3-mini',
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },

@@ -2,7 +2,7 @@ import { sql, eq, and, lte, gte, desc } from 'drizzle-orm';
 import { db } from '../db';
 import { users, userActivity, userRetentionMessages, notifications } from '@shared/schema';
 import { emailService } from './emailService';
-import { callXAI, generateText } from './xaiClient';
+import { callOpenAI, generateText } from './xaiClient';
 import { logger } from './logger';
 
 /**
@@ -145,7 +145,7 @@ Days Since Last Activity: ${context.daysSinceLastActivity || 'unknown'}
 Recent Activity Types: ${context.recentActivities.map(a => a.type).join(', ') || 'no recent activity'}`;
 
       try {
-        const response = await callXAI('/chat/completions', {
+        const response = await callOpenAI('/chat/completions', {
           model: 'grok-2-1212',
           messages: [
             { role: 'system', content: systemPrompt },

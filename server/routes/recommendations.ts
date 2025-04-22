@@ -68,7 +68,7 @@ router.post('/services', async (req, res) => {
     
     // Race the API call against the timeout
     const response = await Promise.race([
-      callXAI('/chat/completions', {
+      callOpenAI('/chat/completions', {
         model: 'grok-3-latest',
         messages: [{ role: 'user', content: prompt }],
         response_format: { type: 'json_object' }
@@ -159,7 +159,7 @@ router.post('/features', async (req, res) => {
     
     // Use a smaller model for faster response time
     const response = await Promise.race([
-      callXAI('/chat/completions', {
+      callOpenAI('/chat/completions', {
         model: 'grok-3-mini', // Use mini model for faster response
         messages: [{ role: 'user', content: prompt }],
         response_format: { type: 'json_object' }
@@ -367,7 +367,7 @@ router.post('/tech-stack', async (req, res) => {
     
     // Use a smaller model for faster response time
     const response = await Promise.race([
-      callXAI('/chat/completions', {
+      callOpenAI('/chat/completions', {
         model: 'grok-3-mini', // Use mini model for faster response
         messages: [{ role: 'user', content: prompt }],
         response_format: { type: 'json_object' }
@@ -607,7 +607,7 @@ router.post('/content-plan', async (req, res) => {
     
     // Use a smaller model for faster response time
     const response = await Promise.race([
-      callXAI('/chat/completions', {
+      callOpenAI('/chat/completions', {
         model: 'grok-3-mini', // Use mini model for faster response
         messages: [{ role: 'user', content: prompt }],
         response_format: { type: 'json_object' }

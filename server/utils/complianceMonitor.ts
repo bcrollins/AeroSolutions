@@ -1,5 +1,5 @@
 import { db } from '../db';
-import { callXAI, generateJson } from './xaiClient';
+import { callOpenAI, generateJson } from './xaiClient';
 import { 
   contentComplianceScans, 
   contentComplianceAlerts,

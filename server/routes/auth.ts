@@ -104,7 +104,7 @@ router.post('/register', [
         
         let onboardingTips = '';
         try {
-          const response = await callXAI('/chat/completions', {
+          const response = await callOpenAI('/chat/completions', {
             model: 'grok-3-mini',
             messages: [{ role: 'user', content: aiPrompt }]
           });

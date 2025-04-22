@@ -1,6 +1,6 @@
 import express from 'express';
 import { db } from '../db';
-import { callXAI } from '../utils/xaiClient';
+import { callOpenAI } from '../utils/xaiClient';
 
 const router = express.Router();
 
@@ -27,7 +27,7 @@ router.post('/code', async (req, res) => {
     
     const systemPrompt = "You are an expert code reviewer and debugger specializing in JavaScript and TypeScript.";
     
-    const response = await callXAI('/v1/chat/completions', {
+    const response = await callOpenAI('/v1/chat/completions', {
       model: 'gpt-4o',
       messages: [
         { role: 'system', content: systemPrompt },
@@ -84,7 +84,7 @@ router.post('/analyze-trends', async (req, res) => {
     
     const systemPrompt = "You are an expert system debugger who specializes in analyzing application logs to identify patterns and potential issues.";
     
-    const response = await callXAI('/v1/chat/completions', {
+    const response = await callOpenAI('/v1/chat/completions', {
       model: 'gpt-4o',
       messages: [
         { role: 'system', content: systemPrompt },
@@ -138,7 +138,7 @@ router.post('/performance', async (req, res) => {
     
     const systemPrompt = "You are an expert performance engineer specialized in identifying bottlenecks and optimization opportunities in application logs.";
     
-    const response = await callXAI('/v1/chat/completions', {
+    const response = await callOpenAI('/v1/chat/completions', {
       model: 'gpt-4o',
       messages: [
         { role: 'system', content: systemPrompt },

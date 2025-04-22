@@ -118,7 +118,7 @@ router.post('/suggest-mockup', async (req: Request, res: Response) => {
     });
     
     // Generate design ideas using Grok API
-    const grokPromise = callXAI('/chat/completions', {
+    const grokPromise = callOpenAI('/chat/completions', {
       model: 'grok-3-mini', // Using mini model for faster responses
       messages: [
         { 
@@ -241,7 +241,7 @@ Keep the plan practical, focused on web development needs, and aligned with the 
     });
     
     // Generate project plan using Grok API
-    const grokPromise = callXAI('/chat/completions', {
+    const grokPromise = callOpenAI('/chat/completions', {
       model: 'grok-3', // Using standard model for better quality
       messages: [
         { 
@@ -370,7 +370,7 @@ router.get('/mockup-trends', async (req: Request, res: Response) => {
     // Use Grok API to analyze trends if there are enough requests
     if (requests.length >= 10) {
       try {
-        const response = await callXAI('/chat/completions', {
+        const response = await callOpenAI('/chat/completions', {
           model: 'grok-3',
           messages: [
             {
@@ -511,7 +511,7 @@ Recommend 2-3 post-launch services or support options particularly valuable for 
 `;
     
     // Generate onboarding steps using Grok API
-    const grokPromise = callXAI('/chat/completions', {
+    const grokPromise = callOpenAI('/chat/completions', {
       model: 'grok-3-mini', // Using mini model for faster responses
       messages: [
         { 
@@ -665,7 +665,7 @@ router.post('/suggest-website-copy', async (req: Request, res: Response) => {
     });
     
     // Generate website copy using Grok API
-    const grokPromise = callXAI('/chat/completions', {
+    const grokPromise = callOpenAI('/chat/completions', {
       model: 'grok-3', // Using standard model for better quality copy
       messages: [
         { 
@@ -775,7 +775,7 @@ router.post('/suggest-branding', async (req: Request, res: Response) => {
     });
     
     // Generate branding ideas using Grok API
-    const grokPromise = callXAI('/chat/completions', {
+    const grokPromise = callOpenAI('/chat/completions', {
       model: 'grok-3-mini', // Using mini model for faster responses
       messages: [
         { 
@@ -885,7 +885,7 @@ router.post('/suggest-navigation', async (req: Request, res: Response) => {
     });
     
     // Generate navigation using Grok API
-    const grokPromise = callXAI('/chat/completions', {
+    const grokPromise = callOpenAI('/chat/completions', {
       model: 'grok-3-mini', // Using mini model for faster responses
       messages: [
         { 
@@ -1070,7 +1070,7 @@ Format your response as a JSON object with these sections. For each recommendati
     });
     
     // Generate optimization suggestions using Grok API
-    const grokPromise = callXAI('/chat/completions', {
+    const grokPromise = callOpenAI('/chat/completions', {
       model: 'grok-3', // Using standard model for better quality analysis
       messages: [
         { 
@@ -1221,7 +1221,7 @@ Make the suggestions specific to the ${businessType} industry, addressing common
     });
     
     // Generate blog content suggestions using Grok API
-    const grokPromise = callXAI('/chat/completions', {
+    const grokPromise = callOpenAI('/chat/completions', {
       model: 'grok-3-mini', // Using mini model for faster responses
       messages: [
         { 
@@ -1320,7 +1320,7 @@ router.post('/suggest-cta', async (req: Request, res: Response) => {
     });
     
     // Generate CTA ideas using Grok API
-    const grokPromise = callXAI('/chat/completions', {
+    const grokPromise = callOpenAI('/chat/completions', {
       model: 'grok-3', // Using standard model for better quality, CTAs are important for conversion
       messages: [
         { 
@@ -1425,7 +1425,7 @@ router.post('/suggest-website-features', async (req: Request, res: Response) => 
     });
     
     // Generate website feature suggestions using Grok API
-    const grokPromise = callXAI('/chat/completions', {
+    const grokPromise = callOpenAI('/chat/completions', {
       model: 'grok-3-mini', // Using mini model for faster responses
       messages: [
         { 
@@ -1670,7 +1670,7 @@ router.get('/mockup-engagement', async (req: Request, res: Response) => {
         });
         
         // Generate insights using xAI Grok
-        const grokPromise = callXAI('/chat/completions', {
+        const grokPromise = callOpenAI('/chat/completions', {
           model: 'grok-3',
           messages: [
             {
@@ -1802,7 +1802,7 @@ router.post('/suggest-website-colors', async (req: Request, res: Response) => {
     });
     
     // Generate color suggestions using Grok API
-    const grokPromise = callXAI('/chat/completions', {
+    const grokPromise = callOpenAI('/chat/completions', {
       model: 'grok-3-mini', // Using mini model for faster responses
       messages: [
         { 
@@ -1901,7 +1901,7 @@ router.post('/suggest-website-layout', async (req: Request, res: Response) => {
     });
     
     // Generate layout suggestion using Grok API
-    const grokPromise = callXAI('/chat/completions', {
+    const grokPromise = callOpenAI('/chat/completions', {
       model: 'grok-3',
       messages: [
         { 
@@ -2029,7 +2029,7 @@ router.post('/suggest-images', async (req: Request, res: Response) => {
     });
     
     // Generate image ideas using Grok API
-    const grokPromise = callXAI('/chat/completions', {
+    const grokPromise = callOpenAI('/chat/completions', {
       model: 'grok-3', // Using standard model for better quality images suggestions
       messages: [
         { 

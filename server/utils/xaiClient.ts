@@ -10,8 +10,8 @@ let apiSuccessCount = 0;
 let apiTotalCalls = 0;
 let lastApiError: any = null;
 
-// Function to call OpenAI endpoints
-export async function callXAI(endpoint: string, data: any) { // Using OpenAI API
+// Function to call OpenAI endpoints (renamed from callXAI for clarity)
+export async function callOpenAI(endpoint: string, data: any) {
   try {
     if (!process.env.OPENAI_API_KEY) {
       throw new Error('OpenAI API key (OPENAI_API_KEY) environment variable is not set');
@@ -516,7 +516,7 @@ export async function analyzeUserDataChanges(oldData: any, newData: any) {
 }
 
 export default {
-  callOpenAI: callXAI, // Primary function name
+  callOpenAI, // Primary function name
   generateText,
   generateJson,
   analyzeImage,

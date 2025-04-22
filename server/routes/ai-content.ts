@@ -1,5 +1,5 @@
 import express from 'express';
-import { callXAI } from '../utils/xaiClient';
+import { callOpenAI } from '../utils/xaiClient';
 
 const router = express.Router();
 
@@ -33,7 +33,7 @@ router.post('/blog-ideas', async (req, res) => {
         ]
       }`;
     
-    const response = await callXAI('/chat/completions', {
+    const response = await callOpenAI('/chat/completions', {
       model: 'grok-3-latest',
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' }
@@ -106,7 +106,7 @@ router.post('/product-description', async (req, res) => {
       Benefits: ${benefits ? benefits.join(', ') : 'to be determined from features'}.
       Make the description engaging, highlight unique selling points, and include a call to action.`;
     
-    const response = await callXAI('/chat/completions', {
+    const response = await callOpenAI('/chat/completions', {
       model: 'grok-3-latest',
       messages: [{ role: 'user', content: prompt }]
     });
@@ -164,7 +164,7 @@ router.post('/social-content', async (req, res) => {
         ]
       }`;
     
-    const response = await callXAI('/chat/completions', {
+    const response = await callOpenAI('/chat/completions', {
       model: 'grok-3-latest',
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' }
@@ -234,7 +234,7 @@ router.post('/email-template', async (req, res) => {
       Include appropriate greeting, body with key points, call to action, and signature.
       Format the response with clear sections for subject line and email body.`;
     
-    const response = await callXAI('/chat/completions', {
+    const response = await callOpenAI('/chat/completions', {
       model: 'grok-3-latest',
       messages: [{ role: 'user', content: prompt }]
     });

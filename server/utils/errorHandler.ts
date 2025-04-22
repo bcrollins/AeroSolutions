@@ -1,4 +1,4 @@
-import { callXAI, generateText } from './xaiClient';
+import { callOpenAI, generateText } from './xaiClient';
 import NodeCache from 'node-cache';
 
 // Cache error messages for 1 hour
