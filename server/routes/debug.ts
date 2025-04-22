@@ -117,7 +117,7 @@ router.post('/analyze-trends', async (req, res) => {
 
 /**
  * Analyze performance bottlenecks
- * Uses Grok AI to identify performance issues in application logs
+ * Uses OpenAI to identify performance issues in application logs
  */
 router.post('/performance', async (req, res) => {
   const { logs } = req.body;
@@ -130,16 +130,20 @@ router.post('/performance', async (req, res) => {
   }
   
   try {
-    const response = await callXAI('/chat/completions', {
-      model: 'grok-3-latest',
-      messages: [{ 
-        role: 'user', 
-        content: `Analyze these application logs to identify performance bottlenecks. 
-        Focus on slow operations, resource usage patterns, and optimize suggestions.
-        Format your response with clear sections for different types of issues:
-        
-        ${logs}` 
-      }],
+    const prompt = `Analyze these application logs to identify performance bottlenecks. 
+    Focus on slow operations, resource usage patterns, and optimize suggestions.
+    Format your response with clear sections for different types of issues:
+    
+    ${logs}`;
+    
+    const systemPrompt = "You are an expert performance engineer specialized in identifying bottlenecks and optimization opportunities in application logs.";
+    
+    const response = await callXAI('/v1/chat/completions', {
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt }
+      ],
     });
     
     res.json({ 
