@@ -25,9 +25,15 @@ export async function callXAI(endpoint: string, data: any) { // Function name ke
     // Handle different endpoint types for OpenAI API
     if (endpoint === '/chat/completions' || endpoint === 'chat/completions') {
       // Handle chat completions
+      const messages = Array.isArray(data.messages) ? 
+        data.messages.map((msg: any) => ({
+          role: msg.role as 'system' | 'user' | 'assistant',
+          content: msg.content
+        })) : [];
+        
       response = await openai.chat.completions.create({
         model: data.model || 'gpt-4o',
-        messages: data.messages,
+        messages: messages,
         max_tokens: data.max_tokens,
         temperature: data.temperature,
         top_p: data.top_p,
@@ -50,7 +56,10 @@ export async function callXAI(endpoint: string, data: any) { // Function name ke
       // Handle simple text prompts
       response = await openai.chat.completions.create({
         model: data.model || 'gpt-4o',
-        messages: [{ role: 'user', content: endpoint }],
+        messages: [{ 
+          role: 'user', 
+          content: endpoint 
+        }],
         max_tokens: data.max_tokens || 500,
         temperature: data.temperature || 0.7
       });
@@ -137,13 +146,13 @@ export async function generateText(prompt: string, options: {
 
     if (systemPrompt) {
       messages.push({
-        role: 'system',
+        role: 'system' as const,
         content: systemPrompt,
       });
     }
 
     messages.push({
-      role: 'user',
+      role: 'user' as const,
       content: prompt,
     });
 
@@ -161,7 +170,7 @@ export async function generateText(prompt: string, options: {
     apiSuccessCount++;
     
     // Store response in cache
-    const textResponse = response.choices[0].message.content;
+    const textResponse = response.choices[0].message.content || '';
     responseCache.set(cacheKey, {
       timestamp: Date.now(),
       response: textResponse
@@ -170,7 +179,7 @@ export async function generateText(prompt: string, options: {
     return textResponse;
   } catch (error) {
     // Log error with diagnostics
-    console.error('Elevion AI text generation error:', error);
+    console.error('OpenAI text generation error:', error);
     console.error(`API Stats - Success: ${apiSuccessCount}/${apiTotalCalls} (${Math.round(apiSuccessCount/apiTotalCalls*100)}%)`);
     
     // Check if fallback was provided
@@ -238,11 +247,11 @@ export async function generateJson<T>(prompt: string, options: {
       model,
       messages: [
         {
-          role: 'system',
+          role: 'system' as const,
           content: systemPrompt,
         },
         {
-          role: 'user',
+          role: 'user' as const,
           content: prompt,
         },
       ],
@@ -266,7 +275,7 @@ export async function generateJson<T>(prompt: string, options: {
     return parsedResponse;
   } catch (error) {
     // Log error with diagnostics
-    console.error('Elevion AI JSON generation error:', error);
+    console.error('OpenAI JSON generation error:', error);
     console.error(`API Stats - Success: ${apiSuccessCount}/${apiTotalCalls} (${Math.round(apiSuccessCount/apiTotalCalls*100)}%)`);
     
     // Check if fallback was provided
@@ -356,7 +365,7 @@ export async function analyzeImage(imageBase64: string, prompt: string, options:
       model,
       messages: [
         {
-          role: 'user',
+          role: 'user' as const,
           content: [
             { type: 'text', text: prompt },
             {
@@ -374,7 +383,7 @@ export async function analyzeImage(imageBase64: string, prompt: string, options:
     // Track successful call
     apiSuccessCount++;
     
-    const textResponse = response.choices[0].message.content;
+    const textResponse = response.choices[0].message.content || '';
     
     // Cache the response
     imageAnalysisCache.set(cacheKey, {
@@ -433,13 +442,13 @@ export async function validateUserProfileChanges(changes: any, userData: any) {
     4. Privacy concerns in the information being shared
     `;
 
-    // Call Elevion AI for validation
+    // Call OpenAI for validation
     const validationResult = await generateJson<{
       isValid: boolean;
       issues: string[];
       suggestions: string[];
     }>(prompt, {
-      model: 'grok-3-mini',
+      model: 'gpt-4o',
       systemPrompt,
       temperature: 0.3,
     });
@@ -481,14 +490,14 @@ export async function analyzeUserDataChanges(oldData: any, newData: any) {
     4. Personalization opportunities based on the updated profile
     `;
 
-    // Call Elevion AI for analysis
+    // Call OpenAI for analysis
     const analysisResult = await generateJson<{
       significantChanges: string[];
       suggestedActions: string[];
       recommendedFeatures: string[];
       personalizationInsights: string[];
     }>(prompt, {
-      model: 'grok-3',
+      model: 'gpt-4o',
       systemPrompt,
       temperature: 0.4,
     });
