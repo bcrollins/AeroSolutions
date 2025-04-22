@@ -147,6 +147,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Apply rate limiting to all API routes
   app.use('/api', rateLimiter.middleware);
   
+  // Database connection test endpoint
+  app.get('/api/test-db', async (req: Request, res: Response) => {
+    try {
+      // Import pool from db.ts
+      const { pool } = require('./db');
+      const result = await pool.query('SELECT NOW()');
+      res.json({ 
+        status: 'success', 
+        time: result.rows[0],
+        message: 'Database connection successful'
+      });
+    } catch (err: any) {
+      console.error('Database connection test failed:', err);
+      res.status(500).json({ 
+        status: 'error', 
+        message: err.message,
+        error: 'Database connection failed'
+      });
+    }
+  });
+  
   // Mount authentication routes
   app.use('/api/auth', authRouter);
   app.use('/api/users', userRouter);

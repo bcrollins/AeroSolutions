@@ -124,6 +124,25 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Initialize database tables
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const { pool } = require('./db');
+    
+    // Read the SQL initialization file
+    const initSqlPath = path.join(process.cwd(), 'init.sql');
+    if (fs.existsSync(initSqlPath)) {
+      const initSql = fs.readFileSync(initSqlPath).toString();
+      await pool.query(initSql);
+      log("Database tables initialized successfully");
+    } else {
+      log("Warning: init.sql file not found", "warn");
+    }
+  } catch (error) {
+    log(`Error initializing database tables: ${error}`, "error");
+  }
+  
   // Initialize sample data
   try {
     await (storage as any).initSampleData();
