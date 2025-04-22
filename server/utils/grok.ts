@@ -19,17 +19,16 @@ interface JsonGenerationOptions<T> {
 }
 
 // Make sure we have the API key
-if (!process.env.XAI_API_KEY) {
-  console.warn('No XAI_API_KEY found in environment. AI-powered features will not work.');
+if (!process.env.OPENAI_API_KEY) {
+  console.warn('No OPENAI_API_KEY found in environment. AI-powered features will not work.');
 }
 
-// Initialize the OpenAI client with Elevion AI configuration
+// Initialize the OpenAI client
 const openai = new OpenAI({
-  baseURL: 'https://api.x.ai/v1',
-  apiKey: process.env.XAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
-// GrokAPI class for interaction with Elevion AI
+// OpenAIApi class for interaction with OpenAI
 class GrokApi {
   // Generate text based on a prompt
   async generateText({

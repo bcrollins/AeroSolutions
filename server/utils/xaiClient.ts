@@ -297,8 +297,8 @@ export async function generateJson<T>(prompt: string, options: {
         sentiment: 'neutral',
         isEscalationNeeded: true,
         escalationReason: 'AI service unavailable',
-        suggestedResponse: 'Thank you for reaching out to Elevion support. Our AI assistant is currently experiencing technical difficulties. A support team member will review your question and get back to you shortly. We appreciate your patience.',
-        relevantDocumentation: ['https://elevion.dev/docs/support'],
+        suggestedResponse: 'Thank you for reaching out to our support team. Our AI assistant is currently experiencing technical difficulties. A support team member will review your question and get back to you shortly. We appreciate your patience.',
+        relevantDocumentation: ['https://docs.openai.com/'],
         followUpQuestions: ['Can you provide more details about your issue?', 'Have you tried any troubleshooting steps?']
       } as unknown as T;
     } else if (isUserProfile) {
@@ -394,7 +394,7 @@ export async function analyzeImage(imageBase64: string, prompt: string, options:
     return textResponse;
   } catch (error) {
     // Log detailed error information
-    console.error('Elevion AI image analysis error:', error);
+    console.error('OpenAI image analysis error:', error);
     console.error(`API Stats - Success: ${apiSuccessCount}/${apiTotalCalls} (${Math.round(apiSuccessCount/apiTotalCalls*100)}%)`);
     
     // Use provided fallback if available
@@ -516,7 +516,8 @@ export async function analyzeUserDataChanges(oldData: any, newData: any) {
 }
 
 export default {
-  callElevionAI: callXAI, // Renamed for API compatibility
+  callElevionAI: callXAI, // Kept for backward compatibility (routes using old name)
+  callOpenAI: callXAI, // New recommended name
   generateText,
   generateJson,
   analyzeImage,
