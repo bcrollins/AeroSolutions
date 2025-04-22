@@ -1,6 +1,6 @@
 /**
  * ElevateBot AI Assistant - Specialized business-focused chatbot endpoints
- * Uses xAI Grok for business-oriented conversations and queries
+ * Uses OpenAI for business-oriented conversations and queries
  */
 
 import { Request, Response } from 'express';
@@ -52,7 +52,7 @@ export async function handleElevateBotQuery(req: Request, res: Response) {
     }
     
     // No cache hit, generate a new response
-    console.log('ElevateBot cache miss, generating response with xAI');
+    console.log('ElevateBot cache miss, generating response with OpenAI');
     
     // Create the system prompt for business-focused responses
     const businessSystemPrompt = `You are ElevateBot, a tech assistant from Elevion, a premier web development company for small businesses. 
@@ -77,19 +77,18 @@ Remember that Elevion specializes in web development with these core services:
 - Web application development
 - AI-driven business insights`;
 
-    // Generate response using xAI's Grok model
+    // Generate response using OpenAI model
     try {
-      // First attempt - use grok-3-latest for best quality responses
-      const aiResponse = await grokApi.createChatCompletion([
-        { role: 'system', content: businessSystemPrompt },
-        { role: 'user', content: message }
-      ], {
-        model: 'grok-3-latest',
+      // First attempt - use OpenAI gpt-4o for best quality responses
+      const aiResponse = await grokApi.generateText({
+        prompt: message,
+        systemPrompt: businessSystemPrompt,
+        model: 'gpt-4o',
         temperature: 0.7,
-        max_tokens: 800
+        maxTokens: 800
       });
       
-      const responseText = aiResponse.choices[0].message.content;
+      const responseText = aiResponse;
       
       // Cache the successful response for future requests
       elevateBotCache.set(cacheKey, responseText);
@@ -99,23 +98,20 @@ Remember that Elevion specializes in web development with these core services:
         response: responseText,
         timestamp: new Date().toISOString(),
         cached: false,
-        model: 'grok-3-latest'
+        model: 'gpt-4o'
       });
     } catch (error) {
       console.error("Primary model failed, falling back to mini model:", error);
       
-      // Fallback to grok-3-mini if the main model fails
+      // Fallback to GPT-3.5-turbo if the main model fails
       try {
-        const fallbackResponse = await grokApi.createChatCompletion([
-          { role: 'system', content: businessSystemPrompt },
-          { role: 'user', content: message }
-        ], {
-          model: 'grok-3-mini',
+        const fallbackText = await grokApi.generateText({
+          prompt: message,
+          systemPrompt: businessSystemPrompt,
+          model: 'gpt-3.5-turbo', // Fallback to a cheaper model
           temperature: 0.7,
-          max_tokens: 600
+          maxTokens: 600
         });
-        
-        const fallbackText = fallbackResponse.choices[0].message.content;
         
         // Cache the fallback response
         elevateBotCache.set(cacheKey, fallbackText);
@@ -125,7 +121,7 @@ Remember that Elevion specializes in web development with these core services:
           response: fallbackText,
           timestamp: new Date().toISOString(),
           cached: false,
-          model: 'grok-3-mini'
+          model: 'gpt-3.5-turbo'
         });
       } catch (fallbackError) {
         console.error("Both models failed:", fallbackError);
@@ -177,9 +173,9 @@ export async function handleElevateBotQuerySimple(req: Request, res: Response) {
       });
     }
     
-    console.log('ElevateBot cache miss, generating response with xAI');
+    console.log('ElevateBot cache miss, generating response with OpenAI');
     
-    // Use the simpler analyzeText helper with business instructions
+    // Use the simpler generateText helper with business instructions
     const businessInstructions = 
       "You are ElevateBot, a tech assistant from Elevion, a web development company for small businesses. " +
       "Provide expert but accessible advice about web development, site design, and digital presence. " +
@@ -187,7 +183,13 @@ export async function handleElevateBotQuerySimple(req: Request, res: Response) {
       "Keep responses concise (3-5 paragraphs) and explain technical concepts in simple terms.";
     
     try {
-      const responseText = await grokApi.analyzeText(message, businessInstructions);
+      const responseText = await grokApi.generateText({
+        prompt: message,
+        systemPrompt: businessInstructions,
+        model: 'gpt-4o',
+        temperature: 0.7,
+        maxTokens: 600
+      });
       
       // Cache the successful response
       elevateBotCache.set(cacheKey, responseText);
@@ -196,7 +198,8 @@ export async function handleElevateBotQuerySimple(req: Request, res: Response) {
         success: true,
         response: responseText,
         timestamp: new Date().toISOString(),
-        cached: false
+        cached: false,
+        model: 'gpt-4o'
       });
     } catch (error) {
       console.error("ElevateBot AI generation error:", error);
