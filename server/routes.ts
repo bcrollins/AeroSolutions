@@ -10,6 +10,7 @@ import { body, query, param, validationResult } from 'express-validator';
 import { generateToken, authMiddleware } from './utils/auth';
 import { getPublishableKey, createPaymentIntent, createStripeCustomer, createSubscription, getSubscription, cancelSubscription, handleWebhookEvent } from './utils/stripe';
 import { callXAI as callOpenAI, generateText, analyzeImage, generateJson } from './utils/xaiClient';
+import { pool } from './db';
 import { grokApi } from './grok';
 import subscriptionRouter from './routes/subscription';
 import marketplaceRouter from './routes/marketplace';
@@ -150,8 +151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Database connection test endpoint
   app.get('/api/test-db', async (req: Request, res: Response) => {
     try {
-      // Import pool from db.ts
-      const { pool } = require('./db');
+      // Use the already imported pool from db.ts
       const result = await pool.query('SELECT NOW()');
       res.json({ 
         status: 'success', 

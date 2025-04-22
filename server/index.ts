@@ -7,6 +7,9 @@ import { authMiddleware } from "./utils/auth";
 import { cachingMiddleware, conditionalRequestMiddleware } from "./utils/caching";
 import { apiRateLimiter, authRateLimiter, defaultRateLimiter } from "./utils/rate-limiting";
 import compression from "express-compression";
+import fs from "fs/promises";
+import path from "path";
+import { pool } from "./db";
 
 // Extend Express Request type to include user property and timing
 declare global {
@@ -126,18 +129,14 @@ app.use((req, res, next) => {
 (async () => {
   // Initialize database tables
   try {
-    const fs = require('fs');
-    const path = require('path');
-    const { pool } = require('./db');
-    
     // Read the SQL initialization file
     const initSqlPath = path.join(process.cwd(), 'init.sql');
-    if (fs.existsSync(initSqlPath)) {
-      const initSql = fs.readFileSync(initSqlPath).toString();
+    try {
+      const initSql = await fs.readFile(initSqlPath, 'utf8');
       await pool.query(initSql);
       log("Database tables initialized successfully");
-    } else {
-      log("Warning: init.sql file not found", "warn");
+    } catch (fsError) {
+      log("Warning: init.sql file not found or couldn't be read", "warn");
     }
   } catch (error) {
     log(`Error initializing database tables: ${error}`, "error");
