@@ -80,13 +80,14 @@ Remember that Elevion specializes in web development with these core services:
     // Generate response using OpenAI model
     try {
       // First attempt - use OpenAI gpt-4o for best quality responses
-      const aiResponse = await grokApi.generateText({
-        prompt: message,
-        systemPrompt: businessSystemPrompt,
-        model: 'gpt-4o',
-        temperature: 0.7,
-        maxTokens: 800
-      });
+      const aiResponse = await grokApi.generateText(
+        message,
+        businessSystemPrompt,
+        { 
+          temperature: 0.7,
+          max_tokens: 800 
+        }
+      );
       
       const responseText = aiResponse;
       
@@ -105,13 +106,14 @@ Remember that Elevion specializes in web development with these core services:
       
       // Fallback to GPT-3.5-turbo if the main model fails
       try {
-        const fallbackText = await grokApi.generateText({
-          prompt: message,
-          systemPrompt: businessSystemPrompt,
-          model: 'gpt-3.5-turbo', // Fallback to a cheaper model
-          temperature: 0.7,
-          maxTokens: 600
-        });
+        const fallbackText = await grokApi.generateText(
+          message,
+          businessSystemPrompt,
+          { 
+            temperature: 0.7, 
+            max_tokens: 600 
+          }
+        );
         
         // Cache the fallback response
         elevateBotCache.set(cacheKey, fallbackText);
@@ -183,13 +185,14 @@ export async function handleElevateBotQuerySimple(req: Request, res: Response) {
       "Keep responses concise (3-5 paragraphs) and explain technical concepts in simple terms.";
     
     try {
-      const responseText = await grokApi.generateText({
-        prompt: message,
-        systemPrompt: businessInstructions,
-        model: 'gpt-4o',
-        temperature: 0.7,
-        maxTokens: 600
-      });
+      const responseText = await grokApi.generateText(
+        message, 
+        businessInstructions,
+        { 
+          temperature: 0.7, 
+          max_tokens: 600 
+        }
+      );
       
       // Cache the successful response
       elevateBotCache.set(cacheKey, responseText);
