@@ -221,26 +221,7 @@ export default function HomePage() {
         <Blog />
         <Contact />
         
-        {/* Developer Debug Section - Remove in production */}
-        <div className="container mx-auto px-4 py-8 bg-gray-100 my-8 rounded-lg">
-          <h2 className="text-2xl font-bold mb-4">Popup Testing Tools</h2>
-          <p className="mb-4">Click the buttons below to test popup routes:</p>
-          <div className="flex flex-wrap gap-3">
-            <Link href="/popup/client-input">
-              <Button variant="outline">Test Client Input Popup</Button>
-            </Link>
-            <Link href="/popup/preview">
-              <Button variant="outline">Test Preview Popup</Button>
-            </Link>
-            <Link href="/popup/dialog">
-              <Button variant="outline">Test Dialog Popup</Button>
-            </Link>
-            <Link href="/popup/lightbox">
-              <Button variant="outline">Test Lightbox Popup</Button>
-            </Link>
-          </div>
-        </div>
-        
+
         <div className="fixed bottom-0 left-0 right-0 z-20">
           <ElevateBot hideFloatingButton={true} isOpen={isChatOpen} />
         </div>
