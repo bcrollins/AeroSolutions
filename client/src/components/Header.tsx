@@ -16,19 +16,24 @@ export default function Header() {
     setIsSupportDropdownOpen(false);
   };
   
-  // Add event listener to close dropdowns when clicking outside
-  useState(() => {
-    const handleDocumentClick = () => {
-      closeAllDropdowns();
+  // Handle click outside for dropdown menus
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      // This only runs if a dropdown is open
+      if (isSolutionsDropdownOpen || isSupportDropdownOpen) {
+        // Don't close if it's a button click (handled by toggle functions)
+        if ((e.target as Element).closest('button')) return;
+        
+        closeAllDropdowns();
+      }
     };
     
-    // Only add the listener if either dropdown is open
-    if (isSolutionsDropdownOpen || isSupportDropdownOpen) {
-      document.addEventListener('click', handleDocumentClick);
-      return () => {
-        document.removeEventListener('click', handleDocumentClick);
-      };
-    }
+    document.addEventListener('click', handleClickOutside);
+    
+    // Cleanup function
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
   }, [isSolutionsDropdownOpen, isSupportDropdownOpen]);
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);  
