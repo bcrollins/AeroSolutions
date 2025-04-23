@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 
 // Secret key for JWT signing - in production, use environment variable
-const JWT_SECRET = process.env.JWT_SECRET || 'elevion-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'rollinsx-secret-key';
 
 // Generate JWT token
 export const generateToken = (payload: any, expiresIn = '24h'): string => {

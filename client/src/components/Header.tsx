@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'wouter';  
 import { Menu, X, ChevronDown } from 'lucide-react';  
 import ClientPreviewModal from "./ClientPreviewModal";
-import ElevionLogo from "./ElevionLogo";
+import ROLLINSXLogo from "./ROLLINSXLogo";
 
 export default function Header() {  
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);  
@@ -46,8 +46,8 @@ export default function Header() {
           {/* Logo */}  
           <Link href="/">  
             <div className="flex items-center space-x-2">
-              <ElevionLogo size="sm" animated={true} />
-              <div className="text-2xl font-poppins text-electric-cyan">elevion</div>  
+              <ROLLINSXLogo size="sm" animated={true} />
+              <div className="text-2xl font-poppins text-electric-cyan">rollinsx</div>  
             </div>
           </Link>  
 

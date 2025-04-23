@@ -483,7 +483,7 @@ export type InsertContentComplianceScan = z.infer<typeof insertContentCompliance
 export type ContentComplianceAlert = typeof contentComplianceAlerts.$inferSelect;
 export type InsertContentComplianceAlert = z.infer<typeof insertContentComplianceAlertSchema>;
 
-// ElevateBot queries for tracking AI interactions
+// ROLLINSXBot queries for tracking AI interactions
 export const elevatebotQueries = pgTable("elevatebot_queries", {
   id: serial("id").primaryKey(),
   query: text("query").notNull(),

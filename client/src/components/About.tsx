@@ -23,7 +23,7 @@ export default function About() {
             variants={fadeInUp}
             custom={0.5}
           >
-            About Elevion
+            About ROLLINSX
           </motion.h2>
           
           <motion.p 
@@ -34,7 +34,7 @@ export default function About() {
             variants={fadeInUp}
             custom={1}
           >
-            Elevion is a premier full-stack web development company with decades of experience across diverse platforms. Our team of seasoned experts leverages cutting-edge AI technology to empower small businesses, helping them grow, compete, and thrive in a digital-first world.
+            ROLLINSX is a premier full-stack web development company with decades of experience across diverse platforms. Our team of seasoned experts leverages cutting-edge AI technology to empower small businesses, helping them grow, compete, and thrive in a digital-first world.
           </motion.p>
           
           <motion.p 
@@ -56,7 +56,7 @@ export default function About() {
             variants={fadeInUp}
             custom={2}
           >
-            At Elevion, we believe in elevating your business with technology that's as powerful as it is accessible. Let us help you power your future.
+            At ROLLINSX, we believe in elevating your business with technology that's as powerful as it is accessible. Let us help you power your future.
           </motion.p>
           
           <motion.p 

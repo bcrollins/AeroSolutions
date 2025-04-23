@@ -61,7 +61,7 @@ const PriceOptimizationPage: React.FC = () => {
   return (
     <MainLayout>
       <Helmet>
-        <title>Price Optimization Dashboard | Elevion</title>
+        <title>Price Optimization Dashboard | ROLLINSX</title>
         <meta 
           name="description" 
           content="AI-powered price optimization dashboard for subscription services. Analyze market data, user behavior, and competitive analysis to optimize pricing." 

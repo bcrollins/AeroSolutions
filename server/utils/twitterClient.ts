@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import axios from 'axios';
 
 /**
- * Twitter API v2 client for Elevion
+ * Twitter API v2 client for ROLLINSX
  * This client handles authentication and requests to the Twitter API
  */
 export class TwitterClient {
@@ -38,7 +38,7 @@ export class TwitterClient {
     this.bearerToken = config.bearerToken;
     this.clientId = config.clientId;
     this.clientSecret = config.clientSecret;
-    this.callbackUrl = config.callbackUrl || 'https://elevion.dev/api/twitter/callback';
+    this.callbackUrl = config.callbackUrl || 'https://rollinsx.dev/api/twitter/callback';
   }
 
   /**

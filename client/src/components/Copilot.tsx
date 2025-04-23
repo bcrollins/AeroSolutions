@@ -15,7 +15,7 @@ export default function Copilot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
-      text: "👋 Hello! I'm your Elevion Copilot, powered by Grok AI. I can answer questions about our web development services, provide insights about website design, e-commerce solutions, or discuss how we can help with your specific digital needs. Try me out to see what Elevion can build for your business!",
+      text: "👋 Hello! I'm your ROLLINSX Copilot, powered by Grok AI. I can answer questions about our web development services, provide insights about website design, e-commerce solutions, or discuss how we can help with your specific digital needs. Try me out to see what ROLLINSX can build for your business!",
       sender: 'bot'
     }
   ]);
@@ -124,7 +124,7 @@ export default function Copilot() {
             <div className="bg-[#3B5B9D] text-white p-4 flex justify-between items-center">
               <div className="flex items-center">
                 <FaRobot className="mr-3 text-xl" />
-                <h3 className="font-bold font-poppins">Elevion Copilot</h3>
+                <h3 className="font-bold font-poppins">ROLLINSX Copilot</h3>
               </div>
               <button 
                 onClick={toggleChat} 

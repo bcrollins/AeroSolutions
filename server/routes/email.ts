@@ -37,14 +37,14 @@ router.post(
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
             <div style="text-align: center; margin-bottom: 20px;">
-              <img src="https://elevion.dev/logo.png" alt="Elevion Logo" style="max-width: 150px;">
+              <img src="https://rollinsx.dev/logo.png" alt="ROLLINSX Logo" style="max-width: 150px;">
             </div>
             <h1 style="color: #3B5B9D; text-align: center;">${subject}</h1>
             <div style="font-size: 16px; line-height: 1.5; color: #555;">
               ${message}
             </div>
             <p style="font-size: 14px; color: #999; text-align: center; margin-top: 30px; border-top: 1px solid #e0e0e0; padding-top: 20px;">
-              © ${new Date().getFullYear()} Elevion. All rights reserved.
+              © ${new Date().getFullYear()} ROLLINSX. All rights reserved.
             </p>
           </div>
         `

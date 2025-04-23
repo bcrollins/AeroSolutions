@@ -102,7 +102,7 @@ const AdminDashboardPage: React.FC = () => {
   return (
     <AdminLayout title="Dashboard">
       <Helmet>
-        <title>Admin Dashboard | Elevion</title>
+        <title>Admin Dashboard | ROLLINSX</title>
         <meta name="robots" content="noindex,nofollow" />
       </Helmet>
 

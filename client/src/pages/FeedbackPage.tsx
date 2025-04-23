@@ -12,7 +12,7 @@ export default function FeedbackPage() {
           <div className="mb-8 text-center">
             <h1 className="text-3xl md:text-4xl font-bold mb-4">{t('feedback_title', 'Share Your Feedback')}</h1>
             <p className="text-lg text-muted-foreground mb-6">
-              {t('feedback_description', 'We value your input! Help us improve Elevion by sharing your thoughts, suggestions, or reporting any issues you have encountered.')}
+              {t('feedback_description', 'We value your input! Help us improve ROLLINSX by sharing your thoughts, suggestions, or reporting any issues you have encountered.')}
             </p>
           </div>
           

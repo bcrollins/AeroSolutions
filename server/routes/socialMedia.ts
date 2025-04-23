@@ -119,7 +119,7 @@ const samplePosts = [
   {
     id: 4,
     platformId: 1,
-    content: "Join our upcoming webinar: 'Boosting Your Business with Effective Landing Pages' - Learn how to create high-converting pages that drive real results. Register now at elevion.dev/webinar",
+    content: "Join our upcoming webinar: 'Boosting Your Business with Effective Landing Pages' - Learn how to create high-converting pages that drive real results. Register now at rollinsx.dev/webinar",
     status: "scheduled",
     createdAt: new Date(Date.now() - 86400000).toISOString(),
     scheduledTime: new Date(Date.now() + 86400000 * 3).toISOString(),

@@ -71,7 +71,7 @@ export class TwitterPosterService {
     const prompt = `You are a social media expert crafting a tweet for a tech article. 
 Given the following article title and partial content, create an engaging tweet (max 280 chars)
 that will drive clicks to read the full article. Include hashtags for relevant keywords.
-Maintain a professional tone that matches Elevion's brand as a web development company.
+Maintain a professional tone that matches ROLLINSX's brand as a web development company.
 
 Article Title: ${title}
 ${tags.length > 0 ? `Keywords: ${tags.join(', ')}` : ''}
@@ -80,7 +80,7 @@ Article Content: ${truncatedContent}
 Write ONLY the tweet text without any other explanations or formatting. It MUST be under 280 characters.`;
 
     try {
-      // Use Elevion's AI client to generate the tweet
+      // Use ROLLINSX's AI client to generate the tweet
       const tweetContent = await generateText(prompt, 'grok-3-mini');
       
       // Ensure the tweet is under 280 characters

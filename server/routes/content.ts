@@ -10,7 +10,7 @@ const router = Router();
 
 /**
  * Generate content using XAI API
- * Creates blog posts, industry insights, and email templates with Elevion branding
+ * Creates blog posts, industry insights, and email templates with ROLLINSX branding
  */
 router.post('/generate', [
   body('contentType')
@@ -94,7 +94,7 @@ Structure the email template with:
 - Concise body content
 - 2-3 main points
 ${includeCallToAction ? '- A compelling call to action' : ''}
-- Professional signature with Elevion branding`;
+- Professional signature with ROLLINSX branding`;
     }
 
     // Build the prompt
@@ -106,7 +106,7 @@ ${keyPointsPrompt}
 
 ${contentStructure}
 
-Apply Elevion's brand typography:
+Apply ROLLINSX's brand typography:
 - Use Poppins for all headings (h1, h2, h3)
 - Use Lato for body text and paragraphs
 - Include appropriate spacing between sections

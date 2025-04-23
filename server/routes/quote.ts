@@ -34,7 +34,7 @@ router.post("/generate-quote", quoteValidationRules, async (req: Request, res: R
     console.log("Quote request:", { businessType, businessName, selectedFeatures });
 
     // Use Grok AI to analyze the business and generate insights
-    const systemPrompt = `You are a web development pricing expert at Elevion, a premier web development company. 
+    const systemPrompt = `You are a web development pricing expert at ROLLINSX, a premier web development company. 
     Your goal is to generate accurate price quotes for potential clients based on their business type and selected features.
     Always provide competitive pricing (60% of market average) while ensuring we make a reasonable profit.`;
 

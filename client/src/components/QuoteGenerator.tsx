@@ -279,7 +279,7 @@ export default function QuoteGenerator() {
                     <p className="text-2xl font-semibold line-through text-slate-400">${quote.marketPrice}</p>
                   </div>
                   <div className="space-y-1 text-right">
-                    <p className="text-sm text-[#00D1D1] font-medium">Elevion Price (40% Off)</p>
+                    <p className="text-sm text-[#00D1D1] font-medium">ROLLINSX Price (40% Off)</p>
                     <p className="text-3xl font-bold text-[#3B5B9D]">${quote.discountedPrice}</p>
                   </div>
                 </div>

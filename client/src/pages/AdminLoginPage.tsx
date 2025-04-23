@@ -64,14 +64,14 @@ const AdminLoginPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center p-4">
       <Helmet>
-        <title>Admin Login | Elevion</title>
+        <title>Admin Login | ROLLINSX</title>
         <meta name="robots" content="noindex,nofollow" />
       </Helmet>
       
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Shield className="h-12 w-12 text-primary mx-auto mb-2" />
-          <h1 className="text-3xl font-bold">Elevion Admin</h1>
+          <h1 className="text-3xl font-bold">ROLLINSX Admin</h1>
           <p className="text-muted-foreground">Admin dashboard login</p>
         </div>
         
@@ -92,7 +92,7 @@ const AdminLoginPage: React.FC = () => {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input placeholder="admin@elevion.dev" {...field} />
+                        <Input placeholder="admin@rollinsx.dev" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

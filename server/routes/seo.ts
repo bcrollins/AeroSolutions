@@ -500,7 +500,7 @@ router.post('/generate-schema', [
           
           Name: ${contentData.name}
           Description: ${contentData.description}
-          Provider: ${contentData.provider || 'Elevion'}
+          Provider: ${contentData.provider || 'ROLLINSX'}
           Price: ${contentData.price}
           
           Create the proper schema.org Service JSON-LD markup.
@@ -516,10 +516,10 @@ router.post('/generate-schema', [
         prompt = `
           Generate a JSON-LD schema markup for an organization with the following details:
           
-          Name: ${contentData.name || 'Elevion'}
+          Name: ${contentData.name || 'ROLLINSX'}
           Description: ${contentData.description || 'A premier web development company for small businesses'}
-          Logo: ${contentData.logo || '/images/elevion-logo.png'}
-          URL: ${contentData.url || 'https://elevion.com'}
+          Logo: ${contentData.logo || '/images/rollinsx-logo.png'}
+          URL: ${contentData.url || 'https://rollinsx.com'}
           
           Create the proper schema.org Organization JSON-LD markup.
           

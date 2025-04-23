@@ -1,14 +1,14 @@
 import { grokApi } from '../grok';
 
 /**
- * Use XAI to subtly watermark text content with Elevion branding
+ * Use XAI to subtly watermark text content with ROLLINSX branding
  * The watermark is designed to be non-intrusive but detectable
  * 
  * @param content The original content text to watermark
- * @param brandName The brand name to use in watermarking (defaults to Elevion)
+ * @param brandName The brand name to use in watermarking (defaults to ROLLINSX)
  * @returns Watermarked text content
  */
-export async function watermarkText(content: string, brandName: string = 'Elevion'): Promise<string> {
+export async function watermarkText(content: string, brandName: string = 'ROLLINSX'): Promise<string> {
   try {
     const prompt = `
       You are a content watermarking expert. Add subtle, hidden watermarks to this content 
@@ -39,13 +39,13 @@ export async function watermarkText(content: string, brandName: string = 'Elevio
 }
 
 /**
- * Detect if content has been watermarked with Elevion branding
+ * Detect if content has been watermarked with ROLLINSX branding
  * 
  * @param content Text content to analyze
- * @param brandName The brand name to check for (defaults to Elevion)
+ * @param brandName The brand name to check for (defaults to ROLLINSX)
  * @returns Analysis of whether the content contains watermarking
  */
-export async function detectWatermark(content: string, brandName: string = 'Elevion'): Promise<{
+export async function detectWatermark(content: string, brandName: string = 'ROLLINSX'): Promise<{
   isWatermarked: boolean;
   confidence: number;
   detectionDetails?: string;

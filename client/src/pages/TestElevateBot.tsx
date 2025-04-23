@@ -1,5 +1,5 @@
 import { useState } from "react";
-import ElevateBot from "@/components/ElevateBot";
+import ROLLINSXBot from "@/components/ROLLINSXBot";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -101,8 +101,8 @@ export default function TestElevateBot() {
         </CardContent>
       </Card>
 
-      {/* Embed the ElevateBot component */}
-      <ElevateBot isOpen={isOpen} initialOption={initialOption} hideFloatingButton={false} />
+      {/* Embed the ROLLINSXBot component */}
+      <ROLLINSXBot isOpen={isOpen} initialOption={initialOption} hideFloatingButton={false} />
     </div>
   );
 }

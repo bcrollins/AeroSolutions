@@ -13,10 +13,10 @@ export default function SeoTools() {
   return (
     <MainLayout>
       <Helmet>
-        <title>SEO Tools - AI-Powered SEO Optimization | Elevion</title>
+        <title>SEO Tools - AI-Powered SEO Optimization | ROLLINSX</title>
         <meta 
           name="description" 
-          content="Elevion's AI-powered SEO tools help small businesses optimize their websites for better search rankings. Get personalized recommendations and strategies."
+          content="ROLLINSX's AI-powered SEO tools help small businesses optimize their websites for better search rankings. Get personalized recommendations and strategies."
         />
       </Helmet>
 

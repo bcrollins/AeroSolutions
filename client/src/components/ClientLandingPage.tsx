@@ -3,7 +3,7 @@ import { FaPlaneDeparture, FaServer, FaUserTie, FaPlane, FaArrowLeft, FaTimes, F
 import { motion, AnimatePresence } from "framer-motion";
 import PlatformPreview from "./PlatformPreview";
 import WebConnectPlatformView from "./WebConnectPlatformView";
-import ElevateBot from "./ElevateBot";
+import ROLLINSXBot from "./ROLLINSXBot";
 import { useLocation } from "wouter";
 import wolfOfWallStreetImage from "../assets/wolf-of-wall-street.jpg";
 import familyImage1 from "../assets/family/D22397D6-2EF2-45C5-A107-D6BD5E7210F4.jpeg";
@@ -35,8 +35,8 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
   const [showInvestorPopup, setShowInvestorPopup] = useState(false);
   const [showWebConnect, setShowWebConnect] = useState(false);
   const [, setLocation] = useLocation();
-  const [openElevateBot, setOpenElevateBot] = useState(false);
-  const [elevateBotOption, setElevateBotOption] = useState<string | null>(null);
+  const [openROLLINSXBot, setOpenROLLINSXBot] = useState(false);
+  const [rollinsBotOption, setRollinsBotOption] = useState<string | null>(null);
   
   // Check if the code matches any of our special access codes
   const isSpecialCode = accessCode.toLowerCase() === 'demo' || accessCode.toLowerCase() === 'special-access';
@@ -840,15 +840,15 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
                         <FaRocket className="text-[#00D1D1] text-xs" />
                       </div>
                       <p className="text-white text-sm">
-                        Welcome to Elevion's Web Services! How can we help your business succeed online today?
+                        Welcome to ROLLINSX's Web Services! How can we help your business succeed online today?
                       </p>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-2 mt-3">
                       <button 
                         onClick={() => {
-                          setElevateBotOption("website-design");
-                          setOpenElevateBot(true);
+                          setRollinsBotOption("website-design");
+                          setOpenROLLINSXBot(true);
                           setShowInvestorPopup(false);
                         }} 
                         className="bg-gray-800 hover:bg-gray-700 text-white text-xs rounded p-2 flex items-center"
@@ -857,8 +857,8 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
                       </button>
                       <button 
                         onClick={() => {
-                          setElevateBotOption("web-development");
-                          setOpenElevateBot(true);
+                          setRollinsBotOption("web-development");
+                          setOpenROLLINSXBot(true);
                           setShowInvestorPopup(false);
                         }} 
                         className="bg-gray-800 hover:bg-gray-700 text-white text-xs rounded p-2 flex items-center"
@@ -867,8 +867,8 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
                       </button>
                       <button 
                         onClick={() => {
-                          setElevateBotOption("mobile-optimization");
-                          setOpenElevateBot(true);
+                          setRollinsBotOption("mobile-optimization");
+                          setOpenROLLINSXBot(true);
                           setShowInvestorPopup(false);
                         }}  
                         className="bg-gray-800 hover:bg-gray-700 text-white text-xs rounded p-2 flex items-center"
@@ -877,8 +877,8 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
                       </button>
                       <button 
                         onClick={() => {
-                          setElevateBotOption("branding-design");
-                          setOpenElevateBot(true);
+                          setRollinsBotOption("branding-design");
+                          setOpenROLLINSXBot(true);
                           setShowInvestorPopup(false);
                         }} 
                         className="bg-gray-800 hover:bg-gray-700 text-white text-xs rounded p-2 flex items-center"
@@ -891,14 +891,14 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
                   <div className="text-center">
                     <button 
                       onClick={() => {
-                        console.log("Opening ElevateBot", {isSpecialCode});
-                        setElevateBotOption(null); // Reset any previous option
-                        setOpenElevateBot(true);
+                        console.log("Opening ROLLINSXBot", {isSpecialCode});
+                        setRollinsBotOption(null); // Reset any previous option
+                        setOpenROLLINSXBot(true);
                         setShowInvestorPopup(false);
                       }}
                       className="bg-[#3B5B9D] text-white font-bold py-2 px-4 rounded-lg hover:bg-[#2A4A8C] transition-colors"
                     >
-                      Chat with ElevateBot Assistant
+                      Chat with ROLLINSX Assistant
                     </button>
                   </div>
                 </div>

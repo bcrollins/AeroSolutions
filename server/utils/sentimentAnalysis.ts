@@ -34,7 +34,7 @@ export async function analyzeSentiment(text: string): Promise<SentimentResult> {
   }
   
   try {
-    // Call Elevion AI API for sentiment analysis
+    // Call ROLLINSX AI API for sentiment analysis
     const result = await generateJson<{
       sentiment: 'positive' | 'negative' | 'neutral';
       score: number;

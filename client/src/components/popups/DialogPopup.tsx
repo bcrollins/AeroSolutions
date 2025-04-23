@@ -19,7 +19,7 @@ const DialogPopup: React.FC = () => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
       <Helmet>
-        <title>Dialog | Elevion</title>
+        <title>Dialog | ROLLINSX</title>
       </Helmet>
       
       <div className="relative w-full max-w-md rounded-lg bg-white p-6 shadow-lg">

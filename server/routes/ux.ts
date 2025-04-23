@@ -48,7 +48,7 @@ router.post('/onboarding-message', [
     
     The message should:
     - Be warm and welcoming
-    - Briefly introduce relevant Elevion web development services for their business type
+    - Briefly introduce relevant ROLLINSX web development services for their business type
     - Include a specific next step based on the onboarding stage
     - Be under 150 words
     - Mention our free mockup service and AI-generated quotes at 60% below market rates
@@ -75,13 +75,13 @@ router.post('/onboarding-message', [
           console.log('JSON parsing succeeded but fields are empty, adding fallback content');
           
           if (!onboardingMessage.subject || onboardingMessage.subject.trim() === '') {
-            onboardingMessage.subject = `Welcome to Elevion, ${name}! Let's Transform Your ${business_type} Business`;
+            onboardingMessage.subject = `Welcome to ROLLINSX, ${name}! Let's Transform Your ${business_type} Business`;
           }
           
           if (!onboardingMessage.message || onboardingMessage.message.trim() === '') {
             onboardingMessage.message = `Hi ${name},
 
-Welcome to Elevion! We're thrilled to have you join our community of forward-thinking ${business_type} business owners.
+Welcome to ROLLINSX! We're thrilled to have you join our community of forward-thinking ${business_type} business owners.
 
 As promised, we're here to help you transform your online presence with our cutting-edge web development services. Our AI-powered approach allows us to offer solutions at rates 60% below market, without compromising on quality.
 
@@ -91,8 +91,8 @@ ${onboarding_stage === 'mockup_delivered' ? 'We hope you loved the mockup we cre
 
 Looking forward to bringing your vision to life!
 
-The Elevion Team
-www.elevion.dev
+The ROLLINSX Team
+www.rollinsx.dev
 (555) 123-4567`;
           }
         }
@@ -100,10 +100,10 @@ www.elevion.dev
         // If JSON parsing fails, use a fallback response
         console.log('Onboarding message JSON parsing failed, using fallback content');
         onboardingMessage = {
-          subject: `Welcome to Elevion, ${name}! Let's Transform Your ${business_type} Business`,
+          subject: `Welcome to ROLLINSX, ${name}! Let's Transform Your ${business_type} Business`,
           message: `Hi ${name},
 
-Welcome to Elevion! We're thrilled to have you join our community of forward-thinking ${business_type} business owners.
+Welcome to ROLLINSX! We're thrilled to have you join our community of forward-thinking ${business_type} business owners.
 
 As promised, we're here to help you transform your online presence with our cutting-edge web development services. Our AI-powered approach allows us to offer solutions at rates 60% below market, without compromising on quality.
 
@@ -113,8 +113,8 @@ ${onboarding_stage === 'mockup_delivered' ? 'We hope you loved the mockup we cre
 
 Looking forward to bringing your vision to life!
 
-The Elevion Team
-www.elevion.dev
+The ROLLINSX Team
+www.rollinsx.dev
 (555) 123-4567`
         };
       }
@@ -128,10 +128,10 @@ www.elevion.dev
       
       // If API call fails, create a fallback response
       const fallbackMessage = {
-        subject: `Welcome to Elevion, ${name}! Let's Transform Your ${business_type} Business`,
+        subject: `Welcome to ROLLINSX, ${name}! Let's Transform Your ${business_type} Business`,
         message: `Hi ${name},
 
-Welcome to Elevion! We're thrilled to have you join our community of forward-thinking ${business_type} business owners.
+Welcome to ROLLINSX! We're thrilled to have you join our community of forward-thinking ${business_type} business owners.
 
 As promised, we're here to help you transform your online presence with our cutting-edge web development services. Our AI-powered approach allows us to offer solutions at rates 60% below market, without compromising on quality.
 
@@ -141,8 +141,8 @@ ${onboarding_stage === 'mockup_delivered' ? 'We hope you loved the mockup we cre
 
 Looking forward to bringing your vision to life!
 
-The Elevion Team
-www.elevion.dev
+The ROLLINSX Team
+www.rollinsx.dev
 (555) 123-4567`
       };
       
@@ -196,7 +196,7 @@ router.post('/generate-faq', [
       ? `Include answers to these specific questions:\n${common_questions.map((q: string) => `- ${q}`).join('\n')}`
       : 'Generate common questions and answers relevant to this business type';
 
-    const prompt = `Create a comprehensive FAQ section for ${business_type} businesses interested in ${service_focus} services from Elevion.
+    const prompt = `Create a comprehensive FAQ section for ${business_type} businesses interested in ${service_focus} services from ROLLINSX.
     
     ${questionsText}
     
@@ -204,7 +204,7 @@ router.post('/generate-faq', [
     - Include at least 8 Q&A pairs (more if specific questions were provided)
     - Focus on addressing common concerns about web development processes
     - Include information about pricing, timelines, and maintenance
-    - Mention Elevion's free mockups and 60% below market rate pricing
+    - Mention ROLLINSX's free mockups and 60% below market rate pricing
     - Keep answers concise and clear (50-100 words each)
     
     Format as a JSON array of objects with "question" and "answer" fields.`;
@@ -266,16 +266,16 @@ router.post('/generate-faq', [
       // Start with standard questions
       const standardQuestions = [
         {
-          question: `What services does Elevion offer for ${businessType} businesses?`,
-          answer: `Elevion provides comprehensive web development services tailored specifically for ${businessType} businesses, including custom website design, e-commerce solutions, responsive design, content management systems, SEO optimization, and ongoing maintenance. Our ${serviceFocus} solutions are designed to help your business establish a powerful online presence at 60% below market rates.`
+          question: `What services does ROLLINSX offer for ${businessType} businesses?`,
+          answer: `ROLLINSX provides comprehensive web development services tailored specifically for ${businessType} businesses, including custom website design, e-commerce solutions, responsive design, content management systems, SEO optimization, and ongoing maintenance. Our ${serviceFocus} solutions are designed to help your business establish a powerful online presence at 60% below market rates.`
         },
         {
           question: "How much do your web development services cost?",
-          answer: "Elevion provides high-quality web development at rates 60% below market averages. Our pricing is transparent and value-based, with custom quotes based on your specific requirements. We offer flexible payment plans and no upfront costs—you only pay after approving your free mockup."
+          answer: "ROLLINSX provides high-quality web development at rates 60% below market averages. Our pricing is transparent and value-based, with custom quotes based on your specific requirements. We offer flexible payment plans and no upfront costs—you only pay after approving your free mockup."
         },
         {
-          question: "What makes Elevion different from other web development companies?",
-          answer: "Elevion stands out through our AI-powered development approach, which allows us to offer premium services at 60% below market rates without compromising on quality. We provide free mockups before you commit to any payment, have a data-driven design process, and maintain ongoing relationships with clients long after launch."
+          question: "What makes ROLLINSX different from other web development companies?",
+          answer: "ROLLINSX stands out through our AI-powered development approach, which allows us to offer premium services at 60% below market rates without compromising on quality. We provide free mockups before you commit to any payment, have a data-driven design process, and maintain ongoing relationships with clients long after launch."
         },
         {
           question: "How long does it take to build a website?",
@@ -383,7 +383,7 @@ router.post('/support-response', [
     
     Return the response as plain text.`;
 
-    const supportResponse = await generateText(prompt, 'You are a customer support expert at Elevion, a web development company.');
+    const supportResponse = await generateText(prompt, 'You are a customer support expert at ROLLINSX, a web development company.');
     
     return res.status(200).json({
       success: true,
@@ -427,7 +427,7 @@ router.post('/analyze-feedback', [
       return `${index + 1}. ${typeof item === 'string' ? item : JSON.stringify(item)}`;
     }).join('\n');
 
-    const prompt = `Analyze the following user ${feedback_type} feedback for Elevion web development services:
+    const prompt = `Analyze the following user ${feedback_type} feedback for ROLLINSX web development services:
     
     ${feedbackText}
     
@@ -595,7 +595,7 @@ router.post('/generate-persona', [
     7. Technical expertise level
     8. Budget considerations
     9. A day in their life
-    10. How Elevion's web development services specifically address their needs
+    10. How ROLLINSX's web development services specifically address their needs
     
     Return as a JSON object with appropriate sections.`;
 
@@ -691,7 +691,7 @@ router.post('/generate-persona', [
           "typical_day": "Starts work at 8:00 AM, splits time between operations, client meetings, and administrative tasks. Checks website and analytics briefly at the end of the day. Prefers to handle digital marketing tasks during slower afternoon periods.",
           "technology_usage": "Uses smartphone constantly, laptop for most of workday, tablet occasionally at home"
         },
-        "elevion_service_fit": {
+        "rollinsx_service_fit": {
           "key_benefits": [
             "60% below market rates aligns with budget constraints",
             "Free mockups eliminate initial risk",
@@ -733,7 +733,7 @@ router.post('/generate-persona', [
           'technical_expertise',
           'budget_considerations',
           'daily_routine',
-          'elevion_service_fit'
+          'rollinsx_service_fit'
         ];
         
         const missingSections = requiredSections.filter(section => 
@@ -884,7 +884,7 @@ router.get('/analyze-ui-improvements', async (req: Request, res: Response) => {
 
     // Build the prompt for the XAI API
     const prompt = `
-    As a UI/UX expert, analyze the following website interaction data and provide specific improvement recommendations for Elevion, a web development company focused on small businesses.
+    As a UI/UX expert, analyze the following website interaction data and provide specific improvement recommendations for ROLLINSX, a web development company focused on small businesses.
     
     UI ELEMENT INTERACTIONS:
     ${JSON.stringify(interactionSummary, null, 2)}

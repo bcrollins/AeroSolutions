@@ -38,7 +38,7 @@ export const registerAnalyticsRoutes = (app: express.Express) => {
             // Create a new test user
             testUser = await storage.createUser({
               username: 'test_admin',
-              email: 'test_admin@elevion.dev',
+              email: 'test_admin@rollinsx.dev',
               password: 'Password123!', // In real app this would be hashed
               firstName: 'Test',
               lastName: 'Admin',

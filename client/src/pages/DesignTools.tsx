@@ -87,10 +87,10 @@ export default function DesignTools() {
   return (
     <div className="container mx-auto px-4 py-8 space-y-8 relative">
       <Helmet>
-        <title>AI-Powered Design Tools | Elevion</title>
+        <title>AI-Powered Design Tools | ROLLINSX</title>
         <meta 
           name="description" 
-          content="Access Elevion's suite of AI-powered design tools for website color schemes, layouts, branding suggestions, and more." 
+          content="Access ROLLINSX's suite of AI-powered design tools for website color schemes, layouts, branding suggestions, and more." 
         />
       </Helmet>
       

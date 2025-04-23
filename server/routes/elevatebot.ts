@@ -1,7 +1,7 @@
 /**
- * ElevateBot Routes
+ * ROLLINSXBot Routes
  * 
- * This module provides routes for the ElevateBot, including:
+ * This module provides routes for the ROLLINSXBot, including:
  * - Chat interface for real-time user engagement
  * - Analytics for tracking usage patterns
  * - Personalized subscription recommendations
@@ -18,14 +18,14 @@ import { elevatebotQueries } from '@shared/schema';
 // Create a router
 const router = express.Router();
 
-// Create a cache for ElevateBot analytics to prevent excessive AI calls
+// Create a cache for ROLLINSXBot analytics to prevent excessive AI calls
 const elevateAnalyticsCache = new NodeCache({ stdTTL: 1800, checkperiod: 300 }); // 30 min cache
 
 // Create a message history cache to maintain conversation context
 const conversationCache = new NodeCache({ stdTTL: 600, checkperiod: 120 }); // 10 min conversation memory
 
 /**
- * Log a new query to the ElevateBot
+ * Log a new query to the ROLLINSXBot
  */
 router.post('/log', 
   [
@@ -63,7 +63,7 @@ router.post('/log',
         id: result[0].id
       });
     } catch (error: any) {
-      console.error('Error logging ElevateBot query:', error);
+      console.error('Error logging ROLLINSXBot query:', error);
       return res.status(500).json({
         success: false,
         message: 'Failed to log query',
@@ -74,8 +74,8 @@ router.post('/log',
 );
 
 /**
- * Get ElevateBot usage analytics
- * This endpoint analyzes recent ElevateBot queries to identify usage patterns and trends
+ * Get ROLLINSXBot usage analytics
+ * This endpoint analyzes recent ROLLINSXBot queries to identify usage patterns and trends
  */
 router.get('/usage-analytics', async (req: Request, res: Response) => {
   try {
@@ -84,7 +84,7 @@ router.get('/usage-analytics', async (req: Request, res: Response) => {
     const cachedAnalytics = elevateAnalyticsCache.get(cacheKey);
     
     if (cachedAnalytics) {
-      console.log('Returning cached ElevateBot analytics');
+      console.log('Returning cached ROLLINSXBot analytics');
       return res.json(cachedAnalytics);
     }
     
@@ -104,7 +104,7 @@ router.get('/usage-analytics', async (req: Request, res: Response) => {
     if (!queries || queries.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'No ElevateBot usage data found'
+        message: 'No ROLLINSXBot usage data found'
       });
     }
     
@@ -171,7 +171,7 @@ router.get('/usage-analytics', async (req: Request, res: Response) => {
     let aiAnalysis = null;
     if (queries.length >= 10) {
       try {
-        const prompt = `Analyze the following ElevateBot usage data to identify patterns, trends, and insights about how users are utilizing the virtual assistant. Focus on:
+        const prompt = `Analyze the following ROLLINSXBot usage data to identify patterns, trends, and insights about how users are utilizing the virtual assistant. Focus on:
         
         1. Common types of questions or topics
         2. User engagement patterns (time of day, frequency)
@@ -186,7 +186,7 @@ router.get('/usage-analytics', async (req: Request, res: Response) => {
         
         aiAnalysis = await grokApi.analyzeText(prompt);
       } catch (error: any) {
-        console.error('AI analysis of ElevateBot usage failed:', error);
+        console.error('AI analysis of ROLLINSXBot usage failed:', error);
         aiAnalysis = "AI analysis currently unavailable. Please try again later.";
       }
     }
@@ -218,18 +218,18 @@ router.get('/usage-analytics', async (req: Request, res: Response) => {
     
     return res.json(analyticsResults);
   } catch (error: any) {
-    console.error('Error analyzing ElevateBot usage:', error);
+    console.error('Error analyzing ROLLINSXBot usage:', error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to analyze ElevateBot usage',
+      message: 'Failed to analyze ROLLINSXBot usage',
       error: error.message
     });
   }
 });
 
 /**
- * Suggestion 25: Real-Time Analytics for ElevateBot Usage
- * Get ElevateBot usage patterns with AI-powered analysis
+ * Suggestion 25: Real-Time Analytics for ROLLINSXBot Usage
+ * Get ROLLINSXBot usage patterns with AI-powered analysis
  * This is a public endpoint for analytics dashboards
  */
 router.get('/elevatebot-usage', async (req: Request, res: Response) => {
@@ -255,7 +255,7 @@ router.get('/elevatebot-usage', async (req: Request, res: Response) => {
     if (!usage || usage.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'No ElevateBot usage data found'
+        message: 'No ROLLINSXBot usage data found'
       });
     }
     
@@ -267,11 +267,11 @@ router.get('/elevatebot-usage', async (req: Request, res: Response) => {
       [
         { 
           role: 'system', 
-          content: 'You are an analytics expert analyzing ElevateBot usage patterns. Provide insights on common topics, user behavior, time patterns, and suggest improvements.'
+          content: 'You are an analytics expert analyzing ROLLINSXBot usage patterns. Provide insights on common topics, user behavior, time patterns, and suggest improvements.'
         },
         { 
           role: 'user', 
-          content: `Analyze ElevateBot usage patterns and provide insights:\n${usageData}`
+          content: `Analyze ROLLINSXBot usage patterns and provide insights:\n${usageData}`
         }
       ],
       {
@@ -294,14 +294,14 @@ router.get('/elevatebot-usage', async (req: Request, res: Response) => {
     
     return res.json(result);
   } catch (error: any) {
-    console.error('ElevateBot usage analysis failed:', error);
+    console.error('ROLLINSXBot usage analysis failed:', error);
     
     // Provide meaningful fallback
     const fallbackAnalysis = {
       success: true,
-      message: 'ElevateBot usage analysis generated using fallback data',
+      message: 'ROLLINSXBot usage analysis generated using fallback data',
       fallback: true,
-      analysis: `Based on the available ElevateBot usage data, here are some general observations and recommendations:
+      analysis: `Based on the available ROLLINSXBot usage data, here are some general observations and recommendations:
 
 1. **Common Query Topics**:
    - Users frequently ask about web design best practices, particularly around layouts, colors, and responsive design
@@ -330,8 +330,8 @@ router.get('/elevatebot-usage', async (req: Request, res: Response) => {
 });
 
 /**
- * Main ElevateBot chat endpoint
- * Real-time interaction with the ElevateBot using xAI (Grok-3-mini) for answering queries
+ * Main ROLLINSXBot chat endpoint
+ * Real-time interaction with the ROLLINSXBot using xAI (Grok-3-mini) for answering queries
  * and guiding users toward subscriptions or purchases
  */
 router.post('/chat', [
@@ -367,21 +367,21 @@ router.post('/chat', [
     }
     
     // System prompt with conversation guidelines
-    const systemPrompt = `You are ElevateBot, the intelligent assistant for Elevion - a web development company specializing in small business solutions.
+    const systemPrompt = `You are ROLLINSXBot, the intelligent assistant for ROLLINSX - a web development company specializing in small business solutions.
 
-Your personality: Professional, helpful, and persuasive. You communicate in a clear, friendly manner while subtly directing users toward Elevion's services.
+Your personality: Professional, helpful, and persuasive. You communicate in a clear, friendly manner while subtly directing users toward ROLLINSX's services.
 
 Guidelines:
 1. Answer questions accurately about web development, design trends, SEO, and digital marketing
-2. For every response, look for natural opportunities to mention Elevion's services
-3. When appropriate, suggest checking out Elevion's subscription plans or specific services
+2. For every response, look for natural opportunities to mention ROLLINSX's services
+3. When appropriate, suggest checking out ROLLINSX's subscription plans or specific services
 4. If users express interest in website development, suggest starting with a free mockup
 5. For complex technical questions, offer helpful insights but suggest booking a consultation
-6. If users are comparing prices, mention Elevion's competitive pricing at 60% below market rates
+6. If users are comparing prices, mention ROLLINSX's competitive pricing at 60% below market rates
 7. Always provide concrete, practical advice users can implement immediately
 
-IMPORTANT: Never fabricate information about Elevion. Stick to these key facts:
-- Elevion offers web development, design, SEO, and digital marketing services
+IMPORTANT: Never fabricate information about ROLLINSX. Stick to these key facts:
+- ROLLINSX offers web development, design, SEO, and digital marketing services
 - Specializes in small business solutions with competitive pricing
 - Provides free website mockups to help clients visualize potential designs
 - Has subscription plans for ongoing support and maintenance
@@ -447,7 +447,7 @@ IMPORTANT: Never fabricate information about Elevion. Stick to these key facts:
     });
     
   } catch (error: any) {
-    console.error('ElevateBot chat error:', error);
+    console.error('ROLLINSXBot chat error:', error);
     return res.status(500).json({
       success: false,
       message: 'An error occurred while processing your request',
@@ -457,9 +457,9 @@ IMPORTANT: Never fabricate information about Elevion. Stick to these key facts:
 });
 
 /**
- * Suggestion 47: Real-Time Analytics for ElevateBot Engagement
- * Analyze engagement with ElevateBot (e.g., query frequency, popular topics)
- * This endpoint provides in-depth analysis of how users are interacting with ElevateBot
+ * Suggestion 47: Real-Time Analytics for ROLLINSXBot Engagement
+ * Analyze engagement with ROLLINSXBot (e.g., query frequency, popular topics)
+ * This endpoint provides in-depth analysis of how users are interacting with ROLLINSXBot
  */
 router.get('/elevatebot-engagement', async (req: Request, res: Response) => {
   try {
@@ -490,7 +490,7 @@ router.get('/elevatebot-engagement', async (req: Request, res: Response) => {
     if (!queries || queries.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'No ElevateBot engagement data found for analysis'
+        message: 'No ROLLINSXBot engagement data found for analysis'
       });
     }
     
@@ -569,7 +569,7 @@ router.get('/elevatebot-engagement', async (req: Request, res: Response) => {
         { 
           role: 'system', 
           content: `You are an analytics expert who excels at analyzing conversational AI usage patterns. 
-          Provide detailed insights on ElevateBot engagement including:
+          Provide detailed insights on ROLLINSXBot engagement including:
           1. Common question topics and categories
           2. User engagement patterns (time of day, day of week)
           3. Query complexity trends
@@ -580,7 +580,7 @@ router.get('/elevatebot-engagement', async (req: Request, res: Response) => {
         },
         { 
           role: 'user', 
-          content: `Analyze the following ElevateBot engagement data to identify patterns and provide actionable insights:
+          content: `Analyze the following ROLLINSXBot engagement data to identify patterns and provide actionable insights:
           
           ${engagementData}`
         }
@@ -616,11 +616,11 @@ router.get('/elevatebot-engagement', async (req: Request, res: Response) => {
       source: 'fresh'
     });
   } catch (error: any) {
-    console.error('Error analyzing ElevateBot engagement:', error);
+    console.error('Error analyzing ROLLINSXBot engagement:', error);
     
     return res.status(500).json({
       success: false,
-      message: 'Failed to analyze ElevateBot engagement',
+      message: 'Failed to analyze ROLLINSXBot engagement',
       error: error.message
     });
   }

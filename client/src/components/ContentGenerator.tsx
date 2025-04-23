@@ -424,7 +424,7 @@ const ContentGenerator: React.FC = () => {
         <CardHeader>
           <CardTitle>Generated Content</CardTitle>
           <CardDescription>
-            Generated content with Elevion branding (Poppins headings, Lato body text)
+            Generated content with ROLLINSX branding (Poppins headings, Lato body text)
           </CardDescription>
         </CardHeader>
         <CardContent className="flex-grow overflow-auto">
@@ -447,7 +447,7 @@ const ContentGenerator: React.FC = () => {
                 Complete the form and click "Generate Content" to create your content.
               </p>
               <p className="text-xs text-muted-foreground">
-                Content will be styled with Elevion branding: Poppins for headings and Lato for body text.
+                Content will be styled with ROLLINSX branding: Poppins for headings and Lato for body text.
               </p>
             </div>
           )}

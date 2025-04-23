@@ -9,8 +9,8 @@ const AchievementsPage = () => {
   return (
     <div className="container px-4 py-8 mx-auto max-w-7xl">
       <Helmet>
-        <title>Your Achievements | Elevion</title>
-        <meta name="description" content="View your achievements, milestones, and rewards earned on the Elevion platform." />
+        <title>Your Achievements | ROLLINSX</title>
+        <meta name="description" content="View your achievements, milestones, and rewards earned on the ROLLINSX platform." />
       </Helmet>
 
       {/* Breadcrumb navigation */}
@@ -27,7 +27,7 @@ const AchievementsPage = () => {
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">Your Achievements</h1>
         <p className="mt-2 text-muted-foreground">
-          Track your milestones and rewards as you engage with the Elevion platform.
+          Track your milestones and rewards as you engage with the ROLLINSX platform.
         </p>
       </div>
 

@@ -8,7 +8,7 @@ const api = axios.create({
 
 // Test user credentials
 const adminCredentials = {
-  username: 'admin@elevion.dev',
+  username: 'admin@rollinsx.dev',
   password: '*Rosie2010'
 };
 

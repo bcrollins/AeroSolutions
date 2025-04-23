@@ -275,7 +275,7 @@ export default function AdminClientPreviewsPage() {
   return (
     <MainLayout>
       <Helmet>
-        <title>Manage Client Previews | Admin | Elevion</title>
+        <title>Manage Client Previews | Admin | ROLLINSX</title>
         <meta name="description" content="Admin dashboard to manage client preview access codes" />
         <meta name="robots" content="noindex,nofollow" />
         <html lang={t('language_code')} />

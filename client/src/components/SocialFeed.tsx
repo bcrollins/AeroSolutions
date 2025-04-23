@@ -512,7 +512,7 @@ export function SocialFeed({
                 
                 {post.status === 'posted' && (
                   <SocialShareButtons
-                    url={`https://elevion.dev/social-posts/${post.id}`}
+                    url={`https://rollinsx.dev/social-posts/${post.id}`}
                     title={post.content.substring(0, 100)}
                     variant="compact"
                   />

@@ -53,8 +53,8 @@ export default function ContentAnalyticsPage() {
   return (
     <MainLayout>
       <Helmet>
-        <title>Content Analytics | Elevion</title>
-        <meta name="description" content="Content engagement analytics dashboard for Elevion" />
+        <title>Content Analytics | ROLLINSX</title>
+        <meta name="description" content="Content engagement analytics dashboard for ROLLINSX" />
         <meta name="robots" content="noindex,nofollow" />
         <html lang={t('language_code')} />
       </Helmet>

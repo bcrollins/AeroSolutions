@@ -12,7 +12,7 @@ const BrandConsistencyPage: React.FC = () => {
   return (
     <div className="bg-background">
       <Helmet>
-        <title>{t('Brand & Platform Consistency')} | Elevion</title>
+        <title>{t('Brand & Platform Consistency')} | ROLLINSX</title>
         <meta
           name="description"
           content={t('Track and manage brand consistency and platform compatibility issues across your digital presence')}

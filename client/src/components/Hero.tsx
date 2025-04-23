@@ -71,7 +71,7 @@ export default function Hero() {
     <section 
       id="home" 
       className="pt-32 pb-24 bg-gradient-to-br from-slate-blue via-electric-cyan/20 to-slate-blue/80 relative overflow-hidden"
-      aria-label="Elevion Introduction"
+      aria-label="ROLLINSX Introduction"
     >
       {/* Background Pattern */}
       <div 
@@ -130,7 +130,7 @@ export default function Hero() {
               animate="visible"
               custom={3}
             >
-              <span className="font-semibold">Elevion</span> delivers full-stack web development with our unique guarantee: no payment until you're 100% satisfied. Based in Miami and built by developers who understand your business challenges, our platforms integrate seamlessly with your existing systems.
+              <span className="font-semibold">ROLLINSX</span> delivers full-stack web development with our unique guarantee: no payment until you're 100% satisfied. Based in Miami and built by developers who understand your business challenges, our platforms integrate seamlessly with your existing systems.
             </motion.p>
             
             <motion.div 
@@ -472,7 +472,7 @@ export default function Hero() {
                     animate={{ textShadow: ['0 0 5px rgba(0,209,209,0.5)', '0 0 20px rgba(0,209,209,0.8)', '0 0 5px rgba(0,209,209,0.5)'] }}
                     transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                   >
-                    ELEVION
+                    ROLLINSX
                     <div className="absolute -bottom-2 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-electric-cyan to-transparent"></div>
                   </motion.div>
                   

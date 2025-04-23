@@ -68,7 +68,7 @@ export const registerFeedRoutes = (app: express.Express) => {
           model: 'grok-3-mini',
           messages: [{ 
             role: 'user', 
-            content: `You are a content recommendation system for Elevion web development company. 
+            content: `You are a content recommendation system for ROLLINSX web development company. 
             Rank these posts for a user with preferences: "${preferences}".
             Focus on relevance to small business owners and web development needs.
             Return a JSON array with post IDs in ranked order, with the most relevant first.
@@ -172,7 +172,7 @@ export const registerFeedRoutes = (app: express.Express) => {
           model: 'grok-3-mini',
           messages: [{ 
             role: 'user', 
-            content: `As Elevion's content recommendation system, personalize this feed for a user with these interests: "${preferences}".
+            content: `As ROLLINSX's content recommendation system, personalize this feed for a user with these interests: "${preferences}".
             Consider relevance to small business owners and web development needs.
             Return a JSON object with:
             1. "rankedPostIds": Array of post IDs in order of relevance (most relevant first)
@@ -416,7 +416,7 @@ export const registerFeedRoutes = (app: express.Express) => {
           model: 'grok-3-mini',
           messages: [{ 
             role: 'user', 
-            content: `Generate a short, engaging social media post (under 250 characters) that a ${businessType} business owner might share on their Elevion platform profile. Focus on topics like ${interests}.`
+            content: `Generate a short, engaging social media post (under 250 characters) that a ${businessType} business owner might share on their ROLLINSX platform profile. Focus on topics like ${interests}.`
           }],
         });
         
@@ -482,7 +482,7 @@ export const registerFeedRoutes = (app: express.Express) => {
           model: 'grok-3',  
           messages: [{ 
             role: 'user', 
-            content: `As Elevion's AI analyst, analyze these feed engagement metrics for our web development platform:
+            content: `As ROLLINSX's AI analyst, analyze these feed engagement metrics for our web development platform:
             
             ${engagementData}
             

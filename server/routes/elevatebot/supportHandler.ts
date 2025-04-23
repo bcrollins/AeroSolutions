@@ -215,7 +215,7 @@ async function analyzeQuery(
     `, {
       model: 'grok-3-mini',
       systemPrompt: `
-        You are an AI support assistant for Elevion, a web development company that offers services 
+        You are an AI support assistant for ROLLINSX, a web development company that offers services 
         to small businesses. Your job is to analyze customer support queries and determine:
         
         1. The category of the query

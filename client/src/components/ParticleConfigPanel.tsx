@@ -48,7 +48,7 @@ const ParticleConfigPanel: React.FC<ParticleConfigPanelProps> = ({ config, onCha
   const [colorPalette, setColorPalette] = useState<string[]>(config.colorPalette);
   const [presets, setPresets] = useState<Preset[]>([
     {
-      name: 'Elevion Default',
+      name: 'ROLLINSX Default',
       config: {
         particleCount: 60,
         colorPalette: ['#00D1D1', '#3B5B9D', '#EDEFF2', '#FF7043'],

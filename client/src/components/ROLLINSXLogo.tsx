@@ -1,13 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-interface ElevionLogoProps {
+interface ROLLINSXLogoProps {
   size?: 'sm' | 'md' | 'lg';
   animated?: boolean;
   className?: string;
 }
 
-const ElevionLogo: React.FC<ElevionLogoProps> = ({ 
+const ROLLINSXLogo: React.FC<ROLLINSXLogoProps> = ({ 
   size = 'md', 
   animated = false,
   className = '' 
@@ -47,12 +47,12 @@ const ElevionLogo: React.FC<ElevionLogoProps> = ({
         viewBox="0 0 100 100" 
         xmlns="http://www.w3.org/2000/svg" 
         className="w-full h-full"
-        aria-label="Elevion Logo"
+        aria-label="ROLLINSX Logo"
       >
         {/* Main hexagon shape */}
         <polygon 
           points="50,10 90,30 90,70 50,90 10,70 10,30" 
-          fill="url(#elevionGradient)" 
+          fill="url(#rollinsxGradient)" 
         />
         
         {/* Letter E stylized */}
@@ -69,7 +69,7 @@ const ElevionLogo: React.FC<ElevionLogoProps> = ({
         
         {/* Define gradient */}
         <defs>
-          <linearGradient id="elevionGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id="rollinsxGradient" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#3B5B9D" /> {/* slate-blue */}
             <stop offset="100%" stopColor="#00D1D1" /> {/* electric-cyan */}
           </linearGradient>
@@ -79,4 +79,4 @@ const ElevionLogo: React.FC<ElevionLogoProps> = ({
   );
 };
 
-export default ElevionLogo;
+export default ROLLINSXLogo;

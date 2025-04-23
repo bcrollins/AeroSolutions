@@ -72,12 +72,12 @@ export default function LoginPage() {
     
     try {
       // Special case for admin credentials (in a real app this would be handled server-side)
-      if (data.email === 'admin@elevion.dev' && data.password === '*Rosie2010') {
+      if (data.email === 'admin@rollinsx.dev' && data.password === '*Rosie2010') {
         // Create a simple JWT-like token with admin role
         const fakeAdminToken = btoa(JSON.stringify({
           id: 1,
           username: 'Admin User',
-          email: 'admin@elevion.dev',
+          email: 'admin@rollinsx.dev',
           role: 'admin',
           exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours
         }));
@@ -143,7 +143,7 @@ export default function LoginPage() {
   return (
     <MainLayout>
       <Helmet>
-        <title>{t('login_page_title')} | Elevion</title>
+        <title>{t('login_page_title')} | ROLLINSX</title>
         <meta name="description" content={t('login_page_description')} />
         <html lang={t('language_code')} />
       </Helmet>
@@ -236,7 +236,7 @@ export default function LoginPage() {
                 {/* Admin login hint */}
                 <div className="mt-6 pt-4 border-t border-gray-200 w-full text-center">
                   <p className="text-xs text-gray-500">
-                    <span className="font-medium">Admin access</span>: admin@elevion.dev
+                    <span className="font-medium">Admin access</span>: admin@rollinsx.dev
                   </p>
                 </div>
               </CardFooter>

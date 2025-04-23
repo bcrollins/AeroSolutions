@@ -46,7 +46,7 @@ export default {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
-        /* Elevion Brand Colors */
+        /* ROLLINSX Brand Colors */
         'slate-blue': '#3B5B9D',
         'electric-cyan': '#00D1D1',
         'light-gray': '#EDEFF2',

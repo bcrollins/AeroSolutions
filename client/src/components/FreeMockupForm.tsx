@@ -159,7 +159,7 @@ export default function FreeMockupForm() {
             variants={fadeInUp}
             custom={1}
           >
-            See What Elevion Can Do for You
+            See What ROLLINSX Can Do for You
           </motion.h2>
           
           <motion.p 
@@ -318,7 +318,7 @@ export default function FreeMockupForm() {
                 className="mt-1 data-[state=checked]:bg-electric-cyan data-[state=checked]:border-electric-cyan"
               />
               <Label htmlFor="terms" className="font-lato text-slate-blue/80 text-sm">
-                I agree to allow Elevion to use my business information and any provided images to create my free mockup. 
+                I agree to allow ROLLINSX to use my business information and any provided images to create my free mockup. 
                 I understand that mockups will be based on the information provided and any images submitted may be used in the 
                 design process. No payment will be required until I approve the final design.
               </Label>

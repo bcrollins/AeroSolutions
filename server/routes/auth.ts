@@ -112,7 +112,7 @@ router.post('/register', [
           onboardingTips = response.choices[0].message.content;
         } catch (aiError) {
           console.error('Error generating AI onboarding tips:', aiError);
-          onboardingTips = '• Welcome to Elevion! Set up your profile\n• Explore our marketplace for inspiration\n• Try our AI tools to enhance your web presence';
+          onboardingTips = '• Welcome to ROLLINSX! Set up your profile\n• Explore our marketplace for inspiration\n• Try our AI tools to enhance your web presence';
         }
         
         await storage.createUserOnboarding({

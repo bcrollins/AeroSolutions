@@ -300,7 +300,7 @@ function getPersonalizedMessagePrompt(user: any, achievement: any, extraData: an
   let prompt = `Write a personalized, friendly, and engaging achievement notification message for ${userName}. `;
   
   // Add achievement-specific context
-  prompt += `They just earned the "${achievement.title}" achievement on Elevion, a web development platform. `;
+  prompt += `They just earned the "${achievement.title}" achievement on ROLLINSX, a web development platform. `;
   prompt += `The achievement description is: "${achievement.description}". `;
   prompt += `They received ${achievement.points} points for this achievement. `;
   

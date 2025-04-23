@@ -47,7 +47,7 @@ export default function Ownership() {
         >
           <h2 className="text-3xl font-bold font-montserrat mb-6 text-[#FF7043]">Full Ownership Guarantee</h2>
           <p className="text-xl text-gray-100">
-            We believe your software should truly be yours. When you work with Elevion, 
+            We believe your software should truly be yours. When you work with ROLLINSX, 
             you own 100% of the code and all aspects of your platform upon project completion.
           </p>
         </motion.div>

@@ -706,7 +706,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ElevateBot business assistant API - dedicated endpoint for business-specific queries
+  // ROLLINSXBot business assistant API - dedicated endpoint for business-specific queries
   // Redirect old endpoint to new structured API
   app.post("/api/elevate-bot", [
     // Express-validator validations

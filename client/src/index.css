@@ -24,7 +24,7 @@
 
 @layer base {
   :root {
-    /* Elevion Brand Colors */
+    /* ROLLINSX Brand Colors */
     --slate-blue: 219 43% 42%; /* #3B5B9D */
     --electric-cyan: 180 100% 41%; /* #00D1D1 */
     --light-gray: 210 17% 94%; /* #EDEFF2 */
@@ -53,7 +53,7 @@
   }
  
   .dark {
-    /* Elevion Dark Theme Colors */
+    /* ROLLINSX Dark Theme Colors */
     --background: 219 43% 22%; /* Darker slate-blue */
     --foreground: 210 17% 94%; /* light-gray */
     --card: 219 43% 25%; /* Slightly lighter than background */

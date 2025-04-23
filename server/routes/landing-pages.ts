@@ -177,7 +177,7 @@ router.post('/generate-suggestions', async (req: Request, res: Response) => {
       You are an expert in landing page optimization and conversion rate optimization (CRO).
       
       Generate 6 specific actionable suggestions to improve a landing page for a web development company
-      called Elevion. The suggestions should include a mix of content, color, layout, and call-to-action (CTA) improvements.
+      called ROLLINSX. The suggestions should include a mix of content, color, layout, and call-to-action (CTA) improvements.
       
       For each suggestion:
       1. Specify the type (color, layout, content, cta)

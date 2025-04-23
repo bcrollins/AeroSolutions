@@ -158,7 +158,7 @@ const CreateMarketplaceItemForm: React.FC = () => {
       <CardHeader>
         <CardTitle>Create Marketplace Listing</CardTitle>
         <CardDescription>
-          Add a new service or product to the Elevion marketplace
+          Add a new service or product to the ROLLINSX marketplace
         </CardDescription>
       </CardHeader>
       <CardContent>

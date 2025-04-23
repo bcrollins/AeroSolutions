@@ -41,7 +41,7 @@ export default function MockupSuggestionPage() {
       try {
         await navigator.share({
           title: "Website Design Suggestions",
-          text: "Check out these website design suggestions from Elevion!",
+          text: "Check out these website design suggestions from ROLLINSX!",
           url: window.location.href,
         });
         toast({
@@ -64,7 +64,7 @@ export default function MockupSuggestionPage() {
   return (
     <MainLayout>
       <SEOHead
-        title="Free Website Design Suggestions | Elevion"
+        title="Free Website Design Suggestions | ROLLINSX"
         description="Get free AI-powered website design suggestions tailored to your business type. Receive color schemes, typography, layouts, and key features instantly."
         canonicalUrl="/mockup-suggestions"
       />

@@ -85,7 +85,7 @@ router.get('/users', adminMiddleware, async (req: Request, res: Response) => {
     // Mock data for now
     const users = [
       { id: 1, email: 'user@example.com', firstName: 'John', lastName: 'Doe', role: 'user', createdAt: new Date() },
-      { id: 2, email: 'admin@elevion.dev', firstName: 'Admin', lastName: 'User', role: 'admin', createdAt: new Date() },
+      { id: 2, email: 'admin@rollinsx.dev', firstName: 'Admin', lastName: 'User', role: 'admin', createdAt: new Date() },
     ];
     
     return res.status(200).json(users);

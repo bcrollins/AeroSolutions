@@ -111,7 +111,7 @@ export default function BlogSeoOptimizer({ postId, preview = false }: BlogSeoOpt
     
     setSeoData({
       seoTitle: seoAnalysis.keyword_analysis?.primary_keyword 
-        ? `${seoAnalysis.keyword_analysis.primary_keyword} - Blog Post | Elevion`
+        ? `${seoAnalysis.keyword_analysis.primary_keyword} - Blog Post | ROLLINSX`
         : undefined,
       seoDescription: seoAnalysis.meta_description_suggestion,
       seoKeywords: seoAnalysis.keyword_analysis?.primary_keyword +
@@ -137,7 +137,7 @@ export default function BlogSeoOptimizer({ postId, preview = false }: BlogSeoOpt
         contentType: 'blog',
         contentData: {
           title: seoData.seoTitle,
-          author: 'Elevion',
+          author: 'ROLLINSX',
           datePublished: new Date().toISOString(),
           description: seoData.seoDescription,
           keywords: seoData.seoKeywords,
@@ -453,7 +453,7 @@ export default function BlogSeoOptimizer({ postId, preview = false }: BlogSeoOpt
                     value={seoData.canonicalUrl || ''}
                     onChange={(e) => handleInputChange('canonicalUrl', e.target.value)}
                     className="w-full"
-                    placeholder="https://elevion.com/blog/my-post"
+                    placeholder="https://rollinsx.com/blog/my-post"
                   />
                   <p className="mt-1 text-xs text-slate-500">
                     Leave empty if this is the primary version of the content

@@ -33,7 +33,7 @@ export function SocialShareButtons({
   const [copied, setCopied] = useState(false);
   
   // Ensure URL is absolute
-  const absoluteUrl = url.startsWith('http') ? url : `https://elevion.dev${url.startsWith('/') ? url : `/${url}`}`;
+  const absoluteUrl = url.startsWith('http') ? url : `https://rollinsx.dev${url.startsWith('/') ? url : `/${url}`}`;
   
   // Encode components for sharing
   const encodedUrl = encodeURIComponent(absoluteUrl);

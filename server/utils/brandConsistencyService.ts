@@ -6,7 +6,7 @@ import { Logger } from '../middlewares/logger';
 
 const logger = new Logger('BrandConsistency');
 
-// Define Elevion brand guidelines
+// Define ROLLINSX brand guidelines
 const BRAND_GUIDELINES = {
   colors: {
     primary: '#3B5B9D', // Slate-blue
@@ -112,13 +112,13 @@ async function checkUIComponentConsistency(): Promise<BrandConsistencyIssue[]> {
       
       // Create analysis prompt
       const prompt = `
-      Analyze this React UI component for Elevion brand consistency issues:
+      Analyze this React UI component for ROLLINSX brand consistency issues:
       
       File: ${path.basename(file)}
       
       ${fileContent}
       
-      Elevion Brand Guidelines:
+      ROLLINSX Brand Guidelines:
       - Colors: Slate-blue (#3B5B9D), Electric-cyan (#00D1D1), Light-gray (#EDEFF2), Sunset-orange (#FF7043)
       - Typography: Headings - Poppins, Body text - Lato, UI elements - Inter
       - Brand tone: professional, modern, helpful, innovative
@@ -192,12 +192,12 @@ async function checkContentConsistency(): Promise<BrandConsistencyIssue[]> {
       
       // Create analysis prompt
       const prompt = `
-      Analyze this content for Elevion brand tone and messaging consistency:
+      Analyze this content for ROLLINSX brand tone and messaging consistency:
       
       Title: ${item.title}
       Content: ${item.content}
       
-      Elevion Brand Guidelines:
+      ROLLINSX Brand Guidelines:
       - Brand tone: professional, modern, helpful, innovative
       - Target audience: Small business owners looking for web development services
       - Key messaging: AI-powered solutions, affordable pricing, quality design, streamlined process

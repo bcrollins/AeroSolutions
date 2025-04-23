@@ -246,7 +246,7 @@ Keep the plan practical, focused on web development needs, and aligned with the 
       messages: [
         { 
           role: 'system', 
-          content: 'You are a senior project manager at Elevion, specializing in web development projects for small to medium businesses. Create practical, detailed project plans based on client goals.'
+          content: 'You are a senior project manager at ROLLINSX, specializing in web development projects for small to medium businesses. Create practical, detailed project plans based on client goals.'
         },
         { 
           role: 'user', 
@@ -484,7 +484,7 @@ router.post('/suggest-onboarding', async (req: Request, res: Response) => {
     });
     
     const prompt = `
-Create a comprehensive client onboarding plan for a ${normalizedBusinessType} business that is building a new website with Elevion.
+Create a comprehensive client onboarding plan for a ${normalizedBusinessType} business that is building a new website with ROLLINSX.
 
 Please structure your response with these sections:
 
@@ -516,7 +516,7 @@ Recommend 2-3 post-launch services or support options particularly valuable for 
       messages: [
         { 
           role: 'system', 
-          content: 'You are a seasoned project manager at Elevion, specializing in client onboarding for web development projects. Provide practical, detailed onboarding plans based on business types.'
+          content: 'You are a seasoned project manager at ROLLINSX, specializing in client onboarding for web development projects. Provide practical, detailed onboarding plans based on business types.'
         },
         { 
           role: 'user', 
@@ -1075,7 +1075,7 @@ Format your response as a JSON object with these sections. For each recommendati
       messages: [
         { 
           role: 'system', 
-          content: 'You are a senior web performance engineer at Elevion, specializing in optimizing websites for various business types. Provide practical, actionable performance optimization recommendations in JSON format.'
+          content: 'You are a senior web performance engineer at ROLLINSX, specializing in optimizing websites for various business types. Provide practical, actionable performance optimization recommendations in JSON format.'
         },
         { 
           role: 'user', 
@@ -1226,7 +1226,7 @@ Make the suggestions specific to the ${businessType} industry, addressing common
       messages: [
         { 
           role: 'system', 
-          content: 'You are a content marketing specialist at Elevion, with expertise in creating engaging blog content strategies for various business types. Provide practical, industry-specific blog content suggestions that will help businesses connect with their audience and drive conversions.'
+          content: 'You are a content marketing specialist at ROLLINSX, with expertise in creating engaging blog content strategies for various business types. Provide practical, industry-specific blog content suggestions that will help businesses connect with their audience and drive conversions.'
         },
         { 
           role: 'user', 

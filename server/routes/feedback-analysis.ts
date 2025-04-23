@@ -112,7 +112,7 @@ router.post('/analyze-feedback', async (req: Request, res: Response) => {
     }
 
     const prompt = `
-You are an expert feedback analyst working for Elevion, a web development company. 
+You are an expert feedback analyst working for ROLLINSX, a web development company. 
 Analyze the following customer feedback in depth and provide a comprehensive analysis in JSON format.
 
 Customer Feedback:
@@ -135,7 +135,7 @@ Respond with valid JSON only.
     // Extended timeout (30s) for deeper analysis
     const analysisResult = await generateJson(
       prompt,
-      'You are an expert feedback analyst working for Elevion, a web development company.'
+      'You are an expert feedback analyst working for ROLLINSX, a web development company.'
     );
 
     // Parse the JSON response
@@ -184,7 +184,7 @@ router.post('/analyze-feedback-trends', async (req: Request, res: Response) => {
     ).join('\n\n');
 
     const prompt = `
-You are a data analyst for Elevion, a web development company. 
+You are a data analyst for ROLLINSX, a web development company. 
 Analyze the following collection of customer feedback items and identify patterns, trends, and actionable insights.
 
 Feedback Collection:
@@ -208,7 +208,7 @@ Respond with valid JSON only.
     // Get analysis from Grok
     const trendsAnalysis = await generateJson(
       prompt,
-      'You are a data analyst for Elevion, a web development company.'
+      'You are a data analyst for ROLLINSX, a web development company.'
     );
 
     // Parse and return

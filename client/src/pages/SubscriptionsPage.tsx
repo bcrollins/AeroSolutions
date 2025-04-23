@@ -14,14 +14,14 @@ const SubscriptionsPage: React.FC = () => {
   return (
     <MainLayout>
       <Helmet>
-        <title>Premium Subscriptions | Elevion</title>
+        <title>Premium Subscriptions | ROLLINSX</title>
         <meta 
           name="description" 
-          content="Enhance your web development project with premium subscriptions from Elevion. Access exclusive features, priority support, and advanced tools." 
+          content="Enhance your web development project with premium subscriptions from ROLLINSX. Access exclusive features, priority support, and advanced tools." 
         />
-        <meta name="keywords" content="web development subscriptions, premium development services, elevion membership, ai-powered web tools" />
+        <meta name="keywords" content="web development subscriptions, premium development services, rollinsx membership, ai-powered web tools" />
         <meta name="robots" content="index, follow" />
-        <link rel="canonical" href="https://elevion.dev/subscriptions" />
+        <link rel="canonical" href="https://rollinsx.dev/subscriptions" />
       </Helmet>
 
       <div className="container mx-auto py-10 px-4 md:px-6">

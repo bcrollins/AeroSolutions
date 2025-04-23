@@ -166,7 +166,7 @@ const CheckoutOptimizationPage: React.FC = () => {
   return (
     <MainLayout>
       <Helmet>
-        <title>Checkout Optimization | Elevion</title>
+        <title>Checkout Optimization | ROLLINSX</title>
         <meta name="description" content="Optimize your checkout process to increase conversions using AI-powered suggestions" />
       </Helmet>
       

@@ -268,7 +268,7 @@ const MarketplaceSalesAnalytics = () => {
                   <Info className="h-4 w-4 text-slate-500" />
                 </CardTitle>
                 <CardDescription>
-                  Generated using Elevion AI to analyze your sales data patterns
+                  Generated using ROLLINSX AI to analyze your sales data patterns
                 </CardDescription>
               </CardHeader>
               <CardContent>

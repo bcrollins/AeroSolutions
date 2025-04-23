@@ -116,7 +116,7 @@ export class RetentionService {
   }
 
   /**
-   * Generates a personalized retention message using Elevion AI
+   * Generates a personalized retention message using ROLLINSX AI
    * @param userId User to generate message for
    * @param messageType Type of message (email, in-app, etc)
    */
@@ -127,15 +127,15 @@ export class RetentionService {
         return '';
       }
 
-      const systemPrompt = `You are a personalized user retention specialist for Elevion, a web development company. 
+      const systemPrompt = `You are a personalized user retention specialist for ROLLINSX, a web development company. 
 Generate a personalized message to re-engage the user.
 Follow these guidelines:
 1. Message should be warm and professional
 2. Refer to the user by name if available
 3. Reference their recent activity or business type if available
-4. Highlight the value of Elevion's services for their business
+4. Highlight the value of ROLLINSX's services for their business
 5. Include a clear next action or value proposition
-6. Keep tone consistent with Elevion's brand voice (professional, helpful, innovative)
+6. Keep tone consistent with ROLLINSX's brand voice (professional, helpful, innovative)
 7. For email messages, include HTML formatting. For in-app messages, use plain text.`;
 
       const userPrompt = `Generate a personalized ${messageType} message for this user:
@@ -223,8 +223,8 @@ Recent Activity Types: ${context.recentActivities.map(a => a.type).join(', ') ||
         // Extract a good subject line from the message
         const subjectMatch = retentionMessage.match(/<h1>(.*?)<\/h1>|<strong>(.*?)<\/strong>|<b>(.*?)<\/b>/);
         const subject = subjectMatch ? 
-          (subjectMatch[1] || subjectMatch[2] || subjectMatch[3] || 'We miss you at Elevion!') : 
-          'We miss you at Elevion!';
+          (subjectMatch[1] || subjectMatch[2] || subjectMatch[3] || 'We miss you at ROLLINSX!') : 
+          'We miss you at ROLLINSX!';
           
         try {
           const response = await emailService.sendEmail({

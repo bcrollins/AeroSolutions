@@ -46,7 +46,7 @@ const MarketplacePage: React.FC = () => {
   return (
     <MainLayout>
       <Helmet>
-        <title>Business Marketplace | Elevion Web Development</title>
+        <title>Business Marketplace | ROLLINSX Web Development</title>
         <meta 
           name="description" 
           content="Discover premium web tools, digital services, and small business solutions in our marketplace. Find specialized web development resources to grow your online presence." 
@@ -57,7 +57,7 @@ const MarketplacePage: React.FC = () => {
       <div className="container mx-auto py-10 px-4 md:px-6">
         <div className="flex flex-col md:flex-row gap-8">
           <div className="w-full md:w-3/4">
-            <h1 className="text-3xl md:text-4xl font-bold text-primary mb-2">Elevion Marketplace</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-primary mb-2">ROLLINSX Marketplace</h1>
             <p className="text-lg text-muted-foreground mb-6">
               Discover premium tools, software, and services designed to help small businesses succeed in the digital landscape.
             </p>

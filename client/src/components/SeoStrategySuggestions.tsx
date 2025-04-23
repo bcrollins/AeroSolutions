@@ -410,7 +410,7 @@ export default function SeoStrategySuggestions({ websiteUrl, initialContent }: S
       
       <CardFooter className="bg-slate-50 border-t border-slate-100 flex justify-between items-center">
         <p className="text-xs text-slate-500">
-          Analysis powered by Elevion's AI technology
+          Analysis powered by ROLLINSX's AI technology
         </p>
         <div className="flex space-x-2">
           <Badge variant="outline" className="bg-slate-blue-50 text-slate-blue-700 border-slate-blue-200">

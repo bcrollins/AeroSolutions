@@ -90,7 +90,7 @@ const ContentHubPage: React.FC = () => {
   return (
     <div className="container mx-auto py-8">
       <Helmet>
-        <title>Content Hub | Elevion</title>
+        <title>Content Hub | ROLLINSX</title>
         <meta name="description" content="Generate and manage website content with AI assistance" />
       </Helmet>
 

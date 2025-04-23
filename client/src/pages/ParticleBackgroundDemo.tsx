@@ -96,10 +96,10 @@ const ParticleBackgroundDemo = () => {
   return (
     <div className="min-h-screen flex flex-col relative">
       <Helmet>
-        <title>Dynamic Particle Background Generator | Elevion</title>
+        <title>Dynamic Particle Background Generator | ROLLINSX</title>
         <meta name="description" content="Create and customize beautiful interactive particle backgrounds for your web projects with our dynamic generator tool." />
         <meta name="robots" content="index, follow" />
-        <link rel="canonical" href="https://elevion.dev/particle-background" />
+        <link rel="canonical" href="https://rollinsx.dev/particle-background" />
         <html lang={i18n.language.split('-')[0]} />
         <meta httpEquiv="Content-Language" content={i18n.language} />
       </Helmet>

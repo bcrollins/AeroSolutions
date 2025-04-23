@@ -8,7 +8,7 @@ const BugMonitoringPage = () => {
   return (
     <>
       <Helmet>
-        <title>Bug Monitoring | Elevion</title>
+        <title>Bug Monitoring | ROLLINSX</title>
         <meta 
           name="description" 
           content="Detect, analyze and fix application issues with our AI-powered bug monitoring system" 

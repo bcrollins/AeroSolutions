@@ -317,7 +317,7 @@ const ContentEngagementAnalytics = () => {
                 <Info className="h-4 w-4 text-slate-500" />
               </CardTitle>
               <CardDescription>
-                Generated using Elevion AI to analyze your content engagement metrics
+                Generated using ROLLINSX AI to analyze your content engagement metrics
               </CardDescription>
             </CardHeader>
             <CardContent>

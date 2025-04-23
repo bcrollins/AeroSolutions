@@ -12,10 +12,10 @@ const CreateMarketplaceItemPage: React.FC = () => {
   return (
     <MainLayout>
       <Helmet>
-        <title>Create Marketplace Listing | Elevion</title>
+        <title>Create Marketplace Listing | ROLLINSX</title>
         <meta 
           name="description" 
-          content="Add your services or products to the Elevion marketplace. Reach potential clients and grow your business." 
+          content="Add your services or products to the ROLLINSX marketplace. Reach potential clients and grow your business." 
         />
         <meta 
           name="keywords" 
@@ -28,7 +28,7 @@ const CreateMarketplaceItemPage: React.FC = () => {
           <div className="mb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-primary mb-2">Create Marketplace Listing</h1>
             <p className="text-lg text-muted-foreground">
-              Share your digital services or products with potential clients on the Elevion marketplace.
+              Share your digital services or products with potential clients on the ROLLINSX marketplace.
             </p>
           </div>
 

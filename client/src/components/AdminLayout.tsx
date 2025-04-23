@@ -62,7 +62,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
           <div className="flex flex-col h-full">
             <div className="p-4 border-b bg-primary text-primary-foreground flex items-center">
               <Shield className="h-6 w-6 mr-2" />
-              <span className="font-semibold">Elevion Admin</span>
+              <span className="font-semibold">ROLLINSX Admin</span>
             </div>
             <ScrollArea className="flex-1">
               <div className="p-4 space-y-1">
@@ -100,7 +100,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
         <div className="flex h-full flex-col border-r bg-white dark:bg-gray-800">
           <div className="h-16 flex items-center border-b px-6">
             <Shield className="h-6 w-6 text-primary mr-2" />
-            <span className="text-xl font-semibold">Elevion Admin</span>
+            <span className="text-xl font-semibold">ROLLINSX Admin</span>
           </div>
           <div className="flex flex-1 flex-col overflow-y-auto">
             <nav className="flex-1 space-y-1 px-4 py-4">

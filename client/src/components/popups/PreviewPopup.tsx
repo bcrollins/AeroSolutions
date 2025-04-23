@@ -19,7 +19,7 @@ const PreviewPopup: React.FC = () => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
       <Helmet>
-        <title>Preview | Elevion</title>
+        <title>Preview | ROLLINSX</title>
       </Helmet>
       
       <div className="relative w-full max-w-4xl rounded-lg bg-white p-6 shadow-lg">

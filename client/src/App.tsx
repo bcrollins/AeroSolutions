@@ -138,7 +138,7 @@ export default function App() {
         {/* Apple specific */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-        <meta name="apple-mobile-web-app-title" content="Elevion" />
+        <meta name="apple-mobile-web-app-title" content="ROLLINSX" />
         
         {/* Microsoft specific */}
         <meta name="msapplication-TileColor" content="#3B5B9D" />
@@ -174,10 +174,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Privacy Policy | Elevion Web Development</title>
-                <meta name="description" content="Learn about how Elevion handles your data, our privacy practices, and your rights under GDPR and other privacy regulations." />
+                <title>Privacy Policy | ROLLINSX Web Development</title>
+                <meta name="description" content="Learn about how ROLLINSX handles your data, our privacy practices, and your rights under GDPR and other privacy regulations." />
                 <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://elevion.dev/privacy-policy" />
+                <link rel="canonical" href="https://rollinsx.dev/privacy-policy" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -189,10 +189,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Terms of Service | Elevion Web Development</title>
-                <meta name="description" content="Review Elevion's terms of service, usage policy, and legal agreement for our web development services and platforms." />
+                <title>Terms of Service | ROLLINSX Web Development</title>
+                <meta name="description" content="Review ROLLINSX's terms of service, usage policy, and legal agreement for our web development services and platforms." />
                 <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://elevion.dev/terms" />
+                <link rel="canonical" href="https://rollinsx.dev/terms" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -204,10 +204,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Security Policy | Elevion Web Development</title>
-                <meta name="description" content="Learn about Elevion's industry-leading security practices, data protection measures, and compliance with security standards." />
+                <title>Security Policy | ROLLINSX Web Development</title>
+                <meta name="description" content="Learn about ROLLINSX's industry-leading security practices, data protection measures, and compliance with security standards." />
                 <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://elevion.dev/security" />
+                <link rel="canonical" href="https://rollinsx.dev/security" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -219,10 +219,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>{t('premium_title')} | Elevion</title>
+                <title>{t('premium_title')} | ROLLINSX</title>
                 <meta name="description" content={t('premium_desc')} />
                 <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://elevion.dev/premium" />
+                <link rel="canonical" href="https://rollinsx.dev/premium" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -234,10 +234,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>{t('history_title')} | Elevion</title>
+                <title>{t('history_title')} | ROLLINSX</title>
                 <meta name="description" content={t('history_intro')} />
                 <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://elevion.dev/history" />
+                <link rel="canonical" href="https://rollinsx.dev/history" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -249,10 +249,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>{t('subscriptions')} | Elevion</title>
+                <title>{t('subscriptions')} | ROLLINSX</title>
                 <meta name="description" content="Discover premium subscription plans for web development solutions. Access advanced features, priority support, and specialized tools." />
                 <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://elevion.dev/subscriptions" />
+                <link rel="canonical" href="https://rollinsx.dev/subscriptions" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -264,8 +264,8 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Checkout | Elevion</title>
-                <meta name="description" content="Complete your subscription purchase securely with Elevion." />
+                <title>Checkout | ROLLINSX</title>
+                <meta name="description" content="Complete your subscription purchase securely with ROLLINSX." />
                 <meta name="robots" content="noindex, nofollow" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
@@ -278,10 +278,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>{t('marketplace')} | Elevion</title>
+                <title>{t('marketplace')} | ROLLINSX</title>
                 <meta name="description" content="Browse web development tools, extensions, and specialized solutions in our marketplace. Find the perfect tools for your website needs." />
                 <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://elevion.dev/marketplace" />
+                <link rel="canonical" href="https://rollinsx.dev/marketplace" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -293,8 +293,8 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Purchase | Elevion Marketplace</title>
-                <meta name="description" content="Complete your marketplace purchase securely with Elevion." />
+                <title>Purchase | ROLLINSX Marketplace</title>
+                <meta name="description" content="Complete your marketplace purchase securely with ROLLINSX." />
                 <meta name="robots" content="noindex, nofollow" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
@@ -307,10 +307,10 @@ export default function App() {
           {(params) => (
             <>
               <Helmet>
-                <title>Client Project Preview | Elevion Web Development</title>
+                <title>Client Project Preview | ROLLINSX Web Development</title>
                 <meta name="description" content="Preview your custom web development project with our secure client access portal. Explore features, functionality, and detailed documentation." />
                 <meta name="robots" content="noindex, nofollow" />
-                <link rel="canonical" href={`https://elevion.dev/client-preview/${params.code}`} />
+                <link rel="canonical" href={`https://rollinsx.dev/client-preview/${params.code}`} />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -322,8 +322,8 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Login | Elevion</title>
-                <meta name="description" content="Log in to your Elevion account to access premium features, subscriptions, and client previews." />
+                <title>Login | ROLLINSX</title>
+                <meta name="description" content="Log in to your ROLLINSX account to access premium features, subscriptions, and client previews." />
                 <meta name="robots" content="noindex, follow" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
@@ -336,8 +336,8 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Admin Dashboard | Elevion</title>
-                <meta name="description" content="Elevion administrative dashboard for platform management." />
+                <title>Admin Dashboard | ROLLINSX</title>
+                <meta name="description" content="ROLLINSX administrative dashboard for platform management." />
                 <meta name="robots" content="noindex, nofollow" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
@@ -350,7 +350,7 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Manage Client Previews | Admin | Elevion</title>
+                <title>Manage Client Previews | Admin | ROLLINSX</title>
                 <meta name="description" content="Admin tool for managing client preview access codes." />
                 <meta name="robots" content="noindex, nofollow" />
                 <html lang={i18n.language.split('-')[0]} />
@@ -364,10 +364,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Content Hub | Elevion</title>
+                <title>Content Hub | ROLLINSX</title>
                 <meta name="description" content="Access AI-powered business insights, trending topics, and personalized content recommendations for small business owners." />
                 <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://elevion.dev/content-hub" />
+                <link rel="canonical" href="https://rollinsx.dev/content-hub" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -379,10 +379,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>AI-Powered Services | Elevion</title>
-                <meta name="description" content="Experience Elevion's AI-powered tools including personalized service recommendations, intelligent content analysis, and our ElevateBot assistant." />
+                <title>AI-Powered Services | ROLLINSX</title>
+                <meta name="description" content="Experience ROLLINSX's AI-powered tools including personalized service recommendations, intelligent content analysis, and our ElevateBot assistant." />
                 <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://elevion.dev/ai-services" />
+                <link rel="canonical" href="https://rollinsx.dev/ai-services" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -394,10 +394,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Feedback | Elevion</title>
-                <meta name="description" content="Share your feedback about Elevion's web development services. Help us improve and provide better solutions for small businesses." />
+                <title>Feedback | ROLLINSX</title>
+                <meta name="description" content="Share your feedback about ROLLINSX's web development services. Help us improve and provide better solutions for small businesses." />
                 <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://elevion.dev/feedback" />
+                <link rel="canonical" href="https://rollinsx.dev/feedback" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -409,10 +409,10 @@ export default function App() {
           {(params) => (
             <>
               <Helmet>
-                <title>Blog | Elevion</title>
-                <meta name="description" content="Expert insights and knowledge from Elevion web development professionals on latest web trends, technologies, and strategies for small businesses." />
+                <title>Blog | ROLLINSX</title>
+                <meta name="description" content="Expert insights and knowledge from ROLLINSX web development professionals on latest web trends, technologies, and strategies for small businesses." />
                 <meta name="robots" content="index, follow" />
-                <link rel="canonical" href={`https://elevion.dev/blog/${params.postId}`} />
+                <link rel="canonical" href={`https://rollinsx.dev/blog/${params.postId}`} />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -424,10 +424,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Free Website Design Suggestions | Elevion</title>
+                <title>Free Website Design Suggestions | ROLLINSX</title>
                 <meta name="description" content="Get free AI-powered website design suggestions tailored to your business type. Receive color schemes, typography, layouts, and key features instantly." />
                 <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://elevion.dev/mockup-suggestions" />
+                <link rel="canonical" href="https://rollinsx.dev/mockup-suggestions" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -439,10 +439,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>SEO Tools - AI-Powered SEO Optimization | Elevion</title>
-                <meta name="description" content="Elevion's AI-powered SEO tools help small businesses optimize their websites for better search rankings. Get personalized recommendations and strategies." />
+                <title>SEO Tools - AI-Powered SEO Optimization | ROLLINSX</title>
+                <meta name="description" content="ROLLINSX's AI-powered SEO tools help small businesses optimize their websites for better search rankings. Get personalized recommendations and strategies." />
                 <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://elevion.dev/seo-tools" />
+                <link rel="canonical" href="https://rollinsx.dev/seo-tools" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -454,10 +454,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>AI Design Tools | Elevion</title>
-                <meta name="description" content="Access Elevion's suite of AI-powered design tools for website color schemes, typography recommendations, branding guidelines, and layout suggestions." />
+                <title>AI Design Tools | ROLLINSX</title>
+                <meta name="description" content="Access ROLLINSX's suite of AI-powered design tools for website color schemes, typography recommendations, branding guidelines, and layout suggestions." />
                 <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://elevion.dev/design-tools" />
+                <link rel="canonical" href="https://rollinsx.dev/design-tools" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -469,10 +469,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Social Media Manager | Elevion</title>
-                <meta name="description" content="Manage, schedule, and analyze your social media content across multiple platforms with Elevion's AI-powered social media management system." />
+                <title>Social Media Manager | ROLLINSX</title>
+                <meta name="description" content="Manage, schedule, and analyze your social media content across multiple platforms with ROLLINSX's AI-powered social media management system." />
                 <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://elevion.dev/social-media" />
+                <link rel="canonical" href="https://rollinsx.dev/social-media" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -484,10 +484,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Marketing Campaign Generator | Elevion</title>
+                <title>Marketing Campaign Generator | ROLLINSX</title>
                 <meta name="description" content="Create powerful, data-driven marketing campaigns with our AI-powered campaign generator. Design emails, social posts, and full campaigns." />
                 <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://elevion.dev/marketing-campaigns" />
+                <link rel="canonical" href="https://rollinsx.dev/marketing-campaigns" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -499,10 +499,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>AI-Optimized Landing Page | Elevion</title>
+                <title>AI-Optimized Landing Page | ROLLINSX</title>
                 <meta name="description" content="Experience our AI-powered landing page that learns from user behavior to optimize for conversions. See real-time optimization in action." />
                 <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://elevion.dev/optimized-landing" />
+                <link rel="canonical" href="https://rollinsx.dev/optimized-landing" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -515,10 +515,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Checkout Optimization | Elevion</title>
+                <title>Checkout Optimization | ROLLINSX</title>
                 <meta name="description" content="Optimize your checkout process to increase conversions using AI-powered suggestions and analytics." />
                 <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://elevion.dev/checkout-optimization" />
+                <link rel="canonical" href="https://rollinsx.dev/checkout-optimization" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -530,10 +530,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Price Optimization | Elevion</title>
+                <title>Price Optimization | ROLLINSX</title>
                 <meta name="description" content="Optimize your subscription pricing with AI-powered market analysis and user behavior insights. Make data-driven pricing decisions." />
                 <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://elevion.dev/price-optimization" />
+                <link rel="canonical" href="https://rollinsx.dev/price-optimization" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -545,10 +545,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Bug Monitoring | Elevion</title>
+                <title>Bug Monitoring | ROLLINSX</title>
                 <meta name="description" content="Monitor and fix bugs in your website with our advanced bug monitoring dashboard." />
                 <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://elevion.dev/bug-monitoring" />
+                <link rel="canonical" href="https://rollinsx.dev/bug-monitoring" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -560,10 +560,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Brand Consistency Monitor | Elevion</title>
+                <title>Brand Consistency Monitor | ROLLINSX</title>
                 <meta name="description" content="Track and manage brand consistency issues across your digital presence with our brand consistency monitoring dashboard." />
                 <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://elevion.dev/brand-consistency" />
+                <link rel="canonical" href="https://rollinsx.dev/brand-consistency" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -575,10 +575,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Website Analytics | Elevion</title>
-                <meta name="description" content="Track and analyze website performance, engagement metrics, and conversion rates with Elevion's AI-powered analytics platform." />
+                <title>Website Analytics | ROLLINSX</title>
+                <meta name="description" content="Track and analyze website performance, engagement metrics, and conversion rates with ROLLINSX's AI-powered analytics platform." />
                 <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://elevion.dev/website-analytics" />
+                <link rel="canonical" href="https://rollinsx.dev/website-analytics" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -590,10 +590,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Service Analytics | Marketplace | Elevion</title>
+                <title>Service Analytics | Marketplace | ROLLINSX</title>
                 <meta name="description" content="Track service engagement, analyze marketplace metrics, and optimize your service offerings with real-time analytics." />
                 <meta name="robots" content="noindex, follow" />
-                <link rel="canonical" href="https://elevion.dev/marketplace/analytics" />
+                <link rel="canonical" href="https://rollinsx.dev/marketplace/analytics" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -605,10 +605,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Ad Generator | Marketplace | Elevion</title>
+                <title>Ad Generator | Marketplace | ROLLINSX</title>
                 <meta name="description" content="Create compelling, AI-generated ad content for your premium marketplace listings to attract more customers and increase engagement." />
                 <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://elevion.dev/marketplace/ad-generator" />
+                <link rel="canonical" href="https://rollinsx.dev/marketplace/ad-generator" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -620,10 +620,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Content Analytics | Elevion</title>
+                <title>Content Analytics | ROLLINSX</title>
                 <meta name="description" content="Track content performance and engagement metrics with AI-powered insights. Analyze reader behavior, social sharing patterns, and content effectiveness." />
                 <meta name="robots" content="noindex, follow" />
-                <link rel="canonical" href="https://elevion.dev/content/analytics" />
+                <link rel="canonical" href="https://rollinsx.dev/content/analytics" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -635,10 +635,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Social Media Post Suggestions | Elevion</title>
+                <title>Social Media Post Suggestions | ROLLINSX</title>
                 <meta name="description" content="Get AI-powered social media post suggestions tailored to your business type to boost your online presence." />
                 <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://elevion.dev/social-media-suggestions" />
+                <link rel="canonical" href="https://rollinsx.dev/social-media-suggestions" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -650,10 +650,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Email Campaigns | Elevion</title>
+                <title>Email Campaigns | ROLLINSX</title>
                 <meta name="description" content="Create and manage AI-powered email campaigns for your business with industry-specific templates and scheduling." />
                 <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://elevion.dev/email-campaigns" />
+                <link rel="canonical" href="https://rollinsx.dev/email-campaigns" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -665,10 +665,10 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Mockup Analytics | Elevion</title>
+                <title>Mockup Analytics | ROLLINSX</title>
                 <meta name="description" content="Track mockup engagement and performance metrics with AI-powered insights. Analyze client interactions, feedback patterns, and design effectiveness." />
                 <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://elevion.dev/mockups/analytics" />
+                <link rel="canonical" href="https://rollinsx.dev/mockups/analytics" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
@@ -680,8 +680,8 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Your Achievements | Elevion</title>
-                <meta name="description" content="Track your achievements, milestones and progress with Elevion. View rewards for completing key actions and engaging with our platform." />
+                <title>Your Achievements | ROLLINSX</title>
+                <meta name="description" content="Track your achievements, milestones and progress with ROLLINSX. View rewards for completing key actions and engaging with our platform." />
                 <meta name="robots" content="noindex, follow" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
@@ -694,7 +694,7 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Page Not Found | Elevion</title>
+                <title>Page Not Found | ROLLINSX</title>
                 <meta name="description" content="Sorry, the page you are looking for doesn't exist. Return to our homepage to explore our web development services." />
                 <meta name="robots" content="noindex, follow" />
                 <html lang={i18n.language.split('-')[0]} />
@@ -708,8 +708,8 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>UI/UX Analytics | Elevion</title>
-                <meta name="description" content="Analyze user interactions and improve your website's user experience with Elevion's AI-powered UI/UX analytics." />
+                <title>UI/UX Analytics | ROLLINSX</title>
+                <meta name="description" content="Analyze user interactions and improve your website's user experience with ROLLINSX's AI-powered UI/UX analytics." />
                 <meta name="robots" content="noindex, nofollow" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
@@ -722,7 +722,7 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Test ElevateBot | Elevion</title>
+                <title>Test ElevateBot | ROLLINSX</title>
                 <meta name="description" content="Testing page for ElevateBot integration." />
                 <meta name="robots" content="noindex, nofollow" />
                 <html lang={i18n.language.split('-')[0]} />
@@ -742,10 +742,10 @@ export default function App() {
             return (
               <>
                 <Helmet>
-                  <title>Dynamic Particle Background Generator | Elevion</title>
+                  <title>Dynamic Particle Background Generator | ROLLINSX</title>
                   <meta name="description" content="Create and customize beautiful interactive particle backgrounds for your web projects with our dynamic generator tool." />
                   <meta name="robots" content="index, follow" />
-                  <link rel="canonical" href="https://elevion.dev/particle-background" />
+                  <link rel="canonical" href="https://rollinsx.dev/particle-background" />
                   <html lang={i18n.language.split('-')[0]} />
                   <meta httpEquiv="Content-Language" content={i18n.language} />
                 </Helmet>
@@ -763,7 +763,7 @@ export default function App() {
             return (
               <>
                 <Helmet>
-                  <title>Client Input | Elevion</title>
+                  <title>Client Input | ROLLINSX</title>
                   <meta name="robots" content="noindex, nofollow" />
                   <html lang={i18n.language.split('-')[0]} />
                   <meta httpEquiv="Content-Language" content={i18n.language} />
@@ -780,7 +780,7 @@ export default function App() {
             return (
               <>
                 <Helmet>
-                  <title>Preview | Elevion</title>
+                  <title>Preview | ROLLINSX</title>
                   <meta name="robots" content="noindex, nofollow" />
                   <html lang={i18n.language.split('-')[0]} />
                   <meta httpEquiv="Content-Language" content={i18n.language} />
@@ -797,7 +797,7 @@ export default function App() {
             return (
               <>
                 <Helmet>
-                  <title>Dialog | Elevion</title>
+                  <title>Dialog | ROLLINSX</title>
                   <meta name="robots" content="noindex, nofollow" />
                   <html lang={i18n.language.split('-')[0]} />
                   <meta httpEquiv="Content-Language" content={i18n.language} />
@@ -814,7 +814,7 @@ export default function App() {
             return (
               <>
                 <Helmet>
-                  <title>Image Lightbox | Elevion</title>
+                  <title>Image Lightbox | ROLLINSX</title>
                   <meta name="robots" content="noindex, nofollow" />
                   <html lang={i18n.language.split('-')[0]} />
                   <meta httpEquiv="Content-Language" content={i18n.language} />
@@ -830,7 +830,7 @@ export default function App() {
           {() => (
             <>
               <Helmet>
-                <title>Page Not Found | Elevion</title>
+                <title>Page Not Found | ROLLINSX</title>
                 <meta name="description" content="Sorry, the page you are looking for doesn't exist. Return to our homepage to explore our web development services." />
                 <meta name="robots" content="noindex, follow" />
                 <html lang={i18n.language.split('-')[0]} />

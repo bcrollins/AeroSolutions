@@ -79,7 +79,7 @@ export default function SocialMediaPage() {
   return (
     <div className="container py-8">
       <Helmet>
-        <title>Social Media Manager | Elevion</title>
+        <title>Social Media Manager | ROLLINSX</title>
       </Helmet>
       
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">

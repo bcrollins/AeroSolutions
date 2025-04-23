@@ -160,7 +160,7 @@ router.post('/natural-language-query', async (req, res) => {
       message: 'Natural language query failed', 
       error: error.message,
       fallback: {
-        answer: `I apologize, but I'm currently unable to process your question fully. Based on general knowledge, ${question.includes('pricing') ? 'Elevion offers competitive pricing packages tailored to your business needs' : question.includes('services') ? 'Elevion provides comprehensive web development services including website design, e-commerce solutions, and content management systems' : 'Elevion specializes in web development services for small businesses'}. For more specific information, please contact our team directly or try again later.`
+        answer: `I apologize, but I'm currently unable to process your question fully. Based on general knowledge, ${question.includes('pricing') ? 'ROLLINSX offers competitive pricing packages tailored to your business needs' : question.includes('services') ? 'ROLLINSX provides comprehensive web development services including website design, e-commerce solutions, and content management systems' : 'ROLLINSX specializes in web development services for small businesses'}. For more specific information, please contact our team directly or try again later.`
       }
     });
   }
@@ -306,7 +306,7 @@ router.post('/faq-matching', async (req, res) => {
           match_confidence: 0
         },
         suggested_followup_questions: [
-          "What services does Elevion offer?",
+          "What services does ROLLINSX offer?",
           "How much do your web development services cost?",
           "What is your process for creating a website?"
         ]

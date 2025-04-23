@@ -274,13 +274,13 @@ export class DatabaseStorage implements IStorage {
         'business': 'Highlight your team, services, and include strong calls-to-action on every page.'
       };
       
-      const defaultTips = 'Welcome to Elevion! Start by completing your profile and exploring our web development marketplace.';
+      const defaultTips = 'Welcome to ROLLINSX! Start by completing your profile and exploring our web development marketplace.';
       const personalizedTips = businessTypeMap[businessType.toLowerCase()] || defaultTips;
       
       return personalizedTips;
     } catch (error) {
       console.error('Error generating personalized onboarding:', error);
-      return 'Welcome to Elevion! Start by exploring our web development marketplace and tools.';
+      return 'Welcome to ROLLINSX! Start by exploring our web development marketplace and tools.';
     }
   }
   

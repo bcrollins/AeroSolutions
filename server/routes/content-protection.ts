@@ -23,7 +23,7 @@ contentProtectionRouter.post(
       const { content, contentId, contentType, customBrand } = req.body;
       
       // Apply XAI watermarking to the content
-      const watermarkedContent = await watermarkText(content, customBrand || 'Elevion');
+      const watermarkedContent = await watermarkText(content, customBrand || 'ROLLINSX');
       
       return res.status(200).json({
         success: true,
@@ -56,7 +56,7 @@ contentProtectionRouter.post(
       const { content, customBrand } = req.body;
       
       // Detect watermarking in content
-      const detection = await detectWatermark(content, customBrand || 'Elevion');
+      const detection = await detectWatermark(content, customBrand || 'ROLLINSX');
       
       return res.status(200).json({
         success: true,

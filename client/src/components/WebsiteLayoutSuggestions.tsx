@@ -153,7 +153,7 @@ export default function WebsiteLayoutSuggestions() {
         )}
       </CardContent>
       <CardFooter className="flex justify-between text-xs text-muted-foreground">
-        <p>Powered by Elevion AI</p>
+        <p>Powered by ROLLINSX AI</p>
         <p>Results may vary based on business type</p>
       </CardFooter>
     </Card>

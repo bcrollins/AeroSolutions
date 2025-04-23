@@ -24,7 +24,7 @@ const MarketplaceAnalyticsPage: React.FC = () => {
         <div>
           <h1 className="text-3xl font-bold text-slate-blue font-poppins">Marketplace Analytics</h1>
           <p className="text-muted-foreground">
-            Track service engagement, sales performance, and customer behavior in the Elevion Marketplace
+            Track service engagement, sales performance, and customer behavior in the ROLLINSX Marketplace
           </p>
         </div>
         <Button 

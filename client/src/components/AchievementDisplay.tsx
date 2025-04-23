@@ -138,7 +138,7 @@ export function AchievementDisplay() {
             <Award className="mx-auto h-12 w-12 text-gray-300" />
             <h3 className="mt-4 text-lg font-medium">No achievements yet</h3>
             <p className="mt-2 text-sm text-gray-500">
-              Continue using Elevion to earn achievements and rewards!
+              Continue using ROLLINSX to earn achievements and rewards!
             </p>
           </div>
         ) : (

@@ -13,7 +13,7 @@ export function useAuth() {
   const mockUser: User = {
     id: 1,
     username: 'demo_admin',
-    email: 'admin@elevion.dev',
+    email: 'admin@rollinsx.dev',
     role: 'admin'
   };
 

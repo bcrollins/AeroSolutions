@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { apiRequest } from "@/lib/queryClient";
 import { toast } from "@/hooks/use-toast";
 
-interface ElevateBotProps {
+interface ROLLINSXBotProps {
   isOpen?: boolean;
   initialOption?: string | null;
   hideFloatingButton?: boolean;
@@ -21,12 +21,12 @@ interface ChatMessage {
   isProcessing?: boolean;
 }
 
-export default function ElevateBot({ 
+export default function ROLLINSXBot({ 
   isOpen: externalIsOpen, 
   initialOption, 
   hideFloatingButton = false,
   className = ""
-}: ElevateBotProps = {}) {
+}: ROLLINSXBotProps = {}) {
   const [isOpen, setIsOpen] = useState(externalIsOpen || false);
   const [activeOption, setActiveOption] = useState<string | null>(initialOption || null);
   const [isTyping, setIsTyping] = useState(false);
@@ -168,7 +168,7 @@ export default function ElevateBot({
     setMessages(prev => [...prev, botMessage]);
     
     try {
-      // Send request to dedicated ElevateBot endpoint powered by Elevion AI
+      // Send request to dedicated ElevateBot endpoint powered by ROLLINSX AI
       const response = await apiRequest("POST", "/api/elevatebot/support", { 
         query: `User selected option: ${option}. ${getOptionText(option)}` 
       });
@@ -222,7 +222,7 @@ export default function ElevateBot({
       case "branding-design":
         return "I need help with branding and identity";
       default:
-        return "Tell me more about Elevion's services";
+        return "Tell me more about ROLLINSX's services";
     }
   };
   
@@ -254,7 +254,7 @@ export default function ElevateBot({
     setMessages(prev => [...prev, botMessage]);
     
     try {
-      // Send request to dedicated ElevateBot endpoint powered by Elevion AI
+      // Send request to dedicated ElevateBot endpoint powered by ROLLINSX AI
       // Include business info in the request if available
       const hasBusinessInfo = Object.values(businessInfo).some(value => value.trim() !== '');
       
@@ -361,7 +361,7 @@ export default function ElevateBot({
                 </div>
                 <div>
                   <h3 className="font-bold font-poppins">Tech Assistant</h3>
-                  <span className="text-xs text-[#00D1D1] font-inter">Powered by Elevion AI</span>
+                  <span className="text-xs text-[#00D1D1] font-inter">Powered by ROLLINSX AI</span>
                 </div>
               </div>
               <button onClick={() => setIsOpen(false)} className="text-gray-300 hover:text-white">
@@ -395,7 +395,7 @@ export default function ElevateBot({
                       </div>
                     ) : typingComplete ? (
                       <p className="text-gray-800 font-lato">
-                        Hi there! I'm your Elevion Tech Assistant, powered by Elevion AI. How can I help you with your web development needs today?
+                        Hi there! I'm your ROLLINSX Tech Assistant, powered by ROLLINSX AI. How can I help you with your web development needs today?
                       </p>
                     ) : null}
                   </div>

@@ -47,7 +47,7 @@ router.post('/competitor-analysis', [
     7. SEO strategy insights
     8. Market positioning comparison
     9. Opportunities for differentiation
-    10. Recommended competitive advantages for Elevion
+    10. Recommended competitive advantages for ROLLINSX
     
     Format the analysis as a JSON object with appropriate sections.`;
 
@@ -116,7 +116,7 @@ router.post('/market-trends', [
     4. Regulatory impacts (if applicable)
     5. Market size and growth projections
     6. Key players and their strategies
-    7. Opportunities for Elevion web development services
+    7. Opportunities for ROLLINSX web development services
     8. Potential threats and challenges
     9. Recommended strategic positioning
     
@@ -188,7 +188,7 @@ router.post('/business-case', [
     1. Executive Summary
     2. Project Overview
     3. Current Situation Analysis
-    4. Proposed Solution (using Elevion's web development services)
+    4. Proposed Solution (using ROLLINSX's web development services)
     5. Expected Benefits and ROI
     6. Implementation Timeline and Milestones
     7. Investment Breakdown (with 60% below market rate pricing highlighted)
@@ -258,7 +258,7 @@ router.post('/prioritize-features', [
       ? `Business goals:\n${business_goals.map((g: string) => `- ${g}`).join('\n')}`
       : 'Business goals not specified.';
 
-    const prompt = `Analyze and prioritize these feature requests for Elevion's web development services:
+    const prompt = `Analyze and prioritize these feature requests for ROLLINSX's web development services:
     
     ${featuresText}
     
@@ -347,7 +347,7 @@ router.post('/optimize-pricing', [
     ${competitorInfo}
     
     Provide a comprehensive pricing analysis including:
-    1. Recommended base price (incorporating Elevion's 60% below market rate strategy)
+    1. Recommended base price (incorporating ROLLINSX's 60% below market rate strategy)
     2. Optional tiered pricing structure (if applicable)
     3. Value-based pricing justification
     4. Competitive positioning analysis
@@ -510,7 +510,7 @@ router.post('/generate-proposal', [
     
     The proposal should include:
     1. Executive Summary
-    2. Company Introduction (Elevion web development)
+    2. Company Introduction (ROLLINSX web development)
     3. Understanding of Client Needs
     4. Proposed Solution and Approach
     5. Project Deliverables
@@ -521,7 +521,7 @@ router.post('/generate-proposal', [
     10. Terms and Conditions Summary
     
     Format as a complete, professional proposal in JSON format with appropriate sections.
-    Emphasize Elevion's free mockup service and payment only after design approval.`;
+    Emphasize ROLLINSX's free mockup service and payment only after design approval.`;
 
     const response = await callOpenAI('/chat/completions', {
       model: 'grok-3-mini',
@@ -599,7 +599,7 @@ router.post('/competitive-edge', [
     9. Conversion optimization advantages
     10. Cost-benefit analysis of recommended solutions
     
-    Format as a JSON object with appropriate sections. Focus on realistic, actionable advantages that Elevion can deliver at 60% below market rates.`;
+    Format as a JSON object with appropriate sections. Focus on realistic, actionable advantages that ROLLINSX can deliver at 60% below market rates.`;
 
     const response = await callOpenAI('/chat/completions', {
       model: 'grok-3-mini',
@@ -660,14 +660,14 @@ router.post('/roi-calculator', [
       ? `Industry benchmarks:\n${JSON.stringify(industry_benchmarks, null, 2)}`
       : 'Industry benchmarks not provided.';
 
-    const prompt = `Create a comprehensive ROI calculator for a ${business_type} business considering web development services from Elevion.
+    const prompt = `Create a comprehensive ROI calculator for a ${business_type} business considering web development services from ROLLINSX.
     
     ${scopeText}
     
     ${benchmarksText}
     
     The ROI calculator should include:
-    1. Initial investment parameters (with Elevion's 60% below market rate pricing)
+    1. Initial investment parameters (with ROLLINSX's 60% below market rate pricing)
     2. Ongoing maintenance costs
     3. Expected revenue increases (direct and indirect)
     4. Cost savings (time, resources, operational)
@@ -758,7 +758,7 @@ router.post('/analyze-scope', [
     11. Acceptance Criteria
     
     Format as a complete, professional scope document in JSON format with appropriate sections.
-    Include realistic estimates based on Elevion's web development capabilities.`;
+    Include realistic estimates based on ROLLINSX's web development capabilities.`;
 
     const response = await callOpenAI('/chat/completions', {
       model: 'grok-3-mini',

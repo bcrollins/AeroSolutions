@@ -838,7 +838,7 @@ export default function WebConnectPlatformView({ isOpen, onClose, onBackToLandin
         {/* Footer */}
         <div className="border-t border-gray-200 p-4 bg-gray-50">
           <div className="flex justify-between items-center">
-            <p className="text-sm text-gray-500">© {new Date().getFullYear()} Elevion. All rights reserved.</p>
+            <p className="text-sm text-gray-500">© {new Date().getFullYear()} ROLLINSX. All rights reserved.</p>
             <div className="flex space-x-2">
               <button 
                 onClick={onBackToLanding}

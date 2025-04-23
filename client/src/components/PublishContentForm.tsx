@@ -156,7 +156,7 @@ const PublishContentForm = ({ onPublish }: PublishContentFormProps) => {
         </CardContent>
         <CardFooter className="flex justify-between">
           <div className="text-sm text-slate-500">
-            Published with <Badge variant="outline">Elevion AI</Badge>
+            Published with <Badge variant="outline">ROLLINSX AI</Badge>
           </div>
           <Button 
             onClick={handlePublish}
