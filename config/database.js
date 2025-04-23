@@ -4,34 +4,40 @@
  * This module provides a connection pool for PostgreSQL database connections.
  * It uses environment variables for configuration to keep sensitive information secure.
  */
+
 const { Pool } = require('pg');
 const logger = require('./logger');
 
-// Get database connection details from environment variables
-const connectionString = process.env.DATABASE_URL;
+// Get database configuration from environment variables
+const dbConfig = {
+  connectionString: process.env.DATABASE_URL,
+  // SSL options for production environments
+  ssl: process.env.NODE_ENV === 'production' ? 
+    { rejectUnauthorized: false } : 
+    false,
+  // Maximum number of clients in the pool
+  max: parseInt(process.env.PG_MAX_CLIENTS || '10'),
+  // How long a client can stay idle before being closed
+  idleTimeoutMillis: parseInt(process.env.PG_IDLE_TIMEOUT || '30000'),
+  // How long to wait for a connection from the pool
+  connectionTimeoutMillis: parseInt(process.env.PG_CONNECTION_TIMEOUT || '5000')
+};
 
-// Basic validation
-if (!connectionString) {
-  logger.error('DATABASE_URL environment variable is not set');
-  throw new Error('DATABASE_URL environment variable is required');
-}
+// Create a new pool instance
+const pool = new Pool(dbConfig);
 
-// Configure connection pool
-const pool = new Pool({
-  connectionString,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  max: parseInt(process.env.PG_MAX_CONNECTIONS, 10) || 10, // Maximum number of clients in the pool
-  idleTimeoutMillis: 30000, // How long a client is allowed to remain idle before being closed
-  connectionTimeoutMillis: 2000, // How long to wait for a connection
-});
-
-// Log pool events
-pool.on('connect', () => {
-  logger.debug('New client connected to PostgreSQL pool');
-});
-
+// Register pool error event handler
 pool.on('error', (err) => {
-  logger.logDatabaseError('Pool error', err, { connectionString: 'REDACTED' });
+  logger.error('Unexpected error on idle PostgreSQL client', {
+    error: err.message,
+    stack: err.stack
+  });
+  process.exit(-1); // exit in case of critical errors
+});
+
+// Register pool connect event handler for debugging
+pool.on('connect', (client) => {
+  logger.debug('New client connected to PostgreSQL');
 });
 
 /**
@@ -42,24 +48,28 @@ pool.on('error', (err) => {
  */
 async function query(text, params) {
   const start = Date.now();
-  
   try {
     const result = await pool.query(text, params);
     const duration = Date.now() - start;
     
-    logger.debug('Executed query', { 
-      text, 
-      params, 
-      duration, 
-      rowCount: result.rowCount 
+    logger.debug('Executed query', {
+      query: text.replace(/\s+/g, ' ').trim(),
+      duration,
+      rows: result.rowCount
     });
     
     return result;
   } catch (error) {
-    logger.logDatabaseError('Query execution', error, { 
-      query: text, 
-      params 
+    const duration = Date.now() - start;
+    
+    logger.error('Query error', {
+      query: text.replace(/\s+/g, ' ').trim(),
+      params,
+      duration,
+      error: error.message,
+      stack: error.stack
     });
+    
     throw error;
   }
 }
@@ -72,10 +82,10 @@ async function getClient() {
   const client = await pool.connect();
   const originalRelease = client.release;
   
-  // Override the release method to track release time
+  // Override client release method to track release events
   client.release = () => {
     logger.debug('Client returned to pool');
-    return originalRelease.apply(client);
+    originalRelease.apply(client);
   };
   
   return client;
@@ -87,14 +97,34 @@ async function getClient() {
  */
 async function testConnection() {
   try {
-    const result = await query('SELECT NOW()');
+    const result = await query('SELECT NOW() as current_time');
     logger.info('Database connection test successful', {
-      timestamp: result.rows[0].now,
+      currentTime: result.rows[0].current_time
     });
     return true;
   } catch (error) {
-    logger.error('Database connection test failed', { error: error.message });
+    logger.error('Database connection test failed', {
+      error: error.message,
+      stack: error.stack
+    });
     return false;
+  }
+}
+
+/**
+ * Close the pool and end all connections
+ * @returns {Promise<void>}
+ */
+async function end() {
+  try {
+    await pool.end();
+    logger.info('Database pool has ended and all connections are closed');
+  } catch (error) {
+    logger.error('Error closing database pool', {
+      error: error.message,
+      stack: error.stack
+    });
+    throw error;
   }
 }
 
@@ -102,5 +132,6 @@ module.exports = {
   query,
   getClient,
   testConnection,
-  pool, // Exported for direct use if needed
+  end,
+  pool
 };

@@ -4,119 +4,129 @@
  * This is the main entry point for the API Platform
  */
 const express = require('express');
-const helmet = require('helmet');
-const compression = require('express-compression');
 const path = require('path');
 const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('express-compression');
+const { errorHandler } = require('./middlewares/errorHandler');
+const requestLogger = require('./middlewares/requestLogger');
+const { apiLimiter, openaiLimiter } = require('./middlewares/rateLimiter');
 const logger = require('./config/logger');
 
-// Middleware imports
-const errorHandler = require('./middlewares/errorHandler');
-const requestLogger = require('./middlewares/requestLogger');
-const { apiLimiter } = require('./middlewares/rateLimiter');
-
-// Route imports
+// Import routes
 const openaiRoutes = require('./routes/openaiRoutes');
 const databaseRoutes = require('./routes/databaseRoutes');
 
-// Create Express application
+// Initialize express app
 const app = express();
 
-// Set server port and host
+// Get port from environment or default to 8080
 const PORT = process.env.PORT || 8080;
 const HOST = process.env.HOST || '0.0.0.0';
 
-// Apply global middleware
-app.use(helmet({ contentSecurityPolicy: false })); // Security headers
-app.use(compression()); // Compress responses
+// Apply global middlewares
+app.use(helmet()); // Security headers
 app.use(cors()); // Enable CORS for all routes
-app.use(express.json({ limit: '10mb' })); // Parse JSON bodies (with increased limit for image processing)
-app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Parse URL-encoded bodies
-app.use(requestLogger); // Log all requests
+app.use(compression()); // Compress responses
+app.use(express.json({ limit: '10mb' })); // Parse JSON request bodies
+app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Parse URL-encoded request bodies
 
-// Apply rate limiting to all API routes
-app.use('/api', apiLimiter);
+// Request logging
+app.use(requestLogger);
 
-// Mount API routes
-app.use('/api/openai', openaiRoutes);
-app.use('/api/database', databaseRoutes);
-
-// Serve static files from the public directory
+// Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Root route serving the landing page
+// Apply rate limiting to API routes
+app.use('/api', apiLimiter);
+
+// Register API routes with appropriate rate limiters
+app.use('/api/openai', openaiLimiter, openaiRoutes);
+app.use('/api/database', databaseRoutes);
+
+// Base route serves the landing page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// API documentation route
+// API information route
 app.get('/api', (req, res) => {
   res.json({
-    message: 'API Platform - API Documentation',
+    name: 'AI Platform API',
     version: '1.0.0',
-    endpoints: {
-      '/api/openai': 'OpenAI API endpoints',
-      '/api/openai/text': 'Generate text using OpenAI',
-      '/api/openai/json': 'Generate JSON using OpenAI',
-      '/api/openai/analyze-image': 'Analyze images using OpenAI',
-      '/api/openai/test': 'Test OpenAI connection',
-      '/api/database': 'Database management endpoints',
-      '/api/database/status': 'Get database status',
-      '/api/database/tables': 'List database tables',
-      '/api/database/tables/:tableName/columns': 'Get columns for a table'
-    }
+    description: 'RESTful API with OpenAI integration',
+    documentation: '/api/docs',
+    status: 'online',
+    timestamp: new Date().toISOString(),
   });
 });
 
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({
-    status: 'UP',
-    timestamp: new Date().toISOString(),
+    status: 'ok',
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development'
+    timestamp: new Date().toISOString(),
   });
 });
 
-// Catch-all route for undefined routes
+// Catch-all for unmatched routes
 app.use('*', (req, res) => {
   res.status(404).json({
     success: false,
     error: {
-      message: 'Resource not found',
-      details: `The requested URL ${req.originalUrl} was not found on this server.`
-    }
+      message: `Route not found: ${req.originalUrl}`,
+    },
   });
 });
 
-// Apply global error handler
+// Global error handler
 app.use(errorHandler);
 
 // Start the server
-app.listen(PORT, HOST, () => {
-  logger.info(`Server running on http://${HOST}:${PORT}`);
-  logger.info(`OpenAI API configured: ${process.env.OPENAI_API_KEY ? 'Yes' : 'No'}`);
-  logger.info(`Database URL configured: ${process.env.DATABASE_URL ? 'Yes' : 'No'}`);
-});
+function startServer() {
+  try {
+    const server = app.listen(PORT, HOST, () => {
+      logger.info(`Server running at http://${HOST}:${PORT}`);
+      logger.info(`API available at http://${HOST}:${PORT}/api`);
+    });
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (reason, promise) => {
-  logger.error('Unhandled Promise Rejection', { reason, stack: reason.stack });
-  // Don't exit the process in production, just log it
-  if (process.env.NODE_ENV !== 'production') {
-    console.error('Unhandled Promise Rejection:', reason);
-  }
-});
+    // Handle shutdown gracefully
+    process.on('SIGTERM', () => {
+      logger.info('SIGTERM received, shutting down gracefully');
+      server.close(() => {
+        logger.info('Server closed');
+        process.exit(0);
+      });
+    });
 
-// Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
-  logger.error('Uncaught Exception', { error: error.message, stack: error.stack });
-  // Exit with error in production to allow process manager to restart
-  if (process.env.NODE_ENV === 'production') {
+    process.on('SIGINT', () => {
+      logger.info('SIGINT received, shutting down gracefully');
+      server.close(() => {
+        logger.info('Server closed');
+        process.exit(0);
+      });
+    });
+
+    // Unhandled rejection handler
+    process.on('unhandledRejection', (reason, promise) => {
+      logger.error('Unhandled Rejection at:', {
+        promise: promise,
+        reason: reason,
+      });
+    });
+
+    return server;
+  } catch (error) {
+    logger.error('Failed to start server:', { error: error.message });
     process.exit(1);
-  } else {
-    console.error('Uncaught Exception:', error);
   }
-});
+}
 
-module.exports = app;
+// If this file is run directly, start the server
+if (require.main === module) {
+  startServer();
+}
+
+// Export for testing
+module.exports = { app, startServer };

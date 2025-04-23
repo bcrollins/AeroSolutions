@@ -1,104 +1,82 @@
 /**
  * Rate Limiter Middleware
  * 
- * API rate limiting middleware to prevent abuse
+ * Implements rate limiting to protect API endpoints from abuse
  */
-
-const NodeCache = require('node-cache');
+const rateLimit = require('express-rate-limit');
+const { ServiceUnavailableError } = require('./errorHandler');
 const logger = require('../config/logger');
 
-// In-memory cache for rate limiting
-const rateCache = new NodeCache({
-  stdTTL: 60, // Default time-to-live in seconds
-  checkperiod: 120, // Check for expired keys every 2 minutes
-  useClones: false // Don't clone data to improve performance
-});
+// Create a store for production environments (if needed)
+// For example, you might want to use Redis store for distributed applications
+// const RedisStore = require('rate-limit-redis');
+// const redisClient = require('../config/redis'); // You would need to create this
 
 /**
- * Create a rate limiter middleware
- * @param {number} maxRequests - Maximum requests allowed in the window
- * @param {number} windowMs - Time window in milliseconds
- * @param {string} limitType - Type of rate limit for identification
- * @returns {Function} - Express middleware
+ * Create rate limiter based on provided options
+ * @param {Object} options - Rate limiting options
+ * @returns {Function} Express middleware
  */
-function createRateLimiter(maxRequests, windowMs, limitType) {
-  return (req, res, next) => {
-    // Get client IP or custom identifier (e.g. API key)
-    const identifier = req.headers['x-api-key'] || 
-                       req.headers['x-forwarded-for'] || 
-                       req.ip || 
-                       'unknown';
-    
-    // Create a unique key for this rate limit type and client
-    const key = `${limitType}:${identifier}`;
-    
-    // Get current request count
-    let requestCount = rateCache.get(key) || { count: 0, resetTime: Date.now() + windowMs };
-    
-    // Check if window has expired and reset if needed
-    if (Date.now() > requestCount.resetTime) {
-      requestCount = { count: 0, resetTime: Date.now() + windowMs };
-    }
-    
-    // Increment request count
-    requestCount.count += 1;
-    
-    // Set remaining requests and reset time headers
-    res.setHeader('X-RateLimit-Limit', maxRequests);
-    res.setHeader('X-RateLimit-Remaining', Math.max(0, maxRequests - requestCount.count));
-    res.setHeader('X-RateLimit-Reset', Math.ceil(requestCount.resetTime / 1000)); // in seconds
-    
-    // Update cache
-    rateCache.set(key, requestCount);
-    
-    // Check if rate limit exceeded
-    if (requestCount.count > maxRequests) {
-      // Calculate retry after time
-      const retryAfterSeconds = Math.ceil((requestCount.resetTime - Date.now()) / 1000);
-      
-      // Set retry headers
-      res.setHeader('Retry-After', retryAfterSeconds);
-      
+function createRateLimiter(options = {}) {
+  const defaultOptions = {
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+    skipSuccessfulRequests: false, // Don't count successful requests
+    message: 'Too many requests, please try again later.',
+    skip: (req) => false, // No default skip function
+  };
+
+  // Merge provided options with defaults
+  const limiterOptions = {
+    ...defaultOptions,
+    ...options,
+    handler: (req, res, next, options) => {
       // Log rate limit hit
-      logger.warn(`Rate limit exceeded for ${limitType}`, {
-        ip: identifier,
+      logger.warn(`Rate limit exceeded`, {
+        ip: req.ip,
         path: req.originalUrl,
         method: req.method,
-        rateLimit: {
-          type: limitType,
-          max: maxRequests,
-          current: requestCount.count,
-          resetTime: new Date(requestCount.resetTime).toISOString()
-        }
+        userAgent: req.get('user-agent'),
+        limit: options.max,
+        window: options.windowMs,
       });
       
-      // Return rate limit error
-      return res.status(429).json({
-        success: false,
-        error: {
-          message: 'Too many requests, please try again later',
-          code: 'RATE_LIMIT_EXCEEDED',
-          retryAfter: retryAfterSeconds
-        }
-      });
+      // Use our error handler for consistency
+      next(new ServiceUnavailableError(options.message || 'Too many requests, please try again later.'));
     }
-    
-    // Continue if within rate limit
-    next();
   };
+  
+  // Return the configured middleware
+  return rateLimit(limiterOptions);
 }
 
-// Export rate limiters for different endpoints
+// Standard API rate limiter
+const apiLimiter = createRateLimiter({ 
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // 100 requests per 15 minutes
+  message: 'Too many API requests, please try again after 15 minutes',
+});
+
+// More strict rate limiter for authentication routes
+const authLimiter = createRateLimiter({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10, // 10 attempts per hour
+  message: 'Too many login attempts, please try again after an hour',
+  skipSuccessfulRequests: true, // Don't count successful logins
+});
+
+// Rate limiter specifically for OpenAI endpoints
+const openaiLimiter = createRateLimiter({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 60, // 60 requests per hour (1 per minute on average)
+  message: 'OpenAI request limit reached. Please try again later.',
+});
+
 module.exports = {
-  // Standard rate limiter for general API endpoints
-  standard: createRateLimiter(60, 60 * 1000, 'standard'), // 60 requests per minute
-  
-  // More restrictive rate limiter for expensive operations
-  api: createRateLimiter(30, 60 * 1000, 'api'), // 30 requests per minute
-  
-  // Highly restrictive rate limiter for OpenAI APIs
-  openai: createRateLimiter(10, 60 * 1000, 'openai'), // 10 requests per minute
-  
-  // Custom rate limiter factory for specific needs
-  create: createRateLimiter
+  createRateLimiter,
+  apiLimiter,
+  authLimiter,
+  openaiLimiter
 };

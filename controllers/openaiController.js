@@ -3,22 +3,19 @@
  * 
  * Handles logic for OpenAI-related routes
  */
-
 const OpenAI = require('openai');
 const logger = require('../config/logger');
-const { createError } = require('../middlewares/errorHandler');
+const { ValidationError, ServiceUnavailableError } = require('../middlewares/errorHandler');
 
-// Create OpenAI client with API key from environment variable
+// Initialize OpenAI client
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Define default models for different operations
-const DEFAULT_MODELS = {
-  text: 'gpt-4o', // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-  json: 'gpt-4o',
-  image: 'gpt-4o'
-};
+// Default model to use
+const DEFAULT_MODEL = 'gpt-4o'; // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+const DEFAULT_MAX_TOKENS = 1000;
+const DEFAULT_TEMPERATURE = 0.7;
 
 /**
  * Generate text using OpenAI
@@ -27,52 +24,63 @@ const DEFAULT_MODELS = {
  */
 async function generateText(req, res, next) {
   try {
-    const { prompt, model = DEFAULT_MODELS.text, max_tokens = 1000, temperature = 0.7 } = req.body;
-
-    logger.info('OpenAI text generation request', {
+    const { prompt, model = DEFAULT_MODEL, max_tokens = DEFAULT_MAX_TOKENS, temperature = DEFAULT_TEMPERATURE } = req.body;
+    
+    // Validate input
+    if (!prompt) {
+      throw new ValidationError('Prompt is required', { prompt: 'This field is required' });
+    }
+    
+    if (typeof prompt !== 'string') {
+      throw new ValidationError('Prompt must be a string', { prompt: 'Invalid type, must be a string' });
+    }
+    
+    // Log the request (sanitized for privacy/security)
+    logger.logOpenAIRequest('generateText', {
       model,
-      prompt_length: prompt.length,
-      max_tokens
-    });
-
+      prompt: prompt.substring(0, 100) + (prompt.length > 100 ? '...' : ''),
+      max_tokens,
+      temperature
+    }, 'pending');
+    
+    // Make the API call
     const response = await openai.chat.completions.create({
       model,
       messages: [{ role: 'user', content: prompt }],
       max_tokens,
-      temperature
+      temperature,
     });
-
-    logger.debug('OpenAI text generation response', {
-      completion_tokens: response.usage?.completion_tokens,
-      prompt_tokens: response.usage?.prompt_tokens,
-      finish_reason: response.choices[0]?.finish_reason
-    });
-
+    
+    // Log success (sanitized)
+    logger.logOpenAIRequest('generateText', {
+      model,
+      prompt: prompt.substring(0, 100) + (prompt.length > 100 ? '...' : ''),
+    }, 'success');
+    
+    // Return response
     return res.json({
       success: true,
       data: {
-        text: response.choices[0]?.message.content || '',
-        model: response.model,
+        text: response.choices[0].message.content,
         usage: response.usage,
-        created: response.created
+        model: response.model,
       }
     });
   } catch (error) {
-    logger.error('OpenAI text generation error', {
-      error: error.message,
-      stack: error.stack
-    });
-
     // Handle specific OpenAI errors
-    if (error.response) {
-      return next(createError(
-        `OpenAI API error: ${error.response.data.error.message}`,
-        'OPENAI_API_ERROR',
-        error.status || 500
-      ));
+    if (error.name === 'APIError') {
+      if (error.status === 429) {
+        return next(new ServiceUnavailableError('OpenAI rate limit exceeded, please try again later'));
+      } else if (error.status === 400) {
+        return next(new ValidationError('Invalid request to OpenAI', { details: error.message }));
+      } else {
+        logger.error('OpenAI API Error', { error: error.message, status: error.status });
+        return next(new ServiceUnavailableError('Error communicating with OpenAI'));
+      }
     }
-
-    return next(createError('Error generating text with OpenAI', 'OPENAI_ERROR', 500));
+    
+    // Pass to global error handler for all other errors
+    next(error);
   }
 }
 
@@ -83,75 +91,87 @@ async function generateText(req, res, next) {
  */
 async function generateJSON(req, res, next) {
   try {
-    const { prompt, model = DEFAULT_MODELS.json, max_tokens = 2000, temperature = 0.2 } = req.body;
-
-    logger.info('OpenAI JSON generation request', {
+    const { 
+      prompt, 
+      model = DEFAULT_MODEL, 
+      max_tokens = DEFAULT_MAX_TOKENS, 
+      temperature = DEFAULT_TEMPERATURE,
+      schema
+    } = req.body;
+    
+    // Validate input
+    if (!prompt) {
+      throw new ValidationError('Prompt is required', { prompt: 'This field is required' });
+    }
+    
+    if (typeof prompt !== 'string') {
+      throw new ValidationError('Prompt must be a string', { prompt: 'Invalid type, must be a string' });
+    }
+    
+    // Create an augmented prompt that includes schema information if provided
+    let augmentedPrompt = prompt;
+    if (schema) {
+      augmentedPrompt += `\n\nPlease return a valid JSON object with the following structure: ${JSON.stringify(schema)}`;
+    }
+    
+    // Log the request (sanitized for privacy/security)
+    logger.logOpenAIRequest('generateJSON', {
       model,
-      prompt_length: prompt.length,
-      max_tokens
-    });
-
-    const response = await openai.chat.completions.create({
-      model,
-      messages: [
-        { 
-          role: 'system', 
-          content: 'You are a JSON generator. Always respond with valid JSON only.' 
-        },
-        { 
-          role: 'user', 
-          content: prompt 
-        }
-      ],
+      prompt: prompt.substring(0, 100) + (prompt.length > 100 ? '...' : ''),
       max_tokens,
       temperature,
-      response_format: { type: 'json_object' }
+      schema: schema ? 'provided' : 'not provided'
+    }, 'pending');
+    
+    // Make the API call with JSON response format
+    const response = await openai.chat.completions.create({
+      model,
+      messages: [{ role: 'user', content: augmentedPrompt }],
+      max_tokens,
+      temperature,
+      response_format: { type: "json_object" }
     });
-
-    logger.debug('OpenAI JSON generation response', {
-      completion_tokens: response.usage?.completion_tokens,
-      prompt_tokens: response.usage?.prompt_tokens,
-      finish_reason: response.choices[0]?.finish_reason
-    });
-
-    // Parse the response content to ensure it's valid JSON
-    let parsedJson;
+    
+    // Log success
+    logger.logOpenAIRequest('generateJSON', {
+      model,
+      prompt: prompt.substring(0, 100) + (prompt.length > 100 ? '...' : ''),
+    }, 'success');
+    
+    // Parse the JSON response
+    let jsonData;
     try {
-      parsedJson = JSON.parse(response.choices[0]?.message.content || '{}');
-    } catch (jsonError) {
-      logger.warn('Failed to parse OpenAI JSON response', {
-        content: response.choices[0]?.message.content,
-        error: jsonError.message
+      jsonData = JSON.parse(response.choices[0].message.content);
+    } catch (parseError) {
+      throw new ValidationError('OpenAI returned invalid JSON', { 
+        response: response.choices[0].message.content.substring(0, 100) + '...' 
       });
-      parsedJson = { error: 'Invalid JSON response from OpenAI' };
     }
-
+    
+    // Return response
     return res.json({
       success: true,
       data: {
-        json: parsedJson,
-        raw: response.choices[0]?.message.content,
-        model: response.model,
+        json: jsonData,
         usage: response.usage,
-        created: response.created
+        model: response.model,
       }
     });
   } catch (error) {
-    logger.error('OpenAI JSON generation error', {
-      error: error.message,
-      stack: error.stack
-    });
-
     // Handle specific OpenAI errors
-    if (error.response) {
-      return next(createError(
-        `OpenAI API error: ${error.response.data.error.message}`,
-        'OPENAI_API_ERROR',
-        error.status || 500
-      ));
+    if (error.name === 'APIError') {
+      if (error.status === 429) {
+        return next(new ServiceUnavailableError('OpenAI rate limit exceeded, please try again later'));
+      } else if (error.status === 400) {
+        return next(new ValidationError('Invalid request to OpenAI', { details: error.message }));
+      } else {
+        logger.error('OpenAI API Error', { error: error.message, status: error.status });
+        return next(new ServiceUnavailableError('Error communicating with OpenAI'));
+      }
     }
-
-    return next(createError('Error generating JSON with OpenAI', 'OPENAI_ERROR', 500));
+    
+    // Pass to global error handler for all other errors
+    next(error);
   }
 }
 
@@ -162,65 +182,80 @@ async function generateJSON(req, res, next) {
  */
 async function analyzeImage(req, res, next) {
   try {
-    const { imageUrl, prompt = 'Analyze this image in detail and describe what you see.', model = DEFAULT_MODELS.image } = req.body;
-
-    logger.info('OpenAI image analysis request', {
+    const { image_url, image_base64, prompt, model = 'gpt-4o' } = req.body;
+    
+    // Validate input
+    if (!image_url && !image_base64) {
+      throw new ValidationError('Either image_url or image_base64 is required', { 
+        image: 'Provide either an image URL or base64 encoded image' 
+      });
+    }
+    
+    if (!prompt) {
+      throw new ValidationError('Prompt is required', { prompt: 'This field is required' });
+    }
+    
+    // Prepare the message content
+    const content = [
+      { type: 'text', text: prompt }
+    ];
+    
+    // Add the image
+    if (image_url) {
+      content.push({
+        type: 'image_url',
+        image_url: { url: image_url },
+      });
+    } else if (image_base64) {
+      content.push({
+        type: 'image_url',
+        image_url: { url: `data:image/jpeg;base64,${image_base64}` },
+      });
+    }
+    
+    // Log the request (sanitized for privacy/security)
+    logger.logOpenAIRequest('analyzeImage', {
       model,
-      prompt_length: prompt.length,
-      image_url: imageUrl.substring(0, 100) + '...' // Don't log full URL
-    });
-
+      prompt: prompt.substring(0, 100) + (prompt.length > 100 ? '...' : ''),
+      has_image: true,
+    }, 'pending');
+    
+    // Make the API call
     const response = await openai.chat.completions.create({
       model,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: prompt
-            },
-            {
-              type: 'image_url',
-              image_url: {
-                url: imageUrl
-              }
-            }
-          ]
-        }
-      ],
-      max_tokens: 1000
+      messages: [{ role: 'user', content }],
+      max_tokens: DEFAULT_MAX_TOKENS,
     });
-
-    logger.debug('OpenAI image analysis response', {
-      response_length: response.choices[0]?.message.content.length,
-      finish_reason: response.choices[0]?.finish_reason
-    });
-
+    
+    // Log success
+    logger.logOpenAIRequest('analyzeImage', {
+      model,
+      prompt: prompt.substring(0, 100) + (prompt.length > 100 ? '...' : ''),
+    }, 'success');
+    
+    // Return response
     return res.json({
       success: true,
       data: {
-        analysis: response.choices[0]?.message.content || '',
+        analysis: response.choices[0].message.content,
         model: response.model,
-        created: response.created
       }
     });
   } catch (error) {
-    logger.error('OpenAI image analysis error', {
-      error: error.message,
-      stack: error.stack
-    });
-
     // Handle specific OpenAI errors
-    if (error.response) {
-      return next(createError(
-        `OpenAI API error: ${error.response.data.error.message}`,
-        'OPENAI_API_ERROR',
-        error.status || 500
-      ));
+    if (error.name === 'APIError') {
+      if (error.status === 429) {
+        return next(new ServiceUnavailableError('OpenAI rate limit exceeded, please try again later'));
+      } else if (error.status === 400) {
+        return next(new ValidationError('Invalid request to OpenAI', { details: error.message }));
+      } else {
+        logger.error('OpenAI API Error', { error: error.message, status: error.status });
+        return next(new ServiceUnavailableError('Error communicating with OpenAI'));
+      }
     }
-
-    return next(createError('Error analyzing image with OpenAI', 'OPENAI_ERROR', 500));
+    
+    // Pass to global error handler for all other errors
+    next(error);
   }
 }
 
@@ -231,43 +266,48 @@ async function analyzeImage(req, res, next) {
  */
 async function testConnection(req, res, next) {
   try {
-    // Simple test query to check if OpenAI API is working
+    // Check if API key is configured
+    if (!process.env.OPENAI_API_KEY) {
+      throw new ServiceUnavailableError('OpenAI API key is not configured');
+    }
+    
+    // Make a simple API call to test connection
     const response = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo', // Use 3.5 for quicker response in testing
-      messages: [{ role: 'user', content: 'Hello, this is a test message. Respond with "OK" if you can receive this.' }],
+      model: DEFAULT_MODEL,
+      messages: [{ role: 'user', content: 'Hello, this is a test. Respond with a simple "OK".' }],
       max_tokens: 10,
-      temperature: 0.1
+      temperature: 0.1,
     });
-
-    logger.info('OpenAI API connection test successful', {
-      model: response.model,
-      response: response.choices[0]?.message.content
-    });
-
+    
+    // Return success response
     return res.json({
       success: true,
-      message: 'OpenAI API connection successful',
       data: {
+        status: 'connected',
         model: response.model,
-        response: response.choices[0]?.message.content
+        message: 'Successfully connected to OpenAI API',
       }
     });
   } catch (error) {
-    logger.error('OpenAI API connection test failed', {
-      error: error.message,
-      stack: error.stack
-    });
-
     // Handle specific OpenAI errors
-    if (error.response) {
-      return next(createError(
-        `OpenAI API connection failed: ${error.response.data.error.message}`,
-        'OPENAI_API_ERROR',
-        error.status || 500
-      ));
+    if (error.name === 'APIError') {
+      logger.error('OpenAI API Error during connection test', { 
+        error: error.message, 
+        status: error.status 
+      });
+      
+      return res.status(503).json({
+        success: false,
+        error: {
+          message: 'Failed to connect to OpenAI API',
+          details: error.message,
+          status: error.status,
+        }
+      });
     }
-
-    return next(createError('OpenAI API connection failed', 'OPENAI_ERROR', 500));
+    
+    // Pass to global error handler for all other errors
+    next(error);
   }
 }
 

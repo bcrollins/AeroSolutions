@@ -1,112 +1,101 @@
 /**
  * Error Handling Middleware
  * 
- * Centralized error handling for the application
+ * Provides centralized error handling for the application
  */
 
 const logger = require('../config/logger');
 
-/**
- * Custom error class for API errors
- */
-class ApiError extends Error {
-  constructor(message, code, status) {
+// Custom error class for API errors
+class APIError extends Error {
+  constructor(message, status = 500, code = 'INTERNAL_SERVER_ERROR', data = null) {
     super(message);
-    this.name = 'ApiError';
-    this.code = code || 'INTERNAL_ERROR';
-    this.status = status || 500;
+    this.name = this.constructor.name;
+    this.status = status;
+    this.code = code;
+    this.data = data;
+    Error.captureStackTrace(this, this.constructor);
   }
 }
 
 /**
- * Create a standardized API error
+ * Create a standardized error object
  * @param {string} message - Error message
- * @param {string} code - Error code
  * @param {number} status - HTTP status code
- * @returns {ApiError} - Custom error object
+ * @param {string} code - Error code
+ * @param {any} data - Additional error data
+ * @returns {APIError} - API error object
  */
-function createError(message, code, status) {
-  return new ApiError(message, code, status);
+function createError(message, status = 500, code = 'INTERNAL_SERVER_ERROR', data = null) {
+  return new APIError(message, status, code, data);
 }
 
 /**
- * Error handling middleware
+ * Handle 404 errors for undefined routes
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next function
+ */
+function notFoundHandler(req, res, next) {
+  const error = createError(`Route not found: ${req.method} ${req.originalUrl}`, 404, 'NOT_FOUND');
+  next(error);
+}
+
+/**
+ * Central error handling middleware
  * @param {Error} err - Error object
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next function
  */
 function errorHandler(err, req, res, next) {
-  // Default error values
-  let status = err.status || 500;
-  let message = err.message || 'Internal Server Error';
-  let code = err.code || 'INTERNAL_ERROR';
-  let stack = err.stack;
+  // Default status code and error information
+  const status = err.status || 500;
+  const code = err.code || 'INTERNAL_SERVER_ERROR';
+  const message = err.message || 'Something went wrong';
+  const data = err.data || null;
   
-  // Handle specific error types
-  if (err.name === 'ValidationError') {
-    status = 400;
-    code = 'VALIDATION_ERROR';
-  } else if (err.name === 'UnauthorizedError') {
-    status = 401;
-    code = 'UNAUTHORIZED';
-  } else if (err.name === 'ForbiddenError') {
-    status = 403;
-    code = 'FORBIDDEN';
-  } else if (err.name === 'NotFoundError') {
-    status = 404;
-    code = 'NOT_FOUND';
-  }
-  
-  // Log the error
+  // Log error based on severity
   if (status >= 500) {
-    logger.error(`Error: ${message}`, {
+    logger.error(`${status} - ${message}`, {
       code,
-      stack,
       method: req.method,
-      url: req.originalUrl,
+      path: req.path,
       ip: req.ip,
-      userId: req.user?.id
+      body: req.body,
+      stack: err.stack,
+      user: req.user ? { id: req.user.id, username: req.user.username } : 'unauthenticated'
     });
-  } else {
-    logger.warn(`Error: ${message}`, {
+  } else if (status >= 400) {
+    logger.warn(`${status} - ${message}`, {
       code,
       method: req.method,
-      url: req.originalUrl,
-      status
+      path: req.path,
+      ip: req.ip
     });
   }
   
-  // In development, include stack trace
-  const error = {
-    message,
-    code,
-    status
-  };
-  
-  if (process.env.NODE_ENV !== 'production' && status >= 500) {
-    error.stack = stack;
+  // Check if response has already been sent
+  if (res.headersSent) {
+    return next(err);
   }
   
   // Send error response
   res.status(status).json({
     success: false,
-    error
+    error: {
+      message,
+      code,
+      status,
+      data
+    }
   });
 }
 
-/**
- * Not found handler middleware
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- */
-function notFoundHandler(req, res, next) {
-  const error = createError(`Resource not found: ${req.originalUrl}`, 'NOT_FOUND', 404);
-  next(error);
-}
-
+// Export error handling functions
 module.exports = {
+  APIError,
   createError,
-  errorHandler,
-  notFoundHandler
+  notFoundHandler,
+  errorHandler
 };
