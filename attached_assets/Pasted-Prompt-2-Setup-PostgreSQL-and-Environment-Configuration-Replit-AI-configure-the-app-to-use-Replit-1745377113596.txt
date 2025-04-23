@@ -1,0 +1,129 @@
+Prompt 2: Setup PostgreSQL and Environment Configuration
+
+Replit AI, configure the app to use Replit’s PostgreSQL database for all data storage, replacing any existing database or file-based storage. Set up environment variables for secure configuration. Follow these steps:
+
+
+
+
+
+Setup PostgreSQL:
+
+
+
+
+
+Use Replit’s built-in PostgreSQL database.
+
+
+
+Install pg (Node.js) via npm install pg if using Node.js, or equivalent for other stacks (e.g., psycopg2 for Python).
+
+
+
+Create a /config/database.js file (for Node.js) with a connection pool using pg:
+
+const { Pool } = require('pg');
+require('dotenv').config();
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
+module.exports = pool;
+
+
+
+Verify connectivity by running a test query (e.g., SELECT NOW()).
+
+
+
+Migrate Data:
+
+
+
+
+
+Identify existing data storage (e.g., JSON files, in-memory arrays).
+
+
+
+Create a /models/schema.sql file with table definitions based on the app’s data needs (e.g., users, products, orders for an e-commerce app).
+
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS products (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  price DECIMAL(10,2) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+
+Write a script in /models/migrate.js to execute schema.sql and migrate existing data to PostgreSQL.
+
+
+
+Environment Variables:
+
+
+
+
+
+Create a .env file with:
+
+DATABASE_URL=postgresql://<username>:<password>@<host>:<port>/<dbname>
+PORT=8080
+
+
+
+Use Replit’s Secrets tab to store these variables securely.
+
+
+
+Load variables using dotenv in the main app file (e.g., index.js).
+
+
+
+Update Code:
+
+
+
+
+
+Replace all existing data access code (e.g., file reads/writes) with PostgreSQL queries using the connection pool.
+
+
+
+Use parameterized queries to prevent SQL injection (e.g., pool.query('SELECT * FROM users WHERE id = $1', [id])).
+
+
+
+Test:
+
+
+
+
+
+Run the app and verify database connectivity via console logs.
+
+
+
+Test CRUD operations (create, read, update, delete) to ensure data persistence.
+
+
+
+Output:
+
+
+
+
+
+Save /config/database.js, /models/schema.sql, /models/migrate.js, and .env (in Secrets).
+
+
+
+Confirm the app runs and interacts with PostgreSQL.
