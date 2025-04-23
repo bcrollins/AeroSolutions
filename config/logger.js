@@ -3,16 +3,22 @@
  * 
  * Winston logger configuration for application-wide logging
  */
-
 const winston = require('winston');
 const path = require('path');
 const fs = require('fs');
 
-// Ensure logs directory exists
-const logsDir = path.join(process.cwd(), 'logs');
+// Create logs directory if it doesn't exist
+const logsDir = path.join(__dirname, '..', 'logs');
 if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir, { recursive: true });
+  fs.mkdirSync(logsDir);
 }
+
+// Define log file paths
+const errorLogPath = path.join(logsDir, 'error.log');
+const combinedLogPath = path.join(logsDir, 'combined.log');
+const apiLogPath = path.join(logsDir, 'api.log');
+const openaiLogPath = path.join(logsDir, 'openai.log');
+const databaseLogPath = path.join(logsDir, 'database.log');
 
 // Define log format
 const logFormat = winston.format.combine(
@@ -22,70 +28,103 @@ const logFormat = winston.format.combine(
   winston.format.json()
 );
 
-// Console format with colors for better readability
-const consoleFormat = winston.format.combine(
-  winston.format.colorize(),
-  winston.format.timestamp({ format: 'HH:mm:ss' }),
-  winston.format.printf(({ timestamp, level, message, ...meta }) => {
-    let metaStr = '';
-    if (Object.keys(meta).length > 0 && meta.stack) {
-      metaStr = `\n${meta.stack}`;
-    } else if (Object.keys(meta).length > 0) {
-      metaStr = `\n${JSON.stringify(meta, null, 2)}`;
-    }
-    return `[${timestamp}] [${level}] ${message}${metaStr}`;
-  })
-);
+// Configure transports based on environment
+const transports = [
+  // Always log errors to a file
+  new winston.transports.File({
+    filename: errorLogPath,
+    level: 'error',
+    format: logFormat,
+  }),
+  
+  // Always log to combined log file
+  new winston.transports.File({
+    filename: combinedLogPath,
+    format: logFormat,
+  }),
+  
+  // API-specific log file
+  new winston.transports.File({
+    filename: apiLogPath,
+    format: logFormat,
+  }),
+  
+  // OpenAI-specific log file
+  new winston.transports.File({
+    filename: openaiLogPath,
+    format: logFormat,
+  }),
+  
+  // Database-specific log file
+  new winston.transports.File({
+    filename: databaseLogPath,
+    format: logFormat,
+  }),
+];
 
-// Define log levels
-const levels = {
-  error: 0,
-  warn: 1,
-  info: 2,
-  http: 3,
-  debug: 4,
-};
-
-// Determine log level based on environment
-const level = () => {
-  const env = process.env.NODE_ENV || 'development';
-  const isDevelopment = env === 'development';
-  return isDevelopment ? 'debug' : 'http';
-};
+// In development, also log to console with colorization
+if (process.env.NODE_ENV !== 'production') {
+  transports.push(
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+      ),
+      level: 'debug',
+    })
+  );
+}
 
 // Create the logger instance
 const logger = winston.createLogger({
-  level: level(),
-  levels,
+  level: process.env.LOG_LEVEL || 'info',
+  defaultMeta: { service: 'api-platform' },
   format: logFormat,
-  transports: [
-    // Write logs to console
-    new winston.transports.Console({
-      format: consoleFormat
-    }),
-    // Write all logs with level 'info' and below to 'combined.log'
-    new winston.transports.File({
-      filename: path.join(logsDir, 'combined.log'),
-      maxsize: 10485760, // 10MB
-      maxFiles: 5,
-      tailable: true
-    }),
-    // Write all logs with level 'error' to 'error.log'
-    new winston.transports.File({
-      filename: path.join(logsDir, 'error.log'),
-      level: 'error',
-      maxsize: 10485760, // 10MB
-      maxFiles: 5,
-      tailable: true
-    }),
-  ],
-  // Do not exit on handled exceptions
-  exitOnError: false
+  transports,
 });
 
-// Create a stream object for morgan HTTP request logging
-logger.stream = {
-  write: (message) => logger.http(message.trim()),
+// Log API error with request details
+logger.logApiError = (req, error) => {
+  logger.error('API Error', {
+    method: req.method,
+    url: req.originalUrl,
+    ip: req.ip,
+    body: req.body,
+    error: {
+      message: error.message,
+      stack: error.stack,
+      status: error.statusCode || 500,
+    },
+  });
 };
 
+// Log OpenAI request and response
+logger.logOpenAIRequest = (type, data, status) => {
+  const logObject = {
+    type,
+    status,
+    ...data,
+  };
+  
+  if (status === 'error') {
+    logger.error('OpenAI API Error', logObject);
+  } else {
+    logger.info('OpenAI API Request', logObject);
+  }
+};
+
+// Log database error
+logger.logDatabaseError = (operation, error, details) => {
+  logger.error('Database Error', {
+    operation,
+    details,
+    error: {
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+    },
+  });
+};
+
+// Export the logger
 module.exports = logger;

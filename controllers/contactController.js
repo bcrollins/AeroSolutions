@@ -1,319 +1,209 @@
 /**
  * Contact Controller
  * 
- * Handles logic for contact-related routes
+ * Handles logic for contact form submissions
  */
 
 const db = require('../config/database');
 const logger = require('../config/logger');
 const { createError } = require('../middlewares/errorHandler');
+const nodemailer = require('nodemailer');
 
 /**
  * Submit a contact form
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
  */
 async function submitContact(req, res, next) {
   try {
-    const { name, email, subject, message } = req.body;
+    const { name, email, phone, subject, message, companyName } = req.body;
     
-    // Insert contact submission into database
+    // Insert into database
     const query = `
-      INSERT INTO contacts (name, email, subject, message, status, created_at)
-      VALUES ($1, $2, $3, $4, $5, NOW())
-      RETURNING id, name, email, subject, status, created_at;
+      INSERT INTO contact_submissions 
+        (name, email, phone, subject, message, company_name, status, ip_address, user_agent) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING id, created_at;
     `;
     
-    const values = [name, email, subject, message, 'new'];
+    const result = await db.query(query, [
+      name,
+      email,
+      phone || null,
+      subject,
+      message,
+      companyName || null,
+      'pending', // Default status
+      req.ip,
+      req.headers['user-agent'] || 'Unknown'
+    ]);
     
-    const result = await db.query(query, values);
+    const submissionId = result.rows[0].id;
     
-    if (result.rows.length === 0) {
-      return next(createError('Failed to submit contact form', 'DATABASE_ERROR', 500));
+    // Send notification email to admin
+    try {
+      if (process.env.NOTIFICATION_EMAIL) {
+        // Initialize nodemailer transport
+        const transporter = nodemailer.createTransport({
+          host: process.env.EMAIL_HOST || 'smtp.example.com',
+          port: process.env.EMAIL_PORT || 587,
+          secure: process.env.EMAIL_SECURE === 'true',
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASSWORD
+          }
+        });
+        
+        // Prepare email content
+        const mailOptions = {
+          from: process.env.EMAIL_FROM || 'noreply@example.com',
+          to: process.env.NOTIFICATION_EMAIL,
+          subject: `New Contact Submission: ${subject}`,
+          html: `
+            <h2>New Contact Form Submission</h2>
+            <p><strong>ID:</strong> ${submissionId}</p>
+            <p><strong>Name:</strong> ${name}</p>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
+            <p><strong>Company:</strong> ${companyName || 'Not provided'}</p>
+            <p><strong>Subject:</strong> ${subject}</p>
+            <p><strong>Message:</strong></p>
+            <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px;">
+              ${message.replace(/\n/g, '<br>')}
+            </div>
+            <p><strong>IP Address:</strong> ${req.ip}</p>
+            <p><strong>User Agent:</strong> ${req.headers['user-agent'] || 'Unknown'}</p>
+            <p><strong>Submission Time:</strong> ${result.rows[0].created_at}</p>
+          `
+        };
+        
+        // Send email asynchronously (don't await)
+        transporter.sendMail(mailOptions)
+          .catch(emailError => {
+            logger.error('Failed to send notification email', {
+              error: emailError.message,
+              stack: emailError.stack,
+              submissionId
+            });
+          });
+      }
+    } catch (emailError) {
+      // Log error but don't fail the request
+      logger.error('Error setting up email notification', {
+        error: emailError.message,
+        stack: emailError.stack
+      });
     }
     
-    const contact = result.rows[0];
-    
-    logger.info('Contact form submitted', {
-      id: contact.id,
-      email: contact.email
-    });
-    
-    // TODO: Send notification email to admin or add to queue
-    
-    return res.status(201).json({
+    // Return success response
+    res.json({
       success: true,
-      message: 'Contact form submitted successfully',
       data: {
-        id: contact.id,
-        name: contact.name,
-        email: contact.email,
-        subject: contact.subject,
-        status: contact.status,
-        created_at: contact.created_at
-      }
+        id: submissionId,
+        timestamp: result.rows[0].created_at
+      },
+      message: 'Contact form submitted successfully'
     });
   } catch (error) {
-    logger.error('Error submitting contact form', {
+    logger.error('Failed to submit contact form', {
       error: error.message,
       stack: error.stack,
       body: req.body
     });
     
-    return next(createError(`Error submitting contact form: ${error.message}`, 'CONTACT_ERROR', 500));
+    next(createError(
+      'Failed to submit contact form: ' + error.message,
+      500,
+      'CONTACT_SUBMISSION_ERROR'
+    ));
   }
 }
 
 /**
- * Get all contact submissions (admin only)
+ * Get all contact submissions
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
  */
 async function getAllContacts(req, res, next) {
   try {
-    // Extract query parameters for filtering and pagination
-    const { status, search, page = 1, limit = 20, sort = 'created_at', order = 'desc' } = req.query;
+    // Extract query parameters
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const status = req.query.status || null;
+    const sortBy = req.query.sortBy || 'created_at';
+    const sortOrder = req.query.sortOrder === 'asc' ? 'ASC' : 'DESC';
     
-    // Build query with potential filters
-    let query = `
-      SELECT 
-        id, name, email, subject, message, status, created_at, updated_at
-      FROM 
-        contacts
-      WHERE 1=1
-    `;
+    // Calculate offset for pagination
+    const offset = (page - 1) * limit;
     
+    // Prepare query parameters
     const queryParams = [];
-    let paramIndex = 1;
+    let whereClause = '';
     
     // Add status filter if provided
     if (status) {
-      query += ` AND status = $${paramIndex}`;
+      whereClause = 'WHERE status = $1';
       queryParams.push(status);
-      paramIndex++;
     }
     
-    // Add search filter if provided
-    if (search) {
-      query += ` AND (
-        name ILIKE $${paramIndex} OR
-        email ILIKE $${paramIndex} OR
-        subject ILIKE $${paramIndex} OR
-        message ILIKE $${paramIndex}
-      )`;
-      queryParams.push(`%${search}%`);
-      paramIndex++;
-    }
-    
-    // Add sorting
-    query += ` ORDER BY ${sort} ${order === 'asc' ? 'ASC' : 'DESC'}`;
-    
-    // Add pagination
-    const offset = (page - 1) * limit;
-    query += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
-    queryParams.push(limit, offset);
-    
-    // Execute query
-    const result = await db.query(query, queryParams);
-    
-    // Get total count for pagination
-    const countQuery = `
-      SELECT COUNT(*) as total
-      FROM contacts
-      WHERE 1=1
-      ${status ? ' AND status = $1' : ''}
-      ${search ? ` AND (
-        name ILIKE $${status ? 2 : 1} OR
-        email ILIKE $${status ? 2 : 1} OR
-        subject ILIKE $${status ? 2 : 1} OR
-        message ILIKE $${status ? 2 : 1}
-      )` : ''}
+    // Create base query
+    const baseQuery = `
+      FROM contact_submissions
+      ${whereClause}
     `;
     
-    const countParams = [];
-    if (status) countParams.push(status);
-    if (search) countParams.push(`%${search}%`);
-    
-    const countResult = await db.query(countQuery, countParams);
+    // Get total count for pagination
+    const countQuery = `SELECT COUNT(*) as total ${baseQuery}`;
+    const countResult = await db.query(countQuery, queryParams);
     const total = parseInt(countResult.rows[0].total);
     
-    logger.info('Retrieved contact submissions', {
-      count: result.rows.length,
-      total,
-      page,
-      limit
-    });
+    // Main query for data
+    const dataQueryParams = [...queryParams, limit, offset];
+    const dataQuery = `
+      SELECT 
+        id, name, email, phone, subject, 
+        message, company_name, status, 
+        ip_address, user_agent, created_at, updated_at
+      ${baseQuery}
+      ORDER BY ${sortBy} ${sortOrder}
+      LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}
+    `;
     
-    return res.json({
+    const dataResult = await db.query(dataQuery, dataQueryParams);
+    
+    // Prepare pagination metadata
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+    
+    res.json({
       success: true,
       data: {
-        contacts: result.rows,
+        contacts: dataResult.rows,
         pagination: {
           total,
-          page: parseInt(page),
-          limit: parseInt(limit),
-          pages: Math.ceil(total / limit)
+          totalPages,
+          currentPage: page,
+          limit,
+          hasNextPage,
+          hasPreviousPage
         }
       }
     });
   } catch (error) {
-    logger.error('Error retrieving contact submissions', {
-      error: error.message,
-      stack: error.stack
-    });
-    
-    return next(createError(`Error retrieving contact submissions: ${error.message}`, 'CONTACT_ERROR', 500));
-  }
-}
-
-/**
- * Get a single contact submission by ID (admin only)
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- */
-async function getContactById(req, res, next) {
-  try {
-    const { id } = req.params;
-    
-    const query = `
-      SELECT 
-        id, name, email, subject, message, status, created_at, updated_at
-      FROM 
-        contacts
-      WHERE 
-        id = $1
-    `;
-    
-    const result = await db.query(query, [id]);
-    
-    if (result.rows.length === 0) {
-      return next(createError(`Contact with ID ${id} not found`, 'NOT_FOUND', 404));
-    }
-    
-    const contact = result.rows[0];
-    
-    logger.info(`Retrieved contact submission with ID ${id}`);
-    
-    return res.json({
-      success: true,
-      data: contact
-    });
-  } catch (error) {
-    logger.error('Error retrieving contact submission', {
+    logger.error('Failed to get contact submissions', {
       error: error.message,
       stack: error.stack,
-      id: req.params.id
+      query: req.query
     });
     
-    return next(createError(`Error retrieving contact submission: ${error.message}`, 'CONTACT_ERROR', 500));
-  }
-}
-
-/**
- * Update a contact submission's status (admin only)
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- */
-async function updateContactStatus(req, res, next) {
-  try {
-    const { id } = req.params;
-    const { status, notes } = req.body;
-    
-    // Get current contact to verify it exists
-    const checkQuery = `
-      SELECT id FROM contacts WHERE id = $1
-    `;
-    
-    const checkResult = await db.query(checkQuery, [id]);
-    
-    if (checkResult.rows.length === 0) {
-      return next(createError(`Contact with ID ${id} not found`, 'NOT_FOUND', 404));
-    }
-    
-    // Update contact status
-    const updateQuery = `
-      UPDATE contacts
-      SET 
-        status = $1,
-        notes = $2,
-        updated_at = NOW()
-      WHERE 
-        id = $3
-      RETURNING 
-        id, name, email, subject, status, notes, created_at, updated_at
-    `;
-    
-    const updateResult = await db.query(updateQuery, [status, notes, id]);
-    
-    const updatedContact = updateResult.rows[0];
-    
-    logger.info(`Updated contact submission status`, {
-      id,
-      status,
-      hasNotes: !!notes
-    });
-    
-    return res.json({
-      success: true,
-      message: 'Contact status updated successfully',
-      data: updatedContact
-    });
-  } catch (error) {
-    logger.error('Error updating contact status', {
-      error: error.message,
-      stack: error.stack,
-      id: req.params.id,
-      status: req.body.status
-    });
-    
-    return next(createError(`Error updating contact status: ${error.message}`, 'CONTACT_ERROR', 500));
-  }
-}
-
-/**
- * Delete a contact submission (admin only)
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- */
-async function deleteContact(req, res, next) {
-  try {
-    const { id } = req.params;
-    
-    // Get current contact to verify it exists
-    const checkQuery = `
-      SELECT id FROM contacts WHERE id = $1
-    `;
-    
-    const checkResult = await db.query(checkQuery, [id]);
-    
-    if (checkResult.rows.length === 0) {
-      return next(createError(`Contact with ID ${id} not found`, 'NOT_FOUND', 404));
-    }
-    
-    // Delete contact
-    const deleteQuery = `
-      DELETE FROM contacts
-      WHERE id = $1
-      RETURNING id
-    `;
-    
-    await db.query(deleteQuery, [id]);
-    
-    logger.info(`Deleted contact submission with ID ${id}`);
-    
-    return res.json({
-      success: true,
-      message: 'Contact deleted successfully',
-      data: { id: parseInt(id) }
-    });
-  } catch (error) {
-    logger.error('Error deleting contact submission', {
-      error: error.message,
-      stack: error.stack,
-      id: req.params.id
-    });
-    
-    return next(createError(`Error deleting contact submission: ${error.message}`, 'CONTACT_ERROR', 500));
+    next(createError(
+      'Failed to get contact submissions: ' + error.message,
+      500,
+      'DATABASE_ERROR'
+    ));
   }
 }
 
@@ -321,73 +211,238 @@ async function deleteContact(req, res, next) {
  * Get contact submission counts by status
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
  */
 async function getContactCounts(req, res, next) {
   try {
     const query = `
       SELECT 
-        status, COUNT(*) as count
+        status, 
+        COUNT(*) as count
       FROM 
-        contacts
+        contact_submissions
       GROUP BY 
         status
       ORDER BY 
-        CASE 
-          WHEN status = 'new' THEN 1
-          WHEN status = 'in_progress' THEN 2
-          WHEN status = 'completed' THEN 3
-          WHEN status = 'archived' THEN 4
-          ELSE 5
-        END
+        status
     `;
     
     const result = await db.query(query);
     
     // Get total count
     const totalQuery = `
-      SELECT COUNT(*) as total FROM contacts
+      SELECT COUNT(*) as total
+      FROM contact_submissions
     `;
     
     const totalResult = await db.query(totalQuery);
     const total = parseInt(totalResult.rows[0].total);
     
-    // Format result as an object
-    const counts = {
-      total,
-      byStatus: {}
-    };
+    // Format the response
+    const statusCounts = result.rows.reduce((acc, row) => {
+      acc[row.status] = parseInt(row.count);
+      return acc;
+    }, {});
     
-    // Initialize all statuses with zero counts
-    ['new', 'in_progress', 'completed', 'archived'].forEach(status => {
-      counts.byStatus[status] = 0;
-    });
-    
-    // Update with actual counts
-    result.rows.forEach(row => {
-      counts.byStatus[row.status] = parseInt(row.count);
-    });
-    
-    logger.info('Retrieved contact submission counts');
-    
-    return res.json({
+    res.json({
       success: true,
-      data: counts
+      data: {
+        total,
+        statusCounts
+      }
     });
   } catch (error) {
-    logger.error('Error retrieving contact counts', {
+    logger.error('Failed to get contact submission counts', {
       error: error.message,
       stack: error.stack
     });
     
-    return next(createError(`Error retrieving contact counts: ${error.message}`, 'CONTACT_ERROR', 500));
+    next(createError(
+      'Failed to get contact submission counts: ' + error.message,
+      500,
+      'DATABASE_ERROR'
+    ));
+  }
+}
+
+/**
+ * Get contact submission by ID
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
+async function getContactById(req, res, next) {
+  try {
+    const { id } = req.params;
+    
+    const query = `
+      SELECT 
+        id, name, email, phone, subject, 
+        message, company_name, status, 
+        ip_address, user_agent, created_at, updated_at
+      FROM 
+        contact_submissions
+      WHERE 
+        id = $1
+    `;
+    
+    const result = await db.query(query, [id]);
+    
+    if (result.rowCount === 0) {
+      return next(createError(
+        `Contact submission with ID ${id} not found`,
+        404,
+        'CONTACT_NOT_FOUND'
+      ));
+    }
+    
+    res.json({
+      success: true,
+      data: result.rows[0]
+    });
+  } catch (error) {
+    logger.error(`Failed to get contact submission with ID ${req.params.id}`, {
+      error: error.message,
+      stack: error.stack
+    });
+    
+    next(createError(
+      'Failed to get contact submission: ' + error.message,
+      500,
+      'DATABASE_ERROR'
+    ));
+  }
+}
+
+/**
+ * Update contact submission status
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
+async function updateContactStatus(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { status, notes } = req.body;
+    
+    // Validate status
+    const validStatuses = ['pending', 'in_progress', 'completed', 'rejected'];
+    if (!validStatuses.includes(status)) {
+      return next(createError(
+        `Invalid status value. Must be one of: ${validStatuses.join(', ')}`,
+        400,
+        'INVALID_STATUS'
+      ));
+    }
+    
+    // Check if record exists first
+    const checkQuery = `
+      SELECT id FROM contact_submissions WHERE id = $1
+    `;
+    
+    const checkResult = await db.query(checkQuery, [id]);
+    
+    if (checkResult.rowCount === 0) {
+      return next(createError(
+        `Contact submission with ID ${id} not found`,
+        404,
+        'CONTACT_NOT_FOUND'
+      ));
+    }
+    
+    // Update the record
+    const updateQuery = `
+      UPDATE contact_submissions
+      SET 
+        status = $1,
+        notes = $2,
+        updated_at = NOW()
+      WHERE 
+        id = $3
+      RETURNING 
+        id, status, updated_at
+    `;
+    
+    const updateResult = await db.query(updateQuery, [status, notes || null, id]);
+    
+    res.json({
+      success: true,
+      data: updateResult.rows[0],
+      message: 'Contact submission status updated successfully'
+    });
+  } catch (error) {
+    logger.error(`Failed to update status for contact submission with ID ${req.params.id}`, {
+      error: error.message,
+      stack: error.stack,
+      body: req.body
+    });
+    
+    next(createError(
+      'Failed to update contact submission status: ' + error.message,
+      500,
+      'DATABASE_ERROR'
+    ));
+  }
+}
+
+/**
+ * Delete contact submission
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
+async function deleteContact(req, res, next) {
+  try {
+    const { id } = req.params;
+    
+    // Check if record exists first
+    const checkQuery = `
+      SELECT id FROM contact_submissions WHERE id = $1
+    `;
+    
+    const checkResult = await db.query(checkQuery, [id]);
+    
+    if (checkResult.rowCount === 0) {
+      return next(createError(
+        `Contact submission with ID ${id} not found`,
+        404,
+        'CONTACT_NOT_FOUND'
+      ));
+    }
+    
+    // Delete the record
+    const deleteQuery = `
+      DELETE FROM contact_submissions
+      WHERE id = $1
+      RETURNING id
+    `;
+    
+    await db.query(deleteQuery, [id]);
+    
+    res.json({
+      success: true,
+      data: { id: parseInt(id) },
+      message: 'Contact submission deleted successfully'
+    });
+  } catch (error) {
+    logger.error(`Failed to delete contact submission with ID ${req.params.id}`, {
+      error: error.message,
+      stack: error.stack
+    });
+    
+    next(createError(
+      'Failed to delete contact submission: ' + error.message,
+      500,
+      'DATABASE_ERROR'
+    ));
   }
 }
 
 module.exports = {
   submitContact,
   getAllContacts,
+  getContactCounts,
   getContactById,
   updateContactStatus,
-  deleteContact,
-  getContactCounts
+  deleteContact
 };

@@ -1,101 +1,198 @@
 /**
- * Error Handling Middleware
+ * Error Handler Middleware
  * 
- * Provides centralized error handling for the application
+ * Centralized error handling for the API
  */
-
 const logger = require('../config/logger');
 
-// Custom error class for API errors
-class APIError extends Error {
-  constructor(message, status = 500, code = 'INTERNAL_SERVER_ERROR', data = null) {
+/**
+ * Custom error class for API errors
+ */
+class ApiError extends Error {
+  constructor(message, statusCode) {
     super(message);
-    this.name = this.constructor.name;
-    this.status = status;
-    this.code = code;
-    this.data = data;
+    this.statusCode = statusCode;
+    this.status = `${statusCode}`.startsWith('4') ? 'fail' : 'error';
+    this.isOperational = true;
+
     Error.captureStackTrace(this, this.constructor);
   }
 }
 
 /**
- * Create a standardized error object
- * @param {string} message - Error message
- * @param {number} status - HTTP status code
- * @param {string} code - Error code
- * @param {any} data - Additional error data
- * @returns {APIError} - API error object
+ * HTTP 400 Bad Request Error
  */
-function createError(message, status = 500, code = 'INTERNAL_SERVER_ERROR', data = null) {
-  return new APIError(message, status, code, data);
+class BadRequestError extends ApiError {
+  constructor(message = 'Bad request') {
+    super(message, 400);
+  }
 }
 
 /**
- * Handle 404 errors for undefined routes
+ * HTTP 401 Unauthorized Error
+ */
+class UnauthorizedError extends ApiError {
+  constructor(message = 'Unauthorized') {
+    super(message, 401);
+  }
+}
+
+/**
+ * HTTP 403 Forbidden Error
+ */
+class ForbiddenError extends ApiError {
+  constructor(message = 'Forbidden') {
+    super(message, 403);
+  }
+}
+
+/**
+ * HTTP 404 Not Found Error
+ */
+class NotFoundError extends ApiError {
+  constructor(message = 'Resource not found') {
+    super(message, 404);
+  }
+}
+
+/**
+ * HTTP 409 Conflict Error
+ */
+class ConflictError extends ApiError {
+  constructor(message = 'Conflict with current state') {
+    super(message, 409);
+  }
+}
+
+/**
+ * HTTP 422 Validation Error
+ */
+class ValidationError extends ApiError {
+  constructor(message = 'Validation failed', errors = null) {
+    super(message, 422);
+    this.errors = errors;
+  }
+}
+
+/**
+ * HTTP 429 Too Many Requests Error
+ */
+class TooManyRequestsError extends ApiError {
+  constructor(message = 'Too many requests') {
+    super(message, 429);
+  }
+}
+
+/**
+ * HTTP 500 Internal Server Error
+ */
+class InternalServerError extends ApiError {
+  constructor(message = 'Internal server error') {
+    super(message, 500);
+  }
+}
+
+/**
+ * HTTP 503 Service Unavailable Error
+ */
+class ServiceUnavailableError extends ApiError {
+  constructor(message = 'Service unavailable') {
+    super(message, 503);
+  }
+}
+
+/**
+ * Global error handling middleware
+ * @param {Error} err - The error object
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next function
  */
-function notFoundHandler(req, res, next) {
-  const error = createError(`Route not found: ${req.method} ${req.originalUrl}`, 404, 'NOT_FOUND');
-  next(error);
-}
-
-/**
- * Central error handling middleware
- * @param {Error} err - Error object
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next function
- */
-function errorHandler(err, req, res, next) {
-  // Default status code and error information
-  const status = err.status || 500;
-  const code = err.code || 'INTERNAL_SERVER_ERROR';
-  const message = err.message || 'Something went wrong';
-  const data = err.data || null;
+const errorHandler = (err, req, res, next) => {
+  // Set default error status and message
+  err.statusCode = err.statusCode || 500;
+  err.message = err.message || 'Something went wrong';
   
-  // Log error based on severity
-  if (status >= 500) {
-    logger.error(`${status} - ${message}`, {
-      code,
-      method: req.method,
-      path: req.path,
-      ip: req.ip,
-      body: req.body,
-      stack: err.stack,
-      user: req.user ? { id: req.user.id, username: req.user.username } : 'unauthenticated'
-    });
-  } else if (status >= 400) {
-    logger.warn(`${status} - ${message}`, {
-      code,
-      method: req.method,
-      path: req.path,
-      ip: req.ip
-    });
-  }
+  // Determine if this is a trusted operational error or an unknown error
+  const isOperational = err.isOperational === true;
   
-  // Check if response has already been sent
-  if (res.headersSent) {
-    return next(err);
-  }
-  
-  // Send error response
-  res.status(status).json({
-    success: false,
-    error: {
-      message,
-      code,
-      status,
-      data
+  // Log the error appropriately
+  if (isOperational) {
+    // For operational errors, log with less severity
+    if (err.statusCode >= 500) {
+      logger.error('Operational Error', {
+        message: err.message,
+        statusCode: err.statusCode,
+        path: req.originalUrl,
+        method: req.method,
+        stack: err.stack,
+      });
+    } else {
+      logger.warn('Client Error', {
+        message: err.message,
+        statusCode: err.statusCode,
+        path: req.originalUrl,
+        method: req.method,
+      });
     }
-  });
-}
+  } else {
+    // For programming or unexpected errors, log with high severity
+    logger.error('Unexpected Error', {
+      message: err.message,
+      statusCode: err.statusCode,
+      path: req.originalUrl,
+      method: req.method,
+      stack: err.stack,
+    });
+  }
+  
+  // Send appropriate response based on environment
+  if (process.env.NODE_ENV === 'development') {
+    // In development, send detailed error information
+    res.status(err.statusCode).json({
+      success: false,
+      error: {
+        status: err.statusCode,
+        message: err.message,
+        stack: err.stack,
+        ...(err.errors && { errors: err.errors }),
+      },
+    });
+  } else {
+    // In production, send limited error information
+    if (err.statusCode >= 500 && !isOperational) {
+      // For unexpected server errors, don't expose details
+      res.status(500).json({
+        success: false,
+        error: {
+          status: 500,
+          message: 'Something went wrong. Our team has been notified.',
+        },
+      });
+    } else {
+      // For operational errors, send the actual error
+      res.status(err.statusCode).json({
+        success: false,
+        error: {
+          status: err.statusCode,
+          message: err.message,
+          ...(err.errors && { errors: err.errors }),
+        },
+      });
+    }
+  }
+};
 
-// Export error handling functions
 module.exports = {
-  APIError,
-  createError,
-  notFoundHandler,
-  errorHandler
+  errorHandler,
+  ApiError,
+  BadRequestError,
+  UnauthorizedError,
+  ForbiddenError,
+  NotFoundError,
+  ConflictError,
+  ValidationError,
+  TooManyRequestsError,
+  InternalServerError,
+  ServiceUnavailableError,
 };

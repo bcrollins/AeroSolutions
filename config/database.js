@@ -4,40 +4,36 @@
  * This module provides a connection pool for PostgreSQL database connections.
  * It uses environment variables for configuration to keep sensitive information secure.
  */
-
 const { Pool } = require('pg');
 const logger = require('./logger');
 
 // Get database configuration from environment variables
 const dbConfig = {
   connectionString: process.env.DATABASE_URL,
-  // SSL options for production environments
-  ssl: process.env.NODE_ENV === 'production' ? 
-    { rejectUnauthorized: false } : 
-    false,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   // Maximum number of clients in the pool
-  max: parseInt(process.env.PG_MAX_CLIENTS || '10'),
-  // How long a client can stay idle before being closed
-  idleTimeoutMillis: parseInt(process.env.PG_IDLE_TIMEOUT || '30000'),
-  // How long to wait for a connection from the pool
-  connectionTimeoutMillis: parseInt(process.env.PG_CONNECTION_TIMEOUT || '5000')
+  max: parseInt(process.env.DB_POOL_MAX || '10', 10),
+  // Maximum time (ms) a client can stay idle before being closed
+  idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT || '30000', 10),
+  // Maximum time (ms) to wait for a client to become available
+  connectionTimeoutMillis: parseInt(process.env.DB_CONNECTION_TIMEOUT || '5000', 10),
 };
 
-// Create a new pool instance
+// Create a pool of connections
 const pool = new Pool(dbConfig);
 
-// Register pool error event handler
+// Error handler for unexpected pool errors
 pool.on('error', (err) => {
-  logger.error('Unexpected error on idle PostgreSQL client', {
-    error: err.message,
-    stack: err.stack
-  });
-  process.exit(-1); // exit in case of critical errors
+  logger.error('Unexpected error on idle client', { error: err.message, stack: err.stack });
 });
 
-// Register pool connect event handler for debugging
-pool.on('connect', (client) => {
-  logger.debug('New client connected to PostgreSQL');
+// Log pool creation
+logger.info('Database pool created', { 
+  host: process.env.PGHOST || 'from connection string',
+  database: process.env.PGDATABASE || 'from connection string',
+  max: dbConfig.max,
+  idleTimeoutMillis: dbConfig.idleTimeoutMillis,
+  connectionTimeoutMillis: dbConfig.connectionTimeoutMillis
 });
 
 /**
@@ -52,22 +48,23 @@ async function query(text, params) {
     const result = await pool.query(text, params);
     const duration = Date.now() - start;
     
+    // Log query info (excluding sensitive parameters)
     logger.debug('Executed query', {
-      query: text.replace(/\s+/g, ' ').trim(),
-      duration,
-      rows: result.rowCount
+      query: text,
+      rows: result.rowCount,
+      duration: `${duration}ms`
     });
     
     return result;
   } catch (error) {
     const duration = Date.now() - start;
     
+    // Log query error
     logger.error('Query error', {
-      query: text.replace(/\s+/g, ' ').trim(),
-      params,
-      duration,
+      query: text,
       error: error.message,
-      stack: error.stack
+      code: error.code,
+      duration: `${duration}ms`
     });
     
     throw error;
@@ -79,16 +76,24 @@ async function query(text, params) {
  * @returns {Promise} - Database client
  */
 async function getClient() {
-  const client = await pool.connect();
-  const originalRelease = client.release;
-  
-  // Override client release method to track release events
-  client.release = () => {
-    logger.debug('Client returned to pool');
-    originalRelease.apply(client);
-  };
-  
-  return client;
+  try {
+    const client = await pool.connect();
+    const originalRelease = client.release;
+    
+    // Override the release method to log the duration
+    const startTime = Date.now();
+    client.release = () => {
+      const duration = Date.now() - startTime;
+      logger.debug('Client released', { duration: `${duration}ms` });
+      originalRelease.apply(client);
+    };
+    
+    logger.debug('Client acquired');
+    return client;
+  } catch (error) {
+    logger.error('Error acquiring client', { error: error.message });
+    throw error;
+  }
 }
 
 /**
@@ -97,15 +102,15 @@ async function getClient() {
  */
 async function testConnection() {
   try {
-    const result = await query('SELECT NOW() as current_time');
+    const result = await query('SELECT NOW()');
     logger.info('Database connection test successful', {
-      currentTime: result.rows[0].current_time
+      timestamp: result.rows[0].now,
     });
     return true;
   } catch (error) {
     logger.error('Database connection test failed', {
       error: error.message,
-      stack: error.stack
+      code: error.code
     });
     return false;
   }
@@ -120,10 +125,7 @@ async function end() {
     await pool.end();
     logger.info('Database pool has ended and all connections are closed');
   } catch (error) {
-    logger.error('Error closing database pool', {
-      error: error.message,
-      stack: error.stack
-    });
+    logger.error('Error closing database pool', { error: error.message });
     throw error;
   }
 }
@@ -133,5 +135,5 @@ module.exports = {
   getClient,
   testConnection,
   end,
-  pool
+  pool,
 };

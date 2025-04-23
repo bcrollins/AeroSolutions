@@ -1,386 +1,197 @@
 /**
- * Request Validation Middleware
+ * Input Validation Middleware
  * 
- * Input validation middleware using express-validator
+ * Validates request inputs using Joi schema validation
  */
 
-const { validationResult, matchedData } = require('express-validator');
+const Joi = require('joi');
 const { createError } = require('./errorHandler');
-const logger = require('../config/logger');
 
-/**
- * Validation middleware that checks the result of validation rules
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next function
- */
-function validate(req, res, next) {
-  const errors = validationResult(req);
-  
-  if (!errors.isEmpty()) {
-    const validationErrors = errors.array().map(error => ({
-      field: error.param,
-      message: error.msg,
-      value: error.value
-    }));
+// Helper function to validate request against a schema
+function validate(schema, property = 'body') {
+  return (req, res, next) => {
+    const { error, value } = schema.validate(req[property], { abortEarly: false });
     
-    logger.warn('Validation error', {
-      errors: validationErrors,
-      path: req.originalUrl,
-      method: req.method
-    });
+    if (error) {
+      // Extract and format validation errors
+      const errorDetails = error.details.map(detail => ({
+        message: detail.message,
+        path: detail.path,
+        type: detail.type
+      }));
+      
+      // Create API error with validation details
+      return next(
+        createError(
+          'Input validation failed',
+          400,
+          'VALIDATION_ERROR',
+          errorDetails
+        )
+      );
+    }
     
-    return res.status(400).json({
-      success: false,
-      error: {
-        message: 'Validation error',
-        code: 'VALIDATION_ERROR',
-        status: 400,
-        errors: validationErrors
-      }
-    });
-  }
-  
-  // If validation passes, add validated data to request
-  req.validatedData = matchedData(req);
-  next();
+    // Update request with validated and sanitized values
+    req[property] = value;
+    next();
+  };
 }
 
-/**
- * Custom validation middleware for OpenAI text generation requests
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next function
- */
-function validateOpenAITextRequest(req, res, next) {
-  const { prompt, model, max_tokens, temperature } = req.body;
-  const errors = [];
-  
-  // Validate prompt
-  if (!prompt) {
-    errors.push({
-      field: 'prompt',
-      message: 'Prompt is required',
-      value: prompt
-    });
-  } else if (typeof prompt !== 'string') {
-    errors.push({
-      field: 'prompt',
-      message: 'Prompt must be a string',
-      value: prompt
-    });
-  } else if (prompt.length < 3) {
-    errors.push({
-      field: 'prompt',
-      message: 'Prompt must be at least 3 characters long',
-      value: prompt
-    });
-  } else if (prompt.length > 10000) {
-    errors.push({
-      field: 'prompt',
-      message: 'Prompt is too long, maximum is 10,000 characters',
-      value: `${prompt.substring(0, 20)}... (${prompt.length} chars)`
-    });
-  }
-  
-  // Validate model if provided
-  if (model !== undefined) {
-    if (typeof model !== 'string') {
-      errors.push({
-        field: 'model',
-        message: 'Model must be a string',
-        value: model
-      });
-    } else {
-      const validModels = ['gpt-4o', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo'];
-      if (!validModels.includes(model)) {
-        errors.push({
-          field: 'model',
-          message: `Model must be one of: ${validModels.join(', ')}`,
-          value: model
-        });
-      }
-    }
-  }
-  
-  // Validate max_tokens if provided
-  if (max_tokens !== undefined) {
-    if (typeof max_tokens !== 'number') {
-      errors.push({
-        field: 'max_tokens',
-        message: 'max_tokens must be a number',
-        value: max_tokens
-      });
-    } else if (max_tokens < 1 || max_tokens > 4096) {
-      errors.push({
-        field: 'max_tokens',
-        message: 'max_tokens must be between 1 and 4096',
-        value: max_tokens
-      });
-    }
-  }
-  
-  // Validate temperature if provided
-  if (temperature !== undefined) {
-    if (typeof temperature !== 'number') {
-      errors.push({
-        field: 'temperature',
-        message: 'temperature must be a number',
-        value: temperature
-      });
-    } else if (temperature < 0 || temperature > 1) {
-      errors.push({
-        field: 'temperature',
-        message: 'temperature must be between 0 and 1',
-        value: temperature
-      });
-    }
-  }
-  
-  // Return validation errors if any
-  if (errors.length > 0) {
-    logger.warn('OpenAI request validation error', {
-      errors,
-      path: req.originalUrl,
-      method: req.method
-    });
-    
-    return res.status(400).json({
-      success: false,
-      error: {
-        message: 'Validation error',
-        code: 'VALIDATION_ERROR',
-        status: 400,
-        errors
-      }
-    });
-  }
-  
-  // If validation passes, continue
-  next();
-}
+// Request body schemas
 
-/**
- * Custom validation middleware for OpenAI image analysis requests
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next function
- */
-function validateOpenAIImageRequest(req, res, next) {
-  const { imageUrl, prompt, model } = req.body;
-  const errors = [];
-  
-  // Validate imageUrl
-  if (!imageUrl) {
-    errors.push({
-      field: 'imageUrl',
-      message: 'Image URL is required',
-      value: imageUrl
-    });
-  } else if (typeof imageUrl !== 'string') {
-    errors.push({
-      field: 'imageUrl',
-      message: 'Image URL must be a string',
-      value: imageUrl
-    });
-  } else if (!imageUrl.match(/^(https?:\/\/|\/)|(data:image\/[a-z]+;base64,)/i)) {
-    errors.push({
-      field: 'imageUrl',
-      message: 'Image URL must be a valid HTTP URL, path, or base64 data URL',
-      value: imageUrl.substring(0, 20) + '...'
-    });
-  }
-  
-  // Validate prompt if provided
-  if (prompt !== undefined && typeof prompt !== 'string') {
-    errors.push({
-      field: 'prompt',
-      message: 'Prompt must be a string',
-      value: prompt
-    });
-  }
-  
-  // Validate model if provided
-  if (model !== undefined) {
-    if (typeof model !== 'string') {
-      errors.push({
-        field: 'model',
-        message: 'Model must be a string',
-        value: model
-      });
-    } else {
-      const validModels = ['gpt-4o', 'gpt-4-vision-preview'];
-      if (!validModels.includes(model)) {
-        errors.push({
-          field: 'model',
-          message: `Model must be one of: ${validModels.join(', ')}`,
-          value: model
-        });
-      }
-    }
-  }
-  
-  // Return validation errors if any
-  if (errors.length > 0) {
-    logger.warn('OpenAI image request validation error', {
-      errors,
-      path: req.originalUrl,
-      method: req.method
-    });
-    
-    return res.status(400).json({
-      success: false,
-      error: {
-        message: 'Validation error',
-        code: 'VALIDATION_ERROR',
-        status: 400,
-        errors
-      }
-    });
-  }
-  
-  // If validation passes, continue
-  next();
-}
+// OpenAI Text Generation Schema
+const openaiTextSchema = Joi.object({
+  prompt: Joi.string().required().trim().min(1).max(4000)
+    .messages({
+      'string.empty': 'Prompt cannot be empty',
+      'string.min': 'Prompt must be at least 1 character long',
+      'string.max': 'Prompt cannot exceed 4000 characters',
+      'any.required': 'Prompt is required'
+    }),
+  model: Joi.string().trim().default('gpt-4o')
+    .valid('gpt-4o', 'gpt-3.5-turbo')
+    .messages({
+      'any.only': 'Model must be one of: gpt-4o, gpt-3.5-turbo'
+    }),
+  max_tokens: Joi.number().integer().min(1).max(4000).default(1000)
+    .messages({
+      'number.base': 'Max tokens must be a number',
+      'number.integer': 'Max tokens must be an integer',
+      'number.min': 'Max tokens must be at least 1',
+      'number.max': 'Max tokens cannot exceed 4000'
+    }),
+  temperature: Joi.number().min(0).max(2).default(0.7)
+    .messages({
+      'number.base': 'Temperature must be a number',
+      'number.min': 'Temperature must be at least 0',
+      'number.max': 'Temperature cannot exceed 2'
+    })
+});
 
-/**
- * Custom validation middleware for contact form requests
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next function
- */
-function validateContactRequest(req, res, next) {
-  const { name, email, subject, message } = req.body;
-  const errors = [];
-  
-  // Validate name
-  if (!name) {
-    errors.push({
-      field: 'name',
-      message: 'Name is required',
-      value: name
-    });
-  } else if (typeof name !== 'string') {
-    errors.push({
-      field: 'name',
-      message: 'Name must be a string',
-      value: name
-    });
-  } else if (name.length < 2) {
-    errors.push({
-      field: 'name',
-      message: 'Name must be at least 2 characters long',
-      value: name
-    });
-  } else if (name.length > 100) {
-    errors.push({
-      field: 'name',
-      message: 'Name is too long, maximum is 100 characters',
-      value: name
-    });
-  }
-  
-  // Validate email
-  if (!email) {
-    errors.push({
-      field: 'email',
-      message: 'Email is required',
-      value: email
-    });
-  } else if (typeof email !== 'string') {
-    errors.push({
-      field: 'email',
-      message: 'Email must be a string',
-      value: email
-    });
-  } else if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-    errors.push({
-      field: 'email',
-      message: 'Email must be a valid email address',
-      value: email
-    });
-  }
-  
-  // Validate subject
-  if (!subject) {
-    errors.push({
-      field: 'subject',
-      message: 'Subject is required',
-      value: subject
-    });
-  } else if (typeof subject !== 'string') {
-    errors.push({
-      field: 'subject',
-      message: 'Subject must be a string',
-      value: subject
-    });
-  } else if (subject.length < 3) {
-    errors.push({
-      field: 'subject',
-      message: 'Subject must be at least 3 characters long',
-      value: subject
-    });
-  } else if (subject.length > 200) {
-    errors.push({
-      field: 'subject',
-      message: 'Subject is too long, maximum is 200 characters',
-      value: subject
-    });
-  }
-  
-  // Validate message
-  if (!message) {
-    errors.push({
-      field: 'message',
-      message: 'Message is required',
-      value: message
-    });
-  } else if (typeof message !== 'string') {
-    errors.push({
-      field: 'message',
-      message: 'Message must be a string',
-      value: message
-    });
-  } else if (message.length < 10) {
-    errors.push({
-      field: 'message',
-      message: 'Message must be at least 10 characters long',
-      value: message
-    });
-  } else if (message.length > 5000) {
-    errors.push({
-      field: 'message',
-      message: 'Message is too long, maximum is 5000 characters',
-      value: `${message.substring(0, 20)}... (${message.length} chars)`
-    });
-  }
-  
-  // Return validation errors if any
-  if (errors.length > 0) {
-    logger.warn('Contact form validation error', {
-      errors,
-      path: req.originalUrl,
-      method: req.method
-    });
-    
-    return res.status(400).json({
-      success: false,
-      error: {
-        message: 'Validation error',
-        code: 'VALIDATION_ERROR',
-        status: 400,
-        errors
-      }
-    });
-  }
-  
-  // If validation passes, continue
-  next();
-}
+// OpenAI Image Analysis Schema
+const openaiImageSchema = Joi.object({
+  imageUrl: Joi.string().required().uri()
+    .messages({
+      'string.empty': 'Image URL cannot be empty',
+      'string.uri': 'Image URL must be a valid URI',
+      'any.required': 'Image URL is required'
+    }),
+  prompt: Joi.string().trim().min(1).max(1000)
+    .default('Analyze this image in detail')
+    .messages({
+      'string.empty': 'Prompt cannot be empty',
+      'string.min': 'Prompt must be at least 1 character long',
+      'string.max': 'Prompt cannot exceed 1000 characters'
+    }),
+  model: Joi.string().trim().default('gpt-4o')
+    .valid('gpt-4o')
+    .messages({
+      'any.only': 'Model must be gpt-4o for image analysis'
+    })
+});
 
+// Contact Form Schema
+const contactSchema = Joi.object({
+  name: Joi.string().required().trim().min(2).max(100)
+    .messages({
+      'string.empty': 'Name cannot be empty',
+      'string.min': 'Name must be at least 2 characters long',
+      'string.max': 'Name cannot exceed 100 characters',
+      'any.required': 'Name is required'
+    }),
+  email: Joi.string().required().trim().email()
+    .messages({
+      'string.empty': 'Email cannot be empty',
+      'string.email': 'Email must be a valid email address',
+      'any.required': 'Email is required'
+    }),
+  phone: Joi.string().trim().min(5).max(20).allow('', null)
+    .messages({
+      'string.min': 'Phone must be at least 5 characters long',
+      'string.max': 'Phone cannot exceed 20 characters'
+    }),
+  subject: Joi.string().required().trim().min(2).max(200)
+    .messages({
+      'string.empty': 'Subject cannot be empty',
+      'string.min': 'Subject must be at least 2 characters long',
+      'string.max': 'Subject cannot exceed 200 characters',
+      'any.required': 'Subject is required'
+    }),
+  message: Joi.string().required().trim().min(10).max(5000)
+    .messages({
+      'string.empty': 'Message cannot be empty',
+      'string.min': 'Message must be at least 10 characters long',
+      'string.max': 'Message cannot exceed 5000 characters',
+      'any.required': 'Message is required'
+    }),
+  companyName: Joi.string().trim().max(100).allow('', null)
+    .messages({
+      'string.max': 'Company name cannot exceed 100 characters'
+    })
+});
+
+// Authentication Schema
+const loginSchema = Joi.object({
+  username: Joi.string().required().trim().min(3).max(50)
+    .messages({
+      'string.empty': 'Username cannot be empty',
+      'string.min': 'Username must be at least 3 characters long',
+      'string.max': 'Username cannot exceed 50 characters',
+      'any.required': 'Username is required'
+    }),
+  password: Joi.string().required().min(8).max(100)
+    .messages({
+      'string.empty': 'Password cannot be empty',
+      'string.min': 'Password must be at least 8 characters long',
+      'string.max': 'Password cannot exceed 100 characters',
+      'any.required': 'Password is required'
+    })
+});
+
+// Registration Schema
+const registrationSchema = Joi.object({
+  username: Joi.string().required().trim().min(3).max(50)
+    .pattern(/^[a-zA-Z0-9_]+$/)
+    .messages({
+      'string.empty': 'Username cannot be empty',
+      'string.min': 'Username must be at least 3 characters long',
+      'string.max': 'Username cannot exceed 50 characters',
+      'string.pattern.base': 'Username can only contain letters, numbers, and underscores',
+      'any.required': 'Username is required'
+    }),
+  email: Joi.string().required().trim().email()
+    .messages({
+      'string.empty': 'Email cannot be empty',
+      'string.email': 'Email must be a valid email address',
+      'any.required': 'Email is required'
+    }),
+  password: Joi.string().required().min(8).max(100)
+    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
+    .messages({
+      'string.empty': 'Password cannot be empty',
+      'string.min': 'Password must be at least 8 characters long',
+      'string.max': 'Password cannot exceed 100 characters',
+      'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+      'any.required': 'Password is required'
+    }),
+  confirmPassword: Joi.string().required().valid(Joi.ref('password'))
+    .messages({
+      'any.only': 'Passwords do not match',
+      'any.required': 'Password confirmation is required'
+    }),
+  fullName: Joi.string().trim().min(2).max(100)
+    .messages({
+      'string.min': 'Full name must be at least 2 characters long',
+      'string.max': 'Full name cannot exceed 100 characters'
+    })
+});
+
+// Export validation middlewares
 module.exports = {
-  validate,
-  validateOpenAITextRequest,
-  validateOpenAIImageRequest,
-  validateContactRequest
+  validateOpenAITextRequest: validate(openaiTextSchema),
+  validateOpenAIImageRequest: validate(openaiImageSchema),
+  validateContactRequest: validate(contactSchema),
+  validateLoginRequest: validate(loginSchema),
+  validateRegistrationRequest: validate(registrationSchema),
+  validate // Export the base validation function for custom schemas
 };

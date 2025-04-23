@@ -5,87 +5,111 @@
  */
 const express = require('express');
 const path = require('path');
-const cors = require('cors');
+const fs = require('fs');
 
-// Create Express application
+// Initialize express app
 const app = express();
-
-// Set server port and host
 const PORT = process.env.PORT || 8080;
 const HOST = process.env.HOST || '0.0.0.0';
 
-// Apply basic middleware
-app.use(cors());
+// Basic middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files from the public directory
+// Serve static files from public directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Root route serving the landing page
+// Root route
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Simple health check
+// Health check route
 app.get('/health', (req, res) => {
   res.json({
-    status: 'UP',
-    timestamp: new Date().toISOString(),
-    mode: 'BACKUP',
-    message: 'Running in backup mode with limited functionality'
+    status: 'ok',
+    mode: 'backup-server',
+    timestamp: new Date().toISOString()
   });
 });
 
-// Simple API info
+// API status route
 app.get('/api', (req, res) => {
   res.json({
-    message: 'API Platform - Backup Mode',
-    status: 'Limited functionality available',
-    error: 'Main server is down, running in backup mode'
+    status: 'limited',
+    mode: 'backup-server',
+    message: 'Running in backup mode. Limited functionality available.',
+    timestamp: new Date().toISOString()
   });
 });
 
-// OpenAI fallback endpoint
-app.post('/api/openai/text', (req, res) => {
-  res.status(503).json({
+// OpenAI status route
+app.get('/api/openai/test', (req, res) => {
+  res.json({
     success: false,
     error: {
-      message: 'Service temporarily unavailable',
-      details: 'OpenAI services are not available in backup mode'
+      message: 'OpenAI service unavailable in backup mode',
+      status: 'service_unavailable'
     }
   });
 });
 
-// Simple catch-all for other API routes
-app.use('/api/*', (req, res) => {
-  res.status(503).json({
+// Database status route
+app.get('/api/database/test', (req, res) => {
+  res.json({
     success: false,
     error: {
-      message: 'Service temporarily unavailable',
-      details: 'Full API functionality is not available in backup mode'
+      message: 'Database service unavailable in backup mode',
+      status: 'service_unavailable'
     }
   });
 });
 
-// Catch-all route handler
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(500).json({
+    success: false,
+    error: {
+      message: 'Internal server error in backup mode',
+      status: 'internal_error'
+    }
+  });
+});
+
+// Catch all unmatched routes
 app.use('*', (req, res) => {
-  if (req.originalUrl.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg)$/)) {
-    return res.status(404).send('Not found');
-  }
-  
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.status(404).json({
+    success: false,
+    error: {
+      message: `Route ${req.originalUrl} not found in backup mode`,
+      status: 'not_found'
+    }
+  });
 });
 
-// Start the server
-app.listen(PORT, HOST, () => {
-  console.log(`Backup server running on http://${HOST}:${PORT}`);
-  console.log('WARNING: Running in backup mode with limited functionality');
-});
+// Start server
+function startBackupServer() {
+  return app.listen(PORT, HOST, () => {
+    console.log(`🔄 Backup server running at http://${HOST}:${PORT}`);
+    console.log('⚠️ Running in limited functionality mode');
+    
+    // Log to file as well
+    const logDir = path.join(__dirname, 'logs');
+    if (!fs.existsSync(logDir)) {
+      fs.mkdirSync(logDir);
+    }
+    
+    fs.appendFileSync(
+      path.join(logDir, 'backup-server.log'),
+      `[${new Date().toISOString()}] Backup server started on port ${PORT}\n`
+    );
+  });
+}
 
-// Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
-});
+// If this file is run directly, start the server
+if (require.main === module) {
+  startBackupServer();
+}
 
-module.exports = app;
+module.exports = { app, startBackupServer };

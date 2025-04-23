@@ -1,82 +1,111 @@
 /**
- * Rate Limiter Middleware
+ * Rate Limiting Middleware
  * 
- * Implements rate limiting to protect API endpoints from abuse
+ * Provides rate limiting for API endpoints to prevent abuse
  */
+
 const rateLimit = require('express-rate-limit');
-const { ServiceUnavailableError } = require('./errorHandler');
 const logger = require('../config/logger');
+const { createError } = require('./errorHandler');
 
-// Create a store for production environments (if needed)
-// For example, you might want to use Redis store for distributed applications
-// const RedisStore = require('rate-limit-redis');
-// const redisClient = require('../config/redis'); // You would need to create this
+// Configure rate limiting options for different endpoints
+const DEFAULT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const DEFAULT_MAX_REQUESTS = 100; // 100 requests per window
 
-/**
- * Create rate limiter based on provided options
- * @param {Object} options - Rate limiting options
- * @returns {Function} Express middleware
- */
-function createRateLimiter(options = {}) {
-  const defaultOptions = {
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
-    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-    skipSuccessfulRequests: false, // Don't count successful requests
-    message: 'Too many requests, please try again later.',
-    skip: (req) => false, // No default skip function
-  };
-
-  // Merge provided options with defaults
-  const limiterOptions = {
-    ...defaultOptions,
-    ...options,
-    handler: (req, res, next, options) => {
-      // Log rate limit hit
-      logger.warn(`Rate limit exceeded`, {
-        ip: req.ip,
-        path: req.originalUrl,
-        method: req.method,
-        userAgent: req.get('user-agent'),
-        limit: options.max,
-        window: options.windowMs,
-      });
-      
-      // Use our error handler for consistency
-      next(new ServiceUnavailableError(options.message || 'Too many requests, please try again later.'));
-    }
+// Helper to create a rate limiter with custom options
+function createLimiter(options = {}) {
+  const {
+    windowMs = DEFAULT_WINDOW_MS,
+    max = DEFAULT_MAX_REQUESTS,
+    message = 'Too many requests from this IP, please try again later',
+    statusCode = 429,
+    standardHeaders = true,
+    legacyHeaders = false,
+    skipSuccessfulRequests = false,
+    requestPropertyName = 'rateLimit',
+    keyGenerator = (req) => req.ip,
+    handler
+  } = options;
+  
+  // Custom handler for rate limit exceeded
+  const defaultHandler = (req, res, next, options) => {
+    logger.warn('Rate limit exceeded', {
+      ip: req.ip,
+      path: req.originalUrl,
+      method: req.method,
+      userAgent: req.headers['user-agent'],
+      limit: max,
+      window: windowMs / 1000 / 60 + ' minutes'
+    });
+    
+    const error = createError(
+      message,
+      statusCode,
+      'RATE_LIMIT_EXCEEDED',
+      {
+        timeWindow: windowMs / 1000 + ' seconds',
+        maxRequests: max
+      }
+    );
+    
+    next(error);
   };
   
-  // Return the configured middleware
-  return rateLimit(limiterOptions);
+  return rateLimit({
+    windowMs,
+    max,
+    message,
+    statusCode,
+    standardHeaders,
+    legacyHeaders,
+    skipSuccessfulRequests,
+    requestPropertyName,
+    keyGenerator,
+    handler: handler || defaultHandler
+  });
 }
 
-// Standard API rate limiter
-const apiLimiter = createRateLimiter({ 
+// Create different rate limiters for different endpoints
+
+// API rate limiter (used for most API endpoints)
+const apiLimiter = createLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per 15 minutes
-  message: 'Too many API requests, please try again after 15 minutes',
+  max: 100 // 100 requests per window
 });
 
-// More strict rate limiter for authentication routes
-const authLimiter = createRateLimiter({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 10, // 10 attempts per hour
-  message: 'Too many login attempts, please try again after an hour',
-  skipSuccessfulRequests: true, // Don't count successful logins
+// Contact form rate limiter (more restrictive)
+const contactLimiter = createLimiter({
+  windowMs: 30 * 60 * 1000, // 30 minutes
+  max: 5, // 5 requests per window
+  message: 'Too many contact form submissions, please try again later'
 });
 
-// Rate limiter specifically for OpenAI endpoints
-const openaiLimiter = createRateLimiter({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 60, // 60 requests per hour (1 per minute on average)
-  message: 'OpenAI request limit reached. Please try again later.',
+// OpenAI API rate limiter (restricted due to cost)
+const openaiLimiter = createLimiter({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 20, // 20 requests per window
+  message: 'Too many AI requests, please try again later'
+});
+
+// Authentication rate limiter (to prevent brute force)
+const authLimiter = createLimiter({
+  windowMs: 30 * 60 * 1000, // 30 minutes
+  max: 10, // 10 requests per window
+  message: 'Too many authentication attempts, please try again later'
+});
+
+// Strict rate limiter for sensitive operations
+const strictLimiter = createLimiter({
+  windowMs: 60 * 60 * 1000, // 60 minutes
+  max: 5, // 5 requests per window
+  message: 'Too many requests for this operation, please try again later'
 });
 
 module.exports = {
-  createRateLimiter,
   apiLimiter,
+  contactLimiter,
+  openaiLimiter,
   authLimiter,
-  openaiLimiter
+  strictLimiter,
+  createLimiter // Export the factory function for custom limiters
 };
