@@ -716,8 +716,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .isLength({ min: 1, max: 1000 }).withMessage('Message must be between 1 and 1000 characters')
       .trim()
   ], (req, res, next) => {
-    console.log(`Redirecting old /api/elevate-bot endpoint to new /api/elevatebot/support endpoint`);
-    req.url = '/api/elevatebot/support';
+    console.log(`Redirecting old /api/elevate-bot endpoint to new /api/rollinsxbot/support endpoint`);
+    req.url = '/api/rollinsxbot/support';
     app._router.handle(req, res, next);
   });
   
@@ -803,8 +803,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .isLength({ min: 1, max: 1000 }).withMessage('Message must be between 1 and 1000 characters')
       .trim()
   ], (req, res, next) => {
-    console.log(`Redirecting old /api/elevate-bot-legacy endpoint to new /api/elevatebot/support endpoint`);
-    req.url = '/api/elevatebot/support';
+    console.log(`Redirecting old /api/elevate-bot-legacy endpoint to new /api/rollinsxbot/support endpoint`);
+    req.url = '/api/rollinsxbot/support';
     app._router.handle(req, res, next);
   });
 
