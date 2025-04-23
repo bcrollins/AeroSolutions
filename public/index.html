@@ -1,38 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Platform</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Web Platform</title>
+    <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body class="bg-gray-100">
-  <header class="bg-blue-600 text-white p-4">
-    <h1 class="text-2xl font-bold">AI Platform</h1>
-  </header>
-  <main class="max-w-4xl mx-auto mt-8 p-4">
-    <section class="text-center">
-      <h2 class="text-3xl font-semibold">Welcome to Our AI-Powered Platform</h2>
-      <p class="mt-4 text-lg">Create amazing content with the power of Open AI.</p>
-      <a href="/signup" class="mt-6 inline-block bg-blue-600 text-white px-6 py-3 rounded-lg">Get Started</a>
-    </section>
-    <section class="mt-12">
-      <h3 class="text-2xl font-semibold text-center">Features</h3>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-        <div class="bg-white p-4 rounded-lg shadow">
-          <h4 class="text-xl font-medium">Text Generation</h4>
-          <p>Generate creative content effortlessly.</p>
+<body>
+    <header>
+        <nav class="main-nav">
+            <div class="container">
+                <div class="logo">
+                    <a href="/">AI-Powered Web Platform</a>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/test">Test</a></li>
+                    <li><a href="/login">Login</a></li>
+                    <li><a href="/api/database/test">Test DB</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <h1>Welcome to AI-Powered Web Platform</h1>
+                    <p>A powerful platform for building intelligent, interactive applications with OpenAI integration.</p>
+                    <div class="hero-actions">
+                        <a href="/test" class="btn btn-primary">Try Demo</a>
+                        <a href="/login" class="btn btn-secondary">Sign In</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="features">
+            <div class="container">
+                <h2>Features</h2>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🧠</div>
+                        <h3>OpenAI Integration</h3>
+                        <p>Leverage the power of OpenAI's API for intelligent content generation and analysis.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔒</div>
+                        <h3>Secure Authentication</h3>
+                        <p>Keep your data safe with our robust authentication and authorization system.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3>PostgreSQL Database</h3>
+                        <p>Reliable data storage with PostgreSQL database integration for your application.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3>Fast Performance</h3>
+                        <p>Optimized for speed and efficiency to deliver a seamless user experience.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="cta">
+            <div class="container">
+                <h2>Ready to get started?</h2>
+                <p>Join our platform today and experience the power of AI in your web applications.</p>
+                <a href="/register" class="btn btn-primary">Register Now</a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 AI-Powered Web Platform. All rights reserved.</p>
         </div>
-        <div class="bg-white p-4 rounded-lg shadow">
-          <h4 class="text-xl font-medium">Scalable</h4>
-          <p>Built for growth and performance.</p>
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow">
-          <h4 class="text-xl font-medium">User-Friendly</h4>
-          <p>Intuitive design for all users.</p>
-        </div>
-      </div>
-    </section>
-  </main>
+    </footer>
+
+    <script src="/js/main.js"></script>
 </body>
 </html>

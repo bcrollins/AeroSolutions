@@ -1,100 +1,239 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Test Page - AI Platform</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-100">
-  <header class="bg-blue-600 text-white p-4">
-    <div class="max-w-4xl mx-auto flex justify-between items-center">
-      <h1 class="text-2xl font-bold">AI Platform</h1>
-      <nav>
-        <a href="/" class="text-white hover:text-blue-200">Home</a>
-      </nav>
-    </div>
-  </header>
-  <main class="max-w-4xl mx-auto mt-8 p-4">
-    <h2 class="text-3xl font-semibold mb-6">Test Page</h2>
-    <div class="bg-white p-6 rounded-lg shadow-md">
-      <h3 class="text-xl font-medium mb-4">OpenAI API Test</h3>
-      <div class="mb-4">
-        <p class="mb-2">Test the OpenAI API integration:</p>
-        <a href="/api/test-xai" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600" target="_blank">
-          Test OpenAI API
-        </a>
-      </div>
-      
-      <h3 class="text-xl font-medium mb-4 mt-8">API Generate Endpoint Test</h3>
-      <div class="mb-4">
-        <p class="mb-2">Try the /api/generate endpoint:</p>
-        <div class="mb-4">
-          <textarea id="prompt" class="w-full p-2 border rounded" rows="4" placeholder="Enter your prompt here...">Write a brief paragraph about artificial intelligence.</textarea>
-        </div>
-        <div class="flex space-x-2">
-          <button id="generateBtn" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-            Generate
-          </button>
-          <button id="clearBtn" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
-            Clear
-          </button>
-        </div>
-      </div>
-      <div class="mt-4">
-        <h4 class="font-medium">Result:</h4>
-        <div id="result" class="mt-2 p-4 bg-gray-100 rounded min-h-[100px]">
-          <p class="text-gray-500 italic">Results will appear here...</p>
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const generateBtn = document.getElementById('generateBtn');
-      const clearBtn = document.getElementById('clearBtn');
-      const promptInput = document.getElementById('prompt');
-      const resultDiv = document.getElementById('result');
-
-      generateBtn.addEventListener('click', async () => {
-        const prompt = promptInput.value.trim();
-        if (!prompt) {
-          resultDiv.innerHTML = '<p class="text-red-500">Please enter a prompt</p>';
-          return;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test OpenAI Integration</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .test-card {
+            background-color: var(--light-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
         }
-
-        resultDiv.innerHTML = '<p class="text-gray-500">Loading...</p>';
-        generateBtn.disabled = true;
         
-        try {
-          const response = await fetch('/api/generate', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ prompt })
-          });
-
-          const data = await response.json();
-          
-          if (data.success) {
-            resultDiv.innerHTML = `<p>${data.result}</p>`;
-          } else {
-            resultDiv.innerHTML = `<p class="text-red-500">Error: ${data.message || 'Something went wrong'}</p>`;
-          }
-        } catch (error) {
-          resultDiv.innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
-        } finally {
-          generateBtn.disabled = false;
+        .test-output {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            margin-top: 1rem;
+            min-height: 100px;
+            white-space: pre-wrap;
         }
-      });
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 1rem 0;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 2rem;
+            height: 2rem;
+            border: 0.25rem solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="main-nav">
+            <div class="container">
+                <div class="logo">
+                    <a href="/">AI-Powered Web Platform</a>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/test" class="active">Test</a></li>
+                    <li><a href="/login">Login</a></li>
+                    <li><a href="/api/database/test">Test DB</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
 
-      clearBtn.addEventListener('click', () => {
-        promptInput.value = '';
-        resultDiv.innerHTML = '<p class="text-gray-500 italic">Results will appear here...</p>';
-      });
-    });
-  </script>
+    <main class="container">
+        <h1>Test OpenAI Integration</h1>
+        <p>Use the forms below to test various OpenAI API functionalities:</p>
+
+        <div class="test-card">
+            <h2>Text Generation</h2>
+            <p>Generate text using OpenAI's GPT-4 model:</p>
+            
+            <form id="text-form">
+                <div class="form-group">
+                    <label for="text-prompt" class="form-label">Prompt:</label>
+                    <textarea id="text-prompt" class="form-input" rows="3" required placeholder="Enter your prompt here..."></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Generate Text</button>
+                
+                <div class="loading" id="text-loading">
+                    <div class="spinner"></div>
+                    <p>Generating response...</p>
+                </div>
+                
+                <div class="test-output" id="text-output"></div>
+            </form>
+        </div>
+
+        <div class="test-card">
+            <h2>JSON Generation</h2>
+            <p>Generate structured JSON data using OpenAI:</p>
+            
+            <form id="json-form">
+                <div class="form-group">
+                    <label for="json-prompt" class="form-label">Prompt:</label>
+                    <textarea id="json-prompt" class="form-input" rows="3" required placeholder="Enter a prompt that would generate structured data..."></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Generate JSON</button>
+                
+                <div class="loading" id="json-loading">
+                    <div class="spinner"></div>
+                    <p>Generating response...</p>
+                </div>
+                
+                <div class="test-output" id="json-output"></div>
+            </form>
+        </div>
+
+        <div class="test-card">
+            <h2>Database Connection Test</h2>
+            <p>Test the PostgreSQL database connection:</p>
+            
+            <button id="test-db" class="btn btn-primary">Test Database</button>
+            
+            <div class="loading" id="db-loading">
+                <div class="spinner"></div>
+                <p>Testing connection...</p>
+            </div>
+            
+            <div class="test-output" id="db-output"></div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 AI-Powered Web Platform. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Text Generation Form
+            const textForm = document.getElementById('text-form');
+            const textPrompt = document.getElementById('text-prompt');
+            const textOutput = document.getElementById('text-output');
+            const textLoading = document.getElementById('text-loading');
+            
+            textForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                textOutput.textContent = '';
+                textLoading.style.display = 'block';
+                
+                try {
+                    const response = await fetch('/api/openai/generate-text', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            prompt: textPrompt.value
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        textOutput.textContent = data.text;
+                    } else {
+                        textOutput.textContent = `Error: ${data.message || 'Something went wrong'}`;
+                    }
+                } catch (error) {
+                    console.error('API error:', error);
+                    textOutput.textContent = 'Error: Failed to connect to the API. Please try again.';
+                } finally {
+                    textLoading.style.display = 'none';
+                }
+            });
+            
+            // JSON Generation Form
+            const jsonForm = document.getElementById('json-form');
+            const jsonPrompt = document.getElementById('json-prompt');
+            const jsonOutput = document.getElementById('json-output');
+            const jsonLoading = document.getElementById('json-loading');
+            
+            jsonForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                jsonOutput.textContent = '';
+                jsonLoading.style.display = 'block';
+                
+                try {
+                    const response = await fetch('/api/openai/generate-json', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            prompt: jsonPrompt.value
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        jsonOutput.textContent = JSON.stringify(data.json, null, 2);
+                    } else {
+                        jsonOutput.textContent = `Error: ${data.message || 'Something went wrong'}`;
+                    }
+                } catch (error) {
+                    console.error('API error:', error);
+                    jsonOutput.textContent = 'Error: Failed to connect to the API. Please try again.';
+                } finally {
+                    jsonLoading.style.display = 'none';
+                }
+            });
+            
+            // Database Test
+            const testDbButton = document.getElementById('test-db');
+            const dbOutput = document.getElementById('db-output');
+            const dbLoading = document.getElementById('db-loading');
+            
+            testDbButton.addEventListener('click', async () => {
+                dbOutput.textContent = '';
+                dbLoading.style.display = 'block';
+                
+                try {
+                    const response = await fetch('/api/database/test');
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        dbOutput.textContent = data.success 
+                            ? `✅ Database connection successful!\nConnection info: ${data.message}` 
+                            : `❌ Database connection failed: ${data.message}`;
+                    } else {
+                        dbOutput.textContent = `Error: ${data.message || 'Something went wrong'}`;
+                    }
+                } catch (error) {
+                    console.error('API error:', error);
+                    dbOutput.textContent = 'Error: Failed to connect to the API. Please try again.';
+                } finally {
+                    dbLoading.style.display = 'none';
+                }
+            });
+        });
+    </script>
 </body>
 </html>

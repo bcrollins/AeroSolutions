@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> | AI-Powered Web Platform</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <% if (stylesheets && stylesheets.length > 0) { %>
+        <% stylesheets.forEach(function(stylesheet) { %>
+            <link rel="stylesheet" href="<%= stylesheet %>">
+        <% }); %>
+    <% } %>
+</head>
+<body>
+    <header>
+        <nav class="main-nav">
+            <div class="container">
+                <div class="logo">
+                    <a href="/">AI-Powered Web Platform</a>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/test">Test</a></li>
+                    <li><a href="/login">Login</a></li>
+                    <li><a href="/api/database/test">Test DB</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <% if (typeof flashMessages !== 'undefined' && flashMessages.length > 0) { %>
+            <div class="flash-messages">
+                <% flashMessages.forEach(function(message) { %>
+                    <div class="flash-message flash-<%= message.type %>">
+                        <%= message.text %>
+                    </div>
+                <% }); %>
+            </div>
+        <% } %>
+
+        <%- body %>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; <%= new Date().getFullYear() %> AI-Powered Web Platform. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/js/main.js"></script>
+    <% if (scripts && scripts.length > 0) { %>
+        <% scripts.forEach(function(script) { %>
+            <script src="<%= script %>"></script>
+        <% }); %>
+    <% } %>
+</body>
+</html>
