@@ -7,26 +7,37 @@
 
 import { Pool, PoolClient, QueryResult } from 'pg';
 
-// Create a connection pool using environment variables
-const pool = new Pool({
-  user: process.env.PGUSER,
-  host: process.env.PGHOST,
-  database: process.env.PGDATABASE,
-  password: process.env.PGPASSWORD,
-  port: parseInt(process.env.PGPORT || '5432'),
-  // Enable SSL for production environments (e.g., Heroku)
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+// Environment-based configuration
+interface DbConfig {
+  connectionString: string;
+  ssl?: boolean | { rejectUnauthorized: boolean };
+  max?: number;
+  idleTimeoutMillis?: number;
+  connectionTimeoutMillis?: number;
+}
 
-// Log connection errors
-pool.on('error', (err: Error) => {
-  console.error('Unexpected error on idle PostgreSQL client', err);
-  process.exit(-1);
-});
+// Create database configuration
+const dbConfig: DbConfig = {
+  connectionString: process.env.DATABASE_URL || '',
+  ssl: process.env.DB_SSL === 'true' ? {
+    rejectUnauthorized: false // For Replit compatibility
+  } : false,
+  max: parseInt(process.env.DB_POOL_SIZE || '10'), // Maximum number of clients in the pool
+  idleTimeoutMillis: 30000, // How long a client is allowed to remain idle before being closed
+  connectionTimeoutMillis: 2000 // How long to wait for a connection to become available
+};
 
-// Log successful connection
+// Create a connection pool
+export const pool = new Pool(dbConfig);
+
+// Log connection events for debugging
 pool.on('connect', () => {
-  console.log(`Connected to PostgreSQL database (${process.env.PGDATABASE}) at ${process.env.PGHOST}:${process.env.PGPORT}`);
+  console.log('Database connection established');
+});
+
+pool.on('error', (err: Error) => {
+  console.error('Unexpected error on idle database client', err);
+  process.exit(-1);
 });
 
 /**
@@ -35,48 +46,37 @@ pool.on('connect', () => {
  * @param params - The query parameters
  * @returns Query result
  */
-const query = async <T = any>(text: string, params?: any[]): Promise<QueryResult<T>> => {
+export const query = async <T = any>(text: string, params?: any[]): Promise<QueryResult<T>> => {
   const start = Date.now();
-  const result = await pool.query<T>(text, params);
-  const duration = Date.now() - start;
-  
-  // Log slow queries (over 100ms) for debugging
-  if (duration > 100) {
-    console.log(`Slow query (${duration}ms): ${text}`);
+  try {
+    const result = await pool.query<T>(text, params);
+    const duration = Date.now() - start;
+    
+    // Log slow queries (over 200ms)
+    if (duration > 200) {
+      console.warn('Slow query:', { text, duration, rows: result.rowCount });
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Database query error:', (error as Error).message);
+    console.error('Query:', text);
+    console.error('Parameters:', params);
+    throw error;
   }
-  
-  return result;
 };
 
 /**
  * Get a client from the pool for transactions
  * @returns Database client
  */
-const getClient = async (): Promise<PoolClient> => {
+export const getClient = async (): Promise<PoolClient> => {
   const client = await pool.connect();
-  const originalQuery = client.query;
   const originalRelease = client.release;
   
-  // Add query execution time monitoring
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  client.query = async (...args: any[]) => {
-    const start = Date.now();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result = await originalQuery.apply(client, args as any);
-    const duration = Date.now() - start;
-    
-    // Log slow queries (over 100ms) for debugging
-    if (duration > 100) {
-      console.log(`Slow transaction query (${duration}ms): ${args[0]}`);
-    }
-    
-    return result;
-  };
-  
-  // Ensure clients are always released back to the pool
+  // Override release method to log when client is returned to the pool
   client.release = () => {
-    client.query = originalQuery;
-    return originalRelease.apply(client);
+    originalRelease.apply(client);
   };
   
   return client;
@@ -86,17 +86,17 @@ const getClient = async (): Promise<PoolClient> => {
  * Test the database connection with a simple query
  * @returns True if connection successful
  */
-const testConnection = async (): Promise<boolean> => {
+export const testConnection = async (): Promise<boolean> => {
   try {
-    await pool.query('SELECT NOW()');
+    await query('SELECT NOW()');
     return true;
   } catch (error) {
-    console.error('Database connection test failed:', error);
+    console.error('Database connection test failed:', (error as Error).message);
     return false;
   }
 };
 
-export {
+export default {
   pool,
   query,
   getClient,

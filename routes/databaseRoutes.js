@@ -1,32 +1,42 @@
 /**
  * Database Routes
  * 
- * Routes for database operations and information
+ * API routes for database-related functionality
  */
 
 const express = require('express');
 const router = express.Router();
 const databaseController = require('../controllers/databaseController');
-const { authMiddleware, adminMiddleware } = require('../middlewares/auth');
-const rateLimiter = require('../middlewares/rateLimiter');
 
-// Apply rate limiting to admin routes
-router.use(rateLimiter.admin);
+// Auth middleware for admin-only routes
+const authMiddleware = require('../middlewares/auth');
+const adminOnly = authMiddleware.adminOnly;
 
-// Test database connection (public route for health checks)
+/**
+ * GET /api/database/test
+ * Test database connection
+ */
 router.get('/test', databaseController.testConnection);
 
-// The following routes require admin authentication
-router.use(authMiddleware);
-router.use(adminMiddleware);
+/**
+ * GET /api/database/tables
+ * Get all tables
+ * Admin only
+ */
+router.get('/tables', adminOnly, databaseController.getTables);
 
-// Get all database tables
-router.get('/tables', databaseController.getTables);
+/**
+ * GET /api/database/tables/:tableName
+ * Get columns for specific table
+ * Admin only
+ */
+router.get('/tables/:tableName', adminOnly, databaseController.getTableColumns);
 
-// Get columns for a specified table
-router.get('/tables/:tableName/columns', databaseController.getTableColumns);
-
-// Get database status and statistics
-router.get('/status', databaseController.getStatus);
+/**
+ * GET /api/database/status
+ * Get database status and statistics
+ * Admin only
+ */
+router.get('/status', adminOnly, databaseController.getStatus);
 
 module.exports = router;

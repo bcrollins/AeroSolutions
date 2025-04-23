@@ -1,165 +1,129 @@
 /**
  * OpenAI Model
  * 
- * Provides a wrapper for OpenAI API services
+ * Handles interactions with the OpenAI API
  */
 
 const OpenAI = require('openai');
 
-// Initialize OpenAI API client with key from environment
-const openai = new OpenAI({ 
+// Create OpenAI client
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-// Default values for API calls
-const defaults = {
-  model: 'gpt-4o', // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-  max_tokens: 500,
-  temperature: 0.7
-};
+// Default values
+const DEFAULT_MODEL = 'gpt-4o'; // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+const DEFAULT_MAX_TOKENS = 1000;
+const DEFAULT_TEMPERATURE = 0.7;
 
 /**
- * Generate text using OpenAI's chat completion API
- * @param {Object} options - Options for text generation
- * @param {string} options.prompt - The prompt to generate text from
- * @param {string} [options.model] - OpenAI model to use
+ * Generate text using OpenAI
+ * @param {Object} options - Generation options
+ * @param {string} options.prompt - The prompt to generate from
+ * @param {string} [options.model] - The model to use
  * @param {number} [options.max_tokens] - Maximum tokens to generate
- * @param {number} [options.temperature] - Sampling temperature
- * @returns {Promise<Object>} - Generated text and metadata
+ * @param {number} [options.temperature] - Temperature for generation
+ * @returns {Promise<Object>} - OpenAI completion response
  */
-const generateText = async (options) => {
+const generateText = async ({ prompt, model = DEFAULT_MODEL, max_tokens = DEFAULT_MAX_TOKENS, temperature = DEFAULT_TEMPERATURE }) => {
   try {
-    const params = {
-      model: options.model || defaults.model,
-      messages: [{ role: 'user', content: options.prompt }],
-      max_tokens: options.max_tokens || defaults.max_tokens,
-      temperature: options.temperature || defaults.temperature
-    };
+    const response = await openai.chat.completions.create({
+      messages: [{ role: 'user', content: prompt }],
+      model: model,
+      max_tokens: max_tokens,
+      temperature: temperature
+    });
     
-    const response = await openai.chat.completions.create(params);
-    
-    return {
-      text: response.choices[0].message.content,
-      usage: response.usage,
-      model: response.model
-    };
+    return response;
   } catch (error) {
-    console.error('OpenAI generateText error:', error);
-    throw new Error(`Failed to generate text: ${error.message}`);
+    console.error('OpenAI text generation error:', error);
+    throw new Error(`OpenAI API error: ${error.message}`);
   }
 };
 
 /**
- * Generate JSON using OpenAI's chat completion API with JSON mode
- * @param {Object} options - Options for JSON generation
- * @param {string} options.prompt - The prompt to generate JSON from
- * @param {string} [options.model] - OpenAI model to use
+ * Generate JSON using OpenAI
+ * @param {Object} options - Generation options
+ * @param {string} options.prompt - The prompt to generate from
+ * @param {string} [options.model] - The model to use
  * @param {number} [options.max_tokens] - Maximum tokens to generate
- * @param {number} [options.temperature] - Sampling temperature
- * @returns {Promise<Object>} - Generated JSON and metadata
+ * @param {number} [options.temperature] - Temperature for generation
+ * @returns {Promise<Object>} - OpenAI completion response
  */
-const generateJSON = async (options) => {
+const generateJSON = async ({ prompt, model = DEFAULT_MODEL, max_tokens = DEFAULT_MAX_TOKENS, temperature = DEFAULT_TEMPERATURE }) => {
   try {
-    const params = {
-      model: options.model || defaults.model,
-      messages: [
-        { 
-          role: 'system', 
-          content: 'You are a JSON generator. Respond with valid JSON only, no additional text.'
-        },
-        { 
-          role: 'user', 
-          content: options.prompt 
-        }
-      ],
-      max_tokens: options.max_tokens || defaults.max_tokens,
-      temperature: options.temperature || defaults.temperature,
+    // Add JSON instructions to the prompt
+    const jsonPrompt = `${prompt}\n\nReturn your response as a valid JSON object.`;
+    
+    const response = await openai.chat.completions.create({
+      messages: [{ role: 'user', content: jsonPrompt }],
+      model: model,
+      max_tokens: max_tokens,
+      temperature: temperature,
       response_format: { type: 'json_object' }
-    };
+    });
     
-    const response = await openai.chat.completions.create(params);
-    
-    return {
-      json: JSON.parse(response.choices[0].message.content),
-      usage: response.usage,
-      model: response.model
-    };
+    return response;
   } catch (error) {
-    console.error('OpenAI generateJSON error:', error);
-    throw new Error(`Failed to generate JSON: ${error.message}`);
+    console.error('OpenAI JSON generation error:', error);
+    throw new Error(`OpenAI API error: ${error.message}`);
   }
 };
 
 /**
- * Analyze an image using OpenAI's vision API
- * @param {Object} options - Options for image analysis
- * @param {string} options.image - Base64 encoded image to analyze
- * @param {string} [options.prompt] - Additional prompt for analysis guidance
- * @param {string} [options.model] - OpenAI model to use
+ * Analyze image using OpenAI
+ * @param {Object} options - Analysis options
+ * @param {string} options.image - Base64 encoded image
+ * @param {string} [options.prompt] - Analysis prompt
+ * @param {string} [options.model] - The model to use
  * @param {number} [options.max_tokens] - Maximum tokens to generate
- * @returns {Promise<Object>} - Analysis results and metadata
+ * @returns {Promise<Object>} - OpenAI analysis response
  */
-const analyzeImage = async (options) => {
+const analyzeImage = async ({ image, prompt = 'Analyze this image in detail.', model = DEFAULT_MODEL, max_tokens = DEFAULT_MAX_TOKENS }) => {
   try {
-    const params = {
-      model: options.model || 'gpt-4o',
+    const response = await openai.chat.completions.create({
+      model: model,
+      max_tokens: max_tokens,
       messages: [
         {
           role: 'user',
           content: [
-            {
-              type: 'text',
-              text: options.prompt || 'Analyze this image in detail and describe its key elements, context, and any notable aspects.'
-            },
+            { type: 'text', text: prompt },
             {
               type: 'image_url',
               image_url: {
-                url: `data:image/jpeg;base64,${options.image}`
+                url: `data:image/jpeg;base64,${image}`
               }
             }
           ],
         },
       ],
-      max_tokens: options.max_tokens || 500,
-    };
+    });
     
-    const response = await openai.chat.completions.create(params);
-    
-    return {
-      analysis: response.choices[0].message.content,
-      usage: response.usage,
-      model: response.model
-    };
+    return response;
   } catch (error) {
-    console.error('OpenAI analyzeImage error:', error);
-    throw new Error(`Failed to analyze image: ${error.message}`);
+    console.error('OpenAI image analysis error:', error);
+    throw new Error(`OpenAI API error: ${error.message}`);
   }
 };
 
 /**
- * Test the OpenAI connection with a simple query
- * @returns {Promise<Object>} - Connection status and model information
+ * Test OpenAI API connection
+ * @returns {Promise<Object>} - Connection test result
  */
 const testConnection = async () => {
   try {
-    const response = await openai.chat.completions.create({
-      model: defaults.model,
-      messages: [{ role: 'user', content: 'Hello' }],
-      max_tokens: 5
-    });
+    const models = await openai.models.list();
     
     return {
-      status: 'connected',
-      model: response.model,
-      available: true
+      success: true,
+      message: 'OpenAI API connection successful',
+      models: models.data.slice(0, 5).map(model => model.id), // Return first 5 models
+      timestamp: new Date().toISOString()
     };
   } catch (error) {
-    console.error('OpenAI testConnection error:', error);
-    return {
-      status: 'error',
-      message: error.message,
-      available: false
-    };
+    console.error('OpenAI connection test error:', error);
+    throw new Error(`OpenAI API connection failed: ${error.message}`);
   }
 };
 
