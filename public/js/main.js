@@ -1,165 +1,125 @@
 /**
- * Main JavaScript for the API Platform Landing Page
+ * Main JavaScript for the landing page
  */
-
-document.addEventListener('DOMContentLoaded', () => {
-  // Mobile menu toggle
-  const mobileMenuBtn = document.querySelector('.mobile-menu');
-  const navLinks = document.querySelector('.nav-links');
+document.addEventListener('DOMContentLoaded', function() {
+  // Smooth scrolling for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      e.preventDefault();
+      
+      const targetId = this.getAttribute('href');
+      if (targetId === '#') return;
+      
+      const targetElement = document.querySelector(targetId);
+      if (targetElement) {
+        window.scrollTo({
+          top: targetElement.offsetTop - 80, // Offset for header
+          behavior: 'smooth'
+        });
+      }
+    });
+  });
   
-  if (mobileMenuBtn && navLinks) {
-    mobileMenuBtn.addEventListener('click', () => {
-      navLinks.classList.toggle('active');
+  // Add active class to the current menu item
+  window.addEventListener('scroll', function() {
+    const sections = document.querySelectorAll('section[id]');
+    let scrollY = window.pageYOffset;
+    
+    sections.forEach(current => {
+      const sectionHeight = current.offsetHeight;
+      const sectionTop = current.offsetTop - 100;
+      const sectionId = current.getAttribute('id');
+      
+      if (scrollY > sectionTop && scrollY <= sectionTop + sectionHeight) {
+        document.querySelector('.nav-links a[href*=' + sectionId + ']')?.classList.add('active');
+      } else {
+        document.querySelector('.nav-links a[href*=' + sectionId + ']')?.classList.remove('active');
+      }
+    });
+  });
+  
+  // Feature cards animation
+  const featureCards = document.querySelectorAll('.feature-card');
+  
+  if (featureCards.length > 0) {
+    featureCards.forEach((card, index) => {
+      setTimeout(() => {
+        card.classList.add('animate-in');
+      }, 100 * index);
     });
   }
-
-  // Contact form handling
-  const contactForm = document.getElementById('contactForm');
+  
+  // Code blocks syntax highlighting simulation
+  const codeBlocks = document.querySelectorAll('.code-block pre code');
+  
+  if (codeBlocks.length > 0) {
+    codeBlocks.forEach(block => {
+      // Simple syntax highlighting
+      let content = block.innerHTML;
+      
+      // Highlight strings
+      content = content.replace(/"(.*?)"/g, '<span class="string">"$1"</span>');
+      
+      // Highlight numbers
+      content = content.replace(/\b(\d+)\b/g, '<span class="number">$1</span>');
+      
+      // Highlight keys in JSON
+      content = content.replace(/"([^"]+)":/g, '<span class="key">"$1"</span>:');
+      
+      // Set the modified content
+      block.innerHTML = content;
+    });
+  }
+  
+  // Simple form validation for contact form (if added later)
+  const contactForm = document.querySelector('#contact-form');
   
   if (contactForm) {
-    contactForm.addEventListener('submit', async (e) => {
+    contactForm.addEventListener('submit', function(e) {
       e.preventDefault();
       
-      const formData = {
-        name: document.getElementById('name').value,
-        email: document.getElementById('email').value,
-        subject: document.getElementById('subject').value,
-        message: document.getElementById('message').value
-      };
+      // Add form validation logic here
       
-      try {
-        const response = await fetch('/api/contact', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(formData)
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-          displayMessage('Thank you for your message. We will contact you soon!', 'success');
-          contactForm.reset();
-        } else {
-          displayMessage(`Failed to send message: ${result.error?.message || 'Unknown error'}`, 'error');
-        }
-      } catch (error) {
-        displayMessage(`An error occurred: ${error.message}`, 'error');
-      }
-    });
-  }
-
-  // API Test buttons
-  const openaiTestBtn = document.querySelector('a[href="/api/openai/test"]');
-  const dbTestBtn = document.querySelector('a[href="/api/database/test"]');
-  
-  if (openaiTestBtn) {
-    openaiTestBtn.addEventListener('click', async (e) => {
-      e.preventDefault();
-      await testEndpoint('/api/openai/test', 'OpenAI API');
+      // Show success message
+      alert('Your message has been sent successfully!');
+      contactForm.reset();
     });
   }
   
-  if (dbTestBtn) {
-    dbTestBtn.addEventListener('click', async (e) => {
-      e.preventDefault();
-      await testEndpoint('/api/database/test', 'Database');
-    });
-  }
-
-  // Helper for testing endpoints
-  async function testEndpoint(url, name) {
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
-      
-      if (data.success) {
-        displayMessage(`${name} connection successful!`, 'success');
-      } else {
-        displayMessage(`${name} connection failed: ${data.error?.message || 'Unknown error'}`, 'error');
-      }
-      
-      // Log detailed response to console
-      console.log(`${name} test response:`, data);
-    } catch (error) {
-      displayMessage(`Error testing ${name}: ${error.message}`, 'error');
-    }
-  }
-
-  // Message display helper
-  function displayMessage(message, type) {
-    // Check if a message container already exists
-    let messageContainer = document.getElementById('message-container');
-    
-    // If not, create one
-    if (!messageContainer) {
-      messageContainer = document.createElement('div');
-      messageContainer.id = 'message-container';
-      messageContainer.style.position = 'fixed';
-      messageContainer.style.top = '20px';
-      messageContainer.style.right = '20px';
-      messageContainer.style.zIndex = '1000';
-      document.body.appendChild(messageContainer);
-    }
-    
-    // Create message element
-    const messageElement = document.createElement('div');
-    messageElement.className = `message ${type}`;
-    messageElement.style.padding = '15px 20px';
-    messageElement.style.marginBottom = '10px';
-    messageElement.style.borderRadius = '6px';
-    messageElement.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-    messageElement.style.backgroundColor = type === 'success' ? '#10b981' : '#ef4444';
-    messageElement.style.color = 'white';
-    messageElement.style.fontWeight = '500';
-    messageElement.style.minWidth = '280px';
-    messageElement.style.maxWidth = '400px';
-    messageElement.style.animation = 'slide-in 0.3s ease-out';
-    
-    messageElement.innerHTML = `
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span>${message}</span>
-        <button style="background: none; border: none; color: white; cursor: pointer; font-size: 16px; margin-left: 10px;">×</button>
-      </div>
-    `;
-    
-    // Add close button functionality
-    messageElement.querySelector('button').addEventListener('click', () => {
-      messageElement.style.animation = 'slide-out 0.3s ease-out forwards';
-      setTimeout(() => {
-        messageContainer.removeChild(messageElement);
-      }, 300);
-    });
-    
-    // Add to container
-    messageContainer.appendChild(messageElement);
-    
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-      if (messageElement.parentNode === messageContainer) {
-        messageElement.style.animation = 'slide-out 0.3s ease-out forwards';
-        setTimeout(() => {
-          if (messageElement.parentNode === messageContainer) {
-            messageContainer.removeChild(messageElement);
-          }
-        }, 300);
-      }
-    }, 5000);
-  }
-
-  // Add CSS animations for messages
+  // Add CSS for dynamic elements
   const style = document.createElement('style');
   style.textContent = `
-    @keyframes slide-in {
-      from { transform: translateX(100%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
+    .feature-card {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
     }
     
-    @keyframes slide-out {
-      from { transform: translateX(0); opacity: 1; }
-      to { transform: translateX(100%); opacity: 0; }
+    .feature-card.animate-in {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    .nav-links a.active {
+      color: var(--primary-color);
+      font-weight: 700;
+    }
+    
+    .code-block .string {
+      color: #a6e22e;
+    }
+    
+    .code-block .number {
+      color: #ae81ff;
+    }
+    
+    .code-block .key {
+      color: #f92672;
     }
   `;
+  
   document.head.appendChild(style);
+  
+  // Console message for developers
+  console.log('✨ AI Platform API | Ready for integration');
 });

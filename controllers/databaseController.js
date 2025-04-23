@@ -4,41 +4,34 @@
  * Handles logic for database-related routes
  */
 
-const { query, testConnection: dbTestConnection } = require('../config/database');
+const db = require('../config/database');
 const logger = require('../config/logger');
+const { createError } = require('../middlewares/errorHandler');
 
 /**
  * Test database connection
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-async function testConnection(req, res) {
+async function testConnection(req, res, next) {
   try {
-    const isConnected = await dbTestConnection();
+    const isConnected = await db.testConnection();
     
-    if (!isConnected) {
-      return res.status(500).json({
-        success: false,
-        error: {
-          message: 'Database connection failed',
-          code: 'DB_CONNECTION_ERROR'
-        }
+    if (isConnected) {
+      return res.json({
+        success: true,
+        message: 'Database connection successful'
       });
+    } else {
+      return next(createError('Database connection failed', 'DATABASE_ERROR', 500));
     }
-    
-    return res.json({
-      success: true,
-      message: 'Database connection successful'
-    });
   } catch (error) {
-    logger.error(`Error in database testConnection: ${error.message}`);
-    return res.status(500).json({
-      success: false,
-      error: {
-        message: 'Failed to test database connection',
-        details: error.message
-      }
+    logger.error('Database connection test error', {
+      error: error.message,
+      stack: error.stack
     });
+    
+    return next(createError(`Database connection failed: ${error.message}`, 'DATABASE_ERROR', 500));
   }
 }
 
@@ -47,28 +40,43 @@ async function testConnection(req, res) {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-async function getTables(req, res) {
+async function getTables(req, res, next) {
   try {
-    const result = await query(`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public'
-      ORDER BY table_name
-    `);
+    // SQL query to get all tables in the public schema
+    const query = `
+      SELECT 
+        table_name 
+      FROM 
+        information_schema.tables 
+      WHERE 
+        table_schema = 'public' 
+      ORDER BY 
+        table_name;
+    `;
+    
+    const result = await db.query(query);
+    
+    // Extract table names
+    const tables = result.rows.map(row => row.table_name);
+    
+    logger.info('Retrieved database tables', {
+      count: tables.length
+    });
     
     return res.json({
       success: true,
-      tables: result.rows.map(row => row.table_name)
-    });
-  } catch (error) {
-    logger.error(`Error getting tables: ${error.message}`);
-    return res.status(500).json({
-      success: false,
-      error: {
-        message: 'Failed to get database tables',
-        details: error.message
+      data: {
+        tables,
+        count: tables.length
       }
     });
+  } catch (error) {
+    logger.error('Error retrieving database tables', {
+      error: error.message,
+      stack: error.stack
+    });
+    
+    return next(createError(`Error retrieving database tables: ${error.message}`, 'DATABASE_ERROR', 500));
   }
 }
 
@@ -77,66 +85,59 @@ async function getTables(req, res) {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-async function getTableColumns(req, res) {
+async function getTableColumns(req, res, next) {
   try {
     const { tableName } = req.params;
     
-    if (!tableName) {
-      return res.status(400).json({
-        success: false,
-        error: {
-          message: 'Table name is required',
-          code: 'MISSING_PARAMETER'
-        }
-      });
+    // Validate input to prevent SQL injection
+    // Even though we're using parameterized queries, this is an extra safeguard
+    if (!tableName.match(/^[a-zA-Z0-9_]+$/)) {
+      return next(createError('Invalid table name', 'VALIDATION_ERROR', 400));
     }
     
-    // Check if table exists
-    const tableCheck = await query(`
-      SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_name = $1
-      )
-    `, [tableName]);
-    
-    if (!tableCheck.rows[0].exists) {
-      return res.status(404).json({
-        success: false,
-        error: {
-          message: `Table '${tableName}' not found`,
-          code: 'TABLE_NOT_FOUND'
-        }
-      });
-    }
-    
-    // Get column information
-    const result = await query(`
+    // SQL query to get columns for the specified table
+    const query = `
       SELECT 
         column_name, 
         data_type, 
         is_nullable, 
-        column_default
-      FROM information_schema.columns 
-      WHERE table_schema = 'public' 
-      AND table_name = $1
-      ORDER BY ordinal_position
-    `, [tableName]);
+        column_default,
+        character_maximum_length
+      FROM 
+        information_schema.columns 
+      WHERE 
+        table_schema = 'public' 
+        AND table_name = $1 
+      ORDER BY 
+        ordinal_position;
+    `;
+    
+    const result = await db.query(query, [tableName]);
+    
+    if (result.rows.length === 0) {
+      return next(createError(`Table '${tableName}' not found or has no columns`, 'NOT_FOUND', 404));
+    }
+    
+    logger.info(`Retrieved columns for table '${tableName}'`, {
+      count: result.rows.length
+    });
     
     return res.json({
       success: true,
-      table: tableName,
-      columns: result.rows
-    });
-  } catch (error) {
-    logger.error(`Error getting table columns: ${error.message}`);
-    return res.status(500).json({
-      success: false,
-      error: {
-        message: 'Failed to get table columns',
-        details: error.message
+      data: {
+        table: tableName,
+        columns: result.rows,
+        count: result.rows.length
       }
     });
+  } catch (error) {
+    logger.error('Error retrieving table columns', {
+      error: error.message,
+      stack: error.stack,
+      tableName: req.params.tableName
+    });
+    
+    return next(createError(`Error retrieving table columns: ${error.message}`, 'DATABASE_ERROR', 500));
   }
 }
 
@@ -145,53 +146,76 @@ async function getTableColumns(req, res) {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-async function getStatus(req, res) {
+async function getStatus(req, res, next) {
   try {
-    // Get database version
-    const versionResult = await query('SELECT version()');
-    const version = versionResult.rows[0].version;
+    // SQL queries to get database statistics
+    const versionQuery = 'SELECT version();';
+    const sizeQuery = `
+      SELECT 
+        pg_size_pretty(pg_database_size(current_database())) as db_size;
+    `;
+    const tablesQuery = `
+      SELECT 
+        COUNT(*) as table_count 
+      FROM 
+        information_schema.tables 
+      WHERE 
+        table_schema = 'public';
+    `;
+    const connectionsQuery = `
+      SELECT 
+        count(*) as connection_count 
+      FROM 
+        pg_stat_activity;
+    `;
     
-    // Get database size
-    const sizeResult = await query(`
-      SELECT pg_size_pretty(pg_database_size(current_database())) as size
-    `);
-    const size = sizeResult.rows[0].size;
+    // Execute queries in parallel
+    const [versionResult, sizeResult, tablesResult, connectionsResult] = await Promise.all([
+      db.query(versionQuery),
+      db.query(sizeQuery),
+      db.query(tablesQuery),
+      db.query(connectionsQuery)
+    ]);
     
-    // Get table counts
-    const tableCountResult = await query(`
-      SELECT count(*) as count
-      FROM information_schema.tables 
-      WHERE table_schema = 'public'
-    `);
-    const tableCount = parseInt(tableCountResult.rows[0].count);
+    // Extra query to get table sizes (executes after retrieving basic info)
+    const tableSizesQuery = `
+      SELECT 
+        table_name, 
+        pg_size_pretty(pg_total_relation_size('"' || table_name || '"')) as size,
+        pg_relation_size('"' || table_name || '"') as raw_size
+      FROM 
+        information_schema.tables 
+      WHERE 
+        table_schema = 'public' 
+      ORDER BY 
+        pg_relation_size('"' || table_name || '"') DESC 
+      LIMIT 10;
+    `;
     
-    // Get active connections
-    const connectionsResult = await query(`
-      SELECT count(*) as count
-      FROM pg_stat_activity
-      WHERE datname = current_database()
-    `);
-    const connections = parseInt(connectionsResult.rows[0].count);
+    const tableSizesResult = await db.query(tableSizesQuery);
+    
+    logger.info('Retrieved database status information');
     
     return res.json({
       success: true,
-      status: {
-        version,
-        size,
-        tableCount,
-        connections,
+      data: {
+        version: versionResult.rows[0].version,
+        size: sizeResult.rows[0].db_size,
+        tables: {
+          count: parseInt(tablesResult.rows[0].table_count),
+          top10BySize: tableSizesResult.rows
+        },
+        connections: parseInt(connectionsResult.rows[0].connection_count),
         timestamp: new Date().toISOString()
       }
     });
   } catch (error) {
-    logger.error(`Error getting database status: ${error.message}`);
-    return res.status(500).json({
-      success: false,
-      error: {
-        message: 'Failed to get database status',
-        details: error.message
-      }
+    logger.error('Error retrieving database status', {
+      error: error.message,
+      stack: error.stack
     });
+    
+    return next(createError(`Error retrieving database status: ${error.message}`, 'DATABASE_ERROR', 500));
   }
 }
 

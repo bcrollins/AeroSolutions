@@ -3,246 +3,172 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Advanced API Platform</title>
-  <meta name="description" content="A powerful API platform with OpenAI integration and PostgreSQL database">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <title>AI Platform API</title>
   <link rel="stylesheet" href="/css/style.css">
-  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta name="description" content="An advanced AI-driven platform for transforming digital concepts into intelligent, interactive prototypes with seamless design generation and comprehensive service visualization.">
 </head>
 <body>
-  <!-- Header Section -->
   <header>
     <nav>
       <div class="container">
         <div class="logo">
-          <h1>Advanced API Platform</h1>
+          <h1>AI Platform</h1>
         </div>
-        <button class="mobile-menu">
-          <i class="fas fa-bars"></i>
-        </button>
         <ul class="nav-links">
           <li><a href="#features">Features</a></li>
-          <li><a href="#api-documentation">API</a></li>
-          <li><a href="#contact">Contact</a></li>
-          <li><a href="https://github.com" target="_blank">GitHub</a></li>
+          <li><a href="#docs">Documentation</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="/api" class="btn">API</a></li>
         </ul>
       </div>
     </nav>
   </header>
 
-  <!-- Hero Section -->
   <section class="hero">
     <div class="container">
       <div class="hero-content">
-        <h1>Advanced AI & Database API Platform</h1>
-        <p>A powerful platform for seamless OpenAI integration and PostgreSQL database management, all in one secure and scalable solution.</p>
-        <div class="cta-buttons">
-          <a href="#api-documentation" class="btn primary">Explore API</a>
-          <a href="#contact" class="btn secondary">Contact Us</a>
+        <h1>Advanced AI-Driven Platform</h1>
+        <p>Transform digital concepts into intelligent, interactive prototypes with seamless design generation and comprehensive service visualization.</p>
+        <div class="hero-buttons">
+          <a href="#features" class="btn btn-primary">Explore Features</a>
+          <a href="/api" class="btn btn-secondary">API Documentation</a>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Features Section -->
-  <section class="features" id="features">
+  <section id="features" class="features">
     <div class="container">
-      <h2>Platform Features</h2>
+      <h2>Key Features</h2>
       <div class="feature-grid">
         <div class="feature-card">
-          <i class="fas fa-robot"></i>
-          <h3>OpenAI Integration</h3>
-          <p>Seamlessly integrate with OpenAI's powerful GPT models for advanced AI capabilities.</p>
+          <div class="feature-icon">🧠</div>
+          <h3>AI-Powered Text Generation</h3>
+          <p>Generate high-quality text content using state-of-the-art language models.</p>
         </div>
         <div class="feature-card">
-          <i class="fas fa-database"></i>
-          <h3>PostgreSQL Database</h3>
-          <p>Robust database management with PostgreSQL for reliable data storage and retrieval.</p>
+          <div class="feature-icon">📊</div>
+          <h3>Structured JSON Responses</h3>
+          <p>Get well-structured data responses in JSON format for seamless integration.</p>
         </div>
         <div class="feature-card">
-          <i class="fas fa-shield-alt"></i>
-          <h3>Secure Environment</h3>
-          <p>Enterprise-grade security with environment variable protection and authentication.</p>
+          <div class="feature-icon">🖼️</div>
+          <h3>Image Analysis</h3>
+          <p>Analyze images with AI vision capabilities to extract valuable insights.</p>
         </div>
         <div class="feature-card">
-          <i class="fas fa-code"></i>
-          <h3>RESTful API</h3>
-          <p>Clean and well-documented RESTful API for easy integration with any platform.</p>
-        </div>
-        <div class="feature-card">
-          <i class="fas fa-tachometer-alt"></i>
-          <h3>High Performance</h3>
-          <p>Optimized for speed and reliability, with advanced caching and connection pooling.</p>
-        </div>
-        <div class="feature-card">
-          <i class="fas fa-project-diagram"></i>
-          <h3>MVC Architecture</h3>
-          <p>Well-structured code using the Model-View-Controller pattern for maintainability.</p>
+          <div class="feature-icon">🔒</div>
+          <h3>Secure Database Integration</h3>
+          <p>Built with enterprise-grade PostgreSQL database integration and security.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- API Documentation Section -->
-  <section class="api-documentation" id="api-documentation">
+  <section id="docs" class="documentation">
     <div class="container">
       <h2>API Documentation</h2>
-      <div class="endpoint-list">
+      <div class="documentation-wrapper">
         <div class="endpoint">
-          <h3>
-            <span class="method get">GET</span>
-            /api/status
-          </h3>
-          <p>Check the status and health of the API service.</p>
+          <h3>Text Generation</h3>
+          <div class="endpoint-details">
+            <p><strong>Endpoint:</strong> <code>POST /api/openai/text</code></p>
+            <p><strong>Description:</strong> Generate text using OpenAI models</p>
+            <div class="code-block">
+              <pre><code>{
+  "prompt": "Write a summary about artificial intelligence",
+  "model": "gpt-4o",
+  "max_tokens": 1000,
+  "temperature": 0.7
+}</code></pre>
+            </div>
+          </div>
         </div>
+
         <div class="endpoint">
-          <h3>
-            <span class="method get">GET</span>
-            <a href="/api/openai/test">/api/openai/test</a>
-          </h3>
-          <p>Test the connection to the OpenAI API services.</p>
+          <h3>JSON Generation</h3>
+          <div class="endpoint-details">
+            <p><strong>Endpoint:</strong> <code>POST /api/openai/json</code></p>
+            <p><strong>Description:</strong> Generate structured JSON data using OpenAI models</p>
+            <div class="code-block">
+              <pre><code>{
+  "prompt": "Create a product data structure",
+  "model": "gpt-4o",
+  "max_tokens": 1000,
+  "temperature": 0.7,
+  "schema": {
+    "products": [{"name": "string", "price": "number"}]
+  }
+}</code></pre>
+            </div>
+          </div>
         </div>
+
         <div class="endpoint">
-          <h3>
-            <span class="method get">GET</span>
-            <a href="/api/database/test">/api/database/test</a>
-          </h3>
-          <p>Test the connection to the PostgreSQL database.</p>
-        </div>
-        <div class="endpoint">
-          <h3>
-            <span class="method post">POST</span>
-            /api/openai/generate
-          </h3>
-          <p>Generate text completions using OpenAI's GPT models.</p>
-        </div>
-        <div class="endpoint">
-          <h3>
-            <span class="method post">POST</span>
-            /api/openai/analyze-image
-          </h3>
-          <p>Analyze images using OpenAI's vision capabilities.</p>
-        </div>
-        <div class="endpoint">
-          <h3>
-            <span class="method post">POST</span>
-            /api/contact
-          </h3>
-          <p>Submit a contact form to get in touch with the development team.</p>
+          <h3>Image Analysis</h3>
+          <div class="endpoint-details">
+            <p><strong>Endpoint:</strong> <code>POST /api/openai/analyze-image</code></p>
+            <p><strong>Description:</strong> Analyze images using OpenAI's vision capabilities</p>
+            <div class="code-block">
+              <pre><code>{
+  "image_url": "https://example.com/image.jpg",
+  "prompt": "Describe this image in detail",
+  "model": "gpt-4o"
+}</code></pre>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="docs-cta">
-        <a href="https://github.com" target="_blank" class="btn primary">Full Documentation</a>
+      <div class="view-more">
+        <a href="/api" class="btn">View Full Documentation</a>
       </div>
     </div>
   </section>
 
-  <!-- Contact Section -->
-  <section class="contact-section" id="contact">
+  <section id="about" class="about">
     <div class="container">
-      <h2>Contact Us</h2>
-      <div class="contact-content">
-        <div class="contact-form">
-          <form id="contactForm">
-            <div class="form-group">
-              <label for="name">Your Name</label>
-              <input type="text" id="name" name="name" required>
-            </div>
-            <div class="form-group">
-              <label for="email">Email Address</label>
-              <input type="email" id="email" name="email" required>
-            </div>
-            <div class="form-group">
-              <label for="subject">Subject</label>
-              <input type="text" id="subject" name="subject" required>
-            </div>
-            <div class="form-group">
-              <label for="message">Message</label>
-              <textarea id="message" name="message" rows="5" required></textarea>
-            </div>
-            <button type="submit" class="btn primary">Send Message</button>
-          </form>
-        </div>
-        <div class="contact-info">
-          <div class="info-item">
-            <i class="fas fa-envelope"></i>
-            <div>
-              <h3>Email</h3>
-              <p>contact@example.com</p>
-            </div>
-          </div>
-          <div class="info-item">
-            <i class="fas fa-map-marker-alt"></i>
-            <div>
-              <h3>Location</h3>
-              <p>San Francisco, CA</p>
-            </div>
-          </div>
-          <div class="info-item">
-            <i class="fas fa-code-branch"></i>
-            <div>
-              <h3>GitHub</h3>
-              <p><a href="https://github.com" target="_blank">github.com/advanced-api</a></p>
-            </div>
-          </div>
-          <div class="info-item">
-            <i class="fas fa-clock"></i>
-            <div>
-              <h3>Support Hours</h3>
-              <p>Monday - Friday: 9AM - 6PM PST</p>
-            </div>
-          </div>
+      <h2>About the Platform</h2>
+      <p>This advanced AI-driven platform integrates cutting-edge AI technologies with robust backend infrastructure to deliver a comprehensive solution for developers, designers, and businesses. Built using Node.js, Express, PostgreSQL, and OpenAI, the platform provides a reliable and scalable API for intelligent applications.</p>
+      <div class="tech-stack">
+        <h3>Technology Stack</h3>
+        <div class="tech-logos">
+          <div class="tech-logo">Node.js</div>
+          <div class="tech-logo">Express</div>
+          <div class="tech-logo">PostgreSQL</div>
+          <div class="tech-logo">OpenAI</div>
+          <div class="tech-logo">React</div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Footer -->
   <footer>
     <div class="container">
       <div class="footer-content">
         <div class="footer-logo">
-          <h2>Advanced API Platform</h2>
-          <p>Powerful tools for developers to build amazing applications with AI and database capabilities.</p>
+          <h2>AI Platform</h2>
+          <p>Empowering intelligent applications with AI APIs</p>
         </div>
         <div class="footer-links">
-          <div class="link-column">
+          <div class="link-group">
             <h3>Platform</h3>
             <ul>
               <li><a href="#features">Features</a></li>
-              <li><a href="#api-documentation">API Docs</a></li>
-              <li><a href="#">Pricing</a></li>
-              <li><a href="#">Changelog</a></li>
+              <li><a href="#docs">Documentation</a></li>
+              <li><a href="#about">About</a></li>
             </ul>
           </div>
-          <div class="link-column">
+          <div class="link-group">
             <h3>Resources</h3>
             <ul>
-              <li><a href="#">Documentation</a></li>
-              <li><a href="#">Tutorials</a></li>
-              <li><a href="#">Blog</a></li>
-              <li><a href="#">Community</a></li>
-            </ul>
-          </div>
-          <div class="link-column">
-            <h3>Company</h3>
-            <ul>
-              <li><a href="#contact">Contact</a></li>
-              <li><a href="#">About Us</a></li>
-              <li><a href="#">Privacy Policy</a></li>
-              <li><a href="#">Terms of Service</a></li>
+              <li><a href="/api">API Documentation</a></li>
+              <li><a href="/health">System Status</a></li>
             </ul>
           </div>
         </div>
       </div>
-      <div class="footer-bottom">
-        <p>&copy; 2025 Advanced API Platform. All rights reserved.</p>
-        <div class="social-links">
-          <a href="#" target="_blank"><i class="fab fa-github"></i></a>
-          <a href="#" target="_blank"><i class="fab fa-twitter"></i></a>
-          <a href="#" target="_blank"><i class="fab fa-linkedin"></i></a>
-          <a href="#" target="_blank"><i class="fab fa-discord"></i></a>
-        </div>
+      <div class="copyright">
+        <p>&copy; 2025 AI Platform API. All rights reserved.</p>
       </div>
     </div>
   </footer>

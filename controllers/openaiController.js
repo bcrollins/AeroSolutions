@@ -6,67 +6,73 @@
 
 const OpenAI = require('openai');
 const logger = require('../config/logger');
+const { createError } = require('../middlewares/errorHandler');
 
-// Initialize OpenAI with API key from environment variables
+// Create OpenAI client with API key from environment variable
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY
 });
+
+// Define default models for different operations
+const DEFAULT_MODELS = {
+  text: 'gpt-4o', // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+  json: 'gpt-4o',
+  image: 'gpt-4o'
+};
 
 /**
  * Generate text using OpenAI
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-async function generateText(req, res) {
+async function generateText(req, res, next) {
   try {
-    const { prompt, model = 'gpt-4o', max_tokens = 1000, temperature = 0.7 } = req.body;
-    
-    // Validate required parameters
-    if (!prompt) {
-      return res.status(400).json({
-        success: false,
-        error: {
-          message: 'Prompt is required'
-        }
-      });
-    }
-    
-    // Log API request (redact sensitive information)
-    logger.info(`OpenAI API request for model: ${model}, tokens: ${max_tokens}, temp: ${temperature}`);
-    
-    // Call OpenAI API
-    // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-    const response = await openai.chat.completions.create({
-      model: model,
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: max_tokens,
-      temperature: temperature,
+    const { prompt, model = DEFAULT_MODELS.text, max_tokens = 1000, temperature = 0.7 } = req.body;
+
+    logger.info('OpenAI text generation request', {
+      model,
+      prompt_length: prompt.length,
+      max_tokens
     });
-    
-    // Log success (no sensitive data)
-    logger.info(`OpenAI API response received successfully`);
-    
-    // Return response
+
+    const response = await openai.chat.completions.create({
+      model,
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens,
+      temperature
+    });
+
+    logger.debug('OpenAI text generation response', {
+      completion_tokens: response.usage?.completion_tokens,
+      prompt_tokens: response.usage?.prompt_tokens,
+      finish_reason: response.choices[0]?.finish_reason
+    });
+
     return res.json({
       success: true,
       data: {
-        text: response.choices[0].message.content,
-        model: model,
-        usage: response.usage
+        text: response.choices[0]?.message.content || '',
+        model: response.model,
+        usage: response.usage,
+        created: response.created
       }
     });
   } catch (error) {
-    // Log error
-    logger.error(`OpenAI API error: ${error.message}`);
-    
-    // Return error response
-    return res.status(500).json({
-      success: false,
-      error: {
-        message: 'Error generating text with OpenAI',
-        details: error.message
-      }
+    logger.error('OpenAI text generation error', {
+      error: error.message,
+      stack: error.stack
     });
+
+    // Handle specific OpenAI errors
+    if (error.response) {
+      return next(createError(
+        `OpenAI API error: ${error.response.data.error.message}`,
+        'OPENAI_API_ERROR',
+        error.status || 500
+      ));
+    }
+
+    return next(createError('Error generating text with OpenAI', 'OPENAI_ERROR', 500));
   }
 }
 
@@ -75,74 +81,77 @@ async function generateText(req, res) {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-async function generateJSON(req, res) {
+async function generateJSON(req, res, next) {
   try {
-    const { prompt, model = 'gpt-4o', max_tokens = 1000, temperature = 0.7, schema } = req.body;
-    
-    // Validate required parameters
-    if (!prompt) {
-      return res.status(400).json({
-        success: false,
-        error: {
-          message: 'Prompt is required'
-        }
-      });
-    }
+    const { prompt, model = DEFAULT_MODELS.json, max_tokens = 2000, temperature = 0.2 } = req.body;
 
-    // Create system message with schema if provided
-    const systemMessage = schema 
-      ? `Please provide a response in JSON format according to this schema: ${JSON.stringify(schema)}` 
-      : 'Please provide a response in JSON format.';
-
-    // Log API request (redact sensitive information)
-    logger.info(`OpenAI JSON API request for model: ${model}, tokens: ${max_tokens}, temp: ${temperature}`);
-    
-    // Call OpenAI API with JSON format specification
-    // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-    const response = await openai.chat.completions.create({
-      model: model,
-      messages: [
-        { role: 'system', content: systemMessage },
-        { role: 'user', content: prompt }
-      ],
-      max_tokens: max_tokens,
-      temperature: temperature,
-      response_format: { type: "json_object" }
+    logger.info('OpenAI JSON generation request', {
+      model,
+      prompt_length: prompt.length,
+      max_tokens
     });
-    
-    // Log success (no sensitive data)
-    logger.info(`OpenAI JSON API response received successfully`);
-    
-    // Parse the JSON response
-    let jsonResponse;
+
+    const response = await openai.chat.completions.create({
+      model,
+      messages: [
+        { 
+          role: 'system', 
+          content: 'You are a JSON generator. Always respond with valid JSON only.' 
+        },
+        { 
+          role: 'user', 
+          content: prompt 
+        }
+      ],
+      max_tokens,
+      temperature,
+      response_format: { type: 'json_object' }
+    });
+
+    logger.debug('OpenAI JSON generation response', {
+      completion_tokens: response.usage?.completion_tokens,
+      prompt_tokens: response.usage?.prompt_tokens,
+      finish_reason: response.choices[0]?.finish_reason
+    });
+
+    // Parse the response content to ensure it's valid JSON
+    let parsedJson;
     try {
-      jsonResponse = JSON.parse(response.choices[0].message.content);
-    } catch (parseError) {
-      logger.error(`Error parsing OpenAI JSON response: ${parseError.message}`);
-      jsonResponse = { error: 'Could not parse JSON response', text: response.choices[0].message.content };
+      parsedJson = JSON.parse(response.choices[0]?.message.content || '{}');
+    } catch (jsonError) {
+      logger.warn('Failed to parse OpenAI JSON response', {
+        content: response.choices[0]?.message.content,
+        error: jsonError.message
+      });
+      parsedJson = { error: 'Invalid JSON response from OpenAI' };
     }
-    
-    // Return response
+
     return res.json({
       success: true,
       data: {
-        json: jsonResponse,
-        model: model,
-        usage: response.usage
+        json: parsedJson,
+        raw: response.choices[0]?.message.content,
+        model: response.model,
+        usage: response.usage,
+        created: response.created
       }
     });
   } catch (error) {
-    // Log error
-    logger.error(`OpenAI JSON API error: ${error.message}`);
-    
-    // Return error response
-    return res.status(500).json({
-      success: false,
-      error: {
-        message: 'Error generating JSON with OpenAI',
-        details: error.message
-      }
+    logger.error('OpenAI JSON generation error', {
+      error: error.message,
+      stack: error.stack
     });
+
+    // Handle specific OpenAI errors
+    if (error.response) {
+      return next(createError(
+        `OpenAI API error: ${error.response.data.error.message}`,
+        'OPENAI_API_ERROR',
+        error.status || 500
+      ));
+    }
+
+    return next(createError('Error generating JSON with OpenAI', 'OPENAI_ERROR', 500));
   }
 }
 
@@ -151,62 +160,67 @@ async function generateJSON(req, res) {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-async function analyzeImage(req, res) {
+async function analyzeImage(req, res, next) {
   try {
-    const { image_url, prompt = 'Describe this image in detail.', model = 'gpt-4o' } = req.body;
-    
-    // Validate required parameters
-    if (!image_url) {
-      return res.status(400).json({
-        success: false,
-        error: {
-          message: 'Image URL is required'
-        }
-      });
-    }
-    
-    // Log API request (redact sensitive information)
-    logger.info(`OpenAI Vision API request for model: ${model}`);
-    
-    // Call OpenAI API
-    // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+    const { imageUrl, prompt = 'Analyze this image in detail and describe what you see.', model = DEFAULT_MODELS.image } = req.body;
+
+    logger.info('OpenAI image analysis request', {
+      model,
+      prompt_length: prompt.length,
+      image_url: imageUrl.substring(0, 100) + '...' // Don't log full URL
+    });
+
     const response = await openai.chat.completions.create({
-      model: model,
+      model,
       messages: [
         {
           role: 'user',
           content: [
-            { type: 'text', text: prompt },
-            { type: 'image_url', image_url: { url: image_url } }
+            {
+              type: 'text',
+              text: prompt
+            },
+            {
+              type: 'image_url',
+              image_url: {
+                url: imageUrl
+              }
+            }
           ]
         }
       ],
-      max_tokens: 1000,
+      max_tokens: 1000
     });
-    
-    // Log success (no sensitive data)
-    logger.info(`OpenAI Vision API response received successfully`);
-    
-    // Return response
+
+    logger.debug('OpenAI image analysis response', {
+      response_length: response.choices[0]?.message.content.length,
+      finish_reason: response.choices[0]?.finish_reason
+    });
+
     return res.json({
       success: true,
       data: {
-        analysis: response.choices[0].message.content,
-        model: model
+        analysis: response.choices[0]?.message.content || '',
+        model: response.model,
+        created: response.created
       }
     });
   } catch (error) {
-    // Log error
-    logger.error(`OpenAI Vision API error: ${error.message}`);
-    
-    // Return error response
-    return res.status(500).json({
-      success: false,
-      error: {
-        message: 'Error analyzing image with OpenAI',
-        details: error.message
-      }
+    logger.error('OpenAI image analysis error', {
+      error: error.message,
+      stack: error.stack
     });
+
+    // Handle specific OpenAI errors
+    if (error.response) {
+      return next(createError(
+        `OpenAI API error: ${error.response.data.error.message}`,
+        'OPENAI_API_ERROR',
+        error.status || 500
+      ));
+    }
+
+    return next(createError('Error analyzing image with OpenAI', 'OPENAI_ERROR', 500));
   }
 }
 
@@ -215,41 +229,45 @@ async function analyzeImage(req, res) {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-async function testConnection(req, res) {
+async function testConnection(req, res, next) {
   try {
-    // Send a simple request to OpenAI API to test connection
-    // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+    // Simple test query to check if OpenAI API is working
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [{ role: 'user', content: 'Hello, are you working?' }],
+      model: 'gpt-3.5-turbo', // Use 3.5 for quicker response in testing
+      messages: [{ role: 'user', content: 'Hello, this is a test message. Respond with "OK" if you can receive this.' }],
       max_tokens: 10,
-      temperature: 0,
+      temperature: 0.1
     });
-    
-    // Log success (no sensitive data)
-    logger.info('OpenAI API connection test successful');
-    
-    // Return success response
+
+    logger.info('OpenAI API connection test successful', {
+      model: response.model,
+      response: response.choices[0]?.message.content
+    });
+
     return res.json({
       success: true,
       message: 'OpenAI API connection successful',
       data: {
-        model: 'gpt-4o',
-        response: response.choices[0].message.content.trim()
+        model: response.model,
+        response: response.choices[0]?.message.content
       }
     });
   } catch (error) {
-    // Log error
-    logger.error(`OpenAI API connection test failed: ${error.message}`);
-    
-    // Return error response
-    return res.status(500).json({
-      success: false,
-      error: {
-        message: 'OpenAI API connection test failed',
-        details: error.message
-      }
+    logger.error('OpenAI API connection test failed', {
+      error: error.message,
+      stack: error.stack
     });
+
+    // Handle specific OpenAI errors
+    if (error.response) {
+      return next(createError(
+        `OpenAI API connection failed: ${error.response.data.error.message}`,
+        'OPENAI_API_ERROR',
+        error.status || 500
+      ));
+    }
+
+    return next(createError('OpenAI API connection failed', 'OPENAI_ERROR', 500));
   }
 }
 

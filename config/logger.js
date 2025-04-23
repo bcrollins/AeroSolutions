@@ -5,45 +5,67 @@
  */
 
 const winston = require('winston');
-const fs = require('fs');
 const path = require('path');
+const fs = require('fs');
 
-// Ensure logs directory exists
-const logsDir = path.join(__dirname, '..', 'logs');
+// Create logs directory if it doesn't exist
+const logsDir = path.join(__dirname, '../logs');
 if (!fs.existsSync(logsDir)) {
   fs.mkdirSync(logsDir, { recursive: true });
 }
 
-// Define log formats
-const formats = [
-  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+// Define log file paths
+const logFileName = `app-${new Date().toISOString().split('T')[0]}.log`;
+const errorFileName = `error-${new Date().toISOString().split('T')[0]}.log`;
+
+// Define custom log format
+const customFormat = winston.format.combine(
+  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
   winston.format.errors({ stack: true }),
   winston.format.splat(),
-  winston.format.json()
-];
+  winston.format.printf(({ level, message, timestamp, ...meta }) => {
+    // Format the metadata as a string
+    const metaString = Object.keys(meta).length 
+      ? `\n${JSON.stringify(meta, null, 2)}`
+      : '';
+    
+    return `${timestamp} [${level.toUpperCase()}]: ${message}${metaString}`;
+  })
+);
 
-// Create the logger
+// Create winston logger instance
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
-  format: winston.format.combine(...formats),
-  defaultMeta: { service: 'api-platform' },
+  format: customFormat,
+  defaultMeta: { service: 'api-service' },
   transports: [
-    // Write all logs with level 'error' and below to error.log
+    // Write logs to files
     new winston.transports.File({ 
-      filename: path.join(logsDir, 'error.log'), 
+      filename: path.join(logsDir, errorFileName),
       level: 'error',
-      maxsize: 5242880, // 5MB
+      maxsize: 10485760, // 10MB
       maxFiles: 5
     }),
-    // Write all logs with level 'info' and below to combined.log
     new winston.transports.File({ 
-      filename: path.join(logsDir, 'combined.log'),
-      maxsize: 5242880, // 5MB
+      filename: path.join(logsDir, logFileName),
+      maxsize: 10485760, // 10MB
       maxFiles: 5
-    }),
+    })
   ],
-  // Prevent winston from exiting on uncaught exceptions
-  exitOnError: false
+  exceptionHandlers: [
+    new winston.transports.File({ 
+      filename: path.join(logsDir, 'exceptions.log'),
+      maxsize: 10485760, // 10MB
+      maxFiles: 5
+    })
+  ],
+  rejectionHandlers: [
+    new winston.transports.File({ 
+      filename: path.join(logsDir, 'rejections.log'),
+      maxsize: 10485760, // 10MB
+      maxFiles: 5
+    })
+  ]
 });
 
 // Add console transport in development environment
@@ -51,80 +73,13 @@ if (process.env.NODE_ENV !== 'production') {
   logger.add(new winston.transports.Console({
     format: winston.format.combine(
       winston.format.colorize(),
-      winston.format.printf(info => {
-        const { timestamp, level, message, ...rest } = info;
-        return `${timestamp} [${level}]: ${message} ${Object.keys(rest).length ? JSON.stringify(rest, null, 2) : ''}`;
-      })
+      winston.format.simple()
     ),
+    level: 'debug'
   }));
 }
 
-/**
- * Log an API request
- * @param {Object} req - Express request object
- * @param {number} responseTime - Response time in milliseconds
- */
-logger.logApiRequest = (req, responseTime) => {
-  const { method, originalUrl, ip } = req;
-  logger.info('API Request', {
-    method,
-    url: originalUrl,
-    ip,
-    responseTime,
-    userAgent: req.get('user-agent')
-  });
-};
-
-/**
- * Log an API error
- * @param {Object} req - Express request object
- * @param {Error} error - Error object
- */
-logger.logApiError = (req, error) => {
-  const { method, originalUrl, ip } = req;
-  logger.error('API Error', {
-    method,
-    url: originalUrl,
-    ip,
-    errorMessage: error.message,
-    errorStack: error.stack
-  });
-};
-
-/**
- * Log a database query (redacted for security)
- * @param {string} query - SQL query text (method name for ORM)
- * @param {number} responseTime - Response time in milliseconds
- */
-logger.logDatabaseQuery = (query, responseTime) => {
-  logger.debug('Database Query', {
-    query: query.substring(0, 100) + (query.length > 100 ? '...' : ''),
-    responseTime
-  });
-};
-
-/**
- * Log an OpenAI API request (redacted for security)
- * @param {string} model - The model name
- * @param {number} tokens - Number of tokens used
- */
-logger.logOpenAiRequest = (model, tokens) => {
-  logger.info('OpenAI API Request', {
-    model,
-    tokens
-  });
-};
-
-/**
- * Log security events
- * @param {string} event - Security event type
- * @param {Object} details - Event details
- */
-logger.logSecurityEvent = (event, details) => {
-  logger.warn('Security Event', {
-    event,
-    ...details
-  });
-};
+// Log server startup
+logger.info('Logger initialized');
 
 module.exports = logger;

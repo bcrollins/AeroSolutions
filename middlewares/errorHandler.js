@@ -1,5 +1,5 @@
 /**
- * Error Handler Middleware
+ * Error Handling Middleware
  * 
  * Centralized error handling for the application
  */
@@ -7,108 +7,106 @@
 const logger = require('../config/logger');
 
 /**
- * Error handler middleware
+ * Custom error class for API errors
+ */
+class ApiError extends Error {
+  constructor(message, code, status) {
+    super(message);
+    this.name = 'ApiError';
+    this.code = code || 'INTERNAL_ERROR';
+    this.status = status || 500;
+  }
+}
+
+/**
+ * Create a standardized API error
+ * @param {string} message - Error message
+ * @param {string} code - Error code
+ * @param {number} status - HTTP status code
+ * @returns {ApiError} - Custom error object
+ */
+function createError(message, code, status) {
+  return new ApiError(message, code, status);
+}
+
+/**
+ * Error handling middleware
  * @param {Error} err - Error object
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
- * @param {Function} next - Next middleware
+ * @param {Function} next - Express next function
  */
 function errorHandler(err, req, res, next) {
-  // Log the error
-  logger.error(`Error: ${err.message}`, {
-    stack: err.stack,
-    url: req.originalUrl,
-    method: req.method,
-    body: req.method !== 'GET' ? req.body : undefined,
-    requestId: req.id || 'unknown'
-  });
-
-  // Determine if this is an operational error (expected) or programming error (unexpected)
-  const isOperational = err.isOperational || false;
+  // Default error values
+  let status = err.status || 500;
+  let message = err.message || 'Internal Server Error';
+  let code = err.code || 'INTERNAL_ERROR';
+  let stack = err.stack;
   
-  // Format the error response
-  const errorResponse = {
-    success: false,
-    error: {
-      message: isOperational ? err.message : 'Internal server error',
-      code: err.code || 'SERVER_ERROR',
-      ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
-    }
-  };
-  
-  // Additional details for non-production environments
-  if (process.env.NODE_ENV !== 'production') {
-    errorResponse.error.originalMessage = err.message;
+  // Handle specific error types
+  if (err.name === 'ValidationError') {
+    status = 400;
+    code = 'VALIDATION_ERROR';
+  } else if (err.name === 'UnauthorizedError') {
+    status = 401;
+    code = 'UNAUTHORIZED';
+  } else if (err.name === 'ForbiddenError') {
+    status = 403;
+    code = 'FORBIDDEN';
+  } else if (err.name === 'NotFoundError') {
+    status = 404;
+    code = 'NOT_FOUND';
   }
   
-  // Set the appropriate status code
-  const statusCode = err.statusCode || 500;
+  // Log the error
+  if (status >= 500) {
+    logger.error(`Error: ${message}`, {
+      code,
+      stack,
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.ip,
+      userId: req.user?.id
+    });
+  } else {
+    logger.warn(`Error: ${message}`, {
+      code,
+      method: req.method,
+      url: req.originalUrl,
+      status
+    });
+  }
   
-  // Send the error response
-  res.status(statusCode).json(errorResponse);
+  // In development, include stack trace
+  const error = {
+    message,
+    code,
+    status
+  };
+  
+  if (process.env.NODE_ENV !== 'production' && status >= 500) {
+    error.stack = stack;
+  }
+  
+  // Send error response
+  res.status(status).json({
+    success: false,
+    error
+  });
 }
 
 /**
  * Not found handler middleware
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
- * @param {Function} next - Next middleware
  */
 function notFoundHandler(req, res, next) {
-  const err = new Error(`Not Found - ${req.originalUrl}`);
-  err.statusCode = 404;
-  err.isOperational = true;
-  err.code = 'RESOURCE_NOT_FOUND';
-  next(err);
+  const error = createError(`Resource not found: ${req.originalUrl}`, 'NOT_FOUND', 404);
+  next(error);
 }
-
-/**
- * Create an operational error
- * @param {string} message - Error message
- * @param {string} code - Error code
- * @param {number} statusCode - HTTP status code
- * @returns {Error} - Operational error
- */
-function createError(message, code = 'INTERNAL_ERROR', statusCode = 500) {
-  const error = new Error(message);
-  error.isOperational = true;
-  error.code = code;
-  error.statusCode = statusCode;
-  return error;
-}
-
-/**
- * Handle uncaught exceptions
- * @param {Error} err - Error object
- */
-function handleUncaughtException(err) {
-  logger.error('UNCAUGHT EXCEPTION! 💥 Shutting down...', {
-    error: err.message,
-    stack: err.stack
-  });
-  // Implement graceful shutdown logic if needed
-  process.exit(1);
-}
-
-/**
- * Handle unhandled promise rejections
- * @param {Error} err - Error object
- */
-function handleUnhandledRejection(err) {
-  logger.error('UNHANDLED REJECTION! 💥 Shutting down...', {
-    error: err.message,
-    stack: err.stack 
-  });
-  // Implement graceful shutdown logic if needed
-  process.exit(1);
-}
-
-// Register global handlers
-process.on('uncaughtException', handleUncaughtException);
-process.on('unhandledRejection', handleUnhandledRejection);
 
 module.exports = {
+  createError,
   errorHandler,
-  notFoundHandler,
-  createError
+  notFoundHandler
 };
