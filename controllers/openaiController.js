@@ -1,7 +1,7 @@
 /**
  * OpenAI Controller
  * 
- * Handles OpenAI-related API requests
+ * Handles logic for OpenAI-related routes
  */
 
 const OpenAIModel = require('../models/openai');
@@ -12,7 +12,7 @@ const { validationResult } = require('express-validator');
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const generateText = async (req, res) => {
+async function generateText(req, res) {
   try {
     // Validate request
     const errors = validationResult(req);
@@ -26,24 +26,23 @@ const generateText = async (req, res) => {
     const { prompt, model, max_tokens, temperature } = req.body;
     
     // Generate text
-    const result = await OpenAIModel.generateText({
+    const response = await OpenAIModel.generateText({
       prompt,
       model,
       max_tokens,
       temperature
     });
     
-    // Log usage
-    console.info('OpenAI text generation:', {
-      prompt: prompt.substring(0, 50) + (prompt.length > 50 ? '...' : ''),
-      model: result.model,
-      tokens: result.usage?.total_tokens || 'unknown'
-    });
+    // Extract response content
+    const content = response.choices[0]?.message?.content || '';
     
-    // Return result
     return res.status(200).json({
       success: true,
-      data: result
+      data: {
+        text: content,
+        model: response.model,
+        usage: response.usage
+      }
     });
   } catch (error) {
     console.error('Error in openaiController.generateText:', error);
@@ -53,14 +52,14 @@ const generateText = async (req, res) => {
       error: error.message
     });
   }
-};
+}
 
 /**
  * Generate JSON using OpenAI
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const generateJSON = async (req, res) => {
+async function generateJSON(req, res) {
   try {
     // Validate request
     const errors = validationResult(req);
@@ -74,24 +73,36 @@ const generateJSON = async (req, res) => {
     const { prompt, model, max_tokens, temperature } = req.body;
     
     // Generate JSON
-    const result = await OpenAIModel.generateJSON({
+    const response = await OpenAIModel.generateJSON({
       prompt,
       model,
       max_tokens,
       temperature
     });
     
-    // Log usage
-    console.info('OpenAI JSON generation:', {
-      prompt: prompt.substring(0, 50) + (prompt.length > 50 ? '...' : ''),
-      model: result.model,
-      tokens: result.usage?.total_tokens || 'unknown'
-    });
+    // Extract and parse JSON content
+    const content = response.choices[0]?.message?.content || '{}';
+    let jsonData;
     
-    // Return result
+    try {
+      jsonData = JSON.parse(content);
+    } catch (parseError) {
+      console.error('Error parsing JSON response:', parseError);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to parse JSON response',
+        error: parseError.message,
+        rawContent: content
+      });
+    }
+    
     return res.status(200).json({
       success: true,
-      data: result
+      data: {
+        json: jsonData,
+        model: response.model,
+        usage: response.usage
+      }
     });
   } catch (error) {
     console.error('Error in openaiController.generateJSON:', error);
@@ -101,14 +112,14 @@ const generateJSON = async (req, res) => {
       error: error.message
     });
   }
-};
+}
 
 /**
- * Analyze image using OpenAI Vision API
+ * Analyze image using OpenAI
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const analyzeImage = async (req, res) => {
+async function analyzeImage(req, res) {
   try {
     // Validate request
     const errors = validationResult(req);
@@ -121,32 +132,24 @@ const analyzeImage = async (req, res) => {
     
     const { image, prompt, model, max_tokens } = req.body;
     
-    // Ensure image is provided
-    if (!image) {
-      return res.status(400).json({
-        success: false,
-        message: 'Image data is required'
-      });
-    }
-    
     // Analyze image
-    const result = await OpenAIModel.analyzeImage({
+    const response = await OpenAIModel.analyzeImage({
       image,
       prompt,
       model,
       max_tokens
     });
     
-    // Log usage
-    console.info('OpenAI image analysis:', {
-      model: result.model,
-      tokens: result.usage?.total_tokens || 'unknown'
-    });
+    // Extract response content
+    const content = response.choices[0]?.message?.content || '';
     
-    // Return result
     return res.status(200).json({
       success: true,
-      data: result
+      data: {
+        analysis: content,
+        model: response.model,
+        usage: response.usage
+      }
     });
   } catch (error) {
     console.error('Error in openaiController.analyzeImage:', error);
@@ -156,20 +159,20 @@ const analyzeImage = async (req, res) => {
       error: error.message
     });
   }
-};
+}
 
 /**
  * Test OpenAI API connection
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const testConnection = async (req, res) => {
+async function testConnection(req, res) {
   try {
     const result = await OpenAIModel.testConnection();
     
     return res.status(200).json({
       success: true,
-      data: result
+      ...result
     });
   } catch (error) {
     console.error('Error in openaiController.testConnection:', error);
@@ -179,7 +182,7 @@ const testConnection = async (req, res) => {
       error: error.message
     });
   }
-};
+}
 
 module.exports = {
   generateText,

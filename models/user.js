@@ -1,13 +1,13 @@
 /**
  * User Model
  * 
- * Handles user-related database operations
+ * Handles user data and operations
  */
 
+const { pool, query } = require('../config/database');
 const bcrypt = require('bcrypt');
-const { query } = require('../config/database');
 
-// Number of salt rounds for password hashing
+// Constants
 const SALT_ROUNDS = 10;
 
 /**
@@ -18,7 +18,7 @@ const SALT_ROUNDS = 10;
 const findById = async (id) => {
   try {
     const result = await query(
-      'SELECT id, username, email, role, created_at, updated_at FROM users WHERE id = $1',
+      'SELECT * FROM users WHERE id = $1',
       [id]
     );
     
@@ -26,56 +26,50 @@ const findById = async (id) => {
       return null;
     }
     
-    return result.rows[0];
+    const user = result.rows[0];
+    delete user.password; // Don't expose password hash
+    return user;
   } catch (error) {
     console.error('Error in user.findById:', error);
-    throw new Error(`Database error: ${error.message}`);
+    throw new Error(`Failed to find user: ${error.message}`);
   }
 };
 
 /**
  * Find a user by username
- * @param {string} username - Username to find
+ * @param {string} username - Username
  * @returns {Promise<Object|null>} - User object or null if not found
  */
 const findByUsername = async (username) => {
   try {
     const result = await query(
-      'SELECT id, username, email, password, role, created_at, updated_at FROM users WHERE username = $1',
+      'SELECT * FROM users WHERE username = $1',
       [username]
     );
     
-    if (result.rows.length === 0) {
-      return null;
-    }
-    
-    return result.rows[0];
+    return result.rows[0] || null;
   } catch (error) {
     console.error('Error in user.findByUsername:', error);
-    throw new Error(`Database error: ${error.message}`);
+    throw new Error(`Failed to find user: ${error.message}`);
   }
 };
 
 /**
  * Find a user by email
- * @param {string} email - Email to find
+ * @param {string} email - Email
  * @returns {Promise<Object|null>} - User object or null if not found
  */
 const findByEmail = async (email) => {
   try {
     const result = await query(
-      'SELECT id, username, email, password, role, created_at, updated_at FROM users WHERE email = $1',
+      'SELECT * FROM users WHERE email = $1',
       [email]
     );
     
-    if (result.rows.length === 0) {
-      return null;
-    }
-    
-    return result.rows[0];
+    return result.rows[0] || null;
   } catch (error) {
     console.error('Error in user.findByEmail:', error);
-    throw new Error(`Database error: ${error.message}`);
+    throw new Error(`Failed to find user: ${error.message}`);
   }
 };
 
@@ -83,45 +77,49 @@ const findByEmail = async (email) => {
  * Create a new user
  * @param {Object} userData - User data
  * @param {string} userData.username - Username
- * @param {string} userData.email - Email address
- * @param {string} userData.password - Plain text password
- * @param {string} [userData.role='user'] - User role
- * @returns {Promise<Object>} - Created user object
+ * @param {string} userData.email - Email
+ * @param {string} userData.password - Password (plaintext)
+ * @param {string} [userData.fullName] - Full name
+ * @param {string} [userData.role] - User role (default: 'user')
+ * @returns {Promise<Object>} - Created user
  */
-const create = async (userData) => {
+const create = async ({ username, email, password, fullName = '', role = 'user' }) => {
   try {
-    // Check if username already exists
-    const existingUsername = await findByUsername(userData.username);
-    if (existingUsername) {
-      throw new Error('Username already exists');
-    }
-    
-    // Check if email already exists
-    const existingEmail = await findByEmail(userData.email);
-    if (existingEmail) {
-      throw new Error('Email already exists');
-    }
-    
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(userData.password, SALT_ROUNDS);
-    
-    // Insert new user
-    const result = await query(
-      `INSERT INTO users (username, email, password, role, created_at, updated_at) 
-       VALUES ($1, $2, $3, $4, NOW(), NOW()) 
-       RETURNING id, username, email, role, created_at, updated_at`,
-      [
-        userData.username,
-        userData.email,
-        hashedPassword,
-        userData.role || 'user'
-      ]
+    // Check if username or email already exists
+    const existingUser = await query(
+      'SELECT * FROM users WHERE username = $1 OR email = $2',
+      [username, email]
     );
     
-    return result.rows[0];
+    if (existingUser.rows.length > 0) {
+      const existing = existingUser.rows[0];
+      if (existing.username === username) {
+        throw new Error('Username already exists');
+      }
+      if (existing.email === email) {
+        throw new Error('Email already exists');
+      }
+    }
+    
+    // Hash password
+    const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+    
+    const now = new Date();
+    
+    // Create user
+    const result = await query(
+      `INSERT INTO users (username, email, password, full_name, role, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [username, email, passwordHash, fullName, role, now, now]
+    );
+    
+    const user = result.rows[0];
+    delete user.password; // Don't expose password hash
+    return user;
   } catch (error) {
     console.error('Error in user.create:', error);
-    throw new Error(error.message);
+    throw new Error(`Failed to create user: ${error.message}`);
   }
 };
 
@@ -129,71 +127,104 @@ const create = async (userData) => {
  * Update a user
  * @param {number} id - User ID
  * @param {Object} userData - User data to update
- * @returns {Promise<Object>} - Updated user object
+ * @param {string} [userData.email] - Email
+ * @param {string} [userData.fullName] - Full name
+ * @param {string} [userData.role] - User role
+ * @returns {Promise<Object|null>} - Updated user or null if not found
  */
-const update = async (id, userData) => {
+const update = async (id, { email, fullName, role }) => {
   try {
-    // Start building query
-    let updateQuery = 'UPDATE users SET updated_at = NOW()';
-    const queryParams = [];
-    let paramCounter = 1;
+    // Build update query dynamically
+    const updates = [];
+    const values = [];
     
-    // Add fields to update
-    if (userData.username) {
-      updateQuery += `, username = $${paramCounter++}`;
-      queryParams.push(userData.username);
+    if (email) {
+      updates.push(`email = $${updates.length + 1}`);
+      values.push(email);
     }
     
-    if (userData.email) {
-      updateQuery += `, email = $${paramCounter++}`;
-      queryParams.push(userData.email);
+    if (fullName !== undefined) {
+      updates.push(`full_name = $${updates.length + 1}`);
+      values.push(fullName);
     }
     
-    if (userData.password) {
-      const hashedPassword = await bcrypt.hash(userData.password, SALT_ROUNDS);
-      updateQuery += `, password = $${paramCounter++}`;
-      queryParams.push(hashedPassword);
+    if (role) {
+      updates.push(`role = $${updates.length + 1}`);
+      values.push(role);
     }
     
-    if (userData.role) {
-      updateQuery += `, role = $${paramCounter++}`;
-      queryParams.push(userData.role);
+    // Add updated_at
+    const now = new Date();
+    updates.push(`updated_at = $${updates.length + 1}`);
+    values.push(now);
+    
+    // Add id parameter
+    values.push(id);
+    
+    // Execute update
+    const result = await query(
+      `UPDATE users
+       SET ${updates.join(', ')}
+       WHERE id = $${values.length}
+       RETURNING *`,
+      values
+    );
+    
+    if (result.rows.length === 0) {
+      return null;
     }
     
-    // Finish query
-    updateQuery += ` WHERE id = $${paramCounter} RETURNING id, username, email, role, created_at, updated_at`;
-    queryParams.push(id);
-    
-    // Execute query
-    const result = await query(updateQuery, queryParams);
+    const user = result.rows[0];
+    delete user.password; // Don't expose password hash
+    return user;
+  } catch (error) {
+    console.error('Error in user.update:', error);
+    throw new Error(`Failed to update user: ${error.message}`);
+  }
+};
+
+/**
+ * Change user password
+ * @param {number} id - User ID
+ * @param {string} currentPassword - Current password
+ * @param {string} newPassword - New password
+ * @returns {Promise<boolean>} - True if password changed successfully
+ */
+const changePassword = async (id, currentPassword, newPassword) => {
+  try {
+    // Get user with password
+    const result = await query(
+      'SELECT * FROM users WHERE id = $1',
+      [id]
+    );
     
     if (result.rows.length === 0) {
       throw new Error('User not found');
     }
     
-    return result.rows[0];
-  } catch (error) {
-    console.error('Error in user.update:', error);
-    throw new Error(`Update failed: ${error.message}`);
-  }
-};
-
-/**
- * Delete a user
- * @param {number} id - User ID
- * @returns {Promise<boolean>} - Success indicator
- */
-const remove = async (id) => {
-  try {
-    const result = await query(
-      'DELETE FROM users WHERE id = $1 RETURNING id',
-      [id]
+    const user = result.rows[0];
+    
+    // Verify current password
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isPasswordValid) {
+      throw new Error('Current password is incorrect');
+    }
+    
+    // Hash new password
+    const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+    
+    // Update password
+    await query(
+      `UPDATE users
+       SET password = $1, updated_at = $2
+       WHERE id = $3`,
+      [passwordHash, new Date(), id]
     );
     
-    return result.rows.length > 0;
+    return true;
   } catch (error) {
-    console.error('Error in user.remove:', error);
-    throw new Error(`Delete failed: ${error.message}`);
+    console.error('Error in user.changePassword:', error);
+    throw new Error(`Failed to change password: ${error.message}`);
   }
 };
 
@@ -201,75 +232,29 @@ const remove = async (id) => {
  * Authenticate a user
  * @param {string} username - Username
  * @param {string} password - Password
- * @returns {Promise<Object|null>} - Authenticated user or null
+ * @returns {Promise<Object|null>} - User object if authenticated, null otherwise
  */
 const authenticate = async (username, password) => {
   try {
-    // Find user by username
+    // Get user with password
     const user = await findByUsername(username);
     
     if (!user) {
       return null;
     }
     
-    // Compare passwords
-    const isMatch = await bcrypt.compare(password, user.password);
-    
-    if (!isMatch) {
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
       return null;
     }
     
-    // Remove password from returned object
-    const { password: _, ...userWithoutPassword } = user;
-    
-    return userWithoutPassword;
+    // Return user without password
+    delete user.password;
+    return user;
   } catch (error) {
     console.error('Error in user.authenticate:', error);
-    throw new Error(`Authentication error: ${error.message}`);
-  }
-};
-
-/**
- * Get all users (admin only)
- * @param {Object} options - Query options
- * @param {number} [options.limit=100] - Maximum number of users to return
- * @param {number} [options.offset=0] - Offset for pagination
- * @param {string} [options.sortBy='id'] - Sort field
- * @param {string} [options.sortOrder='ASC'] - Sort direction
- * @returns {Promise<Array>} - Array of users
- */
-const findAll = async (options = {}) => {
-  try {
-    // Set defaults
-    const limit = options.limit || 100;
-    const offset = options.offset || 0;
-    const sortBy = options.sortBy || 'id';
-    const sortOrder = options.sortOrder || 'ASC';
-    
-    // Validate sort field to prevent SQL injection
-    const allowedSortFields = ['id', 'username', 'email', 'role', 'created_at', 'updated_at'];
-    if (!allowedSortFields.includes(sortBy)) {
-      throw new Error('Invalid sort field');
-    }
-    
-    // Validate sort order to prevent SQL injection
-    if (!['ASC', 'DESC'].includes(sortOrder)) {
-      throw new Error('Invalid sort order');
-    }
-    
-    // Execute query
-    const result = await query(
-      `SELECT id, username, email, role, created_at, updated_at 
-       FROM users 
-       ORDER BY ${sortBy} ${sortOrder} 
-       LIMIT $1 OFFSET $2`,
-      [limit, offset]
-    );
-    
-    return result.rows;
-  } catch (error) {
-    console.error('Error in user.findAll:', error);
-    throw new Error(`Query failed: ${error.message}`);
+    throw new Error(`Authentication failed: ${error.message}`);
   }
 };
 
@@ -279,7 +264,6 @@ module.exports = {
   findByEmail,
   create,
   update,
-  remove,
-  authenticate,
-  findAll
+  changePassword,
+  authenticate
 };

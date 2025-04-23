@@ -7,26 +7,30 @@
 
 const { Pool } = require('pg');
 
-// Create a connection pool using environment variables
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  // Optional connection parameters
-  ssl: process.env.DB_SSL === 'true' ? {
-    rejectUnauthorized: false // For Replit compatibility
-  } : false,
-  max: parseInt(process.env.DB_POOL_SIZE || '10'), // Maximum number of clients in the pool
-  idleTimeoutMillis: 30000, // How long a client is allowed to remain idle before being closed
-  connectionTimeoutMillis: 2000 // How long to wait for a connection to become available
-});
+// Get database configuration from environment variables
+const config = {
+  user: process.env.PGUSER,
+  host: process.env.PGHOST,
+  database: process.env.PGDATABASE,
+  password: process.env.PGPASSWORD,
+  port: parseInt(process.env.PGPORT || '5432'),
+  
+  // Connection pool configuration
+  max: parseInt(process.env.PG_MAX_CONNECTIONS || '10'), // Maximum connections in pool
+  idleTimeoutMillis: 30000, // Close idle connections after 30 seconds
+  connectionTimeoutMillis: 2000 // Return an error after 2 seconds if connection cannot be established
+};
 
-// Log connection events for debugging
+// Create connection pool
+const pool = new Pool(config);
+
+// Event handlers
 pool.on('connect', () => {
-  console.log('Database connection established');
+  console.log('PostgreSQL pool: new connection established');
 });
 
-pool.on('error', (err) => {
-  console.error('Unexpected error on idle database client', err);
-  process.exit(-1);
+pool.on('error', (err, client) => {
+  console.error('PostgreSQL pool: unexpected error on idle client', err);
 });
 
 /**
@@ -37,20 +41,29 @@ pool.on('error', (err) => {
  */
 const query = async (text, params) => {
   const start = Date.now();
+  
   try {
     const result = await pool.query(text, params);
     const duration = Date.now() - start;
     
-    // Log slow queries (over 200ms)
-    if (duration > 200) {
-      console.warn('Slow query:', { text, duration, rows: result.rowCount });
+    if (duration > 1000) {
+      // Log slow queries (over 1 second)
+      console.warn('Slow query detected:', {
+        text,
+        params,
+        duration,
+        rowCount: result.rowCount
+      });
     }
     
     return result;
   } catch (error) {
-    console.error('Database query error:', error.message);
-    console.error('Query:', text);
-    console.error('Parameters:', params);
+    console.error('Database query error:', {
+      text,
+      params,
+      error: error.message,
+      stack: error.stack
+    });
     throw error;
   }
 };
@@ -63,9 +76,10 @@ const getClient = async () => {
   const client = await pool.connect();
   const originalRelease = client.release;
   
-  // Override release method to log when client is returned to the pool
+  // Override release method to log connection release
   client.release = () => {
-    originalRelease.apply(client);
+    client.release = originalRelease;
+    return client.release();
   };
   
   return client;
@@ -77,11 +91,24 @@ const getClient = async () => {
  */
 const testConnection = async () => {
   try {
-    await query('SELECT NOW()');
-    return true;
+    const result = await query('SELECT NOW() as current_time');
+    return {
+      connected: true,
+      version: result.rows[0]?.version || 'Unknown',
+      current_time: result.rows[0]?.current_time,
+      database: config.database,
+      host: config.host,
+      port: config.port
+    };
   } catch (error) {
-    console.error('Database connection test failed:', error.message);
-    return false;
+    console.error('Database connection test failed:', error);
+    return {
+      connected: false,
+      error: error.message,
+      database: config.database,
+      host: config.host,
+      port: config.port
+    };
   }
 };
 
