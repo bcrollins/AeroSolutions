@@ -1,0 +1,147 @@
+Prompt 3: Restructure Code with MVC Pattern
+
+Replit AI, restructure the app using the Model-View-Controller (MVC) pattern to make it modular and maintainable. Ensure all functionality remains intact. Follow these steps:
+
+
+
+
+
+Models:
+
+
+
+
+
+In /models, create files for each data entity (e.g., user.js, product.js).
+
+
+
+Example /models/user.js:
+
+const pool = require('../config/database');
+class User {
+  static async findByEmail(email) {
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    return result.rows[0];
+  }
+  static async create(email, password) {
+    const result = await pool.query(
+      'INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *',
+      [email, password]
+    );
+    return result.rows[0];
+  }
+}
+module.exports = User;
+
+
+
+Controllers:
+
+
+
+
+
+In /controllers, create files for each feature (e.g., userController.js, productController.js).
+
+
+
+Example /controllers/userController.js:
+
+const User = require('../models/user');
+const userController = {
+  async getUser(req, res) {
+    try {
+      const user = await User.findByEmail(req.query.email);
+      res.json(user || { error: 'User not found' });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+};
+module.exports = userController;
+
+
+
+Routes:
+
+
+
+
+
+In /routes, create files for each feature (e.g., userRoutes.js, productRoutes.js).
+
+
+
+Example /routes/userRoutes.js:
+
+const express = require('express');
+const router = express.Router();
+const userController = require('../controllers/userController');
+router.get('/user', userController.getUser);
+module.exports = router;
+
+
+
+Views:
+
+
+
+
+
+Move existing HTML/EJS files to /views.
+
+
+
+Configure EJS as the view engine in index.js:
+
+app.set('view engine', 'ejs');
+app.set('views', './views');
+
+
+
+Main App:
+
+
+
+
+
+Update index.js to use routes and middleware:
+
+const express = require('express');
+const app = express();
+require('dotenv').config();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public'));
+const userRoutes = require('./routes/userRoutes');
+app.use('/api', userRoutes);
+app.listen(8080, '0.0.0.0', () => console.log('Server running'));
+
+
+
+Test:
+
+
+
+
+
+Verify all routes and views work as before.
+
+
+
+Check console logs for errors and test the webview.
+
+
+
+Output:
+
+
+
+
+
+Save updated files in /models, /controllers, /routes, /views, and index.js.
+
+
+
+Confirm the app runs without errors.
