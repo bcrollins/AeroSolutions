@@ -1,140 +1,139 @@
--- PostgreSQL Database Schema
--- Contains table definitions for the API Platform
+-- PostgreSQL Database Schema for API Platform
+-- This schema defines the database structure for the application
 
--- Users table
+-- Users Table
+-- Stores user account information
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
-  username VARCHAR(50) NOT NULL UNIQUE,
+  username VARCHAR(100) NOT NULL UNIQUE,
   email VARCHAR(255) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
-  full_name VARCHAR(100),
-  role VARCHAR(20) NOT NULL DEFAULT 'user',
-  is_active BOOLEAN NOT NULL DEFAULT true,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  full_name VARCHAR(255),
+  role VARCHAR(50) NOT NULL DEFAULT 'user',
+  api_key VARCHAR(64) UNIQUE,
+  api_key_created_at TIMESTAMP,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  last_login TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP
 );
 
--- API keys table for users
-CREATE TABLE IF NOT EXISTS api_keys (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  key_name VARCHAR(50) NOT NULL,
-  api_key VARCHAR(255) NOT NULL UNIQUE,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  expires_at TIMESTAMP,
-  last_used_at TIMESTAMP,
-  is_active BOOLEAN NOT NULL DEFAULT true
-);
+-- Create index on username and email for faster lookups
+CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
--- OpenAI requests table
-CREATE TABLE IF NOT EXISTS openai_requests (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-  request_type VARCHAR(50) NOT NULL,
-  prompt TEXT NOT NULL,
-  model VARCHAR(50) NOT NULL,
-  tokens_used INTEGER NOT NULL,
-  status VARCHAR(20) NOT NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  completed_at TIMESTAMP,
-  response_data JSONB,
-  error_message TEXT
-);
-
--- Contact submissions
-CREATE TABLE IF NOT EXISTS contact_submissions (
-  id SERIAL PRIMARY KEY,
-  name VARCHAR(100) NOT NULL,
-  email VARCHAR(255) NOT NULL,
-  subject VARCHAR(255) NOT NULL,
-  message TEXT NOT NULL,
-  status VARCHAR(20) NOT NULL DEFAULT 'new',
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  notes TEXT
-);
-
--- System logs
-CREATE TABLE IF NOT EXISTS system_logs (
-  id SERIAL PRIMARY KEY,
-  level VARCHAR(20) NOT NULL,
-  message TEXT NOT NULL,
-  context JSONB,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  source VARCHAR(100)
-);
-
--- User rate limits
-CREATE TABLE IF NOT EXISTS rate_limits (
+-- API Usage Table
+-- Tracks API usage for rate limiting and analytics
+CREATE TABLE IF NOT EXISTS api_usage (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   endpoint VARCHAR(255) NOT NULL,
-  requests_count INTEGER NOT NULL DEFAULT 0,
-  last_reset TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  next_reset TIMESTAMP,
-  limit_per_window INTEGER NOT NULL
+  request_count INTEGER NOT NULL DEFAULT 1,
+  last_request_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  UNIQUE (user_id, endpoint, date)
 );
 
--- Error reports
-CREATE TABLE IF NOT EXISTS error_reports (
+-- Create index on user_id and date for faster lookups
+CREATE INDEX IF NOT EXISTS idx_api_usage_user_date ON api_usage(user_id, date);
+
+-- OpenAI Requests Table
+-- Stores historical OpenAI API requests
+CREATE TABLE IF NOT EXISTS openai_requests (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-  error_type VARCHAR(100) NOT NULL,
-  error_message TEXT NOT NULL,
-  stack_trace TEXT,
-  browser_info JSONB,
-  url VARCHAR(255),
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  status VARCHAR(20) NOT NULL DEFAULT 'open',
-  resolution TEXT
+  model VARCHAR(100) NOT NULL,
+  prompt TEXT NOT NULL,
+  response TEXT,
+  tokens_used INTEGER,
+  duration_ms INTEGER,
+  status VARCHAR(50) NOT NULL,
+  ip_address VARCHAR(45),
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- Image analysis requests
-CREATE TABLE IF NOT EXISTS image_analysis (
+-- Create index on user_id and created_at for faster lookups
+CREATE INDEX IF NOT EXISTS idx_openai_requests_user_date ON openai_requests(user_id, created_at);
+
+-- Contacts Table
+-- Stores contact form submissions
+CREATE TABLE IF NOT EXISTS contacts (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  subject VARCHAR(200) NOT NULL,
+  message TEXT NOT NULL,
+  status VARCHAR(50) NOT NULL DEFAULT 'new',
+  notes TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP
+);
+
+-- Create index on email and status for faster lookups
+CREATE INDEX IF NOT EXISTS idx_contacts_email ON contacts(email);
+CREATE INDEX IF NOT EXISTS idx_contacts_status ON contacts(status);
+
+-- Settings Table
+-- Stores application settings
+CREATE TABLE IF NOT EXISTS settings (
+  key VARCHAR(100) PRIMARY KEY,
+  value TEXT NOT NULL,
+  description TEXT,
+  is_public BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP
+);
+
+-- Create some default settings
+INSERT INTO settings (key, value, description, is_public)
+VALUES 
+  ('openai_default_model', 'gpt-4o', 'Default OpenAI model to use', TRUE),
+  ('enable_contact_form', 'true', 'Whether to enable the contact form', TRUE),
+  ('max_tokens_per_request', '4000', 'Maximum tokens allowed per OpenAI request', TRUE),
+  ('enable_rate_limiting', 'true', 'Whether to enable API rate limiting', TRUE)
+ON CONFLICT (key) DO NOTHING;
+
+-- Audit Log Table
+-- Stores audit trail of important actions
+CREATE TABLE IF NOT EXISTS audit_logs (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-  image_url VARCHAR(255),
-  analysis_result JSONB,
-  model VARCHAR(50) NOT NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  tokens_used INTEGER
+  action VARCHAR(100) NOT NULL,
+  entity_type VARCHAR(100) NOT NULL,
+  entity_id VARCHAR(100),
+  details JSONB,
+  ip_address VARCHAR(45),
+  user_agent TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- Documentation pages
-CREATE TABLE IF NOT EXISTS documentation (
-  id SERIAL PRIMARY KEY,
-  title VARCHAR(255) NOT NULL,
-  slug VARCHAR(255) NOT NULL UNIQUE,
-  content TEXT NOT NULL,
-  category VARCHAR(100) NOT NULL,
-  order_index INTEGER NOT NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  author_id INTEGER REFERENCES users(id) ON DELETE SET NULL
-);
+-- Create index on action and created_at for faster lookups
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
 
--- API usage statistics
-CREATE TABLE IF NOT EXISTS api_stats (
-  id SERIAL PRIMARY KEY,
-  endpoint VARCHAR(255) NOT NULL,
-  method VARCHAR(10) NOT NULL,
-  requests_count INTEGER NOT NULL DEFAULT 0,
-  success_count INTEGER NOT NULL DEFAULT 0,
-  error_count INTEGER NOT NULL DEFAULT 0,
-  avg_response_time FLOAT,
-  date DATE NOT NULL,
-  UNIQUE(endpoint, method, date)
-);
+-- Add functions
 
--- Indexes for performance
-CREATE INDEX IF NOT EXISTS idx_openai_requests_user_id ON openai_requests(user_id);
-CREATE INDEX IF NOT EXISTS idx_openai_requests_created_at ON openai_requests(created_at);
-CREATE INDEX IF NOT EXISTS idx_contact_submissions_status ON contact_submissions(status);
-CREATE INDEX IF NOT EXISTS idx_system_logs_level ON system_logs(level);
-CREATE INDEX IF NOT EXISTS idx_system_logs_created_at ON system_logs(created_at);
-CREATE INDEX IF NOT EXISTS idx_rate_limits_user_id ON rate_limits(user_id);
-CREATE INDEX IF NOT EXISTS idx_error_reports_status ON error_reports(status);
-CREATE INDEX IF NOT EXISTS idx_documentation_slug ON documentation(slug);
-CREATE INDEX IF NOT EXISTS idx_documentation_category ON documentation(category);
-CREATE INDEX IF NOT EXISTS idx_api_stats_date ON api_stats(date);
-CREATE INDEX IF NOT EXISTS idx_api_stats_endpoint ON api_stats(endpoint);
+-- Function to update the updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+   NEW.updated_at = NOW();
+   RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create triggers to automatically update updated_at columns
+CREATE TRIGGER update_users_updated_at
+  BEFORE UPDATE ON users
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_contacts_updated_at
+  BEFORE UPDATE ON contacts
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_settings_updated_at
+  BEFORE UPDATE ON settings
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();

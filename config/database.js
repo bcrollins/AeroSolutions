@@ -4,43 +4,34 @@
  * This module provides a connection pool for PostgreSQL database connections.
  * It uses environment variables for configuration to keep sensitive information secure.
  */
-
 const { Pool } = require('pg');
 const logger = require('./logger');
 
-// Database configuration
-const dbConfig = {
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' 
-    ? { rejectUnauthorized: false }
-    : false,
-  max: parseInt(process.env.DB_MAX_CONNECTIONS || '10'),
-  idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT || '30000'),
-  connectionTimeoutMillis: parseInt(process.env.DB_CONNECTION_TIMEOUT || '5000')
-};
+// Get database connection details from environment variables
+const connectionString = process.env.DATABASE_URL;
 
-// Create a connection pool
-const pool = new Pool(dbConfig);
+// Basic validation
+if (!connectionString) {
+  logger.error('DATABASE_URL environment variable is not set');
+  throw new Error('DATABASE_URL environment variable is required');
+}
 
-// Connection error handling
-pool.on('error', (err) => {
-  logger.error('Unexpected PostgreSQL pool error', {
-    error: err.message,
-    stack: err.stack
-  });
+// Configure connection pool
+const pool = new Pool({
+  connectionString,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  max: parseInt(process.env.PG_MAX_CONNECTIONS, 10) || 10, // Maximum number of clients in the pool
+  idleTimeoutMillis: 30000, // How long a client is allowed to remain idle before being closed
+  connectionTimeoutMillis: 2000, // How long to wait for a connection
 });
 
-// Pool event listeners for monitoring
+// Log pool events
 pool.on('connect', () => {
-  logger.debug('PostgreSQL pool new client connected');
+  logger.debug('New client connected to PostgreSQL pool');
 });
 
-pool.on('acquire', () => {
-  logger.debug('PostgreSQL pool client acquired from pool');
-});
-
-pool.on('remove', () => {
-  logger.debug('PostgreSQL pool client removed from pool');
+pool.on('error', (err) => {
+  logger.logDatabaseError('Pool error', err, { connectionString: 'REDACTED' });
 });
 
 /**
@@ -51,28 +42,24 @@ pool.on('remove', () => {
  */
 async function query(text, params) {
   const start = Date.now();
+  
   try {
     const result = await pool.query(text, params);
     const duration = Date.now() - start;
     
-    logger.debug(`SQL query executed`, {
-      query: text,
-      params,
-      rows: result.rowCount,
-      duration: `${duration}ms`
+    logger.debug('Executed query', { 
+      text, 
+      params, 
+      duration, 
+      rowCount: result.rowCount 
     });
     
     return result;
   } catch (error) {
-    const duration = Date.now() - start;
-    
-    logger.error(`SQL query error`, {
-      query: text,
-      params,
-      error: error.message,
-      duration: `${duration}ms`
+    logger.logDatabaseError('Query execution', error, { 
+      query: text, 
+      params 
     });
-    
     throw error;
   }
 }
@@ -83,37 +70,12 @@ async function query(text, params) {
  */
 async function getClient() {
   const client = await pool.connect();
+  const originalRelease = client.release;
   
-  // Monkey patch the query method to implement the same logging
-  const query = client.query;
-  client.query = async (...args) => {
-    const [text, params] = args;
-    const start = Date.now();
-    
-    try {
-      const result = await query.apply(client, args);
-      const duration = Date.now() - start;
-      
-      logger.debug(`SQL transaction query executed`, {
-        query: text,
-        params,
-        rows: result.rowCount,
-        duration: `${duration}ms`
-      });
-      
-      return result;
-    } catch (error) {
-      const duration = Date.now() - start;
-      
-      logger.error(`SQL transaction query error`, {
-        query: text,
-        params,
-        error: error.message,
-        duration: `${duration}ms`
-      });
-      
-      throw error;
-    }
+  // Override the release method to track release time
+  client.release = () => {
+    logger.debug('Client returned to pool');
+    return originalRelease.apply(client);
   };
   
   return client;
@@ -126,25 +88,19 @@ async function getClient() {
 async function testConnection() {
   try {
     const result = await query('SELECT NOW()');
-    
-    logger.info(`Database connection test successful`, {
-      timestamp: result.rows[0].now
+    logger.info('Database connection test successful', {
+      timestamp: result.rows[0].now,
     });
-    
     return true;
   } catch (error) {
-    logger.error(`Database connection test failed`, {
-      error: error.message
-    });
-    
+    logger.error('Database connection test failed', { error: error.message });
     return false;
   }
 }
 
-// Export the pool and utilities
 module.exports = {
-  pool,
   query,
   getClient,
-  testConnection
+  testConnection,
+  pool, // Exported for direct use if needed
 };
