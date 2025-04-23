@@ -1,21 +1,27 @@
 /**
  * OpenAI Routes
  * 
- * Routes for OpenAI-related functionality
+ * Routes for OpenAI API functionality
  */
 
 const express = require('express');
 const router = express.Router();
 const openaiController = require('../controllers/openaiController');
-const { authMiddleware } = require('../middlewares/auth');
 const rateLimiter = require('../middlewares/rateLimiter');
 
-// Public test route
-router.get('/test', openaiController.testConnection);
+// Apply specific rate limiting for OpenAI routes
+router.use(rateLimiter.openai);
 
-// Protected routes (require authentication)
-router.post('/generate/text', authMiddleware, rateLimiter, openaiController.generateText);
-router.post('/generate/json', authMiddleware, rateLimiter, openaiController.generateJson);
-router.post('/analyze/image', authMiddleware, rateLimiter, openaiController.analyzeImage);
+// Text generation
+router.post('/generate-text', openaiController.generateText);
+
+// JSON generation
+router.post('/generate-json', openaiController.generateJson);
+
+// Image analysis
+router.post('/analyze-image', openaiController.analyzeImage);
+
+// Test connection
+router.get('/test', openaiController.testConnection);
 
 module.exports = router;

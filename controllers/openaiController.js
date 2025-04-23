@@ -4,36 +4,9 @@
  * Handles logic for OpenAI-related routes
  */
 
-const OpenAI = require('../models/openai');
-const { z } = require('zod');
+const OpenAIService = require('../models/openai');
 
-// Validation schema for generate text requests
-const generateTextSchema = z.object({
-  prompt: z.string().min(1, 'Prompt is required'),
-  model: z.string().optional().default('gpt-4o'),
-  max_tokens: z.number().optional().default(1000),
-  temperature: z.number().min(0).max(2).optional().default(0.7),
-  systemPrompt: z.string().optional()
-});
-
-// Validation schema for generate JSON requests
-const generateJsonSchema = z.object({
-  prompt: z.string().min(1, 'Prompt is required'),
-  model: z.string().optional().default('gpt-4o'),
-  max_tokens: z.number().optional().default(2000),
-  temperature: z.number().min(0).max(2).optional().default(0.7),
-  systemPrompt: z.string().optional()
-});
-
-// Validation schema for image analysis requests
-const analyzeImageSchema = z.object({
-  imageUrl: z.string().url('A valid image URL is required'),
-  prompt: z.string().optional(),
-  model: z.string().optional().default('gpt-4o'),
-  max_tokens: z.number().optional().default(1000)
-});
-
-const openaiController = {
+class OpenAIController {
   /**
    * Generate text using OpenAI
    * @param {Object} req - Express request object
@@ -41,33 +14,40 @@ const openaiController = {
    */
   async generateText(req, res) {
     try {
-      // Validate request body
-      const validationResult = generateTextSchema.safeParse(req.body);
+      const { prompt, model, max_tokens, temperature } = req.body;
       
-      if (!validationResult.success) {
+      // Validate required fields
+      if (!prompt) {
         return res.status(400).json({
           success: false,
-          message: 'Invalid request data',
-          errors: validationResult.error.errors
+          message: 'Prompt is required'
         });
       }
-
-      const options = validationResult.data;
       
       // Generate text
-      const result = await OpenAI.generateText(options);
+      const result = await OpenAIService.generateText({
+        prompt,
+        model,
+        max_tokens,
+        temperature
+      });
       
-      res.status(200).json(result);
+      res.json({
+        success: true,
+        text: result.text,
+        model: result.model,
+        usage: result.usage
+      });
     } catch (error) {
-      console.error('Generate text error:', error);
+      console.error('Error generating text:', error);
       res.status(500).json({
         success: false,
-        message: 'Failed to generate text',
+        message: 'Error generating text',
         error: error.message
       });
     }
-  },
-
+  }
+  
   /**
    * Generate JSON using OpenAI
    * @param {Object} req - Express request object
@@ -75,33 +55,40 @@ const openaiController = {
    */
   async generateJson(req, res) {
     try {
-      // Validate request body
-      const validationResult = generateJsonSchema.safeParse(req.body);
+      const { prompt, model, max_tokens, temperature } = req.body;
       
-      if (!validationResult.success) {
+      // Validate required fields
+      if (!prompt) {
         return res.status(400).json({
           success: false,
-          message: 'Invalid request data',
-          errors: validationResult.error.errors
+          message: 'Prompt is required'
         });
       }
-
-      const options = validationResult.data;
       
       // Generate JSON
-      const result = await OpenAI.generateJSON(options);
+      const result = await OpenAIService.generateJSON({
+        prompt,
+        model,
+        max_tokens,
+        temperature
+      });
       
-      res.status(200).json(result);
+      res.json({
+        success: true,
+        json: result.json,
+        model: result.model,
+        usage: result.usage
+      });
     } catch (error) {
-      console.error('Generate JSON error:', error);
+      console.error('Error generating JSON:', error);
       res.status(500).json({
         success: false,
-        message: 'Failed to generate JSON',
+        message: 'Error generating JSON',
         error: error.message
       });
     }
-  },
-
+  }
+  
   /**
    * Analyze an image using OpenAI
    * @param {Object} req - Express request object
@@ -109,33 +96,40 @@ const openaiController = {
    */
   async analyzeImage(req, res) {
     try {
-      // Validate request body
-      const validationResult = analyzeImageSchema.safeParse(req.body);
+      const { image, prompt, model, max_tokens } = req.body;
       
-      if (!validationResult.success) {
+      // Validate required fields
+      if (!image) {
         return res.status(400).json({
           success: false,
-          message: 'Invalid request data',
-          errors: validationResult.error.errors
+          message: 'Image data is required'
         });
       }
-
-      const options = validationResult.data;
       
       // Analyze image
-      const result = await OpenAI.analyzeImage(options);
+      const result = await OpenAIService.analyzeImage({
+        image,
+        prompt,
+        model,
+        max_tokens
+      });
       
-      res.status(200).json(result);
+      res.json({
+        success: true,
+        analysis: result.analysis,
+        model: result.model,
+        usage: result.usage
+      });
     } catch (error) {
-      console.error('Analyze image error:', error);
+      console.error('Error analyzing image:', error);
       res.status(500).json({
         success: false,
-        message: 'Failed to analyze image',
+        message: 'Error analyzing image',
         error: error.message
       });
     }
-  },
-
+  }
+  
   /**
    * Test OpenAI connection
    * @param {Object} req - Express request object
@@ -143,32 +137,31 @@ const openaiController = {
    */
   async testConnection(req, res) {
     try {
-      console.log("Testing OpenAI API connection...");
+      const result = await OpenAIService.testConnection();
       
-      // Generate a simple test response
-      const result = await OpenAI.generateText({
-        prompt: 'Say hello in one word.',
-        max_tokens: 10,
-        temperature: 0.2
-      });
-      
-      console.log("OpenAI API test successful!");
-      
-      res.status(200).json({
-        success: true,
-        message: 'OpenAI API test successful',
-        data: result.result
-      });
+      if (result.success) {
+        res.json({
+          success: true,
+          message: result.message,
+          model: result.model
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          message: 'OpenAI API connection failed',
+          error: result.error,
+          details: result.details
+        });
+      }
     } catch (error) {
-      console.error("OpenAI API test failed:", error);
-      
+      console.error('Error testing OpenAI connection:', error);
       res.status(500).json({
         success: false,
-        message: 'OpenAI API test failed',
+        message: 'Error testing OpenAI connection',
         error: error.message
       });
     }
   }
-};
+}
 
-module.exports = openaiController;
+module.exports = new OpenAIController();

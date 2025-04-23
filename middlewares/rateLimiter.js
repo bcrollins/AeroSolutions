@@ -1,101 +1,62 @@
 /**
  * Rate Limiter Middleware
  * 
- * Middleware to prevent abuse of API by limiting requests per client
+ * Provides different rate limiting strategies for various API endpoints
  */
 
-// Store client request data in memory
-const clients = new Map();
+const rateLimit = require('express-rate-limit');
 
-// Configuration
-const WINDOW_MS = 60000; // 1 minute window
-const MAX_REQUESTS = 30; // 30 requests per minute
-const MAX_REQUESTS_OPENAI = 10; // 10 OpenAI requests per minute
+// General purpose rate limiter for most API routes
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: {
+    success: false,
+    message: 'Too many requests, please try again later.'
+  }
+});
 
-/**
- * Check if client exceeds rate limit
- * @param {string} ip - Client IP address
- * @param {number} maxRequests - Maximum requests allowed in window
- * @returns {boolean} True if allowed, false if limit exceeded
- */
-const checkRateLimit = (ip, maxRequests) => {
-  const now = Date.now();
-  const client = clients.get(ip);
-  
-  // Create new client entry if not exists or reset if window expired
-  if (!client || now > client.resetTime) {
-    clients.set(ip, { 
-      count: 1, 
-      resetTime: now + WINDOW_MS 
-    });
-    return true;
+// Stricter rate limiter for authentication routes
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // limit each IP to 10 auth requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many authentication attempts, please try again later.'
   }
-  
-  // Increment request count
-  client.count++;
-  
-  // Check if exceeded limit
-  if (client.count > maxRequests) {
-    return false;
+});
+
+// Rate limiter for OpenAI API routes (more expensive operations)
+const openaiLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 60, // limit each IP to 60 openai requests per hour
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'OpenAI API rate limit exceeded. Please try again later.'
   }
-  
-  return true;
+});
+
+// Rate limiter for admin routes
+const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200, // limit each IP to 200 admin requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Admin API rate limit exceeded. Please try again later.'
+  }
+});
+
+module.exports = {
+  general: generalLimiter,
+  auth: authLimiter,
+  openai: openaiLimiter,
+  admin: adminLimiter
 };
-
-/**
- * Rate limiter middleware for general API requests
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next function
- */
-const rateLimiterMiddleware = (req, res, next) => {
-  const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
-  
-  if (!checkRateLimit(clientIp, MAX_REQUESTS)) {
-    return res.status(429).json({
-      success: false,
-      message: 'Too many requests, please try again later',
-      retry_after: Math.ceil((clients.get(clientIp)?.resetTime || 0) - Date.now()) / 1000
-    });
-  }
-  
-  next();
-};
-
-/**
- * Rate limiter middleware for OpenAI API requests
- * Applies stricter limits for AI-based endpoints
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next function
- */
-const openaiRateLimiterMiddleware = (req, res, next) => {
-  const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
-  
-  if (!checkRateLimit(clientIp, MAX_REQUESTS_OPENAI)) {
-    return res.status(429).json({
-      success: false,
-      message: 'Too many AI requests, please try again later',
-      retry_after: Math.ceil((clients.get(clientIp)?.resetTime || 0) - Date.now()) / 1000
-    });
-  }
-  
-  next();
-};
-
-// Cleanup old entries every 5 minutes
-setInterval(() => {
-  const now = Date.now();
-  Array.from(clients.entries()).forEach(([ip, client]) => {
-    if (now > client.resetTime) {
-      clients.delete(ip);
-    }
-  });
-}, 5 * 60 * 1000);
-
-// Use the general rate limiter by default
-module.exports = rateLimiterMiddleware;
-
-// Export both middlewares for specific use cases
-module.exports.general = rateLimiterMiddleware;
-module.exports.openai = openaiRateLimiterMiddleware;
