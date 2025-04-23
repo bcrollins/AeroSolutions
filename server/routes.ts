@@ -205,7 +205,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/feedback', feedbackAnalysisRouter);
   app.use('/api/mockups', mockupsRouter);
   // Only use the new structured router system
-  app.use('/api/rollinsx', rollinsxBotRouter);
+  app.use('/api/rollinsxbot', rollinsxBotRouter);
   app.use('/api/email-campaigns', emailCampaignsRouter);
   app.use('/api/content', contentProtectionRouter);
   app.use('/api/compliance', complianceRouter);
