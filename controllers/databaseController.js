@@ -1,8 +1,7 @@
 /**
  * Database Controller
  * 
- * This controller provides methods for interacting with the database,
- * checking its status, and querying database objects.
+ * This controller provides methods for database management and status.
  */
 
 const db = require('../config/database');
@@ -10,151 +9,145 @@ const logger = require('../config/logger');
 const { createError } = require('../middlewares/errorHandler');
 
 /**
- * Test database connection
+ * Check database status
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
-async function testConnection(req, res, next) {
+async function checkStatus(req, res, next) {
   try {
     const isConnected = await db.checkConnection();
     
     if (isConnected) {
-      return res.json({
+      logger.info('Database status check: Connected');
+      res.json({
         success: true,
-        message: 'Database connection successful',
         data: {
           status: 'connected',
           timestamp: new Date().toISOString()
         }
       });
+    } else {
+      logger.warn('Database status check: Disconnected');
+      res.status(503).json({
+        success: false,
+        error: {
+          message: 'Database is not connected',
+          code: 'DATABASE_DISCONNECTED'
+        }
+      });
     }
-    
-    throw new Error('Database connection test failed');
   } catch (error) {
-    logger.error('Database connection test failed', {
+    logger.error('Database status check error', {
       error: error.message,
       stack: error.stack
     });
-    next(createError('Database connection error', 500, 'DATABASE_CONNECTION_ERROR'));
+    next(createError('Error checking database status', 500, 'DATABASE_STATUS_ERROR'));
   }
 }
 
 /**
- * Get all tables in the database
+ * Initialize database schema
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
-async function getTables(req, res, next) {
+async function initializeDatabase(req, res, next) {
   try {
-    const result = await db.query(`
-      SELECT table_name
-      FROM information_schema.tables
-      WHERE table_schema = 'public'
-      ORDER BY table_name
-    `);
+    logger.info('Database initialization requested');
     
-    res.json({
-      success: true,
-      data: result.rows.map(row => row.table_name)
-    });
-  } catch (error) {
-    logger.error('Error fetching database tables', {
-      error: error.message,
-      stack: error.stack
-    });
-    next(createError('Error fetching database tables', 500, 'DATABASE_TABLES_ERROR'));
-  }
-}
-
-/**
- * Get columns for a specific table
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
- */
-async function getTableColumns(req, res, next) {
-  try {
-    const tableName = req.params.tableName;
-    
-    // Validate table name to prevent SQL injection
-    if (!tableName.match(/^[a-zA-Z0-9_]+$/)) {
-      return next(createError('Invalid table name', 400, 'INVALID_TABLE_NAME'));
-    }
-    
-    const result = await db.query(`
-      SELECT column_name, data_type, is_nullable, column_default
-      FROM information_schema.columns
-      WHERE table_schema = 'public' AND table_name = $1
-      ORDER BY ordinal_position
-    `, [tableName]);
+    await db.initDatabase();
     
     res.json({
       success: true,
       data: {
-        tableName,
-        columns: result.rows
-      }
-    });
-  } catch (error) {
-    logger.error('Error fetching table columns', {
-      error: error.message,
-      tableName: req.params.tableName,
-      stack: error.stack
-    });
-    next(createError('Error fetching table columns', 500, 'DATABASE_COLUMNS_ERROR'));
-  }
-}
-
-/**
- * Get database status information
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
- */
-async function getStatus(req, res, next) {
-  try {
-    // Get current connections
-    const connectionsResult = await db.query(`
-      SELECT count(*) as active_connections 
-      FROM pg_stat_activity
-    `);
-    
-    // Get database size
-    const sizeResult = await db.query(`
-      SELECT pg_size_pretty(pg_database_size(current_database())) as db_size
-    `);
-    
-    // Get table counts
-    const tablesResult = await db.query(`
-      SELECT count(*) as table_count
-      FROM information_schema.tables
-      WHERE table_schema = 'public'
-    `);
-    
-    // Return combined status
-    res.json({
-      success: true,
-      data: {
-        active_connections: parseInt(connectionsResult.rows[0].active_connections, 10),
-        db_size: sizeResult.rows[0].db_size,
-        table_count: parseInt(tablesResult.rows[0].table_count, 10),
+        message: 'Database initialized successfully',
         timestamp: new Date().toISOString()
       }
     });
   } catch (error) {
-    logger.error('Error fetching database status', {
+    logger.error('Database initialization error', {
       error: error.message,
       stack: error.stack
     });
-    next(createError('Error fetching database status', 500, 'DATABASE_STATUS_ERROR'));
+    next(createError('Error initializing database', 500, 'DATABASE_INIT_ERROR'));
+  }
+}
+
+/**
+ * Get database tables info
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
+async function getTablesInfo(req, res, next) {
+  try {
+    // Query to get the list of tables
+    const tablesQuery = `
+      SELECT 
+        table_name,
+        (SELECT COUNT(*) FROM information_schema.columns WHERE table_name = t.table_name) as column_count
+      FROM 
+        information_schema.tables t
+      WHERE 
+        table_schema = 'public'
+      ORDER BY 
+        table_name
+    `;
+    
+    const tablesResult = await db.query(tablesQuery);
+    
+    const tables = [];
+    
+    // For each table, get row count and column details
+    for (const table of tablesResult.rows) {
+      // Get row count
+      const countResult = await db.query(`SELECT COUNT(*) FROM "${table.table_name}"`);
+      const rowCount = parseInt(countResult.rows[0].count);
+      
+      // Get column details
+      const columnsQuery = `
+        SELECT 
+          column_name, 
+          data_type,
+          is_nullable
+        FROM 
+          information_schema.columns
+        WHERE 
+          table_name = $1
+        ORDER BY 
+          ordinal_position
+      `;
+      
+      const columnsResult = await db.query(columnsQuery, [table.table_name]);
+      
+      tables.push({
+        name: table.table_name,
+        rowCount,
+        columns: columnsResult.rows
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: {
+        tables,
+        count: tables.length,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    logger.error('Error fetching database tables info', {
+      error: error.message,
+      stack: error.stack
+    });
+    
+    next(createError('Error retrieving database information', 500, 'DATABASE_INFO_ERROR'));
   }
 }
 
 module.exports = {
-  testConnection,
-  getTables,
-  getTableColumns,
-  getStatus
+  checkStatus,
+  initializeDatabase,
+  getTablesInfo
 };

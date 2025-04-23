@@ -1,139 +1,81 @@
--- PostgreSQL Database Schema for API Platform
--- This schema defines the database structure for the application
+-- Schema for application database
 
--- Users Table
--- Stores user account information
-CREATE TABLE IF NOT EXISTS users (
-  id SERIAL PRIMARY KEY,
-  username VARCHAR(100) NOT NULL UNIQUE,
-  email VARCHAR(255) NOT NULL UNIQUE,
-  password_hash VARCHAR(255) NOT NULL,
-  full_name VARCHAR(255),
-  role VARCHAR(50) NOT NULL DEFAULT 'user',
-  api_key VARCHAR(64) UNIQUE,
-  api_key_created_at TIMESTAMP,
-  is_active BOOLEAN NOT NULL DEFAULT TRUE,
-  last_login TIMESTAMP,
-  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMP
-);
-
--- Create index on username and email for faster lookups
-CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-
--- API Usage Table
--- Tracks API usage for rate limiting and analytics
-CREATE TABLE IF NOT EXISTS api_usage (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-  endpoint VARCHAR(255) NOT NULL,
-  request_count INTEGER NOT NULL DEFAULT 1,
-  last_request_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  date DATE NOT NULL DEFAULT CURRENT_DATE,
-  UNIQUE (user_id, endpoint, date)
-);
-
--- Create index on user_id and date for faster lookups
-CREATE INDEX IF NOT EXISTS idx_api_usage_user_date ON api_usage(user_id, date);
-
--- OpenAI Requests Table
--- Stores historical OpenAI API requests
-CREATE TABLE IF NOT EXISTS openai_requests (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-  model VARCHAR(100) NOT NULL,
-  prompt TEXT NOT NULL,
-  response TEXT,
-  tokens_used INTEGER,
-  duration_ms INTEGER,
-  status VARCHAR(50) NOT NULL,
-  ip_address VARCHAR(45),
-  created_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
--- Create index on user_id and created_at for faster lookups
-CREATE INDEX IF NOT EXISTS idx_openai_requests_user_date ON openai_requests(user_id, created_at);
-
--- Contacts Table
--- Stores contact form submissions
+-- Contacts table to store contact form submissions
 CREATE TABLE IF NOT EXISTS contacts (
   id SERIAL PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
   email VARCHAR(255) NOT NULL,
+  phone VARCHAR(50),
   subject VARCHAR(200) NOT NULL,
   message TEXT NOT NULL,
-  status VARCHAR(50) NOT NULL DEFAULT 'new',
-  notes TEXT,
-  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMP
-);
-
--- Create index on email and status for faster lookups
-CREATE INDEX IF NOT EXISTS idx_contacts_email ON contacts(email);
-CREATE INDEX IF NOT EXISTS idx_contacts_status ON contacts(status);
-
--- Settings Table
--- Stores application settings
-CREATE TABLE IF NOT EXISTS settings (
-  key VARCHAR(100) PRIMARY KEY,
-  value TEXT NOT NULL,
-  description TEXT,
-  is_public BOOLEAN NOT NULL DEFAULT FALSE,
-  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMP
-);
-
--- Create some default settings
-INSERT INTO settings (key, value, description, is_public)
-VALUES 
-  ('openai_default_model', 'gpt-4o', 'Default OpenAI model to use', TRUE),
-  ('enable_contact_form', 'true', 'Whether to enable the contact form', TRUE),
-  ('max_tokens_per_request', '4000', 'Maximum tokens allowed per OpenAI request', TRUE),
-  ('enable_rate_limiting', 'true', 'Whether to enable API rate limiting', TRUE)
-ON CONFLICT (key) DO NOTHING;
-
--- Audit Log Table
--- Stores audit trail of important actions
-CREATE TABLE IF NOT EXISTS audit_logs (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-  action VARCHAR(100) NOT NULL,
-  entity_type VARCHAR(100) NOT NULL,
-  entity_id VARCHAR(100),
-  details JSONB,
-  ip_address VARCHAR(45),
+  company_name VARCHAR(255),
+  ip_address VARCHAR(50),
   user_agent TEXT,
-  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create index on action and created_at for faster lookups
-CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
-CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
+-- Create index for faster email searches
+CREATE INDEX IF NOT EXISTS idx_contacts_email ON contacts(email);
 
--- Add functions
+-- Create index for timestamp sorting
+CREATE INDEX IF NOT EXISTS idx_contacts_created_at ON contacts(created_at DESC);
 
--- Function to update the updated_at timestamp
-CREATE OR REPLACE FUNCTION update_updated_at_column()
+-- API usage logs for tracking and billing
+CREATE TABLE IF NOT EXISTS api_usage_logs (
+  id SERIAL PRIMARY KEY,
+  endpoint VARCHAR(255) NOT NULL,
+  ip_address VARCHAR(50),
+  user_id INTEGER,
+  tokens_used INTEGER,
+  request_time REAL,
+  success BOOLEAN DEFAULT TRUE,
+  error_type VARCHAR(100),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create index for usage reporting
+CREATE INDEX IF NOT EXISTS idx_api_usage_created_at ON api_usage_logs(created_at);
+
+-- Create index for user monitoring
+CREATE INDEX IF NOT EXISTS idx_api_usage_user_id ON api_usage_logs(user_id) WHERE user_id IS NOT NULL;
+
+-- Users table (for future authentication)
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(50) UNIQUE NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  full_name VARCHAR(100),
+  role VARCHAR(20) DEFAULT 'user',
+  api_key VARCHAR(64) UNIQUE,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  last_login TIMESTAMP WITH TIME ZONE
+);
+
+-- Create indexes for user lookups
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_api_key ON users(api_key) WHERE api_key IS NOT NULL;
+
+-- Function to update timestamps
+CREATE OR REPLACE FUNCTION update_timestamp()
 RETURNS TRIGGER AS $$
 BEGIN
-   NEW.updated_at = NOW();
-   RETURN NEW;
+  NEW.updated_at = CURRENT_TIMESTAMP;
+  RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- Create triggers to automatically update updated_at columns
-CREATE TRIGGER update_users_updated_at
-  BEFORE UPDATE ON users
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
+-- Update trigger for contacts
+CREATE OR REPLACE TRIGGER update_contacts_timestamp
+BEFORE UPDATE ON contacts
+FOR EACH ROW
+EXECUTE PROCEDURE update_timestamp();
 
-CREATE TRIGGER update_contacts_updated_at
-  BEFORE UPDATE ON contacts
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_settings_updated_at
-  BEFORE UPDATE ON settings
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
+-- Update trigger for users
+CREATE OR REPLACE TRIGGER update_users_timestamp
+BEFORE UPDATE ON users
+FOR EACH ROW
+EXECUTE PROCEDURE update_timestamp();

@@ -1,8 +1,7 @@
 /**
  * OpenAI Routes
  * 
- * This module defines routes for OpenAI API operations
- * including text completions, chat, and image generation.
+ * This module defines routes for OpenAI API integrations.
  */
 
 const express = require('express');
@@ -14,9 +13,9 @@ const openaiController = require('../controllers/openaiController');
 // Middleware
 const { openaiLimiter } = require('../middlewares/rateLimiter');
 const { 
-  validateCompletionRequest,
-  validateChatRequest,
-  validateImageRequest
+  validateCompletionRequest, 
+  validateChatRequest, 
+  validateImageRequest 
 } = require('../middlewares/validator');
 
 /**
@@ -26,29 +25,30 @@ const {
  * 
  * Request body:
  * {
- *   "prompt": "Complete this sentence: The quick brown fox",
- *   "model": "gpt-4o",              (optional, defaults to gpt-4o)
- *   "maxTokens": 100,               (optional, defaults to 1024)
- *   "temperature": 0.7              (optional, defaults to 0.7)
+ *   "prompt": "Write a summary of the benefits of AI",
+ *   "model": "gpt-4o",                   (optional)
+ *   "maxTokens": 500,                    (optional)
+ *   "temperature": 0.7                   (optional)
  * }
  * 
  * Response:
  * {
  *   "success": true,
  *   "data": {
- *     "completion": "jumps over the lazy dog.",
+ *     "text": "AI offers numerous benefits...",
  *     "usage": {
- *       "promptTokens": 10,
- *       "completionTokens": 6, 
- *       "totalTokens": 16
- *     }
+ *       "prompt_tokens": 9,
+ *       "completion_tokens": 156,
+ *       "total_tokens": 165
+ *     },
+ *     "model": "gpt-4o"
  *   }
  * }
  */
 router.post('/completion',
   openaiLimiter,
   validateCompletionRequest,
-  openaiController.generateCompletion
+  openaiController.createCompletion
 );
 
 /**
@@ -59,49 +59,47 @@ router.post('/completion',
  * Request body:
  * {
  *   "messages": [
- *     { "role": "system", "content": "You are a helpful assistant." },
- *     { "role": "user", "content": "What is the capital of France?" }
+ *     {"role": "system", "content": "You are a helpful assistant"},
+ *     {"role": "user", "content": "Tell me about AI"}
  *   ],
- *   "model": "gpt-4o",             (optional, defaults to gpt-4o)
- *   "maxTokens": 100,              (optional, defaults to 1024)
- *   "temperature": 0.7,            (optional, defaults to 0.7)
- *   "responseFormat": "json_object" (optional, sets response format type)
+ *   "model": "gpt-4o",                   (optional)
+ *   "maxTokens": 1000,                   (optional)
+ *   "temperature": 0.7,                  (optional)
+ *   "responseFormat": "text"             (optional, can be "text" or "json_object")
  * }
  * 
  * Response:
  * {
  *   "success": true,
  *   "data": {
- *     "message": {
- *       "role": "assistant",
- *       "content": "The capital of France is Paris."
- *     },
+ *     "content": "AI, or Artificial Intelligence...",
  *     "usage": {
- *       "promptTokens": 23,
- *       "completionTokens": 7,
- *       "totalTokens": 30
- *     }
+ *       "prompt_tokens": 21,
+ *       "completion_tokens": 312,
+ *       "total_tokens": 333
+ *     },
+ *     "model": "gpt-4o"
  *   }
  * }
  */
 router.post('/chat',
   openaiLimiter,
   validateChatRequest,
-  openaiController.generateChatCompletion
+  openaiController.createChatCompletion
 );
 
 /**
  * @route   POST /api/openai/image
- * @desc    Generate image
+ * @desc    Generate image from prompt
  * @access  Public (rate limited)
  * 
  * Request body:
  * {
- *   "prompt": "A beautiful sunset over a mountain landscape",
- *   "n": 1,                       (optional, number of images, defaults to 1)
- *   "size": "1024x1024",          (optional, defaults to 1024x1024)
- *   "quality": "standard",        (optional, "standard" or "hd", defaults to standard)
- *   "responseFormat": "url"       (optional, "url" or "b64_json", defaults to url)
+ *   "prompt": "A serene mountain landscape at sunset",
+ *   "n": 1,                             (optional)
+ *   "size": "1024x1024",                (optional)
+ *   "quality": "standard",              (optional, can be "standard" or "hd")
+ *   "responseFormat": "url"             (optional, can be "url" or "b64_json")
  * }
  * 
  * Response:
@@ -111,16 +109,17 @@ router.post('/chat',
  *     "images": [
  *       {
  *         "url": "https://...",
- *         "revisedPrompt": "A beautiful sunset with golden rays illuminating a majestic mountain landscape..."
+ *         "revised_prompt": "A serene mountain landscape..."
  *       }
- *     ]
+ *     ],
+ *     "created": 1714567890
  *   }
  * }
  */
 router.post('/image',
   openaiLimiter,
   validateImageRequest,
-  openaiController.generateImage
+  openaiController.createImage
 );
 
 module.exports = router;
