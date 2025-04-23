@@ -4,7 +4,8 @@
  * Handles logic for database-related routes
  */
 
-const { pool, query, testConnection: testConnectionFn } = require('../config/database');
+const { query, testConnection: dbTestConnection } = require('../config/database');
+const logger = require('../config/logger');
 
 /**
  * Test database connection
@@ -13,18 +14,30 @@ const { pool, query, testConnection: testConnectionFn } = require('../config/dat
  */
 async function testConnection(req, res) {
   try {
-    const result = await testConnectionFn();
+    const isConnected = await dbTestConnection();
     
-    return res.status(result.connected ? 200 : 500).json({
-      success: result.connected,
-      ...result
+    if (!isConnected) {
+      return res.status(500).json({
+        success: false,
+        error: {
+          message: 'Database connection failed',
+          code: 'DB_CONNECTION_ERROR'
+        }
+      });
+    }
+    
+    return res.json({
+      success: true,
+      message: 'Database connection successful'
     });
   } catch (error) {
-    console.error('Error in databaseController.testConnection:', error);
+    logger.error(`Error in database testConnection: ${error.message}`);
     return res.status(500).json({
       success: false,
-      message: 'Failed to test database connection',
-      error: error.message
+      error: {
+        message: 'Failed to test database connection',
+        details: error.message
+      }
     });
   }
 }
@@ -37,31 +50,24 @@ async function testConnection(req, res) {
 async function getTables(req, res) {
   try {
     const result = await query(`
-      SELECT
-        table_name,
-        (SELECT COUNT(*) FROM information_schema.columns WHERE table_name = t.table_name) AS column_count,
-        (
-          SELECT pg_size_pretty(pg_total_relation_size(quote_ident(t.table_name)))
-          FROM information_schema.tables
-          WHERE table_name = t.table_name
-          LIMIT 1
-        ) AS size
-      FROM information_schema.tables t
+      SELECT table_name 
+      FROM information_schema.tables 
       WHERE table_schema = 'public'
       ORDER BY table_name
     `);
     
-    return res.status(200).json({
+    return res.json({
       success: true,
-      data: result.rows,
-      count: result.rowCount
+      tables: result.rows.map(row => row.table_name)
     });
   } catch (error) {
-    console.error('Error in databaseController.getTables:', error);
+    logger.error(`Error getting tables: ${error.message}`);
     return res.status(500).json({
       success: false,
-      message: 'Failed to get tables',
-      error: error.message
+      error: {
+        message: 'Failed to get database tables',
+        details: error.message
+      }
     });
   }
 }
@@ -75,40 +81,61 @@ async function getTableColumns(req, res) {
   try {
     const { tableName } = req.params;
     
-    // Validate table name to prevent SQL injection
-    if (!tableName.match(/^[a-zA-Z0-9_]+$/)) {
+    if (!tableName) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid table name'
+        error: {
+          message: 'Table name is required',
+          code: 'MISSING_PARAMETER'
+        }
       });
     }
     
+    // Check if table exists
+    const tableCheck = await query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = $1
+      )
+    `, [tableName]);
+    
+    if (!tableCheck.rows[0].exists) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          message: `Table '${tableName}' not found`,
+          code: 'TABLE_NOT_FOUND'
+        }
+      });
+    }
+    
+    // Get column information
     const result = await query(`
-      SELECT
-        column_name,
-        data_type,
-        character_maximum_length,
-        column_default,
-        is_nullable
-      FROM information_schema.columns
-      WHERE table_name = $1
+      SELECT 
+        column_name, 
+        data_type, 
+        is_nullable, 
+        column_default
+      FROM information_schema.columns 
+      WHERE table_schema = 'public' 
+      AND table_name = $1
       ORDER BY ordinal_position
     `, [tableName]);
     
-    return res.status(200).json({
+    return res.json({
       success: true,
-      data: {
-        tableName,
-        columns: result.rows
-      },
-      count: result.rowCount
+      table: tableName,
+      columns: result.rows
     });
   } catch (error) {
-    console.error('Error in databaseController.getTableColumns:', error);
+    logger.error(`Error getting table columns: ${error.message}`);
     return res.status(500).json({
       success: false,
-      message: 'Failed to get table columns',
-      error: error.message
+      error: {
+        message: 'Failed to get table columns',
+        details: error.message
+      }
     });
   }
 }
@@ -122,53 +149,48 @@ async function getStatus(req, res) {
   try {
     // Get database version
     const versionResult = await query('SELECT version()');
-    
-    // Get connection count
-    const connectionsResult = await query(`
-      SELECT count(*) as active_connections
-      FROM pg_stat_activity
-    `);
+    const version = versionResult.rows[0].version;
     
     // Get database size
     const sizeResult = await query(`
-      SELECT pg_size_pretty(pg_database_size(current_database())) as db_size
+      SELECT pg_size_pretty(pg_database_size(current_database())) as size
     `);
+    const size = sizeResult.rows[0].size;
     
     // Get table counts
     const tableCountResult = await query(`
-      SELECT count(*) as table_count
-      FROM information_schema.tables
+      SELECT count(*) as count
+      FROM information_schema.tables 
       WHERE table_schema = 'public'
     `);
+    const tableCount = parseInt(tableCountResult.rows[0].count);
     
-    // Get largest tables
-    const largestTablesResult = await query(`
-      SELECT
-        table_name,
-        pg_size_pretty(pg_total_relation_size(quote_ident(table_name))) as size,
-        pg_total_relation_size(quote_ident(table_name)) as raw_size
-      FROM information_schema.tables
-      WHERE table_schema = 'public'
-      ORDER BY pg_total_relation_size(quote_ident(table_name)) DESC
-      LIMIT 5
+    // Get active connections
+    const connectionsResult = await query(`
+      SELECT count(*) as count
+      FROM pg_stat_activity
+      WHERE datname = current_database()
     `);
+    const connections = parseInt(connectionsResult.rows[0].count);
     
-    return res.status(200).json({
+    return res.json({
       success: true,
-      data: {
-        version: versionResult.rows[0]?.version,
-        connections: parseInt(connectionsResult.rows[0]?.active_connections) || 0,
-        size: sizeResult.rows[0]?.db_size,
-        tableCount: parseInt(tableCountResult.rows[0]?.table_count) || 0,
-        largestTables: largestTablesResult.rows
+      status: {
+        version,
+        size,
+        tableCount,
+        connections,
+        timestamp: new Date().toISOString()
       }
     });
   } catch (error) {
-    console.error('Error in databaseController.getStatus:', error);
+    logger.error(`Error getting database status: ${error.message}`);
     return res.status(500).json({
       success: false,
-      message: 'Failed to get database status',
-      error: error.message
+      error: {
+        message: 'Failed to get database status',
+        details: error.message
+      }
     });
   }
 }

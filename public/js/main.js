@@ -1,65 +1,23 @@
 /**
- * Main JavaScript for the API Platform
+ * Main JavaScript for the API Platform Landing Page
  */
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
   // Mobile menu toggle
-  const mobileMenuButton = document.querySelector('.mobile-menu');
+  const mobileMenuBtn = document.querySelector('.mobile-menu');
   const navLinks = document.querySelector('.nav-links');
   
-  if (mobileMenuButton && navLinks) {
-    mobileMenuButton.addEventListener('click', function() {
+  if (mobileMenuBtn && navLinks) {
+    mobileMenuBtn.addEventListener('click', () => {
       navLinks.classList.toggle('active');
     });
   }
 
-  // API endpoint tests
-  const testOpenAIButton = document.querySelector('a[href="/api/openai/test"]');
-  const testDatabaseButton = document.querySelector('a[href="/api/database/test"]');
-
-  if (testOpenAIButton) {
-    testOpenAIButton.addEventListener('click', async function(e) {
-      e.preventDefault();
-      
-      try {
-        const response = await fetch('/api/openai/test');
-        const result = await response.json();
-        
-        if (result.success) {
-          alert('OpenAI API connection successful!');
-        } else {
-          alert('OpenAI API connection failed: ' + (result.error?.message || 'Unknown error'));
-        }
-      } catch (error) {
-        alert('Error testing OpenAI connection: ' + error.message);
-      }
-    });
-  }
-
-  if (testDatabaseButton) {
-    testDatabaseButton.addEventListener('click', async function(e) {
-      e.preventDefault();
-      
-      try {
-        const response = await fetch('/api/database/test');
-        const result = await response.json();
-        
-        if (result.success) {
-          alert('Database connection successful!');
-        } else {
-          alert('Database connection failed: ' + (result.error?.message || 'Unknown error'));
-        }
-      } catch (error) {
-        alert('Error testing database connection: ' + error.message);
-      }
-    });
-  }
-
-  // Contact form submission
+  // Contact form handling
   const contactForm = document.getElementById('contactForm');
   
   if (contactForm) {
-    contactForm.addEventListener('submit', async function(e) {
+    contactForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       
       const formData = {
@@ -81,43 +39,127 @@ document.addEventListener('DOMContentLoaded', function() {
         const result = await response.json();
         
         if (result.success) {
-          alert('Thank you for your message. We will contact you soon!');
+          displayMessage('Thank you for your message. We will contact you soon!', 'success');
           contactForm.reset();
         } else {
-          alert('Failed to send message: ' + (result.error?.message || 'Unknown error'));
+          displayMessage(`Failed to send message: ${result.error?.message || 'Unknown error'}`, 'error');
         }
       } catch (error) {
-        alert('An error occurred: ' + error.message);
+        displayMessage(`An error occurred: ${error.message}`, 'error');
       }
     });
   }
 
-  // Smooth scrolling for anchors
-  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function(e) {
-      e.preventDefault();
-      
-      const target = document.querySelector(this.getAttribute('href'));
-      
-      if (target) {
-        window.scrollTo({
-          top: target.offsetTop,
-          behavior: 'smooth'
-        });
-      }
-    });
-  });
-
-  // Feature card animation
-  const featureCards = document.querySelectorAll('.feature-card');
+  // API Test buttons
+  const openaiTestBtn = document.querySelector('a[href="/api/openai/test"]');
+  const dbTestBtn = document.querySelector('a[href="/api/database/test"]');
   
-  featureCards.forEach(card => {
-    card.addEventListener('mouseenter', function() {
-      this.style.transform = 'translateY(-10px)';
+  if (openaiTestBtn) {
+    openaiTestBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      await testEndpoint('/api/openai/test', 'OpenAI API');
+    });
+  }
+  
+  if (dbTestBtn) {
+    dbTestBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      await testEndpoint('/api/database/test', 'Database');
+    });
+  }
+
+  // Helper for testing endpoints
+  async function testEndpoint(url, name) {
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data.success) {
+        displayMessage(`${name} connection successful!`, 'success');
+      } else {
+        displayMessage(`${name} connection failed: ${data.error?.message || 'Unknown error'}`, 'error');
+      }
+      
+      // Log detailed response to console
+      console.log(`${name} test response:`, data);
+    } catch (error) {
+      displayMessage(`Error testing ${name}: ${error.message}`, 'error');
+    }
+  }
+
+  // Message display helper
+  function displayMessage(message, type) {
+    // Check if a message container already exists
+    let messageContainer = document.getElementById('message-container');
+    
+    // If not, create one
+    if (!messageContainer) {
+      messageContainer = document.createElement('div');
+      messageContainer.id = 'message-container';
+      messageContainer.style.position = 'fixed';
+      messageContainer.style.top = '20px';
+      messageContainer.style.right = '20px';
+      messageContainer.style.zIndex = '1000';
+      document.body.appendChild(messageContainer);
+    }
+    
+    // Create message element
+    const messageElement = document.createElement('div');
+    messageElement.className = `message ${type}`;
+    messageElement.style.padding = '15px 20px';
+    messageElement.style.marginBottom = '10px';
+    messageElement.style.borderRadius = '6px';
+    messageElement.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+    messageElement.style.backgroundColor = type === 'success' ? '#10b981' : '#ef4444';
+    messageElement.style.color = 'white';
+    messageElement.style.fontWeight = '500';
+    messageElement.style.minWidth = '280px';
+    messageElement.style.maxWidth = '400px';
+    messageElement.style.animation = 'slide-in 0.3s ease-out';
+    
+    messageElement.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span>${message}</span>
+        <button style="background: none; border: none; color: white; cursor: pointer; font-size: 16px; margin-left: 10px;">×</button>
+      </div>
+    `;
+    
+    // Add close button functionality
+    messageElement.querySelector('button').addEventListener('click', () => {
+      messageElement.style.animation = 'slide-out 0.3s ease-out forwards';
+      setTimeout(() => {
+        messageContainer.removeChild(messageElement);
+      }, 300);
     });
     
-    card.addEventListener('mouseleave', function() {
-      this.style.transform = 'translateY(0)';
-    });
-  });
+    // Add to container
+    messageContainer.appendChild(messageElement);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+      if (messageElement.parentNode === messageContainer) {
+        messageElement.style.animation = 'slide-out 0.3s ease-out forwards';
+        setTimeout(() => {
+          if (messageElement.parentNode === messageContainer) {
+            messageContainer.removeChild(messageElement);
+          }
+        }, 300);
+      }
+    }, 5000);
+  }
+
+  // Add CSS animations for messages
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes slide-in {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slide-out {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(100%); opacity: 0; }
+    }
+  `;
+  document.head.appendChild(style);
 });

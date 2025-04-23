@@ -1,32 +1,87 @@
 /**
  * Error Handler Middleware
  * 
- * Global error handling middleware for Express
+ * Centralized error handling middleware for consistent error responses
  */
 
+const logger = require('../config/logger');
+
 /**
- * Handle errors and send appropriate response
- * @param {Error} err - Error object
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next function
+ * Error handler middleware for Express
  */
-const errorHandler = (err, req, res, next) => {
+function errorHandler(err, req, res, next) {
   // Log the error
-  console.error('Error:', err.message);
-  console.error('Stack:', err.stack);
+  logger.error(`Error: ${err.message}`, {
+    stack: err.stack,
+    url: req.originalUrl,
+    method: req.method,
+    ip: req.ip,
+    errorCode: err.code || 'UNKNOWN'
+  });
+
+  // Determine the error code based on the error type
+  let statusCode = err.statusCode || 500;
+  let errorMessage = err.message || 'Internal Server Error';
+  let errorDetails = err.details || null;
   
-  // Determine status code
-  const statusCode = err.statusCode || 500;
-  
-  // Send response
+  // Handle specific error types
+  if (err.name === 'ValidationError') {
+    statusCode = 400;
+    errorMessage = 'Validation error';
+    errorDetails = err.errors || err.details;
+  } else if (err.name === 'UnauthorizedError' || err.message === 'Unauthorized') {
+    statusCode = 401;
+    errorMessage = 'Unauthorized access';
+  } else if (err.name === 'ForbiddenError' || err.message === 'Forbidden') {
+    statusCode = 403;
+    errorMessage = 'Access forbidden';
+  } else if (err.name === 'NotFoundError' || err.message.includes('not found')) {
+    statusCode = 404;
+    errorMessage = 'Resource not found';
+  } else if (err.code === 'LIMIT_FILE_SIZE') {
+    statusCode = 413;
+    errorMessage = 'File too large';
+  } else if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+    statusCode = 400;
+    errorMessage = 'Invalid file type';
+  } else if (err.code === 'EBADCSRFTOKEN') {
+    statusCode = 403;
+    errorMessage = 'Invalid CSRF token';
+  }
+
+  // Handle database connection errors
+  if (err.code === 'ECONNREFUSED' && err.message.includes('database')) {
+    statusCode = 503;
+    errorMessage = 'Database service unavailable';
+  }
+
+  // Handle OpenAI API errors
+  if (err.message.includes('OpenAI')) {
+    if (err.message.includes('API key')) {
+      statusCode = 401;
+      errorMessage = 'OpenAI API authentication failed';
+    } else {
+      statusCode = 502;
+      errorMessage = 'OpenAI API error';
+    }
+  }
+
+  // Clean up error details for production
+  if (process.env.NODE_ENV === 'production' && statusCode === 500) {
+    errorDetails = null; // Don't expose detailed error info in production
+  }
+
+  // Send the error response
   res.status(statusCode).json({
     success: false,
     error: {
-      message: err.message || 'Something went wrong!',
-      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-    }
+      message: errorMessage,
+      code: err.code || err.name || 'INTERNAL_ERROR',
+      details: errorDetails,
+      requestId: req.id // Assuming request ID middleware is used
+    },
+    timestamp: new Date().toISOString()
   });
-};
+}
 
 module.exports = errorHandler;

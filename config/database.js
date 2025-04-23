@@ -6,31 +6,28 @@
  */
 
 const { Pool } = require('pg');
+const logger = require('./logger');
 
 // Get database configuration from environment variables
-const config = {
-  user: process.env.PGUSER,
-  host: process.env.PGHOST,
-  database: process.env.PGDATABASE,
-  password: process.env.PGPASSWORD,
-  port: parseInt(process.env.PGPORT || '5432'),
-  
-  // Connection pool configuration
-  max: parseInt(process.env.PG_MAX_CONNECTIONS || '10'), // Maximum connections in pool
-  idleTimeoutMillis: 30000, // Close idle connections after 30 seconds
-  connectionTimeoutMillis: 2000 // Return an error after 2 seconds if connection cannot be established
+const isProduction = process.env.NODE_ENV === 'production';
+
+// Configure database connection
+const dbConfig = {
+  connectionString: process.env.DATABASE_URL,
+  ssl: isProduction ? { rejectUnauthorized: false } : false,
+  // Pool configuration - for better performance
+  max: process.env.DB_POOL_SIZE ? parseInt(process.env.DB_POOL_SIZE) : 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
 };
 
 // Create connection pool
-const pool = new Pool(config);
+const pool = new Pool(dbConfig);
 
-// Event handlers
-pool.on('connect', () => {
-  console.log('PostgreSQL pool: new connection established');
-});
-
-pool.on('error', (err, client) => {
-  console.error('PostgreSQL pool: unexpected error on idle client', err);
+// Log errors from the pool
+pool.on('error', (err) => {
+  logger.error('Unexpected error on idle database client', err);
+  process.exit(-1);
 });
 
 /**
@@ -41,30 +38,20 @@ pool.on('error', (err, client) => {
  */
 const query = async (text, params) => {
   const start = Date.now();
-  
   try {
-    const result = await pool.query(text, params);
+    const res = await pool.query(text, params);
     const duration = Date.now() - start;
     
-    if (duration > 1000) {
-      // Log slow queries (over 1 second)
-      console.warn('Slow query detected:', {
-        text,
-        params,
-        duration,
-        rowCount: result.rowCount
-      });
+    if (duration > 1000) { // Log slow queries (over 1 second)
+      logger.warn(`Slow query: ${text} with params: ${JSON.stringify(params)} (${duration}ms)`);
+    } else if (process.env.NODE_ENV === 'development') {
+      logger.debug(`Query executed: ${text} with params: ${JSON.stringify(params)} (${duration}ms)`);
     }
     
-    return result;
-  } catch (error) {
-    console.error('Database query error:', {
-      text,
-      params,
-      error: error.message,
-      stack: error.stack
-    });
-    throw error;
+    return res;
+  } catch (err) {
+    logger.error(`Query error: ${text} with params: ${JSON.stringify(params)}`, err);
+    throw err;
   }
 };
 
@@ -76,10 +63,10 @@ const getClient = async () => {
   const client = await pool.connect();
   const originalRelease = client.release;
   
-  // Override release method to log connection release
+  // Override release method to log duration
   client.release = () => {
-    client.release = originalRelease;
-    return client.release();
+    client.query_count = 0;
+    originalRelease.apply(client);
   };
   
   return client;
@@ -91,30 +78,18 @@ const getClient = async () => {
  */
 const testConnection = async () => {
   try {
-    const result = await query('SELECT NOW() as current_time');
-    return {
-      connected: true,
-      version: result.rows[0]?.version || 'Unknown',
-      current_time: result.rows[0]?.current_time,
-      database: config.database,
-      host: config.host,
-      port: config.port
-    };
+    const result = await query('SELECT NOW()');
+    logger.info(`Database connection successful, server timestamp: ${result.rows[0].now}`);
+    return true;
   } catch (error) {
-    console.error('Database connection test failed:', error);
-    return {
-      connected: false,
-      error: error.message,
-      database: config.database,
-      host: config.host,
-      port: config.port
-    };
+    logger.error(`Database connection failed: ${error.message}`);
+    return false;
   }
 };
 
 module.exports = {
-  pool,
   query,
   getClient,
-  testConnection
+  testConnection,
+  pool
 };

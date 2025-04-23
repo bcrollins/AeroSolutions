@@ -8,45 +8,76 @@ const winston = require('winston');
 const path = require('path');
 const fs = require('fs');
 
-// Ensure log directory exists
-const logDir = path.join(process.cwd(), 'logs');
-if (!fs.existsSync(logDir)) {
-  fs.mkdirSync(logDir, { recursive: true });
+// Ensure logs directory exists
+const logsDir = path.join(process.cwd(), 'logs');
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir);
 }
 
-// Define log format
-const logFormat = winston.format.combine(
-  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-  winston.format.errors({ stack: true }),
-  winston.format.splat(),
-  winston.format.json()
-);
+// Define log file paths
+const errorLogPath = path.join(logsDir, 'error.log');
+const combinedLogPath = path.join(logsDir, 'combined.log');
 
-// Create the logger
+// Configure winston format
+const { combine, timestamp, printf, colorize } = winston.format;
+
+// Custom log format
+const logFormat = printf(({ level, message, timestamp, ...rest }) => {
+  let logMessage = `${timestamp} [${level}]: ${message}`;
+  
+  // Add additional metadata if present
+  if (Object.keys(rest).length > 0) {
+    logMessage += ` ${JSON.stringify(rest)}`;
+  }
+  
+  return logMessage;
+});
+
+// Configure logger
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
-  format: logFormat,
-  defaultMeta: { service: 'api-service' },
+  format: combine(
+    timestamp(),
+    logFormat
+  ),
   transports: [
-    // Write logs with level 'error' and below to error.log
+    // Write errors to error.log
     new winston.transports.File({ 
-      filename: path.join(logDir, 'error.log'), 
-      level: 'error' 
+      filename: errorLogPath, 
+      level: 'error',
+      maxFiles: 5,
+      maxsize: 5242880 // 5MB
     }),
-    
-    // Write all logs to app.log
+    // Write all logs to combined.log
     new winston.transports.File({ 
-      filename: path.join(logDir, 'app.log') 
+      filename: combinedLogPath,
+      maxFiles: 5,
+      maxsize: 5242880 // 5MB
+    })
+  ],
+  exceptionHandlers: [
+    new winston.transports.File({ 
+      filename: path.join(logsDir, 'exceptions.log'),
+      maxFiles: 5,
+      maxsize: 5242880 // 5MB
+    })
+  ],
+  rejectionHandlers: [
+    new winston.transports.File({ 
+      filename: path.join(logsDir, 'rejections.log'),
+      maxFiles: 5,
+      maxsize: 5242880 // 5MB
     })
   ]
 });
 
-// Add console logging in development
+// Add console transport in non-production environments
 if (process.env.NODE_ENV !== 'production') {
   logger.add(new winston.transports.Console({
-    format: winston.format.combine(
-      winston.format.colorize(),
-      winston.format.simple()
+    format: combine(
+      colorize(),
+      timestamp(),
+      logFormat
     )
   }));
 }
