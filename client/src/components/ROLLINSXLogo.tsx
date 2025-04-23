@@ -49,29 +49,29 @@ const ROLLINSXLogo: React.FC<ROLLINSXLogoProps> = ({
         className="w-full h-full"
         aria-label="ROLLINSX Logo"
       >
-        {/* Main hexagon shape */}
+        {/* Main geometric shape */}
         <polygon 
           points="50,10 90,30 90,70 50,90 10,70 10,30" 
-          fill="url(#rollinsxGradient)" 
+          fill="#1E3A8A" /* Midnight Blue */
         />
         
-        {/* Letter E stylized */}
+        {/* Letter R stylized */}
         <path 
-          d="M35,30 H65 V38 H43 V46 H60 V54 H43 V62 H65 V70 H35 Z" 
-          fill="white" 
+          d="M30,30 H50 C60,30 70,35 70,45 C70,55 60,60 50,60 L55,70 H45 L40,60 H40 V70 H30 Z M40,40 V50 H50 C55,50 60,47.5 60,45 C60,42.5 55,40 50,40 Z" 
+          fill="#D4A017" /* Golden Amber */
         />
         
-        {/* Decorative dots representing digital/web elements */}
-        <circle cx="25" cy="30" r="3" fill="#00D1D1" />
-        <circle cx="75" cy="30" r="3" fill="#00D1D1" />
-        <circle cx="25" cy="70" r="3" fill="#00D1D1" />
-        <circle cx="75" cy="70" r="3" fill="#00D1D1" />
+        {/* Decorative elements */}
+        <circle cx="20" cy="25" r="3" fill="#60A5FA" /> {/* Sky Blue */}
+        <circle cx="80" cy="25" r="3" fill="#60A5FA" /> {/* Sky Blue */}
+        <circle cx="20" cy="75" r="3" fill="#60A5FA" /> {/* Sky Blue */}
+        <circle cx="80" cy="75" r="3" fill="#60A5FA" /> {/* Sky Blue */}
         
-        {/* Define gradient */}
+        {/* Define gradient for potential use */}
         <defs>
           <linearGradient id="rollinsxGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#3B5B9D" /> {/* slate-blue */}
-            <stop offset="100%" stopColor="#00D1D1" /> {/* electric-cyan */}
+            <stop offset="0%" stopColor="#1E3A8A" /> {/* Midnight Blue */}
+            <stop offset="100%" stopColor="#60A5FA" /> {/* Sky Blue */}
           </linearGradient>
         </defs>
       </svg>
