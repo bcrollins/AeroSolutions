@@ -7,36 +7,50 @@
 const express = require('express');
 const router = express.Router();
 const databaseController = require('../controllers/databaseController');
-
-// Auth middleware for admin-only routes
-const authMiddleware = require('../middlewares/auth');
-const adminOnly = authMiddleware.adminOnly;
+const limiter = require('../middlewares/rateLimiter');
 
 /**
- * GET /api/database/test
- * Test database connection
+ * @route   GET /api/database/test
+ * @desc    Test database connection
+ * @access  Public
  */
-router.get('/test', databaseController.testConnection);
+router.get(
+  '/test',
+  limiter.default,
+  databaseController.testConnection
+);
 
 /**
- * GET /api/database/tables
- * Get all tables
- * Admin only
+ * @route   GET /api/database/tables
+ * @desc    Get all tables
+ * @access  Admin
  */
-router.get('/tables', adminOnly, databaseController.getTables);
+router.get(
+  '/tables',
+  limiter.default,
+  databaseController.getTables
+);
 
 /**
- * GET /api/database/tables/:tableName
- * Get columns for specific table
- * Admin only
+ * @route   GET /api/database/tables/:table/columns
+ * @desc    Get columns for a specific table
+ * @access  Admin
  */
-router.get('/tables/:tableName', adminOnly, databaseController.getTableColumns);
+router.get(
+  '/tables/:table/columns',
+  limiter.default,
+  databaseController.getTableColumns
+);
 
 /**
- * GET /api/database/status
- * Get database status and statistics
- * Admin only
+ * @route   GET /api/database/status
+ * @desc    Get database status and statistics
+ * @access  Admin
  */
-router.get('/status', adminOnly, databaseController.getStatus);
+router.get(
+  '/status',
+  limiter.default,
+  databaseController.getStatus
+);
 
 module.exports = router;

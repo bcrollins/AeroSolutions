@@ -1,85 +1,235 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI-Powered Web Platform</title>
-    <link rel="stylesheet" href="/css/styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Platform</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
 </head>
 <body>
-    <header>
-        <nav class="main-nav">
-            <div class="container">
-                <div class="logo">
-                    <a href="/">AI-Powered Web Platform</a>
-                </div>
-                <ul class="nav-links">
-                    <li><a href="/">Home</a></li>
-                    <li><a href="/test">Test</a></li>
-                    <li><a href="/login">Login</a></li>
-                    <li><a href="/api/database/test">Test DB</a></li>
-                </ul>
-            </div>
-        </nav>
-    </header>
-
-    <main>
-        <section class="hero">
-            <div class="container">
-                <div class="hero-content">
-                    <h1>Welcome to AI-Powered Web Platform</h1>
-                    <p>A powerful platform for building intelligent, interactive applications with OpenAI integration.</p>
-                    <div class="hero-actions">
-                        <a href="/test" class="btn btn-primary">Try Demo</a>
-                        <a href="/login" class="btn btn-secondary">Sign In</a>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="features">
-            <div class="container">
-                <h2>Features</h2>
-                <div class="feature-grid">
-                    <div class="feature-card">
-                        <div class="feature-icon">🧠</div>
-                        <h3>OpenAI Integration</h3>
-                        <p>Leverage the power of OpenAI's API for intelligent content generation and analysis.</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">🔒</div>
-                        <h3>Secure Authentication</h3>
-                        <p>Keep your data safe with our robust authentication and authorization system.</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">📊</div>
-                        <h3>PostgreSQL Database</h3>
-                        <p>Reliable data storage with PostgreSQL database integration for your application.</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">⚡</div>
-                        <h3>Fast Performance</h3>
-                        <p>Optimized for speed and efficiency to deliver a seamless user experience.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="cta">
-            <div class="container">
-                <h2>Ready to get started?</h2>
-                <p>Join our platform today and experience the power of AI in your web applications.</p>
-                <a href="/register" class="btn btn-primary">Register Now</a>
-            </div>
-        </section>
-    </main>
-
-    <footer>
-        <div class="container">
-            <p>&copy; 2025 AI-Powered Web Platform. All rights reserved.</p>
+  <header>
+    <nav>
+      <div class="container">
+        <div class="logo">
+          <h1>API Platform</h1>
         </div>
-    </footer>
+        <ul class="nav-links">
+          <li><a href="/">Home</a></li>
+          <li><a href="/docs">Documentation</a></li>
+          <li><a href="/dashboard">Dashboard</a></li>
+          <li><a href="/contact">Contact</a></li>
+        </ul>
+        <div class="mobile-menu">
+          <i class="fas fa-bars"></i>
+        </div>
+      </div>
+    </nav>
+  </header>
 
-    <script src="/js/main.js"></script>
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <h1>Intelligent API Platform</h1>
+        <p>A powerful platform for AI-driven APIs with OpenAI integration and PostgreSQL database support.</p>
+        <div class="cta-buttons">
+          <a href="/api/openai/test" class="btn primary">Test OpenAI Connection</a>
+          <a href="/api/database/test" class="btn secondary">Test Database Connection</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features">
+    <div class="container">
+      <h2>Key Features</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <i class="fas fa-brain"></i>
+          <h3>OpenAI Integration</h3>
+          <p>Leverage OpenAI's powerful models for text generation, JSON creation, and image analysis.</p>
+        </div>
+        <div class="feature-card">
+          <i class="fas fa-database"></i>
+          <h3>PostgreSQL Support</h3>
+          <p>Robust database integration with efficient connection pooling and query optimization.</p>
+        </div>
+        <div class="feature-card">
+          <i class="fas fa-shield-alt"></i>
+          <h3>Advanced Security</h3>
+          <p>Comprehensive middleware with request validation, rate limiting, and error handling.</p>
+        </div>
+        <div class="feature-card">
+          <i class="fas fa-code"></i>
+          <h3>MVC Architecture</h3>
+          <p>Clean code organization with Model-View-Controller pattern for maintainability.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="api-documentation">
+    <div class="container">
+      <h2>API Endpoints</h2>
+      <div class="endpoint-list">
+        <div class="endpoint">
+          <h3><span class="method post">POST</span> /api/openai/text</h3>
+          <p>Generate text using OpenAI's GPT models</p>
+        </div>
+        <div class="endpoint">
+          <h3><span class="method post">POST</span> /api/openai/json</h3>
+          <p>Generate structured JSON data using OpenAI</p>
+        </div>
+        <div class="endpoint">
+          <h3><span class="method post">POST</span> /api/openai/image/analyze</h3>
+          <p>Analyze images using OpenAI's vision capabilities</p>
+        </div>
+        <div class="endpoint">
+          <h3><span class="method get">GET</span> /api/database/test</h3>
+          <p>Test the database connection status</p>
+        </div>
+        <div class="endpoint">
+          <h3><span class="method post">POST</span> /api/contact</h3>
+          <p>Submit contact form information</p>
+        </div>
+      </div>
+      <div class="docs-cta">
+        <a href="/docs" class="btn primary">View Full Documentation</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="contact-section">
+    <div class="container">
+      <h2>Contact Us</h2>
+      <div class="contact-content">
+        <div class="contact-form">
+          <form id="contactForm">
+            <div class="form-group">
+              <label for="name">Name</label>
+              <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+              <label for="subject">Subject</label>
+              <input type="text" id="subject" name="subject" required>
+            </div>
+            <div class="form-group">
+              <label for="message">Message</label>
+              <textarea id="message" name="message" rows="5" required></textarea>
+            </div>
+            <button type="submit" class="btn primary">Send Message</button>
+          </form>
+        </div>
+        <div class="contact-info">
+          <div class="info-item">
+            <i class="fas fa-envelope"></i>
+            <p>contact@example.com</p>
+          </div>
+          <div class="info-item">
+            <i class="fas fa-phone"></i>
+            <p>+1 (555) 123-4567</p>
+          </div>
+          <div class="info-item">
+            <i class="fas fa-map-marker-alt"></i>
+            <p>123 Main Street, San Francisco, CA 94105</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-logo">
+          <h2>API Platform</h2>
+          <p>Intelligent API solutions with OpenAI and PostgreSQL</p>
+        </div>
+        <div class="footer-links">
+          <div class="link-column">
+            <h3>Site Links</h3>
+            <ul>
+              <li><a href="/">Home</a></li>
+              <li><a href="/docs">Documentation</a></li>
+              <li><a href="/dashboard">Dashboard</a></li>
+              <li><a href="/contact">Contact</a></li>
+            </ul>
+          </div>
+          <div class="link-column">
+            <h3>API</h3>
+            <ul>
+              <li><a href="/docs/openai">OpenAI Endpoints</a></li>
+              <li><a href="/docs/database">Database Endpoints</a></li>
+              <li><a href="/docs/contact">Contact Endpoints</a></li>
+              <li><a href="/docs/authentication">Authentication</a></li>
+            </ul>
+          </div>
+          <div class="link-column">
+            <h3>Resources</h3>
+            <ul>
+              <li><a href="/docs/getting-started">Getting Started</a></li>
+              <li><a href="/docs/tutorials">Tutorials</a></li>
+              <li><a href="/blog">Blog</a></li>
+              <li><a href="/changelog">Changelog</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 API Platform. All rights reserved.</p>
+        <div class="social-links">
+          <a href="#"><i class="fab fa-github"></i></a>
+          <a href="#"><i class="fab fa-twitter"></i></a>
+          <a href="#"><i class="fab fa-linkedin"></i></a>
+          <a href="#"><i class="fab fa-youtube"></i></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/main.js"></script>
+  <script>
+    // Basic form handling
+    document.getElementById('contactForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const formData = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        subject: document.getElementById('subject').value,
+        message: document.getElementById('message').value
+      };
+      
+      try {
+        const response = await fetch('/api/contact', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          alert('Thank you for your message. We will contact you soon!');
+          this.reset();
+        } else {
+          alert('Failed to send message: ' + (result.error?.message || 'Unknown error'));
+        }
+      } catch (error) {
+        alert('An error occurred: ' + error.message);
+      }
+    });
+
+    // Mobile menu toggle
+    document.querySelector('.mobile-menu').addEventListener('click', function() {
+      document.querySelector('.nav-links').classList.toggle('active');
+    });
+  </script>
 </body>
 </html>

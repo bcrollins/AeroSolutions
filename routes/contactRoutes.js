@@ -5,75 +5,75 @@
  */
 
 const express = require('express');
-const { body } = require('express-validator');
-const contactController = require('../controllers/contactController');
 const router = express.Router();
-
-// Auth middleware for admin-only routes
-const authMiddleware = require('../middlewares/auth');
-const adminOnly = authMiddleware.adminOnly;
-
-// Middleware for rate limiting contact form submissions
-const rateLimiter = require('../middlewares/rateLimiter');
-const contactRateLimit = rateLimiter({
-  windowMs: 60 * 60 * 1000, // 1 hour window
-  max: 5, // limit each IP to 5 requests per window
-  message: {
-    success: false,
-    message: 'Too many contact submissions, please try again later'
-  },
-  standardHeaders: true,
-  legacyHeaders: false
-});
+const contactController = require('../controllers/contactController');
+const limiter = require('../middlewares/rateLimiter');
 
 /**
- * POST /api/contact
- * Submit a contact form
+ * @route   POST /api/contact
+ * @desc    Submit a contact form
+ * @access  Public
  */
-router.post('/', 
-  contactRateLimit,
-  [
-    body('name').notEmpty().withMessage('Name is required')
-      .isLength({ min: 2, max: 100 }).withMessage('Name must be between 2 and 100 characters'),
-    body('email').notEmpty().withMessage('Email is required')
-      .isEmail().withMessage('Email must be valid'),
-    body('subject').optional()
-      .isLength({ max: 200 }).withMessage('Subject cannot exceed 200 characters'),
-    body('message').notEmpty().withMessage('Message is required')
-      .isLength({ min: 10, max: 5000 }).withMessage('Message must be between 10 and 5000 characters')
-  ],
+router.post(
+  '/',
+  limiter.default,
+  contactController.contactValidationRules,
   contactController.submitContact
 );
 
 /**
- * GET /api/contact
- * Get all contact submissions (admin only)
+ * @route   GET /api/contact
+ * @desc    Get all contact submissions
+ * @access  Admin
  */
-router.get('/', adminOnly, contactController.getAllContacts);
+router.get(
+  '/',
+  limiter.default,
+  contactController.getAllContacts
+);
 
 /**
- * GET /api/contact/:id
- * Get a single contact submission by ID (admin only)
+ * @route   GET /api/contact/counts
+ * @desc    Get contact counts by status
+ * @access  Admin
  */
-router.get('/:id', adminOnly, contactController.getContactById);
+router.get(
+  '/counts',
+  limiter.default,
+  contactController.getContactCounts
+);
 
 /**
- * PATCH /api/contact/:id/status
- * Update a contact submission's status (admin only)
+ * @route   GET /api/contact/:id
+ * @desc    Get a contact submission by ID
+ * @access  Admin
  */
-router.patch('/:id/status', 
-  adminOnly,
-  [
-    body('status').notEmpty().withMessage('Status is required')
-      .isIn(['new', 'in_progress', 'completed', 'spam']).withMessage('Invalid status value')
-  ],
+router.get(
+  '/:id',
+  limiter.default,
+  contactController.getContactById
+);
+
+/**
+ * @route   PATCH /api/contact/:id/status
+ * @desc    Update a contact submission's status
+ * @access  Admin
+ */
+router.patch(
+  '/:id/status',
+  limiter.default,
   contactController.updateContactStatus
 );
 
 /**
- * DELETE /api/contact/:id
- * Delete a contact submission (admin only)
+ * @route   DELETE /api/contact/:id
+ * @desc    Delete a contact submission
+ * @access  Admin
  */
-router.delete('/:id', adminOnly, contactController.deleteContact);
+router.delete(
+  '/:id',
+  limiter.default,
+  contactController.deleteContact
+);
 
 module.exports = router;
