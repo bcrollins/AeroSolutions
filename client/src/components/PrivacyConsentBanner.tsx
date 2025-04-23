@@ -47,7 +47,7 @@ export default function PrivacyConsentBanner({ onAccept, onDecline }: PrivacyCon
           <div className="flex-1 pr-4 mb-4 md:mb-0">
             <h3 className="text-lg font-semibold mb-2">Privacy & Cookies Notice</h3>
             <p className="text-sm text-blue-100 mb-2">
-              Aero Solutions uses cookies and similar technologies to enhance your experience, analyze traffic, and personalize content.
+              ROLLINSX uses cookies and similar technologies to enhance your experience, analyze traffic, and personalize content.
               By continuing to use our website, you consent to our use of cookies in accordance with our Privacy Policy.
             </p>
             <p className="text-xs text-blue-200">

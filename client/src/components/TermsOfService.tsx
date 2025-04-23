@@ -7,7 +7,7 @@ export default function TermsOfService() {
       
       <div className="prose prose-blue max-w-none">
         <p className="text-lg text-gray-700 mb-8">
-          Welcome to Aero Solutions. These Terms of Service ("Terms") govern your use of our website, products, and services. By accessing or using our services, you agree to be bound by these Terms.
+          Welcome to ROLLINSX. These Terms of Service ("Terms") govern your use of our website, products, and services. By accessing or using our services, you agree to be bound by these Terms.
         </p>
         
         <Separator className="my-8" />

@@ -7,7 +7,7 @@ export default function PrivacyPolicy() {
       
       <div className="prose prose-blue max-w-none">
         <p className="text-lg text-gray-700 mb-8">
-          At Aero Solutions, we prioritize your privacy and are committed to protecting your personal data.
+          At ROLLINSX, we prioritize your privacy and are committed to protecting your personal data.
           This Privacy Policy explains how we collect, use, protect, and share information when you use our services or visit our website.
         </p>
         
@@ -57,7 +57,7 @@ export default function PrivacyPolicy() {
         <section className="mb-10">
           <h2 className="text-2xl font-semibold text-blue-800 mb-4">Your Data Protection Rights Under GDPR</h2>
           <p className="mb-4">
-            If you are a resident of the European Economic Area (EEA), you have certain data protection rights. Aero Solutions aims to take reasonable steps to allow you to correct, amend, delete, or limit the use of your Personal Data.
+            If you are a resident of the European Economic Area (EEA), you have certain data protection rights. ROLLINSX aims to take reasonable steps to allow you to correct, amend, delete, or limit the use of your Personal Data.
           </p>
           <p className="mb-4">You have the following data protection rights:</p>
           <ul className="list-disc pl-6 mb-4">
@@ -105,9 +105,9 @@ export default function PrivacyPolicy() {
             If you have any questions about this Privacy Policy, please contact us:
           </p>
           <ul className="list-disc pl-6 mb-4">
-            <li className="mb-2">By email: privacy@aerosolutions.com</li>
+            <li className="mb-2">By email: privacy@rollinsx.com</li>
             <li className="mb-2">By phone: +1 (555) 123-4567</li>
-            <li className="mb-2">By mail: 123 Aviation Way, Suite 500, Skyport, CA 94000, USA</li>
+            <li className="mb-2">By mail: 123 Business Plaza, Suite 500, Webville, CA 94000, USA</li>
           </ul>
         </section>
         
