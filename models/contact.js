@@ -1,204 +1,214 @@
 /**
  * Contact Model
  * 
- * Handles contact form submissions and related database operations
+ * Handles contact form submissions and related operations
  */
 
-const { pool } = require('../config/database');
+const { query } = require('../config/database');
 
-class Contact {
-  /**
-   * Create a new contact form submission
-   * @param {Object} contactData - Contact form data
-   * @param {string} contactData.name - Name of the person submitting the form
-   * @param {string} contactData.email - Email of the person submitting the form
-   * @param {string} contactData.subject - Subject of the contact message
-   * @param {string} contactData.message - Content of the contact message
-   * @returns {Promise<Object>} - Created contact object
-   */
-  static async create({ name, email, subject, message }) {
-    try {
-      // Validate required fields
-      if (!name || !email || !subject || !message) {
-        throw new Error('All fields are required');
-      }
-      
-      // Insert new contact
-      const result = await pool.query(
-        `INSERT INTO contacts (name, email, subject, message, status, created_at) 
-         VALUES ($1, $2, $3, $4, 'pending', NOW()) 
-         RETURNING *`,
-        [name, email, subject, message]
-      );
-      
-      return result.rows[0];
-    } catch (error) {
-      console.error('Error creating contact submission:', error);
-      throw error;
-    }
+/**
+ * Submit a new contact form
+ * @param {Object} contactData - Contact form data
+ * @param {string} contactData.name - Submitter's name
+ * @param {string} contactData.email - Submitter's email
+ * @param {string} contactData.subject - Message subject
+ * @param {string} contactData.message - Message content
+ * @returns {Promise<Object>} - Submitted contact data with ID
+ */
+const submit = async (contactData) => {
+  try {
+    const result = await query(
+      `INSERT INTO contact_submissions (name, email, subject, message, status, created_at, updated_at) 
+       VALUES ($1, $2, $3, $4, 'new', NOW(), NOW()) 
+       RETURNING id, name, email, subject, message, status, created_at`,
+      [
+        contactData.name,
+        contactData.email,
+        contactData.subject || '',
+        contactData.message
+      ]
+    );
+    
+    return result.rows[0];
+  } catch (error) {
+    console.error('Error in contact.submit:', error);
+    throw new Error(`Failed to submit contact form: ${error.message}`);
   }
-  
-  /**
-   * Get a contact submission by ID
-   * @param {number} id - Contact ID
-   * @returns {Promise<Object|null>} - Contact object or null if not found
-   */
-  static async findById(id) {
-    try {
-      const result = await pool.query(
-        'SELECT * FROM contacts WHERE id = $1',
-        [id]
-      );
-      
-      return result.rows[0] || null;
-    } catch (error) {
-      console.error('Error finding contact by ID:', error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Update a contact submission's status
-   * @param {number} id - Contact ID
-   * @param {string} status - New status ('pending', 'in_progress', 'completed', 'archived')
-   * @param {string} [notes] - Optional notes to add
-   * @returns {Promise<Object>} - Updated contact object
-   */
-  static async updateStatus(id, status, notes) {
-    try {
-      // Validate status
-      const validStatuses = ['pending', 'in_progress', 'completed', 'archived'];
-      if (!validStatuses.includes(status)) {
-        throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
-      }
-      
-      let query, params;
-      
-      if (notes) {
-        query = `
-          UPDATE contacts
-          SET status = $1, notes = $2, updated_at = NOW()
-          WHERE id = $3
-          RETURNING *
-        `;
-        params = [status, notes, id];
-      } else {
-        query = `
-          UPDATE contacts
-          SET status = $1, updated_at = NOW()
-          WHERE id = $2
-          RETURNING *
-        `;
-        params = [status, id];
-      }
-      
-      const result = await pool.query(query, params);
-      
-      if (result.rows.length === 0) {
-        throw new Error('Contact not found');
-      }
-      
-      return result.rows[0];
-    } catch (error) {
-      console.error('Error updating contact status:', error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Get all contact submissions
-   * @param {Object} options - Query options
-   * @param {string} [options.status] - Filter by status
-   * @param {string} [options.sortBy='created_at'] - Field to sort by
-   * @param {string} [options.sortOrder='DESC'] - Sort order ('ASC' or 'DESC')
-   * @param {number} [options.limit=100] - Maximum number of contacts to return
-   * @param {number} [options.offset=0] - Number of contacts to skip
-   * @returns {Promise<Array>} - Array of contact objects
-   */
-  static async getAll({ status, sortBy = 'created_at', sortOrder = 'DESC', limit = 100, offset = 0 }) {
-    try {
-      // Build query with optional status filter
-      let query = 'SELECT * FROM contacts';
-      const params = [];
-      
-      if (status) {
-        query += ' WHERE status = $1';
-        params.push(status);
-      }
-      
-      // Add sorting (with basic SQL injection protection)
-      const validSortFields = ['created_at', 'name', 'email', 'subject', 'status', 'updated_at'];
-      const validSortOrders = ['ASC', 'DESC'];
-      
-      if (!validSortFields.includes(sortBy)) {
-        sortBy = 'created_at';
-      }
-      
-      if (!validSortOrders.includes(sortOrder)) {
-        sortOrder = 'DESC';
-      }
-      
-      query += ` ORDER BY ${sortBy} ${sortOrder}`;
-      
-      // Add pagination
-      query += ' LIMIT $' + (params.length + 1) + ' OFFSET $' + (params.length + 2);
-      params.push(limit, offset);
-      
-      const result = await pool.query(query, params);
-      
-      return result.rows;
-    } catch (error) {
-      console.error('Error getting contact submissions:', error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Count total contact submissions
-   * @param {string} [status] - Optional status to filter by
-   * @returns {Promise<number>} - Total count of contacts
-   */
-  static async count(status) {
-    try {
-      let query = 'SELECT COUNT(*) as count FROM contacts';
-      const params = [];
-      
-      if (status) {
-        query += ' WHERE status = $1';
-        params.push(status);
-      }
-      
-      const result = await pool.query(query, params);
-      
-      return parseInt(result.rows[0].count);
-    } catch (error) {
-      console.error('Error counting contact submissions:', error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Delete a contact submission
-   * @param {number} id - Contact ID
-   * @returns {Promise<boolean>} - True if deletion successful
-   */
-  static async delete(id) {
-    try {
-      const result = await pool.query(
-        'DELETE FROM contacts WHERE id = $1 RETURNING id',
-        [id]
-      );
-      
-      if (result.rows.length === 0) {
-        throw new Error('Contact not found');
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Error deleting contact:', error);
-      throw error;
-    }
-  }
-}
+};
 
-module.exports = Contact;
+/**
+ * Get all contact submissions (for admin)
+ * @param {Object} options - Query options
+ * @param {number} [options.limit=100] - Maximum number of submissions to return
+ * @param {number} [options.offset=0] - Offset for pagination
+ * @param {string} [options.status] - Filter by status
+ * @param {string} [options.sortBy='created_at'] - Sort field
+ * @param {string} [options.sortOrder='DESC'] - Sort direction
+ * @returns {Promise<Array>} - Array of contact submissions
+ */
+const findAll = async (options = {}) => {
+  try {
+    // Set defaults
+    const limit = options.limit || 100;
+    const offset = options.offset || 0;
+    const sortBy = options.sortBy || 'created_at';
+    const sortOrder = options.sortOrder || 'DESC';
+    
+    // Validate sort field to prevent SQL injection
+    const allowedSortFields = ['id', 'name', 'email', 'subject', 'status', 'created_at', 'updated_at'];
+    if (!allowedSortFields.includes(sortBy)) {
+      throw new Error('Invalid sort field');
+    }
+    
+    // Validate sort order to prevent SQL injection
+    if (!['ASC', 'DESC'].includes(sortOrder)) {
+      throw new Error('Invalid sort order');
+    }
+    
+    // Build query
+    let queryText = `
+      SELECT id, name, email, subject, message, status, created_at, updated_at 
+      FROM contact_submissions
+    `;
+    
+    const queryParams = [];
+    let paramCounter = 1;
+    
+    // Add status filter if provided
+    if (options.status) {
+      queryText += ` WHERE status = $${paramCounter++}`;
+      queryParams.push(options.status);
+    }
+    
+    // Add sorting and pagination
+    queryText += ` ORDER BY ${sortBy} ${sortOrder} LIMIT $${paramCounter++} OFFSET $${paramCounter++}`;
+    queryParams.push(limit, offset);
+    
+    // Execute query
+    const result = await query(queryText, queryParams);
+    
+    return result.rows;
+  } catch (error) {
+    console.error('Error in contact.findAll:', error);
+    throw new Error(`Failed to retrieve contact submissions: ${error.message}`);
+  }
+};
+
+/**
+ * Get a single contact submission by ID
+ * @param {number} id - Contact submission ID
+ * @returns {Promise<Object|null>} - Contact submission or null if not found
+ */
+const findById = async (id) => {
+  try {
+    const result = await query(
+      `SELECT id, name, email, subject, message, status, created_at, updated_at 
+       FROM contact_submissions 
+       WHERE id = $1`,
+      [id]
+    );
+    
+    if (result.rows.length === 0) {
+      return null;
+    }
+    
+    return result.rows[0];
+  } catch (error) {
+    console.error('Error in contact.findById:', error);
+    throw new Error(`Failed to retrieve contact submission: ${error.message}`);
+  }
+};
+
+/**
+ * Update contact submission status
+ * @param {number} id - Contact submission ID
+ * @param {string} status - New status value
+ * @returns {Promise<Object>} - Updated contact submission
+ */
+const updateStatus = async (id, status) => {
+  try {
+    // Validate status
+    const validStatuses = ['new', 'in_progress', 'completed', 'spam'];
+    if (!validStatuses.includes(status)) {
+      throw new Error('Invalid status');
+    }
+    
+    const result = await query(
+      `UPDATE contact_submissions 
+       SET status = $1, updated_at = NOW() 
+       WHERE id = $2 
+       RETURNING id, name, email, subject, message, status, created_at, updated_at`,
+      [status, id]
+    );
+    
+    if (result.rows.length === 0) {
+      throw new Error('Contact submission not found');
+    }
+    
+    return result.rows[0];
+  } catch (error) {
+    console.error('Error in contact.updateStatus:', error);
+    throw new Error(`Failed to update contact status: ${error.message}`);
+  }
+};
+
+/**
+ * Delete a contact submission
+ * @param {number} id - Contact submission ID
+ * @returns {Promise<boolean>} - Success indicator
+ */
+const remove = async (id) => {
+  try {
+    const result = await query(
+      'DELETE FROM contact_submissions WHERE id = $1 RETURNING id',
+      [id]
+    );
+    
+    return result.rows.length > 0;
+  } catch (error) {
+    console.error('Error in contact.remove:', error);
+    throw new Error(`Failed to delete contact submission: ${error.message}`);
+  }
+};
+
+/**
+ * Get count of contact submissions by status
+ * @returns {Promise<Object>} - Counts by status
+ */
+const getCounts = async () => {
+  try {
+    const result = await query(`
+      SELECT status, COUNT(*) as count
+      FROM contact_submissions
+      GROUP BY status
+    `);
+    
+    // Convert to object with status as keys
+    const counts = {
+      total: 0,
+      new: 0,
+      in_progress: 0,
+      completed: 0,
+      spam: 0
+    };
+    
+    result.rows.forEach(row => {
+      counts[row.status] = parseInt(row.count);
+      counts.total += parseInt(row.count);
+    });
+    
+    return counts;
+  } catch (error) {
+    console.error('Error in contact.getCounts:', error);
+    throw new Error(`Failed to get contact counts: ${error.message}`);
+  }
+};
+
+module.exports = {
+  submit,
+  findAll,
+  findById,
+  updateStatus,
+  remove,
+  getCounts
+};

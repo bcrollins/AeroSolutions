@@ -7,8 +7,8 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
-// JWT secret key (should be in environment variables)
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+// JWT secret from environment variables
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_should_be_in_env_variables';
 
 /**
  * Middleware to authenticate users via JWT
@@ -18,53 +18,53 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
  */
 const authMiddleware = async (req, res, next) => {
   try {
+    // Get token from authorization header
     const authHeader = req.headers.authorization;
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
         success: false,
-        message: 'No authentication token provided'
+        message: 'Authentication required. Token missing or invalid'
       });
     }
     
     const token = authHeader.split(' ')[1];
     
-    if (!token) {
+    // Verify the token
+    const decoded = jwt.verify(token, JWT_SECRET);
+    
+    // Find the user
+    const user = await User.findById(decoded.id);
+    
+    if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'No authentication token provided'
+        message: 'User not found'
       });
     }
     
-    try {
-      // Verify token
-      const decoded = jwt.verify(token, JWT_SECRET);
-      
-      // Get user from database (excluding password)
-      const user = await User.findById(decoded.userId);
-      
-      if (!user) {
-        return res.status(401).json({
-          success: false,
-          message: 'User not found'
-        });
-      }
-      
-      // Add user to request
-      req.user = user;
-      next();
-    } catch (error) {
-      console.error('JWT verification error:', error);
+    // Attach user to request object
+    req.user = user;
+    
+    next();
+  } catch (error) {
+    if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({
         success: false,
-        message: 'Invalid or expired token'
+        message: 'Invalid token'
+      });
+    } else if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Token expired'
       });
     }
-  } catch (error) {
-    console.error('Authentication error:', error);
+    
+    console.error('Auth middleware error:', error);
     return res.status(500).json({
       success: false,
-      message: 'Authentication error'
+      message: 'Authentication error',
+      error: error.message
     });
   }
 };
@@ -76,15 +76,7 @@ const authMiddleware = async (req, res, next) => {
  * @param {Function} next - Express next function
  */
 const adminMiddleware = (req, res, next) => {
-  // User should be set by the authMiddleware
-  if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      message: 'Authentication required'
-    });
-  }
-  
-  if (req.user.role !== 'admin') {
+  if (!req.user || req.user.role !== 'admin') {
     return res.status(403).json({
       success: false,
       message: 'Admin access required'
@@ -103,45 +95,51 @@ const adminMiddleware = (req, res, next) => {
  */
 const optionalAuthMiddleware = async (req, res, next) => {
   try {
+    // Get token from authorization header
     const authHeader = req.headers.authorization;
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return next(); // No token, continue
+      return next();
     }
     
     const token = authHeader.split(' ')[1];
     
-    if (!token) {
-      return next(); // No token, continue
+    // Verify the token
+    const decoded = jwt.verify(token, JWT_SECRET);
+    
+    // Find the user
+    const user = await User.findById(decoded.id);
+    
+    if (user) {
+      // Attach user to request object
+      req.user = user;
     }
     
-    try {
-      // Verify token
-      const decoded = jwt.verify(token, JWT_SECRET);
-      
-      // Get user from database (excluding password)
-      const user = await User.findById(decoded.userId);
-      
-      if (user) {
-        // Add user to request if found
-        req.user = user;
-      }
-      
-      next();
-    } catch (error) {
-      // Token invalid but we still continue as this is optional auth
-      console.error('JWT verification error in optional auth:', error);
-      next();
-    }
+    next();
   } catch (error) {
-    console.error('Optional authentication error:', error);
+    // Continue without authentication if token is invalid
     next();
   }
 };
 
-// Generate JWT token for a user
-const generateToken = (userId) => {
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '24h' });
+/**
+ * Generate a JWT token for a user
+ * @param {Object} user - User object
+ * @param {string} expiresIn - Token expiration time (e.g., '1h', '7d')
+ * @returns {string} - JWT token
+ */
+const generateToken = (user, expiresIn = '7d') => {
+  return jwt.sign(
+    { 
+      id: user.id, 
+      username: user.username,
+      role: user.role
+    },
+    JWT_SECRET,
+    {
+      expiresIn
+    }
+  );
 };
 
 module.exports = {

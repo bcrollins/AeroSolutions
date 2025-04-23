@@ -1,27 +1,34 @@
 /**
  * Rate Limiter Middleware
  * 
- * Provides different rate limiting strategies for various API endpoints
+ * Handles rate limiting for various API endpoints
  */
 
 const rateLimit = require('express-rate-limit');
 
-// General purpose rate limiter for most API routes
-const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+// Common settings
+const standardSettings = {
+  standardWindow: 15 * 60 * 1000, // 15 minutes window (in milliseconds)
+  standardMax: 100, // 100 requests per window
+  message: 'Too many requests, please try again later.'
+};
+
+// General API rate limiter
+const apiLimiter = rateLimit({
+  windowMs: standardSettings.standardWindow,
+  max: standardSettings.standardMax,
+  standardHeaders: true,
+  legacyHeaders: false,
   message: {
     success: false,
-    message: 'Too many requests, please try again later.'
+    message: standardSettings.message
   }
 });
 
-// Stricter rate limiter for authentication routes
+// Authentication rate limiter (more restrictive to prevent brute force)
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // limit each IP to 10 auth requests per windowMs
+  windowMs: 60 * 60 * 1000, // 1 hour window
+  max: 10, // 10 requests per hour
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -30,32 +37,32 @@ const authLimiter = rateLimit({
   }
 });
 
-// Rate limiter for OpenAI API routes (more expensive operations)
+// OpenAI API rate limiter (to avoid excessive token usage)
 const openaiLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 60, // limit each IP to 60 openai requests per hour
+  windowMs: 60 * 60 * 1000, // 1 hour window
+  max: 50, // 50 requests per hour
   standardHeaders: true,
   legacyHeaders: false,
   message: {
     success: false,
-    message: 'OpenAI API rate limit exceeded. Please try again later.'
+    message: 'OpenAI request limit reached, please try again later.'
   }
 });
 
-// Rate limiter for admin routes
+// Special admin-only endpoints rate limiter
 const adminLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // limit each IP to 200 admin requests per windowMs
+  windowMs: standardSettings.standardWindow,
+  max: 200, // Higher limit for admin operations
   standardHeaders: true,
   legacyHeaders: false,
   message: {
     success: false,
-    message: 'Admin API rate limit exceeded. Please try again later.'
+    message: standardSettings.message
   }
 });
 
 module.exports = {
-  general: generalLimiter,
+  api: apiLimiter,
   auth: authLimiter,
   openai: openaiLimiter,
   admin: adminLimiter
