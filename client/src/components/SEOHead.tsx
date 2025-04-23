@@ -102,7 +102,7 @@ const SEOHead: React.FC<SEOHeadProps> = ({
       setMetaTag('og:image:width', ogImageWidth, true);
       setMetaTag('og:image:height', ogImageHeight, true);
     }
-    setMetaTag('og:site_name', 'Aero Solutions', true);
+    setMetaTag('og:site_name', 'ROLLINSX', true);
     
     // Set Twitter meta tags
     setMetaTag('twitter:card', twitterCard, true);

@@ -10,10 +10,10 @@ const StructuredData: React.FC<StructuredDataProps> = ({ type, data }) => {
   const organizationData = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    "name": "Aero Solutions",
-    "alternateName": "AeroSolutions",
-    "url": "https://aerosolutions.dev",
-    "logo": "https://aerosolutions.dev/logo.png",
+    "name": "ROLLINSX",
+    "alternateName": "ROLLINSX",
+    "url": "https://rollinsx.dev",
+    "logo": "https://rollinsx.dev/logo.png",
     "contactPoint": {
       "@type": "ContactPoint",
       "telephone": "+1-303-555-0122",
@@ -22,9 +22,9 @@ const StructuredData: React.FC<StructuredDataProps> = ({ type, data }) => {
       "availableLanguage": ["English"]
     },
     "sameAs": [
-      "https://www.facebook.com/aerosolutions",
-      "https://www.linkedin.com/company/aerosolutions",
-      "https://twitter.com/aerosolutions"
+      "https://www.facebook.com/rollinsx",
+      "https://www.linkedin.com/company/rollinsx-dev",
+      "https://twitter.com/rollinsx"
     ]
   };
 
@@ -32,11 +32,11 @@ const StructuredData: React.FC<StructuredDataProps> = ({ type, data }) => {
   const websiteData = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": "Aero Solutions",
-    "url": "https://aerosolutions.dev",
+    "name": "ROLLINSX",
+    "url": "https://rollinsx.dev",
     "potentialAction": {
       "@type": "SearchAction",
-      "target": "https://aerosolutions.dev/search?q={search_term_string}",
+      "target": "https://rollinsx.dev/search?q={search_term_string}",
       "query-input": "required name=search_term_string"
     }
   };
