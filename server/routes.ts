@@ -34,8 +34,8 @@ import twitterRouter from './routes/twitter';
 import retentionRouter from './routes/retention';
 import landingPagesRouter from './routes/landing-pages';
 import checkoutOptimizationRouter from './routes/checkout-optimization';
-// Using only the new structured router from the elevatebot folder
-import elevateBotRouter from './routes/elevatebot/index';
+// Using only the new structured router from the rollinsxbot folder
+import rollinsxBotRouter from './routes/rollinsxbot/index';
 import emailCampaignsRouter from './routes/email-campaigns';
 import emailRouter from './routes/email';
 import contentProtectionRouter from './routes/content-protection';
@@ -205,7 +205,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/feedback', feedbackAnalysisRouter);
   app.use('/api/mockups', mockupsRouter);
   // Only use the new structured router system
-  app.use('/api/elevatebot', elevateBotRouter);
+  app.use('/api/rollinsx', rollinsxBotRouter);
   app.use('/api/email-campaigns', emailCampaignsRouter);
   app.use('/api/content', contentProtectionRouter);
   app.use('/api/compliance', complianceRouter);

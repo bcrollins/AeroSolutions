@@ -54,7 +54,7 @@ import CheckoutOptimizationPage from "@/pages/CheckoutOptimizationPage";
 import PriceOptimizationPage from "@/pages/PriceOptimizationPage";
 import BugMonitoringPage from "@/pages/BugMonitoringPage";
 import BrandConsistencyPage from "@/pages/BrandConsistencyPage";
-import TestElevateBot from "@/pages/TestElevateBot";
+import TestROLLINSXBot from "@/pages/TestROLLINSXBot";
 import ParticleBackgroundDemo from "@/pages/ParticleBackgroundDemo";
 
 export default function App() {
@@ -718,17 +718,17 @@ export default function App() {
             </>
           )}
         </Route>
-        <Route path="/test-elevatebot">
+        <Route path="/test-rollinsx">
           {() => (
             <>
               <Helmet>
-                <title>Test ElevateBot | ROLLINSX</title>
-                <meta name="description" content="Testing page for ElevateBot integration." />
+                <title>Test ROLLINSXBot | ROLLINSX</title>
+                <meta name="description" content="Testing page for ROLLINSXBot integration." />
                 <meta name="robots" content="noindex, nofollow" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
-              <TestElevateBot />
+              <TestROLLINSXBot />
             </>
           )}
         </Route>

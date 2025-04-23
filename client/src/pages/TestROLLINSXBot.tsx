@@ -3,18 +3,18 @@ import ROLLINSXBot from "@/components/ROLLINSXBot";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function TestElevateBot() {
+export default function TestROLLINSXBot() {
   const [isOpen, setIsOpen] = useState(false);
   const [initialOption, setInitialOption] = useState<string | null>(null);
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6 text-[#3B5B9D]">ElevateBot Testing</h1>
+      <h1 className="text-3xl font-bold mb-6 text-[#3B5B9D]">ROLLINSXBot Testing</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <Card>
           <CardHeader>
-            <CardTitle>Open ElevateBot</CardTitle>
+            <CardTitle>Open ROLLINSXBot</CardTitle>
             <CardDescription>Test basic open/close functionality</CardDescription>
           </CardHeader>
           <CardContent>
@@ -25,14 +25,14 @@ export default function TestElevateBot() {
               }}
               className="bg-[#3B5B9D] hover:bg-[#2A4A8C]"
             >
-              Open ElevateBot
+              Open ROLLINSXBot
             </Button>
             <Button 
               onClick={() => setIsOpen(false)}
               variant="outline"
               className="ml-2"
             >
-              Close ElevateBot
+              Close ROLLINSXBot
             </Button>
           </CardContent>
         </Card>
@@ -92,7 +92,7 @@ export default function TestElevateBot() {
         </CardHeader>
         <CardContent>
           <ol className="list-decimal ml-4 space-y-2">
-            <li>Click "Open ElevateBot" to test the basic chat interface</li>
+            <li>Click "Open ROLLINSXBot" to test the basic chat interface</li>
             <li>Try selecting different topics from the chat options</li>
             <li>Test sending custom messages and check the responses</li>
             <li>Use the buttons above to test opening the bot with specific preset topics</li>
