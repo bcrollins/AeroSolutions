@@ -1,134 +1,160 @@
 /**
- * Main Express Server Application
+ * Main Server Application
  * 
- * This is the main entry point for the API Platform.
- * It configures the Express server with middleware, routes,
- * and error handling for a robust API service.
+ * This file configures and starts the Express server.
+ * It implements the MVC pattern and incorporates middleware,
+ * routes, and error handling.
  */
 
-// Load environment variables
+// Environment variables and core imports
 require('dotenv').config();
-
-// Core dependencies
 const express = require('express');
-const helmet = require('helmet');
-const compression = require('express-compression');
-const cors = require('cors');
 const path = require('path');
+const compression = require('express-compression');
+const helmet = require('helmet');
+const cors = require('cors');
 
-// Internal modules
+// Import middleware
+const requestLogger = require('./middlewares/requestLogger');
+const { errorHandler, notFoundHandler } = require('./middlewares/errorHandler');
+
+// Import route handlers
+const apiRoutes = require('./routes/index');
+
+// Import configuration
 const logger = require('./config/logger');
 const db = require('./config/database');
-const apiRoutes = require('./routes');
-const { notFoundHandler, errorHandler } = require('./middlewares/errorHandler');
-const requestLogger = require('./middlewares/requestLogger');
 
-// Create Express app
+// Import Vite if not in production
+const isProduction = process.env.NODE_ENV === 'production';
+let vite;
+if (!isProduction) {
+  vite = require('./server/vite');
+}
+
+// Create Express application
 const app = express();
 
-// Set server port
+// Configure application port
 const PORT = process.env.PORT || 8080;
-const HOST = process.env.HOST || '0.0.0.0';
+const HOST = process.env.HOST || '0.0.0.0';  // Listen on all interfaces
 
-// Basic security middleware
+// Initialize database tables
+db.initDatabase()
+  .then(() => {
+    logger.info('Database initialized successfully');
+  })
+  .catch((error) => {
+    logger.error('Database initialization failed', {
+      error: error.message,
+      stack: error.stack
+    });
+    
+    // Continue starting the server even if database init fails
+    // Individual routes requiring the database will fail gracefully
+  });
+
+// Security middleware
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-      fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-      imgSrc: ["'self'", 'data:', 'https:'],
-      connectSrc: ["'self'", 'https://api.openai.com']
-    }
-  }
+  contentSecurityPolicy: false  // Disabled to allow Vite in development
 }));
-
-// Enable CORS
 app.use(cors());
 
-// Parse JSON and URL-encoded data
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Enable compression
+// Request handling middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(compression());
 
 // Request logging
 app.use(requestLogger);
 
-// Static files
-app.use(express.static(path.join(__dirname, 'public')));
-
-// API routes
+// Mount API routes
 app.use('/api', apiRoutes);
 
-// Landing page route
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+// For development, use Vite middleware
+if (!isProduction && vite) {
+  app.use(vite);
+} else {
+  // For production, serve static files from client/dist
+  app.use(express.static(path.join(__dirname, 'client/dist')));
+  
+  // Serve index.html for all non-API routes (client-side routing)
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(path.join(__dirname, 'client/dist/index.html'));
+    }
+  });
+}
 
-// Catch-all for unhandled routes
+// Error handling middleware - must be after all routes
 app.use(notFoundHandler);
-
-// Error handling middleware
 app.use(errorHandler);
 
 /**
  * Start the server
  */
 function startServer() {
-  // Test database connection
-  db.query('SELECT NOW()')
-    .then(() => {
-      logger.info('Database connection successful');
+  // Start the server
+  const server = app.listen(PORT, HOST, () => {
+    logger.info(`Server running at http://${HOST}:${PORT}`);
+  });
+  
+  // Handle server errors
+  server.on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+      logger.error(`Port ${PORT} is already in use. Please choose a different port.`);
+    } else {
+      logger.error('Server error', {
+        error: error.message,
+        stack: error.stack
+      });
+    }
+    process.exit(1);
+  });
+  
+  // Graceful shutdown
+  process.on('SIGTERM', gracefulShutdown);
+  process.on('SIGINT', gracefulShutdown);
+  
+  function gracefulShutdown() {
+    logger.info('Received shutdown signal, closing server...');
+    
+    // Close the HTTP server
+    server.close(() => {
+      logger.info('HTTP server closed');
       
-      // Start the server
-      app.listen(PORT, HOST, () => {
-        logger.info(`Server started on ${HOST}:${PORT}`);
-        logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
-      });
-    })
-    .catch(err => {
-      logger.error('Failed to connect to database', { 
-        error: err.message,
-        stack: err.stack
-      });
-      // Start server even if DB connection fails
-      app.listen(PORT, HOST, () => {
-        logger.warn(`Server started on ${HOST}:${PORT} without database connection`);
-      });
+      // Close database connections
+      db.end()
+        .then(() => {
+          logger.info('Database connections closed');
+          process.exit(0);
+        })
+        .catch((err) => {
+          logger.error('Error closing database connections', {
+            error: err.message,
+            stack: err.stack
+          });
+          process.exit(1);
+        });
     });
+    
+    // Force close if graceful shutdown takes too long
+    setTimeout(() => {
+      logger.error('Forced shutdown after timeout');
+      process.exit(1);
+    }, 10000);
+  }
+  
+  return server;
 }
 
-// Handle graceful shutdown
-process.on('SIGTERM', () => {
-  logger.info('SIGTERM signal received, shutting down gracefully');
-  db.end()
-    .then(() => {
-      logger.info('Database connection closed');
-      process.exit(0);
-    })
-    .catch(err => {
-      logger.error('Error closing database connection', { 
-        error: err.message,
-        stack: err.stack
-      });
-      process.exit(1);
-    });
-});
-
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (reason, promise) => {
-  logger.error('Unhandled Promise Rejection', {
-    reason: reason.toString(),
-    stack: reason.stack
-  });
-});
-
-// Start the server if this file is executed directly
+// If this file is run directly, start the server
 if (require.main === module) {
   startServer();
 }
 
-module.exports = app;
+// Export for testing
+module.exports = {
+  app,
+  startServer
+};

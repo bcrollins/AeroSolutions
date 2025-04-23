@@ -1,8 +1,7 @@
 /**
- * Main Routes Index
+ * API Routes Index
  * 
- * This module combines all API routes and exports them 
- * for use in the main application.
+ * This file acts as a central point for registering all API routes.
  */
 
 const express = require('express');
@@ -10,88 +9,42 @@ const router = express.Router();
 
 // Import route modules
 const openaiRoutes = require('./openaiRoutes');
-const databaseRoutes = require('./databaseRoutes');
+const contactRoutes = require('./contactRoutes');
 
-// Middleware
-const validator = require('../middlewares/validator');
-const { apiLimiter, contactLimiter } = require('../middlewares/rateLimiter');
-const logger = require('../config/logger');
+// Import middleware
+const { apiLimiter } = require('../middlewares/rateLimiter');
 
-// Mount OpenAI routes
+// Apply global middleware to all API routes
+router.use(apiLimiter);
+
+// Register routes with their base paths
 router.use('/openai', openaiRoutes);
-
-// Mount Database routes 
-router.use('/database', databaseRoutes);
+router.use('/contact', contactRoutes);
 
 /**
- * @route   GET /api/health
- * @desc    API health check endpoint
+ * @route   GET /api
+ * @desc    API Status
  * @access  Public
  * 
  * Response:
  * {
  *   "success": true,
- *   "message": "API is operational",
+ *   "message": "API is running",
  *   "data": {
  *     "version": "1.0.0",
- *     "timestamp": "2025-04-23T12:34:56.789Z",
- *     "environment": "production"
+ *     "timestamp": "2025-04-23T12:34:56.789Z"
  *   }
  * }
  */
-router.get('/health', (req, res) => {
+router.get('/', (req, res) => {
   res.json({
     success: true,
-    message: 'API is operational',
+    message: 'API is running',
     data: {
       version: process.env.npm_package_version || '1.0.0',
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || 'development'
+      timestamp: new Date().toISOString()
     }
   });
 });
-
-/**
- * @route   POST /api/contact
- * @desc    Submit contact form
- * @access  Public (rate limited)
- * 
- * Request body:
- * {
- *   "name": "John Doe",
- *   "email": "john@example.com",
- *   "phone": "555-123-4567", (optional)
- *   "subject": "Business Inquiry",
- *   "message": "I'm interested in your services...",
- *   "companyName": "Acme Corp" (optional)
- * }
- * 
- * Response:
- * {
- *   "success": true,
- *   "data": {
- *     "id": 123,
- *     "timestamp": "2025-04-23T12:34:56.789Z"
- *   },
- *   "message": "Contact form submitted successfully"
- * }
- */
-router.post('/contact', 
-  contactLimiter,
-  validator.validateContactRequest,
-  async (req, res, next) => {
-    try {
-      // Import controller here to avoid circular dependency
-      const contactController = require('../controllers/contactController');
-      await contactController.submitContact(req, res, next);
-    } catch (error) {
-      logger.error('Error in contact route', {
-        error: error.message,
-        stack: error.stack
-      });
-      next(error);
-    }
-  }
-);
 
 module.exports = router;

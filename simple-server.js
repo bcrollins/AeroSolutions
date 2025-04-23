@@ -1,81 +1,57 @@
 /**
- * Simple Backup Express Server
+ * Simple Backup Server
  * 
- * This is a minimal backup server that runs if the main server fails.
- * It provides basic functionality and diagnostics without all the features
- * of the main server.
+ * This is a minimal server that runs when the main application
+ * encounters critical errors. It provides basic routes and error
+ * messages to help diagnose issues.
  */
 
-// Load environment variables
-require('dotenv').config();
-
-// Core dependencies
+// Core modules
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
 
-// Create Express app
+// Create Express application
 const app = express();
 const PORT = process.env.PORT || 8080;
 const HOST = process.env.HOST || '0.0.0.0';
 
-// Basic logging
-const log = (message) => {
-  const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] ${message}`);
-  
-  // Also append to a log file
-  try {
-    const logDir = path.join(__dirname, 'logs');
-    if (!fs.existsSync(logDir)) {
-      fs.mkdirSync(logDir, { recursive: true });
-    }
-    
-    fs.appendFileSync(
-      path.join(logDir, 'backup-server.log'),
-      `[${timestamp}] ${message}\n`
-    );
-  } catch (error) {
-    console.error(`Failed to write to log file: ${error.message}`);
-  }
-};
-
-// Basic request logging middleware
+// Basic request logging
 app.use((req, res, next) => {
-  const start = Date.now();
-  
-  res.on('finish', () => {
-    const duration = Date.now() - start;
-    log(`${req.method} ${req.originalUrl} - ${res.statusCode} (${duration}ms)`);
-  });
-  
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] ${req.method} ${req.url}`);
   next();
 });
 
-// Parse JSON
-app.use(express.json({ limit: '1mb' }));
+// Parse JSON bodies
+app.use(express.json());
 
-// Basic error handler
-const errorHandler = (err, req, res, next) => {
-  log(`Error: ${err.message}`);
-  
+// Basic error handling
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
   res.status(500).json({
     success: false,
     error: {
-      message: 'An error occurred',
-      code: 'SERVER_ERROR'
+      message: 'Internal server error',
+      details: process.env.NODE_ENV !== 'production' ? err.message : undefined
     }
   });
-};
+});
 
-// Static files
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Basic API health check route
+// Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({
     success: true,
-    message: 'Backup server is operational',
+    message: 'Backup server is running',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// API status endpoint
+app.get('/api', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Backup API server is running',
     data: {
       mode: 'backup',
       timestamp: new Date().toISOString()
@@ -83,56 +59,130 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// OpenAI status check
-app.get('/api/openai/status', (req, res) => {
-  const hasOpenAI = !!process.env.OPENAI_API_KEY;
-  
-  res.json({
-    success: true,
-    data: {
-      apiStatus: hasOpenAI ? 'available' : 'unconfigured',
-      hasApiKey: hasOpenAI,
-      mode: 'backup'
-    }
-  });
-});
-
-// Landing page
+// Root landing page
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Application Status</title>
+      <style>
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+          max-width: 800px;
+          margin: 0 auto;
+          padding: 2rem;
+          line-height: 1.6;
+        }
+        h1 {
+          color: #333;
+          border-bottom: 1px solid #eee;
+          padding-bottom: 0.5rem;
+        }
+        .card {
+          background: #f9f9f9;
+          border-radius: 8px;
+          padding: 1.5rem;
+          margin: 1rem 0;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+          display: inline-block;
+          padding: 0.25rem 0.75rem;
+          border-radius: 1rem;
+          font-weight: bold;
+          margin-right: 0.5rem;
+        }
+        .warning {
+          background: #FFF3CD;
+          color: #856404;
+        }
+        code {
+          background: #eee;
+          padding: 0.2rem 0.4rem;
+          border-radius: 4px;
+          font-size: 0.9rem;
+        }
+        .button {
+          display: inline-block;
+          background: #007bff;
+          color: white;
+          padding: 0.5rem 1rem;
+          border-radius: 4px;
+          text-decoration: none;
+          margin-top: 1rem;
+        }
+        .button:hover {
+          background: #0069d9;
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Application Status</h1>
+      
+      <div class="card">
+        <h2>
+          <span class="status warning">BACKUP MODE</span>
+          The application is running in backup mode
+        </h2>
+        <p>
+          The main application server encountered an error and the backup server has been activated.
+          This is a simplified version with limited functionality.
+        </p>
+        <p>
+          Time: ${new Date().toLocaleString()}
+        </p>
+        <p>
+          <strong>What to do next:</strong>
+        </p>
+        <ul>
+          <li>Check application logs for error details</li>
+          <li>Verify that all required environment variables are set</li>
+          <li>Check database connection settings</li>
+          <li>Restart the application once issues are resolved</li>
+        </ul>
+        <a href="/api/health" class="button">Check API Status</a>
+      </div>
+    </body>
+    </html>
+  `);
 });
 
-// Default 404 handler
+// Catch-all for other routes
 app.use((req, res) => {
-  log(`404 Not Found: ${req.method} ${req.originalUrl}`);
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({
+      success: false,
+      error: {
+        message: 'API endpoint not found in backup server',
+        path: req.path
+      }
+    });
+  }
   
-  res.status(404).json({
-    success: false,
-    error: {
-      message: `Route not found: ${req.method} ${req.originalUrl}`,
-      code: 'ROUTE_NOT_FOUND'
-    }
-  });
+  // For non-API routes, redirect to the root
+  res.redirect('/');
 });
-
-// Error handler
-app.use(errorHandler);
 
 /**
  * Start the backup server
  */
 function startBackupServer() {
-  app.listen(PORT, HOST, () => {
-    log(`Backup server started on ${HOST}:${PORT}`);
-    log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  // Start the server
+  return app.listen(PORT, HOST, () => {
+    console.log(`[BACKUP SERVER] Running at http://${HOST}:${PORT}`);
+    console.log('[BACKUP SERVER] This is a limited functionality mode');
   });
 }
 
-// Start the server if this file is executed directly
+// If this file is run directly, start the server
 if (require.main === module) {
   startBackupServer();
 }
 
+// Export for use in other files
 module.exports = {
   app,
   startBackupServer

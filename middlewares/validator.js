@@ -1,228 +1,114 @@
 /**
  * Request Validation Middleware
  * 
- * This middleware provides validation for API requests.
- * It ensures that incoming request data meets specified requirements.
+ * This middleware validates request bodies against schemas
+ * to ensure data integrity and security.
  */
 
+const { z } = require('zod');
+const logger = require('../config/logger');
 const { createError } = require('./errorHandler');
 
-/**
- * Validate contact form request
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
- */
-function validateContactRequest(req, res, next) {
-  const { name, email, subject, message } = req.body;
-  const errors = [];
-  
-  // Check required fields
-  if (!name || name.trim() === '') {
-    errors.push('Name is required');
-  }
-  
-  if (!email || email.trim() === '') {
-    errors.push('Email is required');
-  } else if (!isValidEmail(email)) {
-    errors.push('Email is invalid');
-  }
-  
-  if (!subject || subject.trim() === '') {
-    errors.push('Subject is required');
-  }
-  
-  if (!message || message.trim() === '') {
-    errors.push('Message is required');
-  }
-  
-  // If there are validation errors, return them
-  if (errors.length > 0) {
-    return next(createError(
-      'Validation Error: ' + errors.join(', '),
-      400,
-      'VALIDATION_ERROR',
-      { errors }
-    ));
-  }
-  
-  // If all validations pass, continue
-  next();
-}
+// Format Zod errors for readable response
+const formatZodError = (error) => {
+  return error.errors.map(err => ({
+    path: err.path.join('.'),
+    message: err.message
+  }));
+};
 
-/**
- * Validate OpenAI completion request
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
- */
-function validateCompletionRequest(req, res, next) {
-  const { prompt, model, maxTokens, temperature } = req.body;
-  const errors = [];
-  
-  // Check required fields
-  if (!prompt || prompt.trim() === '') {
-    errors.push('Prompt is required');
-  }
-  
-  // Check optional fields
-  if (model && typeof model !== 'string') {
-    errors.push('Model must be a string');
-  }
-  
-  if (maxTokens !== undefined) {
-    if (typeof maxTokens !== 'number' || maxTokens <= 0) {
-      errors.push('Max tokens must be a positive number');
-    }
-  }
-  
-  if (temperature !== undefined) {
-    if (typeof temperature !== 'number' || temperature < 0 || temperature > 1) {
-      errors.push('Temperature must be a number between 0 and 1');
-    }
-  }
-  
-  // If there are validation errors, return them
-  if (errors.length > 0) {
-    return next(createError(
-      'Validation Error: ' + errors.join(', '),
-      400,
-      'VALIDATION_ERROR',
-      { errors }
-    ));
-  }
-  
-  // If all validations pass, continue
-  next();
-}
-
-/**
- * Validate OpenAI chat completion request
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
- */
-function validateChatRequest(req, res, next) {
-  const { messages, model, maxTokens, temperature } = req.body;
-  const errors = [];
-  
-  // Check required fields
-  if (!messages || !Array.isArray(messages) || messages.length === 0) {
-    errors.push('Messages array is required and must not be empty');
-  } else {
-    // Validate message format
-    for (let i = 0; i < messages.length; i++) {
-      const msg = messages[i];
-      if (!msg.role || !msg.content) {
-        errors.push(`Message at index ${i} must have role and content properties`);
-      } else if (!['system', 'user', 'assistant'].includes(msg.role)) {
-        errors.push(`Message at index ${i} has invalid role '${msg.role}'. Must be 'system', 'user', or 'assistant'`);
+// Generic validation middleware factory
+const validate = (schema) => {
+  return (req, res, next) => {
+    try {
+      const result = schema.safeParse(req.body);
+      
+      if (!result.success) {
+        const formattedErrors = formatZodError(result.error);
+        
+        logger.warn('Request validation failed', {
+          path: req.path,
+          method: req.method,
+          errors: formattedErrors
+        });
+        
+        return next(createError(
+          'Validation failed',
+          400,
+          'VALIDATION_ERROR',
+          { validationErrors: formattedErrors }
+        ));
       }
+      
+      // Replace request body with validated and transformed data
+      req.body = result.data;
+      next();
+    } catch (error) {
+      logger.error('Unexpected validation error', {
+        error: error.message,
+        stack: error.stack
+      });
+      
+      next(createError(
+        'Request validation error',
+        500,
+        'VALIDATION_SYSTEM_ERROR'
+      ));
     }
-  }
-  
-  // Check optional fields
-  if (model && typeof model !== 'string') {
-    errors.push('Model must be a string');
-  }
-  
-  if (maxTokens !== undefined) {
-    if (typeof maxTokens !== 'number' || maxTokens <= 0) {
-      errors.push('Max tokens must be a positive number');
-    }
-  }
-  
-  if (temperature !== undefined) {
-    if (typeof temperature !== 'number' || temperature < 0 || temperature > 1) {
-      errors.push('Temperature must be a number between 0 and 1');
-    }
-  }
-  
-  // If there are validation errors, return them
-  if (errors.length > 0) {
-    return next(createError(
-      'Validation Error: ' + errors.join(', '),
-      400,
-      'VALIDATION_ERROR',
-      { errors }
-    ));
-  }
-  
-  // If all validations pass, continue
-  next();
-}
+  };
+};
 
-/**
- * Validate OpenAI image generation request
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
- */
-function validateImageRequest(req, res, next) {
-  const { prompt, n, size, quality, responseFormat } = req.body;
-  const errors = [];
-  
-  // Check required fields
-  if (!prompt || prompt.trim() === '') {
-    errors.push('Prompt is required');
-  }
-  
-  // Check optional fields
-  if (n !== undefined) {
-    if (typeof n !== 'number' || n < 1 || n > 10 || !Number.isInteger(n)) {
-      errors.push('n must be an integer between 1 and 10');
-    }
-  }
-  
-  if (size !== undefined) {
-    const validSizes = ['256x256', '512x512', '1024x1024', '1792x1024', '1024x1792'];
-    if (!validSizes.includes(size)) {
-      errors.push(`Size must be one of: ${validSizes.join(', ')}`);
-    }
-  }
-  
-  if (quality !== undefined) {
-    const validQualities = ['standard', 'hd'];
-    if (!validQualities.includes(quality)) {
-      errors.push(`Quality must be one of: ${validQualities.join(', ')}`);
-    }
-  }
-  
-  if (responseFormat !== undefined) {
-    const validFormats = ['url', 'b64_json'];
-    if (!validFormats.includes(responseFormat)) {
-      errors.push(`Response format must be one of: ${validFormats.join(', ')}`);
-    }
-  }
-  
-  // If there are validation errors, return them
-  if (errors.length > 0) {
-    return next(createError(
-      'Validation Error: ' + errors.join(', '),
-      400,
-      'VALIDATION_ERROR',
-      { errors }
-    ));
-  }
-  
-  // If all validations pass, continue
-  next();
-}
+// Schema for OpenAI completion request
+const completionSchema = z.object({
+  prompt: z.string().min(1, 'Prompt is required'),
+  model: z.string().default('gpt-4o'),
+  maxTokens: z.number().int().min(1).max(4096).default(1024),
+  temperature: z.number().min(0).max(2).default(0.7)
+});
 
-/**
- * Validate email format
- * @param {string} email - Email to validate
- * @returns {boolean} - Whether the email is valid
- */
-function isValidEmail(email) {
-  // Simple email validation regex
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
+// Schema for OpenAI chat request
+const chatSchema = z.object({
+  messages: z.array(
+    z.object({
+      role: z.enum(['system', 'user', 'assistant']),
+      content: z.string().min(1, 'Message content is required')
+    })
+  ).min(1, 'At least one message is required'),
+  model: z.string().default('gpt-4o'),
+  maxTokens: z.number().int().min(1).max(4096).default(1024),
+  temperature: z.number().min(0).max(2).default(0.7),
+  responseFormat: z.enum(['text', 'json_object']).nullable().default(null)
+});
+
+// Schema for OpenAI image generation request
+const imageSchema = z.object({
+  prompt: z.string().min(1, 'Prompt is required').max(1000),
+  n: z.number().int().min(1).max(10).default(1),
+  size: z.enum(['256x256', '512x512', '1024x1024', '1792x1024', '1024x1792']).default('1024x1024'),
+  quality: z.enum(['standard', 'hd']).default('standard'),
+  responseFormat: z.enum(['url', 'b64_json']).default('url')
+});
+
+// Schema for contact form submission
+const contactSchema = z.object({
+  name: z.string().min(2, 'Name is required').max(100),
+  email: z.string().email('Invalid email address'),
+  phone: z.string().optional(),
+  subject: z.string().min(2, 'Subject is required').max(200),
+  message: z.string().min(10, 'Message is too short').max(2000),
+  companyName: z.string().optional()
+});
+
+// Validator middleware instances
+const validateCompletionRequest = validate(completionSchema);
+const validateChatRequest = validate(chatSchema);
+const validateImageRequest = validate(imageSchema);
+const validateContactRequest = validate(contactSchema);
 
 module.exports = {
-  validateContactRequest,
   validateCompletionRequest,
   validateChatRequest,
-  validateImageRequest
+  validateImageRequest,
+  validateContactRequest,
+  validate
 };
