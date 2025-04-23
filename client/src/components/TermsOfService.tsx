@@ -63,14 +63,14 @@ export default function TermsOfService() {
             We provide our services using reasonable skill and care. Beyond that, we don't make any specific promises about our services.
           </p>
           <p className="mb-4">
-            OTHER THAN AS EXPRESSLY SET OUT IN THESE TERMS OR ADDITIONAL TERMS, NEITHER AERO SOLUTIONS NOR ITS SUPPLIERS OR DISTRIBUTORS MAKE ANY SPECIFIC PROMISES ABOUT THE SERVICES. FOR EXAMPLE, WE DON'T MAKE ANY COMMITMENTS ABOUT THE CONTENT WITHIN THE SERVICES, THE SPECIFIC FUNCTIONS OF THE SERVICES, OR THEIR RELIABILITY, AVAILABILITY, OR ABILITY TO MEET YOUR NEEDS. WE PROVIDE THE SERVICES "AS IS".
+            OTHER THAN AS EXPRESSLY SET OUT IN THESE TERMS OR ADDITIONAL TERMS, NEITHER ROLLINSX NOR ITS SUPPLIERS OR DISTRIBUTORS MAKE ANY SPECIFIC PROMISES ABOUT THE SERVICES. FOR EXAMPLE, WE DON'T MAKE ANY COMMITMENTS ABOUT THE CONTENT WITHIN THE SERVICES, THE SPECIFIC FUNCTIONS OF THE SERVICES, OR THEIR RELIABILITY, AVAILABILITY, OR ABILITY TO MEET YOUR NEEDS. WE PROVIDE THE SERVICES "AS IS".
           </p>
         </section>
         
         <section className="mb-10">
           <h2 className="text-2xl font-semibold text-blue-800 mb-4">7. Limitation of Liability</h2>
           <p className="mb-4">
-            IN ALL CASES, AERO SOLUTIONS, AND ITS SUPPLIERS AND DISTRIBUTORS, WILL NOT BE LIABLE FOR ANY LOSS OR DAMAGE THAT IS NOT REASONABLY FORESEEABLE.
+            IN ALL CASES, ROLLINSX, AND ITS SUPPLIERS AND DISTRIBUTORS, WILL NOT BE LIABLE FOR ANY LOSS OR DAMAGE THAT IS NOT REASONABLY FORESEEABLE.
           </p>
         </section>
         
@@ -79,7 +79,7 @@ export default function TermsOfService() {
         <section className="mb-10">
           <h2 className="text-2xl font-semibold text-blue-800 mb-4">8. Business Uses of Our Services</h2>
           <p className="mb-4">
-            If you are using our services on behalf of a business, that business accepts these terms. It will hold harmless and indemnify Aero Solutions and its affiliates, officers, agents, and employees from any claim, lawsuit, or action arising from or related to the use of the services or violation of these terms, including any liability or expense arising from claims, losses, damages, lawsuits, judgments, litigation costs, and attorneys' fees.
+            If you are using our services on behalf of a business, that business accepts these terms. It will hold harmless and indemnify ROLLINSX and its affiliates, officers, agents, and employees from any claim, lawsuit, or action arising from or related to the use of the services or violation of these terms, including any liability or expense arising from claims, losses, damages, lawsuits, judgments, litigation costs, and attorneys' fees.
           </p>
         </section>
         
@@ -102,14 +102,14 @@ export default function TermsOfService() {
             If you have any questions about these Terms, please contact us:
           </p>
           <ul className="list-disc pl-6 mb-4">
-            <li className="mb-2">By email: legal@aerosolutions.com</li>
+            <li className="mb-2">By email: legal@rollinsx.com</li>
             <li className="mb-2">By phone: +1 (555) 123-4567</li>
-            <li className="mb-2">By mail: 123 Aviation Way, Suite 500, Skyport, CA 94000, USA</li>
+            <li className="mb-2">By mail: 123 Business Plaza, Suite 500, Webville, CA 94000, USA</li>
           </ul>
         </section>
         
         <div className="text-right text-sm text-gray-500 mt-8">
-          Last Updated: April 11, 2025
+          Last Updated: April 23, 2025
         </div>
       </div>
     </div>

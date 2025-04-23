@@ -112,7 +112,7 @@ export default function PrivacyPolicy() {
         </section>
         
         <div className="text-right text-sm text-gray-500 mt-8">
-          Last Updated: April 11, 2025
+          Last Updated: April 23, 2025
         </div>
       </div>
     </div>
