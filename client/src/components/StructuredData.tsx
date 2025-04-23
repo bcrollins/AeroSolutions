@@ -13,7 +13,7 @@ const StructuredData: React.FC<StructuredDataProps> = ({ type, data }) => {
     "name": "ROLLINSX",
     "alternateName": "ROLLINSX",
     "url": "https://rollinsx.dev",
-    "logo": "https://rollinsx.dev/logo.png",
+    "logo": "https://rollinsx.dev/logo.svg",
     "contactPoint": {
       "@type": "ContactPoint",
       "telephone": "+1-303-555-0122",

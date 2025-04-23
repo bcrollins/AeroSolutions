@@ -39,7 +39,7 @@ export default function HomePage() {
     name: "ROLLINSX",
     description: "Premier web development company specializing in custom solutions for small businesses with unique no-payment-until-satisfied guarantee.",
     url: "https://rollinsx.dev",
-    logo: "https://rollinsx.dev/logo.png",
+    logo: "https://rollinsx.dev/logo.svg",
     image: [
       "https://rollinsx.dev/images/office.jpg",
       "https://rollinsx.dev/images/team.jpg",
