@@ -1,77 +1,104 @@
 /**
  * Rate Limiter Middleware
  * 
- * This middleware provides rate limiting for API endpoints.
- * It helps protect against abuse and ensures fair usage.
+ * This middleware implements rate limiting for API endpoints.
+ * It uses a tiered approach to protect against abuse while allowing
+ * legitimate usage patterns.
  */
 
 const rateLimit = require('express-rate-limit');
+const { createError } = require('./errorHandler');
 const logger = require('../config/logger');
 
-// Helper to create a rate limiter with consistent error responses
-function createRateLimiter(options) {
-  return rateLimit({
-    // Default window: 15 minutes
-    windowMs: options.windowMs || 15 * 60 * 1000,
-    
-    // Default max requests per window
-    max: options.max || 100,
-    
-    // Standardized rate limit exceeded message
-    message: {
-      success: false,
-      error: {
-        message: options.message || 'Too many requests, please try again later.',
-        code: 'RATE_LIMIT_EXCEEDED',
-        details: {
-          retryAfter: Math.ceil(options.windowMs / 1000),
-          limit: options.max
-        }
-      }
-    },
-    
-    // Use consistent headers with configurable prefix
-    standardHeaders: true,
-    legacyHeaders: false,
-    
-    // Skip rate limiting in test environment
-    skip: () => process.env.NODE_ENV === 'test',
-    
-    // Log rate limit hits
-    onLimitReached: (req, res, options) => {
-      logger.warn('Rate limit exceeded', {
-        ip: logger.anonymize(req.ip),
-        path: req.originalUrl || req.url,
-        limit: options.max,
-        windowMs: options.windowMs
-      });
+// Helper to format error responses consistently
+const errorHandler = (req, res, next, options) => {
+  const err = createError(
+    `Too many requests, please try again later.`,
+    429,
+    'RATE_LIMIT_EXCEEDED',
+    {
+      retryAfter: options.windowMs / 1000,
+      limit: options.max,
+      windowMs: options.windowMs
     }
+  );
+  
+  // Log rate limit exceeded
+  logger.warn('Rate limit exceeded', {
+    ip: logger.anonymize(req.ip),
+    path: req.originalUrl || req.url,
+    limit: options.max,
+    windowMs: options.windowMs
   });
-}
+  
+  next(err);
+};
 
-// General API rate limiter (100 requests per 15 minutes)
-const apiLimiter = createRateLimiter({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: 'Too many API requests from this IP, please try again after 15 minutes'
+// Standard rate limit for most API endpoints
+const standardLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 60, // 60 requests per minute
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: 'Too many requests from this IP, please try again after a minute',
+  handler: errorHandler
 });
 
-// More restrictive rate limiter for OpenAI endpoints (30 requests per 15 minutes)
-const openaiLimiter = createRateLimiter({
-  windowMs: 15 * 60 * 1000,
-  max: 30,
-  message: 'Too many OpenAI requests from this IP, please try again after 15 minutes'
+// Stricter rate limit for authentication-related endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // 10 requests per 15 minutes
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: 'Too many login attempts, please try again after 15 minutes',
+  handler: errorHandler
 });
 
-// Very restrictive rate limiter for sensitive operations (5 requests per hour)
-const sensitiveOperationsLimiter = createRateLimiter({
-  windowMs: 60 * 60 * 1000,
-  max: 5,
-  message: 'Too many sensitive operations from this IP, please try again after 1 hour'
+// Rate limit for sensitive operations like password reset
+const sensitiveOperationsLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5, // 5 requests per hour
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: 'Too many sensitive operations, please try again later',
+  handler: errorHandler
+});
+
+// Rate limit for OpenAI API endpoints (higher limit but still protected)
+const openaiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 20, // 20 requests per minute
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: 'Rate limit exceeded for AI operations, please try again after a minute',
+  handler: errorHandler
+});
+
+// Rate limit for public APIs without authentication
+const publicApiLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 30, // 30 requests per 5 minutes
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: 'Too many requests from this IP, please try again after 5 minutes',
+  handler: errorHandler
+});
+
+// Very strict rate limit for endpoints that need extra protection
+const strictLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
+  max: 3, // 3 requests per day
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: 'Too many requests for this operation, daily limit exceeded',
+  handler: errorHandler
 });
 
 module.exports = {
-  apiLimiter,
+  standardLimiter,
+  authLimiter,
+  sensitiveOperationsLimiter,
   openaiLimiter,
-  sensitiveOperationsLimiter
+  publicApiLimiter,
+  strictLimiter
 };

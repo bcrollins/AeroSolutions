@@ -2,21 +2,20 @@
  * Error Handler Middleware
  * 
  * This middleware provides centralized error handling for the application.
- * It standardizes error responses and logs error details.
+ * It standardizes error responses and logs errors appropriately.
  */
 
 const logger = require('../config/logger');
 
 /**
- * Custom error factory function to create standardized error objects
- * 
+ * Creates an API error object with consistent format
  * @param {string} message - Human-readable error message
  * @param {number} statusCode - HTTP status code
  * @param {string} code - Machine-readable error code
  * @param {Object} details - Additional error details
- * @returns {Error} Error object with additional properties
+ * @returns {Error} - Error object with additional properties
  */
-function createError(message, statusCode = 500, code = 'INTERNAL_SERVER_ERROR', details = {}) {
+function createError(message, statusCode = 500, code = 'INTERNAL_SERVER_ERROR', details = null) {
   const error = new Error(message);
   error.statusCode = statusCode;
   error.code = code;
@@ -25,75 +24,69 @@ function createError(message, statusCode = 500, code = 'INTERNAL_SERVER_ERROR', 
 }
 
 /**
- * Global error handler middleware
- * 
+ * Express middleware for handling errors
  * @param {Error} err - Error object
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
-function errorHandler(err, req, res, next) {
-  // Set default status code if not present
+function errorHandlerMiddleware(err, req, res, next) {
+  // Set defaults if properties are missing
   const statusCode = err.statusCode || 500;
-  
-  // Set default error code if not present
   const errorCode = err.code || 'INTERNAL_SERVER_ERROR';
+  const message = err.message || 'An unexpected error occurred';
+  const details = err.details || null;
   
-  // Create error response object
-  const errorResponse = {
-    success: false,
-    error: {
-      message: err.message || 'An unexpected error occurred',
-      code: errorCode
-    }
-  };
-  
-  // Add stack trace in development environment
-  if (process.env.NODE_ENV !== 'production') {
-    errorResponse.error.stack = err.stack;
-  }
-  
-  // Add any additional error details if present
-  if (err.details && Object.keys(err.details).length > 0) {
-    errorResponse.error.details = err.details;
-  }
-  
-  // Log error details using appropriate severity level
+  // Log the error (with different levels based on severity)
   if (statusCode >= 500) {
     logger.error('Server error', {
-      message: err.message,
-      code: errorCode,
-      stack: err.stack,
-      url: req.originalUrl || req.url,
+      path: req.originalUrl || req.url,
       method: req.method,
-      ip: logger.anonymize(req.ip)
+      error: message,
+      code: errorCode,
+      ip: logger.anonymize(req.ip),
+      stack: err.stack
     });
-  } else if (statusCode >= 400) {
+  } else {
     logger.warn('Client error', {
-      message: err.message,
-      code: errorCode,
-      url: req.originalUrl || req.url,
+      path: req.originalUrl || req.url,
       method: req.method,
+      error: message,
+      code: errorCode,
       ip: logger.anonymize(req.ip)
     });
   }
   
-  // Send error response to client
-  res.status(statusCode).json(errorResponse);
+  // Send standardized error response
+  res.status(statusCode).json({
+    success: false,
+    error: {
+      message,
+      code: errorCode,
+      details,
+      timestamp: new Date().toISOString()
+    }
+  });
 }
 
-// 404 handler middleware - for routes that don't exist
-function notFoundHandler(req, res, next) {
-  const error = createError(
-    `Route not found: ${req.originalUrl || req.url}`,
+/**
+ * Middleware to handle 404 errors for undefined routes
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
+function notFoundMiddleware(req, res, next) {
+  const err = createError(
+    `Not found: ${req.method} ${req.originalUrl || req.url}`,
     404,
-    'ROUTE_NOT_FOUND'
+    'RESOURCE_NOT_FOUND'
   );
-  next(error);
+  
+  next(err);
 }
 
 module.exports = {
   createError,
-  errorHandler,
-  notFoundHandler
+  errorHandlerMiddleware,
+  notFoundMiddleware
 };

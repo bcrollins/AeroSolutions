@@ -1,46 +1,66 @@
 /**
- * API Routes Index
+ * Routes Index
  * 
- * This module is the central point for all API routes.
- * It registers all route modules and applies common middleware.
+ * This module serves as a central location to register all API routes.
+ * It exports a function that sets up all routes on the Express application.
  */
 
 const express = require('express');
-const router = express.Router();
-
-// Import route modules
-const contactRoutes = require('./contactRoutes');
-const databaseRoutes = require('./databaseRoutes');
+const path = require('path');
 const openaiRoutes = require('./openaiRoutes');
-
-// Import middleware
-const { apiLimiter } = require('../middlewares/rateLimiter');
+const databaseRoutes = require('./databaseRoutes');
+const { errorHandlerMiddleware, notFoundMiddleware } = require('../middlewares/errorHandler');
 const requestLogger = require('../middlewares/requestLogger');
-
-// Apply global middleware to all API routes
-router.use(requestLogger);
-router.use(apiLimiter);
-
-// Mount route modules
-router.use('/contact', contactRoutes);
-router.use('/database', databaseRoutes);
-router.use('/openai', openaiRoutes);
+const { standardLimiter } = require('../middlewares/rateLimiter');
 
 /**
- * @route   GET /api
- * @desc    API status check
- * @access  Public
+ * Configure routes on the Express application
+ * @param {Object} app - Express application instance
  */
-router.get('/', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      version: '1.0.0',
-      name: 'API Server',
-      status: 'operational',
-      timestamp: new Date().toISOString()
-    }
+function setupRoutes(app) {
+  // Apply global middleware
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
+  app.use(requestLogger);
+  
+  // Serve static files from public directory
+  app.use(express.static(path.join(process.cwd(), 'public')));
+  
+  // Apply rate limiting to all API routes
+  app.use('/api', standardLimiter);
+  
+  // Mount API routes
+  app.use('/api/openai', openaiRoutes);
+  app.use('/api/database', databaseRoutes);
+  
+  // Root route - landing page
+  app.get('/', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
   });
-});
 
-module.exports = router;
+  // API status route
+  app.get('/api/status', (req, res) => {
+    res.json({
+      success: true,
+      data: {
+        status: 'operational',
+        version: process.env.npm_package_version || '1.0.0',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development'
+      }
+    });
+  });
+  
+  // Documentation route
+  app.get('/docs', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'public', 'docs.html'));
+  });
+  
+  // Handle 404 errors for undefined routes
+  app.use(notFoundMiddleware);
+  
+  // Global error handler
+  app.use(errorHandlerMiddleware);
+}
+
+module.exports = setupRoutes;

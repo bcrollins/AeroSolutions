@@ -8,27 +8,35 @@
 const { Pool } = require('pg');
 const logger = require('./logger');
 
-// Create connection pool using environment variables
-const pool = new Pool({
-  // Connection details come from environment variables:
-  // PGUSER, PGHOST, PGPASSWORD, PGDATABASE, PGPORT
-  // Or alternatively from the DATABASE_URL environment variable
-  connectionTimeoutMillis: 5000, // 5 seconds
-  idleTimeoutMillis: 30000, // 30 seconds
-  max: 20 // Maximum number of clients in the pool
+// Create a database configuration object
+const dbConfig = {
+  // Use DATABASE_URL environment variable for connection string
+  connectionString: process.env.DATABASE_URL,
+  
+  // Configure SSL based on environment
+  ssl: process.env.NODE_ENV === 'production' ? 
+    { rejectUnauthorized: false } : 
+    false,
+  
+  // Connection pool configuration
+  max: parseInt(process.env.DB_POOL_SIZE) || 10, // Maximum number of clients
+  idleTimeoutMillis: 30000, // How long a client is kept inactive (30 seconds)
+  connectionTimeoutMillis: 5000, // Max time to wait for connection (5 seconds)
+};
+
+// Create a connection pool
+const pool = new Pool(dbConfig);
+
+// Log pool events
+pool.on('connect', () => {
+  logger.info('Database connection established');
 });
 
-// Log pool errors
-pool.on('error', (err, client) => {
-  logger.error('PostgreSQL pool error', {
+pool.on('error', (err) => {
+  logger.error('Database connection error', {
     error: err.message,
     stack: err.stack
   });
-});
-
-// Log pool connections (debug level)
-pool.on('connect', () => {
-  logger.debug('PostgreSQL pool connection created');
 });
 
 /**
@@ -38,43 +46,36 @@ pool.on('connect', () => {
  * @returns {Promise<Object>} - Query result
  */
 async function query(text, params = []) {
-  const start = Date.now();
-  let client;
+  const startTime = Date.now();
   
   try {
-    // Get a client from the pool
-    client = await pool.connect();
+    const result = await pool.query(text, params);
     
-    // Execute query
-    const result = await client.query(text, params);
-    
-    // Calculate query time
-    const duration = Date.now() - start;
-    
-    // Log query (debug level)
-    logger.debug('Executed query', {
-      query: text,
-      params,
-      rowCount: result.rowCount,
-      duration: `${duration}ms`
-    });
+    // Log query performance for slow queries
+    const duration = Date.now() - startTime;
+    if (duration > 200) { // Log queries slower than 200ms
+      logger.warn('Slow database query', {
+        query: text,
+        duration: duration + 'ms',
+        rowCount: result.rowCount
+      });
+    }
     
     return result;
-  } catch (error) {
-    // Log error (error level)
+  } catch (err) {
+    // Add query information to error
+    err.query = text;
+    err.params = params;
+    
+    // Log the error
     logger.error('Database query error', {
+      error: err.message,
       query: text,
-      params,
-      error: error.message,
-      stack: error.stack
+      duration: Date.now() - startTime + 'ms'
     });
     
-    throw error;
-  } finally {
-    // Release client back to the pool
-    if (client) {
-      client.release();
-    }
+    // Rethrow the error
+    throw err;
   }
 }
 
@@ -84,15 +85,14 @@ async function query(text, params = []) {
  */
 async function end() {
   try {
-    logger.info('Closing all database connections');
     await pool.end();
-    logger.info('All database connections closed');
-  } catch (error) {
-    logger.error('Error closing database connections', {
-      error: error.message,
-      stack: error.stack
+    logger.info('Database connection pool closed');
+  } catch (err) {
+    logger.error('Error closing database connection pool', {
+      error: err.message,
+      stack: err.stack
     });
-    throw error;
+    throw err;
   }
 }
 
@@ -102,31 +102,21 @@ async function end() {
  */
 async function initDatabase() {
   try {
-    logger.info('Initializing database tables if needed');
+    // Read the schema file and execute it
+    const fs = require('fs').promises;
+    const path = require('path');
     
-    // Create contacts table if it doesn't exist
-    await query(`
-      CREATE TABLE IF NOT EXISTS contacts (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
-        email VARCHAR(255) NOT NULL,
-        phone VARCHAR(50),
-        subject VARCHAR(200) NOT NULL,
-        message TEXT NOT NULL,
-        company_name VARCHAR(255),
-        ip_address VARCHAR(50),
-        user_agent TEXT,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      )
-    `);
+    const schemaPath = path.join(process.cwd(), 'models', 'schema.sql');
+    const schemaSQL = await fs.readFile(schemaPath, 'utf8');
     
-    logger.info('Database initialization completed');
-  } catch (error) {
-    logger.error('Database initialization failed', {
-      error: error.message,
-      stack: error.stack
+    await query(schemaSQL);
+    logger.info('Database schema initialized successfully');
+  } catch (err) {
+    logger.error('Failed to initialize database schema', {
+      error: err.message,
+      stack: err.stack
     });
-    throw error;
+    throw err;
   }
 }
 
@@ -135,31 +125,21 @@ async function initDatabase() {
  * @returns {Promise<boolean>} - True if connection successful
  */
 async function checkConnection() {
-  let client;
-  
   try {
-    // Get a client from the pool
-    client = await pool.connect();
-    
-    // Execute simple query
-    const result = await client.query('SELECT NOW() as now');
-    
-    // Check if result exists
-    return result && result.rows && result.rows.length > 0;
-  } catch (error) {
+    const result = await query('SELECT NOW() as time');
+    logger.info('Database connection is working', {
+      timestamp: result.rows[0].time
+    });
+    return true;
+  } catch (err) {
     logger.error('Database connection check failed', {
-      error: error.message,
-      stack: error.stack
+      error: err.message
     });
     return false;
-  } finally {
-    // Release client back to the pool
-    if (client) {
-      client.release();
-    }
   }
 }
 
+// Export the database interface
 module.exports = {
   query,
   end,

@@ -1,7 +1,7 @@
 /**
- * OpenAI Routes
+ * OpenAI API Routes
  * 
- * This module defines routes for OpenAI API integrations.
+ * This module defines routes for OpenAI API interactions.
  */
 
 const express = require('express');
@@ -25,21 +25,21 @@ const {
  * 
  * Request body:
  * {
- *   "prompt": "Write a summary of the benefits of AI",
- *   "model": "gpt-4o",                   (optional)
- *   "maxTokens": 500,                    (optional)
- *   "temperature": 0.7                   (optional)
+ *   "prompt": "Generate a creative story about...",
+ *   "model": "gpt-4o",                         (optional, default: "gpt-4o")
+ *   "maxTokens": 500,                          (optional, default: 500)
+ *   "temperature": 0.7                         (optional, default: 0.7)
  * }
  * 
  * Response:
  * {
  *   "success": true,
  *   "data": {
- *     "text": "AI offers numerous benefits...",
+ *     "text": "Once upon a time...",
  *     "usage": {
- *       "prompt_tokens": 9,
- *       "completion_tokens": 156,
- *       "total_tokens": 165
+ *       "prompt_tokens": 10,
+ *       "completion_tokens": 100,
+ *       "total_tokens": 110
  *     },
  *     "model": "gpt-4o"
  *   }
@@ -48,7 +48,7 @@ const {
 router.post('/completion',
   openaiLimiter,
   validateCompletionRequest,
-  openaiController.createCompletion
+  openaiController.generateCompletion
 );
 
 /**
@@ -59,24 +59,27 @@ router.post('/completion',
  * Request body:
  * {
  *   "messages": [
- *     {"role": "system", "content": "You are a helpful assistant"},
- *     {"role": "user", "content": "Tell me about AI"}
+ *     {"role": "system", "content": "You are a helpful assistant."},
+ *     {"role": "user", "content": "Tell me about AI."}
  *   ],
- *   "model": "gpt-4o",                   (optional)
- *   "maxTokens": 1000,                   (optional)
- *   "temperature": 0.7,                  (optional)
- *   "responseFormat": "text"             (optional, can be "text" or "json_object")
+ *   "model": "gpt-4o",                         (optional, default: "gpt-4o")
+ *   "maxTokens": 1000,                         (optional, default: 1000)
+ *   "temperature": 0.7,                        (optional, default: 0.7)
+ *   "responseFormat": "text"                   (optional, default: "text", can be "text" or "json_object")
  * }
  * 
  * Response:
  * {
  *   "success": true,
  *   "data": {
- *     "content": "AI, or Artificial Intelligence...",
+ *     "message": {
+ *       "role": "assistant",
+ *       "content": "AI, or artificial intelligence..."
+ *     },
  *     "usage": {
- *       "prompt_tokens": 21,
- *       "completion_tokens": 312,
- *       "total_tokens": 333
+ *       "prompt_tokens": 23,
+ *       "completion_tokens": 156,
+ *       "total_tokens": 179
  *     },
  *     "model": "gpt-4o"
  *   }
@@ -85,21 +88,21 @@ router.post('/completion',
 router.post('/chat',
   openaiLimiter,
   validateChatRequest,
-  openaiController.createChatCompletion
+  openaiController.generateChatCompletion
 );
 
 /**
  * @route   POST /api/openai/image
- * @desc    Generate image from prompt
+ * @desc    Generate image with DALL-E
  * @access  Public (rate limited)
  * 
  * Request body:
  * {
- *   "prompt": "A serene mountain landscape at sunset",
- *   "n": 1,                             (optional)
- *   "size": "1024x1024",                (optional)
- *   "quality": "standard",              (optional, can be "standard" or "hd")
- *   "responseFormat": "url"             (optional, can be "url" or "b64_json")
+ *   "prompt": "A futuristic city with flying cars...",
+ *   "n": 1,                                    (optional, default: 1, max: 10)
+ *   "size": "1024x1024",                       (optional, default: "1024x1024")
+ *   "quality": "standard",                     (optional, default: "standard", can be "standard" or "hd")
+ *   "responseFormat": "url"                    (optional, default: "url", can be "url" or "b64_json")
  * }
  * 
  * Response:
@@ -109,17 +112,17 @@ router.post('/chat',
  *     "images": [
  *       {
  *         "url": "https://...",
- *         "revised_prompt": "A serene mountain landscape..."
+ *         "revised_prompt": "A detailed futuristic city..."
  *       }
  *     ],
- *     "created": 1714567890
+ *     "created": 1682596287
  *   }
  * }
  */
 router.post('/image',
   openaiLimiter,
   validateImageRequest,
-  openaiController.createImage
+  openaiController.generateImage
 );
 
 module.exports = router;
