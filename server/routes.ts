@@ -48,6 +48,7 @@ import achievementsRouter from './routes/achievements';
 import socialMediaRouter from './routes/socialMedia';
 import marketingCampaignsRouter from './routes/marketingCampaigns';
 import seoRouter from './routes/seo';
+import apiRouter from './routes/api';
 import priceOptimizationRouter from './routes/priceOptimization';
 import bugMonitoringRouter from './routes/bugMonitoring';
 import brandConsistencyRouter from './routes/brandConsistency';
@@ -216,6 +217,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/sentiment', sentimentRouter);
   app.use('/api/abtesting', abTestingRouter);
   app.use('/api/targeted-ads', targetedAdsRouter);
+  
+  // Mount our new OpenAI API router
+  app.use('/api', apiRouter);
   
   // Test OpenAI API endpoint - public endpoint, no auth required
   app.get('/api/test-xai', async (req: Request, res: Response) => {
