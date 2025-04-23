@@ -70,7 +70,7 @@ export default function Hero() {
   return (
     <section 
       id="home" 
-      className="pt-32 pb-24 bg-gradient-to-br from-slate-blue via-electric-cyan/20 to-slate-blue/80 relative overflow-hidden"
+      className="pt-32 pb-24 hero-section bg-gradient-to-br from-[#1E3A8A] via-[#60A5FA]/20 to-[#1E3A8A]/80 relative overflow-hidden"
       aria-label="ROLLINSX Introduction"
     >
       {/* Background Pattern */}
@@ -85,22 +85,22 @@ export default function Hero() {
       />
       
       {/* Subtle overlay gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-blue/10 z-0"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#1E3A8A]/10 z-0"></div>
       
       {/* Cyan accent line at top */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-electric-cyan via-light-gray to-electric-cyan"></div>
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#00D1D1] via-[#F3F4F6] to-[#00D1D1]"></div>
       
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid md:grid-cols-2 gap-16 items-center">
           <div className="text-white">
             <motion.div 
-              className="inline-block mb-4 px-3 py-1 bg-electric-cyan/10 border border-electric-cyan/20 rounded-full"
+              className="inline-block mb-4 px-3 py-1 bg-[#00D1D1]/10 border border-[#00D1D1]/20 rounded-full"
               variants={fadeInUp}
               initial="hidden"
               animate="visible"
               custom={0}
             >
-              <span className="text-electric-cyan text-sm font-medium tracking-wider uppercase font-inter">Premium Web Solutions</span>
+              <span className="text-[#00D1D1] text-sm font-medium tracking-wider uppercase font-inter">Premium Web Solutions</span>
             </motion.div>
             
             <motion.h1 
@@ -110,7 +110,7 @@ export default function Hero() {
               animate="visible"
               custom={1}
             >
-              Web <span className="text-electric-cyan">Development</span> for Small Businesses
+              Web <span className="text-[#00D1D1]">Development</span> for Small Businesses
             </motion.h1>
             
             <motion.p 
@@ -142,14 +142,14 @@ export default function Hero() {
             >
               <a 
                 href="#contact" 
-                className="bg-electric-cyan hover:bg-electric-cyan/90 text-slate-blue font-bold py-4 px-8 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_5px_15px_rgba(0,209,209,0.35)] font-inter"
+                className="bg-[#00D1D1] hover:bg-[#00D1D1]/90 text-[#1E3A8A] font-bold py-4 px-8 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_5px_15px_rgba(0,209,209,0.35)] font-inter"
                 aria-label="Get started with a custom web development solution"
               >
                 Get Started
               </a>
               <a 
                 href="#platforms" 
-                className="bg-transparent hover:bg-white/10 text-white font-semibold py-4 px-8 rounded-lg border border-electric-cyan/30 transition-all duration-300 hover:scale-105 hover:border-electric-cyan/60 font-inter"
+                className="bg-transparent hover:bg-white/10 text-white font-semibold py-4 px-8 rounded-lg border border-[#00D1D1]/30 transition-all duration-300 hover:scale-105 hover:border-[#00D1D1]/60 font-inter"
                 aria-label="Explore our web development platforms"
               >
                 Explore Platforms

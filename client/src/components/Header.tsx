@@ -41,7 +41,7 @@ export default function Header() {
 
   return (  
     <>
-      <header className="bg-slate-blue text-white py-4 px-6 sticky top-0 z-50 shadow-md">  
+      <header className="header bg-midnight-blue text-white py-4 px-6 sticky top-0 z-50 shadow-md">  
         <div className="max-w-7xl mx-auto flex justify-between items-center">  
           {/* Logo */}  
           <Link href="/">  
@@ -111,7 +111,7 @@ export default function Header() {
 
         {/* Mobile Menu */}  
         {isMobileMenuOpen && (  
-          <nav className="md:hidden bg-slate-blue py-4">  
+          <nav className="md:hidden bg-midnight-blue py-4">  
             <div className="flex flex-col space-y-4 px-6">  
               {menuItems.map((item) => (  
                 <div key={item.label}>  
