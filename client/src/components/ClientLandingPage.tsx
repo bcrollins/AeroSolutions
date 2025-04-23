@@ -915,8 +915,8 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
         </div>
       )}
 
-      {/* ElevateBot - Always rendered but only shown when needed */}
-      <ElevateBot isOpen={isSpecialCode && openElevateBot} initialOption={elevateBotOption} />
+      {/* ROLLINSXBot - Always rendered but only shown when needed */}
+      <ROLLINSXBot isOpen={isSpecialCode && openROLLINSXBot} initialOption={rollinsBotOption} />
       
       {/* WebConnect Platform View */}
       <WebConnectPlatformView

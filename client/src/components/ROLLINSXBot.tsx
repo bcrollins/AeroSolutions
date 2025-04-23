@@ -51,7 +51,7 @@ export default function ROLLINSXBot({
   // Handle external props changes
   // Check if business info is stored in localStorage
   useEffect(() => {
-    const storedBusinessInfo = localStorage.getItem('elevatebot_business_info');
+    const storedBusinessInfo = localStorage.getItem('rollinsx_business_info');
     if (storedBusinessInfo) {
       try {
         setBusinessInfo(JSON.parse(storedBusinessInfo));
@@ -168,8 +168,8 @@ export default function ROLLINSXBot({
     setMessages(prev => [...prev, botMessage]);
     
     try {
-      // Send request to dedicated ElevateBot endpoint powered by ROLLINSX AI
-      const response = await apiRequest("POST", "/api/elevatebot/support", { 
+      // Send request to dedicated ROLLINSX endpoint powered by ROLLINSX AI
+      const response = await apiRequest("POST", "/api/rollinsx/support", { 
         query: `User selected option: ${option}. ${getOptionText(option)}` 
       });
       
@@ -254,11 +254,11 @@ export default function ROLLINSXBot({
     setMessages(prev => [...prev, botMessage]);
     
     try {
-      // Send request to dedicated ElevateBot endpoint powered by ROLLINSX AI
+      // Send request to dedicated ROLLINSX endpoint powered by ROLLINSX AI
       // Include business info in the request if available
       const hasBusinessInfo = Object.values(businessInfo).some(value => value.trim() !== '');
       
-      const response = await apiRequest("POST", "/api/elevatebot/support", { 
+      const response = await apiRequest("POST", "/api/rollinsx/support", { 
         query: userInput,
         userContext: hasBusinessInfo ? businessInfo : undefined
       });
@@ -305,7 +305,7 @@ export default function ROLLINSXBot({
     e.preventDefault();
     
     // Save business info to localStorage for persistence
-    localStorage.setItem('elevatebot_business_info', JSON.stringify(businessInfo));
+    localStorage.setItem('rollinsx_business_info', JSON.stringify(businessInfo));
     
     // Hide the form
     setShowBusinessInfoForm(false);
