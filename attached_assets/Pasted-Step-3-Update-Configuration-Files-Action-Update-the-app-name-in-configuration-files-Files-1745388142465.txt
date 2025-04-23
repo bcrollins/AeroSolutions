@@ -1,0 +1,210 @@
+Step 3: Update Configuration Files
+
+
+
+
+
+Action: Update the app name in configuration files.
+
+
+
+Files to Check:
+
+
+
+
+
+package.json:
+
+
+
+
+
+Original: "name": "elevion"
+
+
+
+Updated: "name": "rollinsx"
+
+
+
+.env:
+
+
+
+
+
+Original: APP_NAME=Elevion
+
+
+
+Updated: APP_NAME=ROLLINSX
+
+
+
+.replit:
+
+
+
+
+
+Ensure the run command reflects the updated app (e.g., run = "node index.js" remains valid).
+
+
+
+replit.nix:
+
+
+
+
+
+Update any package names or environment variables if applicable.
+
+
+
+Example for package.json:
+
+{
+  "name": "rollinsx",
+  "version": "1.0.0",
+  "main": "index.js"
+}
+
+
+
+Command: Manually edit or use sed:
+
+sed -i.bak 's/"name": "elevion"/"name": "rollinsx"/g' package.json
+sed -i.bak 's/APP_NAME=Elevion/APP_NAME=ROLLINSX/g' .env
+
+
+
+Verification: Check package.json, .env, and .replit for correctness.
+
+Step 4: Update Database (PostgreSQL)
+
+
+
+
+
+Action: If the app uses a database, update any references to "Elevion" in schema, table names, or data.
+
+
+
+Setup: Ensure PostgreSQL is configured in Replit:
+
+
+
+
+
+Install PostgreSQL driver (e.g., pgx for Node.js, psycopg2 for Python).
+
+
+
+Example for Node.js (index.js):
+
+const { Pool } = require('pg');
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL
+});
+pool.query('SELECT NOW()', (err, res) => {
+  console.log(err, res);
+  pool.end();
+});
+
+
+
+Example for .env:
+
+DATABASE_URL=postgresql://user:password@host:port/dbname
+
+
+
+Changes:
+
+
+
+
+
+Rename tables (e.g., elevion_users to rollinsx_users):
+
+ALTER TABLE elevion_users RENAME TO rollinsx_users;
+
+
+
+Update data (e.g., app name in a settings table):
+
+UPDATE settings SET app_name = 'ROLLINSX' WHERE app_name = 'Elevion';
+
+
+
+Command: Run SQL commands via Replit’s PostgreSQL client or code.
+
+
+
+Verification: Query the database to confirm updates:
+
+SELECT * FROM pg_tables WHERE tablename LIKE '%rollinsx%';
+
+Step 5: Update UI and Static Assets
+
+
+
+
+
+Action: Update all user-facing text and assets.
+
+
+
+Files to Check:
+
+
+
+
+
+HTML templates (e.g., index.html):
+
+
+
+
+
+Original: <title>Elevion</title>
+
+
+
+Updated: <title>ROLLINSX</title>
+
+
+
+React components (e.g., App.jsx):
+
+
+
+
+
+Original: return <div>Welcome to Elevion</div>;
+
+
+
+Updated: return <div>Welcome to ROLLINSX</div>;
+
+
+
+Static assets (e.g., logo.png):
+
+
+
+
+
+If the logo contains "Elevion," replace it with a new "ROLLINSX" logo (confirm if image generation is needed).
+
+
+
+Command: Use sed for HTML/JSX:
+
+find . -type f -name "*.html" -exec sed -i.bak 's/Elevion/ROLLINSX/g' {} \;
+
+
+
+Verification: Open the app in Replit’s webview (https://<project-name>.<username>.repl.co) and inspect all pages for "Elevion."
+

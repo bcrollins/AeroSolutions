@@ -484,7 +484,7 @@ export type ContentComplianceAlert = typeof contentComplianceAlerts.$inferSelect
 export type InsertContentComplianceAlert = z.infer<typeof insertContentComplianceAlertSchema>;
 
 // ROLLINSXBot queries for tracking AI interactions
-export const elevatebotQueries = pgTable("elevatebot_queries", {
+export const rollinsxQueries = pgTable("rollinsx_queries", {
   id: serial("id").primaryKey(),
   query: text("query").notNull(),
   response: text("response"),
@@ -497,13 +497,13 @@ export const elevatebotQueries = pgTable("elevatebot_queries", {
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertElevatebotQuerySchema = createInsertSchema(elevatebotQueries).omit({
+export const insertRollinsxQuerySchema = createInsertSchema(rollinsxQueries).omit({
   id: true,
   created_at: true
 });
 
-export type ElevatebotQuery = typeof elevatebotQueries.$inferSelect;
-export type InsertElevatebotQuery = z.infer<typeof insertElevatebotQuerySchema>;
+export type RollinsxQuery = typeof rollinsxQueries.$inferSelect;
+export type InsertRollinsxQuery = z.infer<typeof insertRollinsxQuerySchema>;
 
 // User data change logs for compliance and audit
 export const userDataChangeLogs = pgTable("user_data_change_logs", {

@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { FaRocket, FaTimes, FaSmile, FaCode, FaDesktop, FaPalette, FaMobileAlt } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 
-interface ElevateBotProps {
+interface ROLLINSXBotProps {
   isOpen?: boolean;
   initialOption?: string | null;
 }
 
-export default function ElevateBot({ isOpen: externalIsOpen, initialOption }: ElevateBotProps = {}) {
+export default function ROLLINSXBot({ isOpen: externalIsOpen, initialOption }: ROLLINSXBotProps = {}) {
   const [isOpen, setIsOpen] = useState(externalIsOpen || false);
   const [activeOption, setActiveOption] = useState<string | null>(initialOption || null);
   const [isTyping, setIsTyping] = useState(false);
