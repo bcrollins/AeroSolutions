@@ -1,7 +1,7 @@
 /**
  * Contact Routes
  * 
- * This module defines routes for contact form submissions.
+ * This module defines routes for contact form submission.
  */
 
 const express = require('express');
@@ -16,17 +16,17 @@ const { validateContactRequest } = require('../middlewares/validator');
 
 /**
  * @route   POST /api/contact
- * @desc    Submit contact form
+ * @desc    Submit a contact form
  * @access  Public (rate limited)
  * 
  * Request body:
  * {
  *   "name": "John Doe",
  *   "email": "john@example.com",
- *   "phone": "555-123-4567", (optional)
- *   "subject": "General Inquiry",
- *   "message": "I would like to learn more about your services...",
- *   "companyName": "Acme Corp" (optional)
+ *   "phone": "555-123-4567",        (optional)
+ *   "subject": "Service Inquiry",
+ *   "message": "I would like more information about your services",
+ *   "company": "Acme Inc."          (optional)
  * }
  * 
  * Response:
@@ -34,8 +34,8 @@ const { validateContactRequest } = require('../middlewares/validator');
  *   "success": true,
  *   "message": "Contact form submitted successfully",
  *   "data": {
- *     "id": 123,
- *     "timestamp": "2025-04-23T12:34:56.789Z"
+ *     "id": 1,
+ *     "createdAt": "2025-04-23T12:34:56.789Z"
  *   }
  * }
  */
@@ -44,5 +44,30 @@ router.post('/',
   validateContactRequest,
   contactController.submitContact
 );
+
+/**
+ * @route   GET /api/contact
+ * @desc    Get all contact submissions (admin only)
+ * @access  Admin
+ * 
+ * Response:
+ * {
+ *   "success": true,
+ *   "data": [
+ *     {
+ *       "id": 1,
+ *       "name": "John Doe",
+ *       "email": "john@example.com",
+ *       "phone": "555-123-4567",
+ *       "subject": "Service Inquiry",
+ *       "message": "I would like more information about your services",
+ *       "company_name": "Acme Inc.",
+ *       "created_at": "2025-04-23T12:34:56.789Z"
+ *     },
+ *     ...
+ *   ]
+ * }
+ */
+router.get('/', contactController.getContacts);
 
 module.exports = router;
