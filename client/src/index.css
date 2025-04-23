@@ -22,6 +22,30 @@
   animation-iteration-count: infinite;
 }
 
+/* Direct color definitions for better browser compatibility */
+:root {
+  /* ROLLINSX Brand Colors - Using direct hex values */
+  --color-midnight-blue: #1E3A8A;
+  --color-steel-gray: #4B5563; 
+  --color-pure-white: #FFFFFF;
+  --color-golden-amber: #D4A017;
+  --color-sky-blue: #60A5FA;
+  --color-dark-blue-shade: #172554;
+  --color-light-gray-tint: #E5E7EB;
+  --color-pale-blue-tint: #DBEAFE;
+}
+
+/* Add explicit classes for direct use */
+.bg-midnight-blue { background-color: var(--color-midnight-blue); }
+.bg-steel-gray { background-color: var(--color-steel-gray); }
+.bg-golden-amber { background-color: var(--color-golden-amber); }
+.bg-sky-blue { background-color: var(--color-sky-blue); }
+
+.text-midnight-blue { color: var(--color-midnight-blue); }
+.text-steel-gray { color: var(--color-steel-gray); }
+.text-golden-amber { color: var(--color-golden-amber); }
+.text-sky-blue { color: var(--color-sky-blue); }
+
 @layer base {
   :root {
     /* ROLLINSX Brand Colors */
@@ -54,6 +78,12 @@
     --input: 220 13% 91%; /* light-gray-tint */
     --ring: 213 94% 68%; /* sky-blue */
     --radius: 0.5rem;
+
+    /* Explicit Color Variables */
+    --slate-blue: #1E3A8A;
+    --electric-cyan: #00D1D1;
+    --light-gray: #F3F4F6;
+    --sunset-orange: #FF7043;
   }
  
   .dark {
@@ -86,15 +116,29 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Lato', sans-serif;
+    color: var(--color-steel-gray); /* Explicit text color */
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Poppins', sans-serif;
+    color: var(--color-midnight-blue); /* Explicit heading color */
   }
   
   button, a, nav, .ui-element {
     font-family: 'Inter', sans-serif;
   }
+}
+
+/* Component styles */
+.header {
+  background-color: var(--color-midnight-blue);
+  color: var(--color-pure-white);
+}
+
+.hero-section {
+  background-color: var(--color-midnight-blue);
+  color: var(--color-pure-white);
+  background-image: linear-gradient(to bottom right, var(--color-midnight-blue), var(--color-sky-blue));
 }
 
 @layer utilities {

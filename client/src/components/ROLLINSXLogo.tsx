@@ -23,7 +23,7 @@ const ROLLINSXLogo: React.FC<ROLLINSXLogoProps> = ({
   const variants = {
     initial: { scale: 0.9, opacity: 0.5 },
     animate: { scale: 1, opacity: 1 },
-    hover: { scale: 1.05, rotate: 5 }
+    hover: { scale: 1.05 }
   };
   
   // If animated, use motion.div, otherwise use regular div
@@ -49,31 +49,31 @@ const ROLLINSXLogo: React.FC<ROLLINSXLogoProps> = ({
         className="w-full h-full"
         aria-label="ROLLINSX Logo"
       >
-        {/* Main geometric shape */}
-        <polygon 
-          points="50,10 90,30 90,70 50,90 10,70 10,30" 
+        {/* Minimalistic circular background */}
+        <circle 
+          cx="50" 
+          cy="50" 
+          r="40" 
           fill="#1E3A8A" /* Midnight Blue */
         />
         
-        {/* Letter R stylized */}
+        {/* Minimalistic 'R' */}
         <path 
-          d="M30,30 H50 C60,30 70,35 70,45 C70,55 60,60 50,60 L55,70 H45 L40,60 H40 V70 H30 Z M40,40 V50 H50 C55,50 60,47.5 60,45 C60,42.5 55,40 50,40 Z" 
-          fill="#D4A017" /* Golden Amber */
+          d="M35,30 H55 C65,30 72,37 72,45 C72,53 65,60 55,60 L52,60 L58,70 H48 L42,60 H42 V70 H35 Z M42,37 V53 H52 C58,53 65,49 65,45 C65,41 58,37 52,37 Z" 
+          fill="#FFFFFF" 
+          stroke="none"
         />
         
-        {/* Decorative elements */}
-        <circle cx="20" cy="25" r="3" fill="#60A5FA" /> {/* Sky Blue */}
-        <circle cx="80" cy="25" r="3" fill="#60A5FA" /> {/* Sky Blue */}
-        <circle cx="20" cy="75" r="3" fill="#60A5FA" /> {/* Sky Blue */}
-        <circle cx="80" cy="75" r="3" fill="#60A5FA" /> {/* Sky Blue */}
-        
-        {/* Define gradient for potential use */}
-        <defs>
-          <linearGradient id="rollinsxGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#1E3A8A" /> {/* Midnight Blue */}
-            <stop offset="100%" stopColor="#60A5FA" /> {/* Sky Blue */}
-          </linearGradient>
-        </defs>
+        {/* Simple golden accent */}
+        <circle 
+          cx="50" 
+          cy="50" 
+          r="35" 
+          fill="none" 
+          stroke="#D4A017" /* Golden Amber */
+          strokeWidth="1.5"
+          strokeDasharray="3,3"
+        />
       </svg>
     </Component>
   );
