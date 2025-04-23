@@ -20,34 +20,35 @@ export default function Header() {
     {  
       label: 'Solutions',  
       dropdown: [  
-        { label: 'AI Web Development', path: '/web-development' },  
-        { label: 'Small Business Growth', path: '/growth-solutions' },  
-        { label: 'Competitive Analysis', path: '/competitive-analysis' },
+        { label: 'AI Services', path: '/ai-services' },  
+        { label: 'Content Hub', path: '/content-hub' },  
+        { label: 'SEO Tools', path: '/seo-tools' },
+        { label: 'Design Tools', path: '/design-tools' },
         { label: 'Particle Background', path: '/particle-background' },
       ],  
     },  
-    { label: 'Pricing', path: '/pricing' },  
+    { label: 'Pricing', path: '/subscriptions' },  
     {  
       label: 'Support',  
       dropdown: [  
-        { label: 'Get Started', path: '/get-started' },  
-        { label: 'Resources', path: '/resources' },  
-        { label: 'Contact Us', path: '/contact' },  
+        { label: 'Mockup Suggestions', path: '/mockup-suggestions' },  
+        { label: 'Social Media', path: '/social-media' },  
+        { label: 'Analytics', path: '/website-analytics' },  
         { label: 'Share Feedback', path: '/feedback' },  
       ],  
     },  
-    { label: 'About', path: '/about' },  
+    { label: 'About', path: '/history' },  
   ];  
 
   return (  
     <>
-      <header className="header bg-midnight-blue text-white py-4 px-6 sticky top-0 z-50 shadow-md">  
+      <header className="header bg-[#1E3A8A] text-white py-4 px-6 sticky top-0 z-50 shadow-md">  
         <div className="max-w-7xl mx-auto flex justify-between items-center">  
           {/* Logo */}  
           <Link href="/">  
             <div className="flex items-center space-x-2">
               <ROLLINSXLogo size="sm" animated={true} />
-              <div className="text-2xl font-poppins text-electric-cyan">rollinsx</div>  
+              <div className="text-2xl font-poppins text-[#00D1D1]">rollinsx</div>  
             </div>
           </Link>  
 
@@ -72,12 +73,12 @@ export default function Header() {
                   </Link>  
                 )}  
                 {item.dropdown && (item.label === 'Solutions' ? isSolutionsDropdownOpen : isSupportDropdownOpen) && (  
-                  <div className="absolute top-full left-0 mt-2 w-48 bg-light-gray rounded-lg shadow-lg z-10">  
+                  <div className="absolute top-full left-0 mt-2 w-48 bg-[#f5f5f5] rounded-lg shadow-lg z-10">  
                     {item.dropdown.map((subItem) => (  
                       <Link  
                         key={subItem.label}  
                         href={subItem.path}  
-                        className="block px-4 py-2 text-slate-blue hover:bg-electric-cyan hover:text-white transition-colors duration-200"  
+                        className="block px-4 py-2 text-[#1E3A8A] hover:bg-[#00D1D1] hover:text-white transition-colors duration-200"  
                       >  
                         {subItem.label}  
                       </Link>  
@@ -88,7 +89,7 @@ export default function Header() {
             ))}  
             <button
               onClick={toggleClientPreview}
-              className="font-inter text-sm uppercase tracking-wide text-electric-cyan hover:text-sunset-orange transition-colors duration-200 border border-electric-cyan px-3 py-1 rounded-md hover:border-sunset-orange"
+              className="font-inter text-sm uppercase tracking-wide text-[#00D1D1] hover:text-[#D4A017] transition-colors duration-200 border border-[#00D1D1] px-3 py-1 rounded-md hover:border-[#D4A017]"
             >
               Client Preview
             </button>
@@ -111,7 +112,7 @@ export default function Header() {
 
         {/* Mobile Menu */}  
         {isMobileMenuOpen && (  
-          <nav className="md:hidden bg-midnight-blue py-4">  
+          <nav className="md:hidden bg-[#1E3A8A] py-4">  
             <div className="flex flex-col space-y-4 px-6">  
               {menuItems.map((item) => (  
                 <div key={item.label}>  
