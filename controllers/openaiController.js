@@ -6,11 +6,12 @@
  * and other OpenAI-powered features.
  */
 
-const { OpenAI } = require('openai');
+const OpenAI = require('openai');
 const logger = require('../config/logger');
 const { createError } = require('../middlewares/errorHandler');
 
 // Initialize OpenAI client
+// Note: The newest OpenAI model is "gpt-4o" which was released May 13, 2024. Do not change this unless explicitly requested by the user
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
@@ -23,72 +24,52 @@ const openai = new OpenAI({
  */
 async function getCompletion(req, res, next) {
   try {
-    // Check API key
-    if (!process.env.OPENAI_API_KEY) {
-      return next(createError(
-        'OpenAI API key is missing',
-        500,
-        'OPENAI_API_KEY_MISSING'
-      ));
-    }
+    // Extract validated data from request body
+    const { prompt, model = 'gpt-4o', maxTokens = 1024, temperature = 0.7 } = req.body;
     
-    // Extract request parameters with defaults
-    const {
-      prompt,
-      model = 'gpt-4o',  // Newest model as of May 2024
-      maxTokens = 1024,
-      temperature = 0.7
-    } = req.body;
-    
-    // Make API request
-    const completion = await openai.completions.create({
+    // Log the request (excluding sensitive data)
+    logger.info('OpenAI completion request', {
       model,
-      prompt,
+      maxTokens,
+      temperature,
+      promptLength: prompt.length
+    });
+    
+    // Make request to OpenAI API
+    const response = await openai.chat.completions.create({
+      model,
+      messages: [{ role: 'user', content: prompt }],
       max_tokens: maxTokens,
       temperature
     });
     
-    // Log success
-    logger.info('OpenAI completion request successful', {
-      model,
-      promptChars: prompt.length,
-      tokens: {
-        used: completion.usage?.total_tokens || 'unknown'
-      }
-    });
-    
-    // Return response
+    // Return the completion
     res.json({
       success: true,
       data: {
-        text: completion.choices[0].text,
-        model: completion.model,
-        usage: completion.usage
+        text: response.choices[0].message.content,
+        model: response.model,
+        usage: response.usage
       }
     });
   } catch (error) {
-    // Log error
-    logger.error('OpenAI completion request failed', {
+    // Handle OpenAI API errors
+    logger.error('OpenAI completion error', {
       error: error.message,
       stack: error.stack
     });
     
-    // Handle specific OpenAI API errors
-    if (error.response) {
-      return next(createError(
-        `OpenAI API error: ${error.response.data.error.message}`,
-        error.response.status,
-        'OPENAI_API_ERROR',
-        { openaiError: error.response.data.error }
-      ));
+    // Determine appropriate error response
+    if (error.status === 401) {
+      return next(createError('OpenAI API key is invalid', 401, 'OPENAI_UNAUTHORIZED'));
+    } else if (error.status === 429) {
+      return next(createError('OpenAI rate limit exceeded', 429, 'OPENAI_RATE_LIMIT'));
+    } else if (error.status === 400) {
+      return next(createError(`OpenAI API error: ${error.message}`, 400, 'OPENAI_BAD_REQUEST'));
     }
     
-    // Handle other errors
-    next(createError(
-      `OpenAI completion error: ${error.message}`,
-      500,
-      'OPENAI_REQUEST_ERROR'
-    ));
+    // Generic error
+    next(createError(`OpenAI API error: ${error.message}`, 500, 'OPENAI_ERROR'));
   }
 }
 
@@ -100,26 +81,26 @@ async function getCompletion(req, res, next) {
  */
 async function getChatCompletion(req, res, next) {
   try {
-    // Check API key
-    if (!process.env.OPENAI_API_KEY) {
-      return next(createError(
-        'OpenAI API key is missing',
-        500,
-        'OPENAI_API_KEY_MISSING'
-      ));
-    }
-    
-    // Extract request parameters with defaults
-    const {
-      messages,
-      model = 'gpt-4o',  // The newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-      maxTokens = 1024,
+    // Extract validated data from request body
+    const { 
+      messages, 
+      model = 'gpt-4o', 
+      maxTokens = 1024, 
       temperature = 0.7,
       responseFormat = null
     } = req.body;
     
-    // Prepare request parameters
-    const requestParams = {
+    // Log the request (excluding sensitive data)
+    logger.info('OpenAI chat completion request', {
+      model,
+      maxTokens,
+      temperature,
+      messagesCount: messages.length,
+      responseFormat
+    });
+    
+    // Prepare response format option if needed
+    const options = {
       model,
       messages,
       max_tokens: maxTokens,
@@ -128,57 +109,39 @@ async function getChatCompletion(req, res, next) {
     
     // Add response format if specified
     if (responseFormat) {
-      requestParams.response_format = { type: responseFormat };
+      options.response_format = { type: responseFormat };
     }
     
-    // Make API request
-    const chatCompletion = await openai.chat.completions.create(requestParams);
+    // Make request to OpenAI API
+    const response = await openai.chat.completions.create(options);
     
-    // Get message content
-    const responseContent = chatCompletion.choices[0].message.content;
-    
-    // Log success
-    logger.info('OpenAI chat completion request successful', {
-      model,
-      messagesCount: messages.length,
-      responseLength: responseContent ? responseContent.length : 0,
-      tokens: {
-        used: chatCompletion.usage?.total_tokens || 'unknown'
-      }
-    });
-    
-    // Return response
+    // Return the chat completion
     res.json({
       success: true,
       data: {
-        message: chatCompletion.choices[0].message,
-        model: chatCompletion.model,
-        usage: chatCompletion.usage
+        message: response.choices[0].message,
+        model: response.model,
+        usage: response.usage
       }
     });
   } catch (error) {
-    // Log error
-    logger.error('OpenAI chat completion request failed', {
+    // Handle OpenAI API errors
+    logger.error('OpenAI chat completion error', {
       error: error.message,
       stack: error.stack
     });
     
-    // Handle specific OpenAI API errors
-    if (error.response) {
-      return next(createError(
-        `OpenAI API error: ${error.response.data.error.message}`,
-        error.response.status,
-        'OPENAI_API_ERROR',
-        { openaiError: error.response.data.error }
-      ));
+    // Determine appropriate error response
+    if (error.status === 401) {
+      return next(createError('OpenAI API key is invalid', 401, 'OPENAI_UNAUTHORIZED'));
+    } else if (error.status === 429) {
+      return next(createError('OpenAI rate limit exceeded', 429, 'OPENAI_RATE_LIMIT'));
+    } else if (error.status === 400) {
+      return next(createError(`OpenAI API error: ${error.message}`, 400, 'OPENAI_BAD_REQUEST'));
     }
     
-    // Handle other errors
-    next(createError(
-      `OpenAI chat completion error: ${error.message}`,
-      500,
-      'OPENAI_REQUEST_ERROR'
-    ));
+    // Generic error
+    next(createError(`OpenAI API error: ${error.message}`, 500, 'OPENAI_ERROR'));
   }
 }
 
@@ -190,26 +153,26 @@ async function getChatCompletion(req, res, next) {
  */
 async function generateImage(req, res, next) {
   try {
-    // Check API key
-    if (!process.env.OPENAI_API_KEY) {
-      return next(createError(
-        'OpenAI API key is missing',
-        500,
-        'OPENAI_API_KEY_MISSING'
-      ));
-    }
-    
-    // Extract request parameters with defaults
-    const {
-      prompt,
-      n = 1,
-      size = '1024x1024',
+    // Extract validated data from request body
+    const { 
+      prompt, 
+      n = 1, 
+      size = '1024x1024', 
       quality = 'standard',
       responseFormat = 'url'
     } = req.body;
     
-    // Make API request
-    const result = await openai.images.generate({
+    // Log the request (excluding sensitive data)
+    logger.info('OpenAI image generation request', {
+      promptLength: prompt.length,
+      n,
+      size,
+      quality,
+      responseFormat
+    });
+    
+    // Make request to OpenAI API
+    const response = await openai.images.generate({
       prompt,
       n,
       size,
@@ -217,45 +180,29 @@ async function generateImage(req, res, next) {
       response_format: responseFormat
     });
     
-    // Log success
-    logger.info('OpenAI image generation request successful', {
-      promptLength: prompt.length,
-      imageCount: n,
-      size,
-      quality
-    });
-    
-    // Return response
+    // Return the generated image(s)
     res.json({
       success: true,
-      data: {
-        images: result.data,
-        created: result.created
-      }
+      data: response.data
     });
   } catch (error) {
-    // Log error
-    logger.error('OpenAI image generation request failed', {
+    // Handle OpenAI API errors
+    logger.error('OpenAI image generation error', {
       error: error.message,
       stack: error.stack
     });
     
-    // Handle specific OpenAI API errors
-    if (error.response) {
-      return next(createError(
-        `OpenAI API error: ${error.response.data.error.message}`,
-        error.response.status,
-        'OPENAI_API_ERROR',
-        { openaiError: error.response.data.error }
-      ));
+    // Determine appropriate error response
+    if (error.status === 401) {
+      return next(createError('OpenAI API key is invalid', 401, 'OPENAI_UNAUTHORIZED'));
+    } else if (error.status === 429) {
+      return next(createError('OpenAI rate limit exceeded', 429, 'OPENAI_RATE_LIMIT'));
+    } else if (error.status === 400) {
+      return next(createError(`OpenAI API error: ${error.message}`, 400, 'OPENAI_BAD_REQUEST'));
     }
     
-    // Handle other errors
-    next(createError(
-      `OpenAI image generation error: ${error.message}`,
-      500,
-      'OPENAI_REQUEST_ERROR'
-    ));
+    // Generic error
+    next(createError(`OpenAI API error: ${error.message}`, 500, 'OPENAI_ERROR'));
   }
 }
 
@@ -267,77 +214,51 @@ async function generateImage(req, res, next) {
  */
 async function checkStatus(req, res, next) {
   try {
-    // Check if API key is configured
-    const hasApiKey = !!process.env.OPENAI_API_KEY;
-    
-    // Only make a test request if the API key is available
-    let apiStatus = 'unknown';
-    let apiVersion = null;
-    let availableModels = [];
-    
-    if (hasApiKey) {
-      try {
-        // Try to list models as a simple API test
-        const modelsResponse = await openai.models.list();
-        
-        apiStatus = 'available';
-        availableModels = modelsResponse.data
-          .slice(0, 10) // Limit to first 10 models to avoid huge response
-          .map(model => ({
-            id: model.id,
-            owned_by: model.owned_by
-          }));
-          
-        // Sort models, placing GPT-4 models first
-        availableModels.sort((a, b) => {
-          const aIsGpt4 = a.id.includes('gpt-4');
-          const bIsGpt4 = b.id.includes('gpt-4');
-          
-          if (aIsGpt4 && !bIsGpt4) return -1;
-          if (!aIsGpt4 && bIsGpt4) return 1;
-          return a.id.localeCompare(b.id);
-        });
-        
-      } catch (apiError) {
-        apiStatus = 'error';
-        logger.error('OpenAI API test failed', {
-          error: apiError.message,
-          stack: apiError.stack
-        });
-      }
-    } else {
-      apiStatus = 'unconfigured';
-    }
-    
-    // Log success
-    logger.info('OpenAI status check successful', {
-      hasApiKey,
-      apiStatus
+    // Make a simple request to check API status
+    await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: 'Hello' }],
+      max_tokens: 5
     });
     
-    // Return response
+    // API is working
     res.json({
       success: true,
+      message: 'OpenAI API is operational',
       data: {
-        apiStatus,
-        hasApiKey,
-        apiVersion,
-        availableModels: apiStatus === 'available' ? availableModels : []
+        status: 'available',
+        timestamp: new Date().toISOString()
       }
     });
   } catch (error) {
-    // Log error
-    logger.error('OpenAI status check failed', {
+    // Determine if this is an authentication error or service error
+    if (error.status === 401) {
+      logger.warn('OpenAI API key is invalid or missing');
+      return res.json({
+        success: false,
+        message: 'OpenAI API key is invalid or missing',
+        data: {
+          status: 'authentication_error',
+          timestamp: new Date().toISOString()
+        }
+      });
+    }
+    
+    // Service might be down or unreachable
+    logger.error('OpenAI API status check failed', {
       error: error.message,
       stack: error.stack
     });
     
-    // Handle the error
-    next(createError(
-      `OpenAI status check error: ${error.message}`,
-      500,
-      'OPENAI_STATUS_CHECK_ERROR'
-    ));
+    res.json({
+      success: false,
+      message: 'OpenAI API status check failed',
+      data: {
+        status: 'error',
+        error: error.message,
+        timestamp: new Date().toISOString()
+      }
+    });
   }
 }
 

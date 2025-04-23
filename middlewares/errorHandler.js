@@ -1,117 +1,111 @@
 /**
- * Error Handling Middleware
+ * Error Handler Middleware
  * 
- * This middleware provides centralized error handling for the application.
- * It creates consistent error responses and logs errors appropriately.
+ * This module provides middleware for handling errors that occur
+ * during request processing.
  */
 
 const logger = require('../config/logger');
 
 /**
- * Function to create a standardized error object with consistent properties
- * @param {string} message - Human-readable error message
- * @param {number} status - HTTP status code (default: 500)
- * @param {string} code - Error code for client-side error handling (default: 'SERVER_ERROR')
- * @param {Object} details - Additional error details (optional)
- * @returns {Error} - Enhanced error object
+ * Custom error creation function with standardized format
+ * @param {string} message - Error message
+ * @param {number} statusCode - HTTP status code (default: 500)
+ * @param {string} code - Error code for client-side error handling (default: 'UNKNOWN_ERROR')
+ * @param {object} details - Additional error details (optional)
+ * @returns {Error} - Formatted error object
  */
-function createError(message, status = 500, code = 'SERVER_ERROR', details = {}) {
+function createError(message, statusCode = 500, code = 'UNKNOWN_ERROR', details = {}) {
   const error = new Error(message);
-  error.status = status;
+  error.statusCode = statusCode;
   error.code = code;
   error.details = details;
   return error;
 }
 
 /**
- * Express middleware to handle errors consistently
+ * Not found (404) handler middleware
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
+function notFoundHandler(req, res, next) {
+  // Skip for static assets and API docs
+  if (req.path.startsWith('/assets/') || req.path.startsWith('/docs/')) {
+    return next();
+  }
+  
+  // For API routes, return JSON error
+  if (req.path.startsWith('/api/')) {
+    const error = createError(
+      `API endpoint not found: ${req.method} ${req.path}`,
+      404,
+      'NOT_FOUND'
+    );
+    return next(error);
+  }
+  
+  // For other routes, pass through (will be handled by frontend routing)
+  next();
+}
+
+/**
+ * Error handler middleware
  * @param {Error} err - Error object
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
 function errorHandler(err, req, res, next) {
-  // Set default status code if not provided
-  const statusCode = err.status || 500;
+  // Set default values if not provided
+  const statusCode = err.statusCode || 500;
+  const code = err.code || 'UNKNOWN_ERROR';
+  const message = err.message || 'An unexpected error occurred';
   
-  // Set default error code if not provided
-  const errorCode = err.code || 'SERVER_ERROR';
+  // Log the error (with different levels based on status code)
+  if (statusCode >= 500) {
+    logger.error('Server error', {
+      error: message,
+      code,
+      statusCode,
+      path: req.path,
+      method: req.method,
+      stack: err.stack
+    });
+  } else if (statusCode >= 400) {
+    logger.warn('Client error', {
+      error: message,
+      code,
+      statusCode,
+      path: req.path,
+      method: req.method
+    });
+  }
   
-  // Format the response
+  // Prepare the response
   const errorResponse = {
     success: false,
     error: {
-      message: err.message || 'An unexpected error occurred',
-      code: errorCode
+      message,
+      code,
+      statusCode
     }
   };
   
-  // Add stack trace in development mode
+  // In development, include more details
   if (process.env.NODE_ENV !== 'production') {
     errorResponse.error.stack = err.stack;
-  }
-  
-  // Add any additional error details
-  if (err.details && Object.keys(err.details).length > 0) {
-    errorResponse.error.details = err.details;
-  }
-  
-  // Log the error with appropriate level
-  if (statusCode >= 500) {
-    logger.error(`Server error: ${err.message}`, {
-      status: statusCode,
-      code: errorCode,
-      stack: err.stack,
-      details: err.details,
-      path: req.path,
-      method: req.method
-    });
-  } else {
-    logger.warn(`Client error: ${err.message}`, {
-      status: statusCode,
-      code: errorCode,
-      path: req.path,
-      method: req.method
-    });
+    if (err.details) {
+      errorResponse.error.details = err.details;
+    }
   }
   
   // Send the error response
   res.status(statusCode).json(errorResponse);
 }
 
-/**
- * Express middleware to handle 404 errors
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
- */
-function notFoundHandler(req, res, next) {
-  // Skip handling certain requests like favicon or static assets
-  if (
-    req.path.startsWith('/favicon.ico') || 
-    req.path.match(/\.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)$/)
-  ) {
-    return next();
-  }
-  
-  // For API requests, return a JSON 404 response
-  if (req.path.startsWith('/api/')) {
-    const error = createError(
-      `Route not found: ${req.method} ${req.path}`,
-      404,
-      'ROUTE_NOT_FOUND'
-    );
-    
-    return errorHandler(error, req, res, next);
-  }
-  
-  // For other requests, let the frontend router handle it
-  // This enables client-side routing in SPA applications
-  next();
-}
-
 module.exports = {
-  createError,
   errorHandler,
-  notFoundHandler
+  notFoundHandler,
+  createError
 };

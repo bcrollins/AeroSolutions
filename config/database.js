@@ -8,37 +8,28 @@
 const { Pool } = require('pg');
 const logger = require('./logger');
 
-// Check for required environment variable
-if (!process.env.DATABASE_URL) {
-  logger.warn('DATABASE_URL environment variable is not set');
-  logger.warn('Please set DATABASE_URL in your .env file or environment variables');
-}
-
-// Configure PostgreSQL connection pool
+// Configure connection pool
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  // Maximum number of clients the pool should contain
-  max: process.env.PG_MAX_CLIENTS ? parseInt(process.env.PG_MAX_CLIENTS) : 10,
-  // Maximum time (ms) a client can stay idle before being closed
-  idleTimeoutMillis: 30000,
-  // Maximum time (ms) to wait for a client to become available
-  connectionTimeoutMillis: 10000
+  // If DATABASE_URL is not set, use individual parameters
+  host: process.env.PGHOST,
+  port: process.env.PGPORT,
+  user: process.env.PGUSER,
+  password: process.env.PGPASSWORD,
+  database: process.env.PGDATABASE,
+  // Connection pool settings
+  max: 20,                       // Maximum connections in pool
+  idleTimeoutMillis: 30000,      // How long a client is idle before being closed
+  connectionTimeoutMillis: 2000, // How long to wait for connection
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-// Log connection events
-pool.on('connect', (client) => {
-  logger.debug('New database connection established');
-});
-
-pool.on('error', (err, client) => {
-  logger.error('Unexpected database error', { 
+// Log pool errors
+pool.on('error', (err) => {
+  logger.error('Unexpected PostgreSQL error on idle client', {
     error: err.message,
     stack: err.stack
   });
-});
-
-pool.on('remove', (client) => {
-  logger.debug('Database client returned to pool');
 });
 
 /**
@@ -49,31 +40,33 @@ pool.on('remove', (client) => {
  */
 async function query(text, params = []) {
   const start = Date.now();
-  const client = await pool.connect();
   
   try {
-    const result = await client.query(text, params);
-    
-    const duration = Date.now() - start;
-    logger.debug('Database query executed', {
-      query: text.replace(/\s+/g, ' ').trim().slice(0, 100) + (text.length > 100 ? '...' : ''),
-      duration: `${duration}ms`,
-      rowCount: result.rowCount
-    });
-    
-    return result;
+    const client = await pool.connect();
+    try {
+      const result = await client.query(text, params);
+      
+      // Log query performance for monitoring
+      const duration = Date.now() - start;
+      logger.debug('Executed query', {
+        query: text.replace(/\s+/g, ' ').trim(),
+        duration,
+        rows: result.rowCount
+      });
+      
+      return result;
+    } finally {
+      // Always release the client back to the pool
+      client.release();
+    }
   } catch (error) {
     logger.error('Database query error', {
+      query: text.replace(/\s+/g, ' ').trim(),
       error: error.message,
-      stack: error.stack,
-      query: text.replace(/\s+/g, ' ').trim().slice(0, 100) + (text.length > 100 ? '...' : '')
+      code: error.code,
+      stack: error.stack
     });
-    
-    // Re-throw the error for handling in the calling code
     throw error;
-  } finally {
-    // Always release the client back to the pool
-    client.release();
   }
 }
 
@@ -82,8 +75,16 @@ async function query(text, params = []) {
  * @returns {Promise<void>} - Resolution when all connections are closed
  */
 async function end() {
-  logger.info('Closing all database connections');
-  return pool.end();
+  try {
+    await pool.end();
+    logger.info('Database pool has been closed');
+  } catch (error) {
+    logger.error('Error closing database pool', {
+      error: error.message,
+      stack: error.stack
+    });
+    throw error;
+  }
 }
 
 /**
@@ -92,38 +93,60 @@ async function end() {
  */
 async function initDatabase() {
   try {
-    // Create contacts table if it doesn't exist
+    // Create required tables
     await query(`
       CREATE TABLE IF NOT EXISTS contacts (
         id SERIAL PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
-        email VARCHAR(100) NOT NULL,
-        phone VARCHAR(20),
+        email VARCHAR(255) NOT NULL,
+        phone VARCHAR(50),
         subject VARCHAR(200) NOT NULL,
         message TEXT NOT NULL,
-        company_name VARCHAR(100),
-        ip_address VARCHAR(45),
+        company_name VARCHAR(200),
+        ip_address VARCHAR(50),
         user_agent TEXT,
-        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-        updated_at TIMESTAMP
+        created_at TIMESTAMP DEFAULT NOW()
       )
     `);
 
-    logger.info('Database initialization completed successfully');
+    // Add index for efficient searches
+    await query(`
+      CREATE INDEX IF NOT EXISTS contacts_email_idx ON contacts(email);
+      CREATE INDEX IF NOT EXISTS contacts_created_at_idx ON contacts(created_at);
+    `);
+
+    logger.info('Database tables initialized successfully');
   } catch (error) {
-    logger.error('Failed to initialize database', {
+    logger.error('Database initialization error', {
       error: error.message,
       stack: error.stack
     });
-    
-    // Re-throw the error for handling in the calling code
     throw error;
   }
 }
 
-// Export functions for use in other modules
+/**
+ * Check database connection status
+ * @returns {Promise<boolean>} - True if connection successful
+ */
+async function checkConnection() {
+  try {
+    // Simple query to check connection
+    const result = await query('SELECT NOW() as time');
+    return !!result.rows[0].time;
+  } catch (error) {
+    logger.error('Database connection check failed', {
+      error: error.message,
+      stack: error.stack
+    });
+    return false;
+  }
+}
+
 module.exports = {
   query,
   end,
-  initDatabase
+  initDatabase,
+  checkConnection,
+  pool
 };

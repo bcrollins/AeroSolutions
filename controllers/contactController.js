@@ -17,36 +17,26 @@ const { createError } = require('../middlewares/errorHandler');
  */
 async function submitContact(req, res, next) {
   try {
-    // Extract validated data from the request body
-    const { name, email, phone = null, subject, message, companyName = null } = req.body;
+    // Extract validated data from request body
+    const { name, email, phone, subject, message, company } = req.body;
     
-    // Additional metadata from the request
-    const ip = req.ip || null;
-    const userAgent = req.headers['user-agent'] || null;
+    // Client information
+    const ipAddress = logger.anonymize(req.ip); // Anonymized for privacy
+    const userAgent = req.get('user-agent') || 'unknown';
     
     // Insert into database
     const result = await db.query(
-      `INSERT INTO contacts 
-        (name, email, phone, subject, message, company_name, ip_address, user_agent, created_at) 
-       VALUES 
-        ($1, $2, $3, $4, $5, $6, $7, $8, NOW()) 
+      `INSERT INTO contacts (name, email, phone, subject, message, company_name, ip_address, user_agent)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING id, created_at`,
-      [name, email, phone, subject, message, companyName, ip, userAgent]
+      [name, email, phone || null, subject, message, company || null, ipAddress, userAgent]
     );
     
-    // Get the inserted contact details
-    const contact = result.rows[0];
-    
-    // Format timestamp for response
-    const timestamp = contact.created_at.toISOString();
-    
-    // Log success
+    // Log the successful submission
     logger.info('Contact form submitted', {
-      contactId: contact.id,
-      name,
+      id: result.rows[0].id,
       email,
-      subject,
-      ip
+      subject
     });
     
     // Return success response
@@ -54,36 +44,55 @@ async function submitContact(req, res, next) {
       success: true,
       message: 'Contact form submitted successfully',
       data: {
-        id: contact.id,
-        timestamp
+        id: result.rows[0].id,
+        createdAt: result.rows[0].created_at
       }
     });
   } catch (error) {
-    // Log error
-    logger.error('Contact form submission failed', {
+    // Log database errors
+    logger.error('Contact form submission error', {
       error: error.message,
       stack: error.stack
     });
     
-    // Handle database errors
-    if (error.code === '23505') {
-      // Duplicate key violation
-      return next(createError(
-        'A recent identical submission was detected. Please wait before submitting again.',
-        409,
-        'DUPLICATE_SUBMISSION'
-      ));
-    }
+    // Pass error to error handler middleware
+    next(createError('Failed to submit contact form', 500, 'CONTACT_SUBMISSION_ERROR'));
+  }
+}
+
+/**
+ * Get all contact submissions (for admin purposes)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
+async function getContacts(req, res, next) {
+  try {
+    // Query to get all contacts, ordered by most recent first
+    const result = await db.query(
+      `SELECT id, name, email, phone, subject, message, company_name, created_at
+       FROM contacts
+       ORDER BY created_at DESC`
+    );
     
-    // Handle other errors
-    next(createError(
-      `Contact form submission error: ${error.message}`,
-      500,
-      'CONTACT_SUBMISSION_ERROR'
-    ));
+    // Return the contacts
+    res.json({
+      success: true,
+      data: result.rows
+    });
+  } catch (error) {
+    // Log database errors
+    logger.error('Error fetching contact submissions', {
+      error: error.message,
+      stack: error.stack
+    });
+    
+    // Pass error to error handler middleware
+    next(createError('Failed to fetch contact submissions', 500, 'CONTACT_FETCH_ERROR'));
   }
 }
 
 module.exports = {
-  submitContact
+  submitContact,
+  getContacts
 };

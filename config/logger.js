@@ -9,100 +9,126 @@ const winston = require('winston');
 const path = require('path');
 const fs = require('fs');
 
-// Create logs directory if it doesn't exist
-const logDir = path.join(__dirname, '..', 'logs');
-if (!fs.existsSync(logDir)) {
-  fs.mkdirSync(logDir, { recursive: true });
+// Ensure logs directory exists
+const logsDir = path.join(process.cwd(), 'logs');
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir);
 }
 
-// Define log levels and colors
-const logLevels = {
+// Define log levels
+const levels = {
   error: 0,
   warn: 1,
   info: 2,
   http: 3,
-  debug: 4
+  debug: 4,
 };
 
-const logColors = {
+// Define level based on environment
+const level = () => {
+  const env = process.env.NODE_ENV || 'development';
+  return env === 'development' ? 'debug' : 'info';
+};
+
+// Define colors for each level
+const colors = {
   error: 'red',
   warn: 'yellow',
   info: 'green',
   http: 'magenta',
-  debug: 'blue'
+  debug: 'blue',
 };
 
 // Add colors to Winston
-winston.addColors(logColors);
+winston.addColors(colors);
 
-// Environment-based logging level
-const level = process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug');
-
-// Custom format for console output
+// Define the format for console output
 const consoleFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.colorize({ all: true }),
-  winston.format.printf(({ timestamp, level, message, ...meta }) => {
-    const metaString = Object.keys(meta).length ? JSON.stringify(meta, null, 2) : '';
-    return `${timestamp} [${level}]: ${message}${metaString ? `\n${metaString}` : ''}`;
-  })
+  winston.format.printf(
+    (info) => `${info.timestamp} [${info.level}] ${info.message}${
+      info.error ? ` - ${info.error}` : ''
+    }${info.stack ? `\n${info.stack}` : ''}`
+  )
 );
 
-// Format for file logging
+// Define the format for file output (JSON for easier parsing)
 const fileFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  winston.format.errors({ stack: true }),
   winston.format.json()
 );
 
-// Create the Winston logger
+// Configure transports
+const transports = [
+  // Console transport
+  new winston.transports.Console({
+    level: level(),
+    format: consoleFormat,
+  }),
+  
+  // Error log file
+  new winston.transports.File({
+    filename: path.join(logsDir, 'error.log'),
+    level: 'error',
+    format: fileFormat,
+    maxsize: 5242880, // 5MB
+    maxFiles: 5,
+  }),
+  
+  // Combined log file
+  new winston.transports.File({
+    filename: path.join(logsDir, 'combined.log'),
+    format: fileFormat,
+    maxsize: 5242880, // 5MB
+    maxFiles: 5,
+  }),
+];
+
+// Create the logger instance
 const logger = winston.createLogger({
-  level,
-  levels: logLevels,
-  format: fileFormat,
-  transports: [
-    // Console transport for all logs
-    new winston.transports.Console({
-      format: consoleFormat
-    }),
-    
-    // File transport for error logs
-    new winston.transports.File({
-      filename: path.join(logDir, 'error.log'),
-      level: 'error'
-    }),
-    
-    // File transport for all logs
-    new winston.transports.File({
-      filename: path.join(logDir, 'combined.log')
-    })
-  ],
+  level: level(),
+  levels,
+  format: winston.format.json(),
+  transports,
   exceptionHandlers: [
     new winston.transports.File({ 
-      filename: path.join(logDir, 'exceptions.log')
-    })
+      filename: path.join(logsDir, 'exceptions.log'),
+      format: fileFormat,
+      maxsize: 5242880, // 5MB
+      maxFiles: 5,
+    }),
   ],
-  exitOnError: false
+  rejectionHandlers: [
+    new winston.transports.File({ 
+      filename: path.join(logsDir, 'rejections.log'),
+      format: fileFormat,
+      maxsize: 5242880, // 5MB
+      maxFiles: 5,
+    }),
+  ],
+  exitOnError: false,
 });
 
-// Specialized HTTP request logger method
-logger.httpRequest = (req, res, duration) => {
-  const { method, originalUrl, ip, headers } = req;
-  const userAgent = headers['user-agent'];
-  const statusCode = res.statusCode;
+// Export a function to anonymize sensitive data (like IP addresses)
+function anonymize(ip) {
+  if (!ip) return 'unknown';
   
-  const logLevel = statusCode >= 500 ? 'error' : 
-                   statusCode >= 400 ? 'warn' : 
-                   'http';
+  // IPv4
+  if (ip.includes('.')) {
+    const parts = ip.split('.');
+    return `${parts[0]}.${parts[1]}.xxx.xxx`;
+  }
   
-  logger.log(logLevel, `${method} ${originalUrl} ${statusCode} ${duration}ms`, {
-    method,
-    url: originalUrl,
-    status: statusCode,
-    responseTime: duration,
-    ip,
-    userAgent
-  });
-};
+  // IPv6
+  if (ip.includes(':')) {
+    const parts = ip.split(':');
+    return `${parts[0]}:${parts[1]}:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx`;
+  }
+  
+  return 'unknown';
+}
 
-// Export the logger
 module.exports = logger;
+module.exports.anonymize = anonymize;
