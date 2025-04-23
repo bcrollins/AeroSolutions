@@ -4,33 +4,8 @@
  * Handles logic for contact-related routes
  */
 
-const { body } = require('express-validator');
 const contactModel = require('../models/contact');
 const logger = require('../config/logger');
-const { handleValidationErrors } = require('../middlewares/validator');
-
-// Validation rules for contact submission
-const contactValidationRules = [
-  body('name')
-    .notEmpty().withMessage('Name is required')
-    .isLength({ min: 2, max: 100 }).withMessage('Name must be between 2 and 100 characters'),
-  
-  body('email')
-    .notEmpty().withMessage('Email is required')
-    .isEmail().withMessage('Must be a valid email address')
-    .normalizeEmail(),
-  
-  body('subject')
-    .notEmpty().withMessage('Subject is required')
-    .isLength({ min: 5, max: 200 }).withMessage('Subject must be between 5 and 200 characters'),
-  
-  body('message')
-    .notEmpty().withMessage('Message is required')
-    .isLength({ min: 10 }).withMessage('Message must be at least 10 characters long'),
-  
-  // Apply validation
-  handleValidationErrors
-];
 
 /**
  * Submit a contact form
@@ -41,28 +16,50 @@ async function submitContact(req, res) {
   try {
     const { name, email, subject, message } = req.body;
     
-    // Log contact submission
-    logger.info(`Contact form submission from ${name} (${email}): ${subject}`);
+    // Validate required fields
+    if (!name || !email || !subject || !message) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Missing required fields',
+          code: 'MISSING_FIELDS'
+        }
+      });
+    }
     
-    // Submit contact form
-    const contact = await contactModel.submit({
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Invalid email format',
+          code: 'INVALID_EMAIL'
+        }
+      });
+    }
+    
+    // Create contact submission
+    const result = await contactModel.createContact({
       name,
       email,
       subject,
       message
     });
     
-    return res.status(201).json({
-      success: true,
-      message: 'Contact form submitted successfully',
-      data: contact
-    });
+    if (!result.success) {
+      return res.status(500).json(result);
+    }
+    
+    return res.status(201).json(result);
   } catch (error) {
-    logger.error('Error in contactController.submitContact:', error);
+    logger.error(`Error in submitContact: ${error.message}`);
     return res.status(500).json({
       success: false,
-      message: 'Failed to submit contact form',
-      error: error.message
+      error: {
+        message: 'Failed to submit contact form',
+        details: error.message
+      }
     });
   }
 }
@@ -74,35 +71,22 @@ async function submitContact(req, res) {
  */
 async function getAllContacts(req, res) {
   try {
-    const { 
-      limit = 100, 
-      offset = 0, 
-      status, 
-      sortBy = 'created_at', 
-      sortOrder = 'DESC' 
-    } = req.query;
+    const status = req.query.status || null;
+    const result = await contactModel.getAllContacts(status);
     
-    logger.info('Fetching all contact submissions', { limit, offset, status, sortBy, sortOrder });
+    if (!result.success) {
+      return res.status(500).json(result);
+    }
     
-    const contacts = await contactModel.findAll({
-      limit: parseInt(limit),
-      offset: parseInt(offset),
-      status,
-      sortBy,
-      sortOrder
-    });
-    
-    return res.status(200).json({
-      success: true,
-      data: contacts,
-      count: contacts.length
-    });
+    return res.json(result);
   } catch (error) {
-    logger.error('Error in contactController.getAllContacts:', error);
+    logger.error(`Error in getAllContacts: ${error.message}`);
     return res.status(500).json({
       success: false,
-      message: 'Failed to retrieve contact submissions',
-      error: error.message
+      error: {
+        message: 'Failed to get contact submissions',
+        details: error.message
+      }
     });
   }
 }
@@ -116,27 +100,34 @@ async function getContactById(req, res) {
   try {
     const { id } = req.params;
     
-    logger.info(`Fetching contact submission with ID ${id}`);
-    
-    const contact = await contactModel.findById(parseInt(id));
-    
-    if (!contact) {
-      return res.status(404).json({
+    if (!id || isNaN(id)) {
+      return res.status(400).json({
         success: false,
-        message: 'Contact submission not found'
+        error: {
+          message: 'Invalid contact ID',
+          code: 'INVALID_ID'
+        }
       });
     }
     
-    return res.status(200).json({
-      success: true,
-      data: contact
-    });
+    const result = await contactModel.getContactById(parseInt(id));
+    
+    if (!result.success) {
+      if (result.error && result.error.message === 'Contact not found') {
+        return res.status(404).json(result);
+      }
+      return res.status(500).json(result);
+    }
+    
+    return res.json(result);
   } catch (error) {
-    logger.error('Error in contactController.getContactById:', error);
+    logger.error(`Error in getContactById: ${error.message}`);
     return res.status(500).json({
       success: false,
-      message: 'Failed to retrieve contact submission',
-      error: error.message
+      error: {
+        message: 'Failed to get contact submission',
+        details: error.message
+      }
     });
   }
 }
@@ -149,39 +140,59 @@ async function getContactById(req, res) {
 async function updateContactStatus(req, res) {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, notes } = req.body;
+    
+    if (!id || isNaN(id)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Invalid contact ID',
+          code: 'INVALID_ID'
+        }
+      });
+    }
+    
+    if (!status) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Status is required',
+          code: 'MISSING_STATUS'
+        }
+      });
+    }
     
     // Validate status
-    const validStatuses = ['new', 'in_progress', 'completed', 'spam'];
+    const validStatuses = ['new', 'in_progress', 'completed', 'archived'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
-        message: `Invalid status. Must be one of: ${validStatuses.join(', ')}`
+        error: {
+          message: 'Invalid status value',
+          code: 'INVALID_STATUS',
+          validValues: validStatuses
+        }
       });
     }
     
-    logger.info(`Updating contact submission ${id} status to ${status}`);
+    const result = await contactModel.updateContactStatus(parseInt(id), status, notes);
     
-    const contact = await contactModel.updateStatus(parseInt(id), status);
-    
-    if (!contact) {
-      return res.status(404).json({
-        success: false,
-        message: 'Contact submission not found'
-      });
+    if (!result.success) {
+      if (result.error && result.error.message === 'Contact not found') {
+        return res.status(404).json(result);
+      }
+      return res.status(500).json(result);
     }
     
-    return res.status(200).json({
-      success: true,
-      message: 'Contact status updated successfully',
-      data: contact
-    });
+    return res.json(result);
   } catch (error) {
-    logger.error('Error in contactController.updateContactStatus:', error);
+    logger.error(`Error in updateContactStatus: ${error.message}`);
     return res.status(500).json({
       success: false,
-      message: 'Failed to update contact status',
-      error: error.message
+      error: {
+        message: 'Failed to update contact status',
+        details: error.message
+      }
     });
   }
 }
@@ -195,27 +206,34 @@ async function deleteContact(req, res) {
   try {
     const { id } = req.params;
     
-    logger.info(`Deleting contact submission with ID ${id}`);
-    
-    const deleted = await contactModel.remove(parseInt(id));
-    
-    if (!deleted) {
-      return res.status(404).json({
+    if (!id || isNaN(id)) {
+      return res.status(400).json({
         success: false,
-        message: 'Contact submission not found'
+        error: {
+          message: 'Invalid contact ID',
+          code: 'INVALID_ID'
+        }
       });
     }
     
-    return res.status(200).json({
-      success: true,
-      message: 'Contact submission deleted successfully'
-    });
+    const result = await contactModel.deleteContact(parseInt(id));
+    
+    if (!result.success) {
+      if (result.error && result.error.message === 'Contact not found') {
+        return res.status(404).json(result);
+      }
+      return res.status(500).json(result);
+    }
+    
+    return res.json(result);
   } catch (error) {
-    logger.error('Error in contactController.deleteContact:', error);
+    logger.error(`Error in deleteContact: ${error.message}`);
     return res.status(500).json({
       success: false,
-      message: 'Failed to delete contact submission',
-      error: error.message
+      error: {
+        message: 'Failed to delete contact submission',
+        details: error.message
+      }
     });
   }
 }
@@ -227,26 +245,26 @@ async function deleteContact(req, res) {
  */
 async function getContactCounts(req, res) {
   try {
-    logger.info('Fetching contact submission counts by status');
+    const result = await contactModel.getContactCounts();
     
-    const counts = await contactModel.getCounts();
+    if (!result.success) {
+      return res.status(500).json(result);
+    }
     
-    return res.status(200).json({
-      success: true,
-      data: counts
-    });
+    return res.json(result);
   } catch (error) {
-    logger.error('Error in contactController.getContactCounts:', error);
+    logger.error(`Error in getContactCounts: ${error.message}`);
     return res.status(500).json({
       success: false,
-      message: 'Failed to retrieve contact counts',
-      error: error.message
+      error: {
+        message: 'Failed to get contact counts',
+        details: error.message
+      }
     });
   }
 }
 
 module.exports = {
-  contactValidationRules,
   submitContact,
   getAllContacts,
   getContactById,

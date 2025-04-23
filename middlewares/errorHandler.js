@@ -1,13 +1,17 @@
 /**
  * Error Handler Middleware
  * 
- * Centralized error handling middleware for consistent error responses
+ * Centralized error handling for the application
  */
 
 const logger = require('../config/logger');
 
 /**
- * Error handler middleware for Express
+ * Error handler middleware
+ * @param {Error} err - Error object
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Next middleware
  */
 function errorHandler(err, req, res, next) {
   // Log the error
@@ -15,73 +19,96 @@ function errorHandler(err, req, res, next) {
     stack: err.stack,
     url: req.originalUrl,
     method: req.method,
-    ip: req.ip,
-    errorCode: err.code || 'UNKNOWN'
+    body: req.method !== 'GET' ? req.body : undefined,
+    requestId: req.id || 'unknown'
   });
 
-  // Determine the error code based on the error type
-  let statusCode = err.statusCode || 500;
-  let errorMessage = err.message || 'Internal Server Error';
-  let errorDetails = err.details || null;
+  // Determine if this is an operational error (expected) or programming error (unexpected)
+  const isOperational = err.isOperational || false;
   
-  // Handle specific error types
-  if (err.name === 'ValidationError') {
-    statusCode = 400;
-    errorMessage = 'Validation error';
-    errorDetails = err.errors || err.details;
-  } else if (err.name === 'UnauthorizedError' || err.message === 'Unauthorized') {
-    statusCode = 401;
-    errorMessage = 'Unauthorized access';
-  } else if (err.name === 'ForbiddenError' || err.message === 'Forbidden') {
-    statusCode = 403;
-    errorMessage = 'Access forbidden';
-  } else if (err.name === 'NotFoundError' || err.message.includes('not found')) {
-    statusCode = 404;
-    errorMessage = 'Resource not found';
-  } else if (err.code === 'LIMIT_FILE_SIZE') {
-    statusCode = 413;
-    errorMessage = 'File too large';
-  } else if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-    statusCode = 400;
-    errorMessage = 'Invalid file type';
-  } else if (err.code === 'EBADCSRFTOKEN') {
-    statusCode = 403;
-    errorMessage = 'Invalid CSRF token';
-  }
-
-  // Handle database connection errors
-  if (err.code === 'ECONNREFUSED' && err.message.includes('database')) {
-    statusCode = 503;
-    errorMessage = 'Database service unavailable';
-  }
-
-  // Handle OpenAI API errors
-  if (err.message.includes('OpenAI')) {
-    if (err.message.includes('API key')) {
-      statusCode = 401;
-      errorMessage = 'OpenAI API authentication failed';
-    } else {
-      statusCode = 502;
-      errorMessage = 'OpenAI API error';
-    }
-  }
-
-  // Clean up error details for production
-  if (process.env.NODE_ENV === 'production' && statusCode === 500) {
-    errorDetails = null; // Don't expose detailed error info in production
-  }
-
-  // Send the error response
-  res.status(statusCode).json({
+  // Format the error response
+  const errorResponse = {
     success: false,
     error: {
-      message: errorMessage,
-      code: err.code || err.name || 'INTERNAL_ERROR',
-      details: errorDetails,
-      requestId: req.id // Assuming request ID middleware is used
-    },
-    timestamp: new Date().toISOString()
-  });
+      message: isOperational ? err.message : 'Internal server error',
+      code: err.code || 'SERVER_ERROR',
+      ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+    }
+  };
+  
+  // Additional details for non-production environments
+  if (process.env.NODE_ENV !== 'production') {
+    errorResponse.error.originalMessage = err.message;
+  }
+  
+  // Set the appropriate status code
+  const statusCode = err.statusCode || 500;
+  
+  // Send the error response
+  res.status(statusCode).json(errorResponse);
 }
 
-module.exports = errorHandler;
+/**
+ * Not found handler middleware
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Next middleware
+ */
+function notFoundHandler(req, res, next) {
+  const err = new Error(`Not Found - ${req.originalUrl}`);
+  err.statusCode = 404;
+  err.isOperational = true;
+  err.code = 'RESOURCE_NOT_FOUND';
+  next(err);
+}
+
+/**
+ * Create an operational error
+ * @param {string} message - Error message
+ * @param {string} code - Error code
+ * @param {number} statusCode - HTTP status code
+ * @returns {Error} - Operational error
+ */
+function createError(message, code = 'INTERNAL_ERROR', statusCode = 500) {
+  const error = new Error(message);
+  error.isOperational = true;
+  error.code = code;
+  error.statusCode = statusCode;
+  return error;
+}
+
+/**
+ * Handle uncaught exceptions
+ * @param {Error} err - Error object
+ */
+function handleUncaughtException(err) {
+  logger.error('UNCAUGHT EXCEPTION! 💥 Shutting down...', {
+    error: err.message,
+    stack: err.stack
+  });
+  // Implement graceful shutdown logic if needed
+  process.exit(1);
+}
+
+/**
+ * Handle unhandled promise rejections
+ * @param {Error} err - Error object
+ */
+function handleUnhandledRejection(err) {
+  logger.error('UNHANDLED REJECTION! 💥 Shutting down...', {
+    error: err.message,
+    stack: err.stack 
+  });
+  // Implement graceful shutdown logic if needed
+  process.exit(1);
+}
+
+// Register global handlers
+process.on('uncaughtException', handleUncaughtException);
+process.on('unhandledRejection', handleUnhandledRejection);
+
+module.exports = {
+  errorHandler,
+  notFoundHandler,
+  createError
+};

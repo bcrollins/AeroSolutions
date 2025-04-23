@@ -7,73 +7,48 @@
 const express = require('express');
 const router = express.Router();
 const contactController = require('../controllers/contactController');
-const limiter = require('../middlewares/rateLimiter');
+const rateLimiter = require('../middlewares/rateLimiter');
 
 /**
- * @route   POST /api/contact
- * @desc    Submit a contact form
- * @access  Public
+ * @route POST /api/contact
+ * @desc Submit contact form
+ * @access Public
  */
-router.post(
-  '/',
-  limiter.default,
-  contactController.contactValidationRules,
-  contactController.submitContact
-);
+router.post('/', rateLimiter.standard, contactController.submitContact);
 
 /**
- * @route   GET /api/contact
- * @desc    Get all contact submissions
- * @access  Admin
+ * @route GET /api/contact
+ * @desc Get all contact submissions
+ * @access Admin
  */
-router.get(
-  '/',
-  limiter.default,
-  contactController.getAllContacts
-);
+router.get('/', rateLimiter.api, contactController.getAllContacts);
 
 /**
- * @route   GET /api/contact/counts
- * @desc    Get contact counts by status
- * @access  Admin
+ * @route GET /api/contact/counts
+ * @desc Get contact submission counts by status
+ * @access Admin
  */
-router.get(
-  '/counts',
-  limiter.default,
-  contactController.getContactCounts
-);
+router.get('/counts', rateLimiter.api, contactController.getContactCounts);
 
 /**
- * @route   GET /api/contact/:id
- * @desc    Get a contact submission by ID
- * @access  Admin
+ * @route GET /api/contact/:id
+ * @desc Get contact submission by ID
+ * @access Admin
  */
-router.get(
-  '/:id',
-  limiter.default,
-  contactController.getContactById
-);
+router.get('/:id', rateLimiter.api, contactController.getContactById);
 
 /**
- * @route   PATCH /api/contact/:id/status
- * @desc    Update a contact submission's status
- * @access  Admin
+ * @route PATCH /api/contact/:id
+ * @desc Update contact submission status
+ * @access Admin
  */
-router.patch(
-  '/:id/status',
-  limiter.default,
-  contactController.updateContactStatus
-);
+router.patch('/:id', rateLimiter.api, contactController.updateContactStatus);
 
 /**
- * @route   DELETE /api/contact/:id
- * @desc    Delete a contact submission
- * @access  Admin
+ * @route DELETE /api/contact/:id
+ * @desc Delete contact submission
+ * @access Admin
  */
-router.delete(
-  '/:id',
-  limiter.default,
-  contactController.deleteContact
-);
+router.delete('/:id', rateLimiter.api, contactController.deleteContact);
 
 module.exports = router;

@@ -4,31 +4,35 @@
  * This module provides a connection pool for PostgreSQL database connections.
  * It uses environment variables for configuration to keep sensitive information secure.
  */
-
 const { Pool } = require('pg');
 const logger = require('./logger');
 
 // Get database configuration from environment variables
-const isProduction = process.env.NODE_ENV === 'production';
-
-// Configure database connection
 const dbConfig = {
   connectionString: process.env.DATABASE_URL,
-  ssl: isProduction ? { rejectUnauthorized: false } : false,
-  // Pool configuration - for better performance
-  max: process.env.DB_POOL_SIZE ? parseInt(process.env.DB_POOL_SIZE) : 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
+  ssl: process.env.NODE_ENV === 'production' 
+    ? { rejectUnauthorized: false } 
+    : false,
+  // Pool configuration for better performance
+  max: parseInt(process.env.DB_POOL_MAX || '20', 10),
+  idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT || '30000', 10),
+  connectionTimeoutMillis: parseInt(process.env.DB_CONNECTION_TIMEOUT || '2000', 10)
 };
 
-// Create connection pool
+// Create a pool for handling database connections
 const pool = new Pool(dbConfig);
 
-// Log errors from the pool
+// Log database connection errors
 pool.on('error', (err) => {
-  logger.error('Unexpected error on idle database client', err);
-  process.exit(-1);
+  logger.error('Unexpected database error', { error: err.message, stack: err.stack });
 });
+
+// Log when new connections are created (only in development)
+if (process.env.NODE_ENV !== 'production') {
+  pool.on('connect', () => {
+    logger.debug('New database connection established');
+  });
+}
 
 /**
  * Execute a query with parameters
@@ -39,18 +43,36 @@ pool.on('error', (err) => {
 const query = async (text, params) => {
   const start = Date.now();
   try {
-    const res = await pool.query(text, params);
-    const duration = Date.now() - start;
+    // Redact sensitive queries (e.g., those containing passwords)
+    const redactedText = text.toLowerCase().includes('password') 
+      ? '[REDACTED PASSWORD QUERY]' 
+      : text;
     
-    if (duration > 1000) { // Log slow queries (over 1 second)
-      logger.warn(`Slow query: ${text} with params: ${JSON.stringify(params)} (${duration}ms)`);
-    } else if (process.env.NODE_ENV === 'development') {
-      logger.debug(`Query executed: ${text} with params: ${JSON.stringify(params)} (${duration}ms)`);
+    // Log the query in development
+    if (process.env.NODE_ENV !== 'production') {
+      logger.debug('Executing query', {
+        query: redactedText.substring(0, 100) + (redactedText.length > 100 ? '...' : ''),
+        parameters: params ? `${params.length} parameters` : 'no parameters'
+      });
     }
+    
+    const res = await pool.query(text, params);
+    
+    // Log the execution time
+    const duration = Date.now() - start;
+    logger.debug('Query complete', {
+      duration,
+      rowCount: res.rowCount
+    });
     
     return res;
   } catch (err) {
-    logger.error(`Query error: ${text} with params: ${JSON.stringify(params)}`, err);
+    const duration = Date.now() - start;
+    logger.error('Query error', {
+      error: err.message,
+      duration,
+      query: text.substring(0, 100) + (text.length > 100 ? '...' : '')
+    });
     throw err;
   }
 };
@@ -61,12 +83,19 @@ const query = async (text, params) => {
  */
 const getClient = async () => {
   const client = await pool.connect();
-  const originalRelease = client.release;
+  const query = client.query;
+  const release = client.release;
   
-  // Override release method to log duration
+  // Override client.query to log queries
+  client.query = (...args) => {
+    client.lastQuery = args;
+    return query.apply(client, args);
+  };
+  
+  // Override client.release to track release time and detect leaks
   client.release = () => {
-    client.query_count = 0;
-    originalRelease.apply(client);
+    client.lastReleaseTime = Date.now();
+    return release.apply(client);
   };
   
   return client;
@@ -79,17 +108,17 @@ const getClient = async () => {
 const testConnection = async () => {
   try {
     const result = await query('SELECT NOW()');
-    logger.info(`Database connection successful, server timestamp: ${result.rows[0].now}`);
-    return true;
-  } catch (error) {
-    logger.error(`Database connection failed: ${error.message}`);
+    return result.rows.length > 0;
+  } catch (err) {
+    logger.error('Database connection test failed', { error: err.message });
     return false;
   }
 };
 
+// Export the pool and helper functions
 module.exports = {
+  pool,
   query,
   getClient,
-  testConnection,
-  pool
+  testConnection
 };
