@@ -29,17 +29,17 @@ interface ClientPlatform {
 // Platform data
 const platforms: ClientPlatform[] = [
   {
-    id: "aerosync",
-    name: "AeroSync",
-    shortDescription: "Comprehensive aviation data synchronization platform",
+    id: "websync",
+    name: "WebSync",
+    shortDescription: "Comprehensive web data synchronization platform",
     icon: <FaPlaneDeparture className="text-3xl" />,
-    description: "AeroSync is an advanced aviation data synchronization platform designed to streamline operations across multiple systems. It integrates flight data, maintenance records, crew scheduling, and other critical information into a unified ecosystem, ensuring real-time updates and data consistency across all departments.",
+    description: "WebSync is an advanced web data synchronization platform designed to streamline operations across multiple systems. It integrates user data, content management, scheduling, and other critical information into a unified ecosystem, ensuring real-time updates and data consistency across all departments.",
     features: [
       "Real-time data synchronization across all connected systems",
       "Automated conflict resolution for simultaneous updates",
       "Role-based access control with detailed permission settings",
       "Comprehensive audit trail and change tracking",
-      "Integration with major aviation software systems",
+      "Integration with major business software systems",
       "Custom workflow automation tools",
       "Advanced reporting and analytics dashboard",
       "Mobile access with offline capabilities"
@@ -69,11 +69,11 @@ const platforms: ClientPlatform[] = [
       }
     ],
     useCases: [
-      "Airlines synchronizing flight data across scheduling, maintenance, and crew management systems",
-      "MRO facilities integrating inventory management with maintenance tracking",
-      "Aviation training centers synchronizing student records with simulator usage",
-      "Aircraft leasing companies managing fleet data across multiple operators",
-      "Airport operations coordinating ground services with flight information"
+      "Businesses synchronizing data across scheduling, inventory, and team management systems",
+      "Retail companies integrating inventory management with sales tracking",
+      "Educational institutions synchronizing student records with learning management systems",
+      "Technology companies managing product data across multiple platforms",
+      "E-commerce operations coordinating logistics with customer information"
     ],
     apiEndpoints: [
       {
@@ -99,17 +99,17 @@ const platforms: ClientPlatform[] = [
     ]
   },
   {
-    id: "aeroops",
-    name: "AeroOps",
-    shortDescription: "End-to-end aviation operations management platform",
+    id: "webops",
+    name: "WebOps",
+    shortDescription: "End-to-end web operations management platform",
     icon: <FaServer className="text-3xl" />,
-    description: "AeroOps is a comprehensive platform designed to help airlines and aviation companies manage their operations efficiently. It offers powerful tools for flight scheduling, crew management, regulatory compliance, and operational analytics. The platform streamlines complex operational processes, making it a critical solution for aviation professionals seeking to optimize their operations and reduce costs.",
+    description: "WebOps is a comprehensive platform designed to help businesses and web-based companies manage their operations efficiently. It offers powerful tools for content scheduling, team management, regulatory compliance, and operational analytics. The platform streamlines complex operational processes, making it a critical solution for digital professionals seeking to optimize their operations and reduce costs.",
     features: [
-      "Intelligent flight scheduling with conflict detection",
-      "Crew management with qualification tracking and fatigue risk monitoring",
+      "Intelligent content scheduling with conflict detection",
+      "Team management with qualification tracking and workload monitoring",
       "Regulatory compliance monitoring and automatic updates",
-      "Maintenance tracking and integration with AeroSync",
-      "Fuel optimization algorithms and consumption tracking",
+      "Maintenance tracking and integration with WebSync",
+      "Resource optimization algorithms and usage tracking",
       "Disruption management with automated recovery scenarios",
       "Performance analytics with customizable KPIs",
       "Real-time operational control dashboards"
@@ -139,27 +139,27 @@ const platforms: ClientPlatform[] = [
       }
     ],
     useCases: [
-      "Regional airlines optimizing crew utilization across multiple bases",
-      "Charter operators managing on-demand flight scheduling",
-      "Flight departments ensuring regulatory compliance across jurisdictions",
-      "Low-cost carriers maximizing aircraft utilization with tight turnarounds",
-      "Helicopter operators managing complex mission-based operations"
+      "Digital agencies optimizing team utilization across multiple projects",
+      "SaaS companies managing on-demand content scheduling",
+      "IT departments ensuring regulatory compliance across platforms",
+      "E-commerce operations maximizing server utilization with traffic spikes",
+      "Web service providers managing complex client-based operations"
     ],
     apiEndpoints: [
       {
         method: "GET",
-        endpoint: "/api/v1/flights",
-        description: "Retrieve scheduled flights with filtering options"
+        endpoint: "/api/v1/schedules",
+        description: "Retrieve scheduled operations with filtering options"
       },
       {
         method: "POST",
-        endpoint: "/api/v1/flights/optimize",
-        description: "Run optimization algorithms on flight schedules with specified parameters"
+        endpoint: "/api/v1/resources/optimize",
+        description: "Run optimization algorithms on resource allocation with specified parameters"
       },
       {
         method: "GET",
-        endpoint: "/api/v1/crew/availability",
-        description: "Check crew availability with qualification filters"
+        endpoint: "/api/v1/team/availability",
+        description: "Check team availability with qualification filters"
       },
       {
         method: "POST",
@@ -209,11 +209,11 @@ const platforms: ClientPlatform[] = [
       }
     ],
     useCases: [
-      "Aviation industry executives managing global teams and operations",
-      "Corporate flight department directors coordinating executive travel",
-      "Airline C-suite executives balancing operational and strategic priorities",
-      "Airport authority leaders managing stakeholder communications",
-      "Aviation consultancy principals managing multiple client engagements"
+      "Technology industry executives managing global teams and operations",
+      "Corporate department directors coordinating executive schedules",
+      "Enterprise C-suite executives balancing operational and strategic priorities",
+      "Government authority leaders managing stakeholder communications",
+      "Business consultancy principals managing multiple client engagements"
     ],
     apiEndpoints: [
       {
@@ -239,35 +239,35 @@ const platforms: ClientPlatform[] = [
     ]
   },
   {
-    id: "aeroflight",
-    name: "AeroFlight",
-    shortDescription: "Advanced flight simulation and training platform",
-    icon: <FaPlane className="text-3xl" />,
-    description: "AeroFlight is a sophisticated flight simulation platform designed for pilot training and proficiency. It provides high-fidelity aircraft models, realistic weather simulation, and comprehensive performance analysis tools. The platform supports both desktop and full-motion simulator configurations, making it versatile for various training needs from individual pilots to large flight schools and airlines.",
+    id: "webtrainer",
+    name: "WebTrainer",
+    shortDescription: "Advanced web-based training platform",
+    icon: <FaServer className="text-3xl" />,
+    description: "WebTrainer is a sophisticated web-based training platform designed for professional development and skill proficiency. It provides high-fidelity interactive modules, realistic scenario simulation, and comprehensive performance analysis tools. The platform supports both desktop and mobile learning configurations, making it versatile for various training needs from individual professionals to large educational institutions and corporations.",
     features: [
-      "High-fidelity aircraft models with accurate flight dynamics",
-      "Real-time weather integration with global meteorological data",
+      "High-fidelity interactive modules with realistic simulations",
+      "Real-time collaboration with global team capabilities",
       "Customizable training scenarios with instructor controls",
       "Performance tracking and detailed analytics",
-      "Procedure and checklist validation",
-      "ATC simulation with voice recognition",
+      "Procedure and checklist completion validation",
+      "Voice interaction capabilities with natural language processing",
       "VR support for immersive training experiences",
       "Learning management system integration for training programs"
     ],
     techStack: [
-      "Simulation Engine: Custom C++ with CUDA acceleration",
-      "Frontend: Unity for visualization",
-      "Backend: C# with .NET Core",
-      "Database: SQL Server for user data and PostgreSQL for telemetry",
-      "Physics: Custom aerodynamics engine",
-      "Voice Processing: CMU Sphinx with aviation lexicon",
-      "APIs: REST with SignalR for real-time data",
-      "Infrastructure: Azure with GPU compute instances"
+      "Simulation Engine: JavaScript with WebGL acceleration",
+      "Frontend: React with Three.js for visualization",
+      "Backend: Node.js with Express",
+      "Database: MongoDB for user data and PostgreSQL for telemetry",
+      "Physics: Custom web-based simulation engine",
+      "Voice Processing: TensorFlow.js with natural language models",
+      "APIs: REST with WebSockets for real-time data",
+      "Infrastructure: AWS with container orchestration"
     ],
     screenshots: [
       { 
         image: "/images/web-dashboard.jpeg", 
-        caption: "WebFlight simulator control view with advanced system" 
+        caption: "WebTrainer interactive dashboard with progress tracking" 
       },
       { 
         image: "/images/web-controls.jpeg", 
@@ -275,21 +275,21 @@ const platforms: ClientPlatform[] = [
       },
       { 
         image: "/images/web-tech.jpeg", 
-        caption: "VR training scenario with emergency procedure practice" 
+        caption: "VR training scenario with interactive practice modules" 
       }
     ],
     useCases: [
-      "Flight schools providing standardized training across multiple aircraft types",
-      "Airlines conducting recurrent training and emergency procedure practice",
-      "Individual pilots maintaining proficiency and preparing for checkrides",
-      "Aviation universities integrating simulation into their curriculum",
-      "Corporate flight departments conducting scenario-based training"
+      "Educational institutions providing standardized training across multiple subjects",
+      "Corporations conducting employee onboarding and compliance training",
+      "Individual professionals maintaining skills and preparing for certifications",
+      "Universities integrating interactive learning into their curriculum",
+      "Government agencies conducting scenario-based policy training"
     ],
     apiEndpoints: [
       {
         method: "GET",
-        endpoint: "/api/v1/aircraft",
-        description: "Retrieve available aircraft models with specifications"
+        endpoint: "/api/v1/modules",
+        description: "Retrieve available training modules with specifications"
       },
       {
         method: "POST",
@@ -303,8 +303,8 @@ const platforms: ClientPlatform[] = [
       },
       {
         method: "POST",
-        endpoint: "/api/v1/weather/load",
-        description: "Load real or custom weather conditions into the simulation"
+        endpoint: "/api/v1/environment/configure",
+        description: "Configure the training environment with specific settings"
       }
     ]
   }
@@ -360,7 +360,7 @@ export default function ClientPlatformsView({ isOpen, onClose, accessCode }: Cli
                     </div>
                     
                     <p className="mb-4 text-lg">
-                      Hello Mom and Dad! I wanted to show you what I've been building - a suite of advanced aviation software platforms. Each one solves critical problems in the aviation industry and represents thousands of hours of development. I'm so excited to show you my work!
+                      Hello Mom and Dad! I wanted to show you what I've been building - a suite of advanced web software platforms. Each one solves critical problems across various industries and represents thousands of hours of development. I'm so excited to show you my work!
                     </p>
                     
                     <div className="bg-white/10 rounded-lg p-4 mb-4 border border-white/30">
@@ -371,13 +371,13 @@ export default function ClientPlatformsView({ isOpen, onClose, accessCode }: Cli
                         <span className="font-semibold">About These Platforms</span>
                       </div>
                       <p className="text-white/90 mb-3">
-                        I've created these sophisticated software platforms specifically for the aviation industry. They handle everything from real-time data synchronization to flight management, executive services, and operations.
+                        I've created these sophisticated software platforms specifically for various business sectors. They handle everything from real-time data synchronization to workflow management, executive services, and operations.
                       </p>
                       <ul className="space-y-1 ml-7 text-sm text-white/90 list-disc">
                         <li>All platforms are designed with modern technology stacks</li>
-                        <li>They solve real problems for aviation businesses</li>
+                        <li>They solve real problems for businesses</li>
                         <li>Each has been carefully crafted with attention to detail</li>
-                        <li>Together they form a comprehensive aviation technology ecosystem</li>
+                        <li>Together they form a comprehensive technology ecosystem</li>
                       </ul>
                     </div>
                     
@@ -416,7 +416,7 @@ export default function ClientPlatformsView({ isOpen, onClose, accessCode }: Cli
                     </div>
                     
                     <p className="mb-4">
-                      Hello, <span className="font-semibold">Special Client</span>! This private environment gives you exclusive access to explore our aviation software platforms. Each platform is fully interactive and showcases the powerful features we've built specifically for aviation industry needs.
+                      Hello, <span className="font-semibold">Special Client</span>! This private environment gives you exclusive access to explore our web software platforms. Each platform is fully interactive and showcases the powerful features we've built specifically for modern business needs.
                     </p>
                     
                     <div className="bg-white/10 rounded-lg p-4 mb-4">
@@ -429,7 +429,7 @@ export default function ClientPlatformsView({ isOpen, onClose, accessCode }: Cli
                       <ul className="space-y-1 ml-7 text-sm text-white/90">
                         <li>• Access Code: <span className="font-mono bg-white/20 px-2 py-0.5 rounded">{accessCode}</span></li>
                         <li>• Session Started: <span className="font-mono">{new Date().toLocaleString()}</span></li>
-                        <li>• Authorized Platforms: AeroSync, AeroFlight, ExecSync, AeroOps</li>
+                        <li>• Authorized Platforms: WebSync, WebTrainer, ExecSync, WebOps</li>
                       </ul>
                     </div>
                     
@@ -469,25 +469,25 @@ export default function ClientPlatformsView({ isOpen, onClose, accessCode }: Cli
                     <div className="p-5">
                       <p className="text-gray-700 mb-4">{platform.shortDescription}</p>
                       <div className="flex flex-wrap gap-2 mb-4">
-                        {platform.id === "aerosync" && (
+                        {platform.id === "websync" && (
                           <>
                             <span className="bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full">Real-time Sync</span>
                             <span className="bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">Data Integration</span>
                           </>
                         )}
-                        {platform.id === "aeroflight" && (
+                        {platform.id === "webtrainer" && (
                           <>
-                            <span className="bg-indigo-100 text-indigo-700 text-xs font-semibold px-3 py-1 rounded-full">Flight Planning</span>
+                            <span className="bg-indigo-100 text-indigo-700 text-xs font-semibold px-3 py-1 rounded-full">Interactive Training</span>
                             <span className="bg-purple-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full">Performance Analytics</span>
                           </>
                         )}
                         {platform.id === "execsync" && (
                           <>
-                            <span className="bg-amber-100 text-amber-700 text-xs font-semibold px-3 py-1 rounded-full">Executive Aviation</span>
-                            <span className="bg-red-100 text-red-700 text-xs font-semibold px-3 py-1 rounded-full">Premium Services</span>
+                            <span className="bg-amber-100 text-amber-700 text-xs font-semibold px-3 py-1 rounded-full">Executive Services</span>
+                            <span className="bg-red-100 text-red-700 text-xs font-semibold px-3 py-1 rounded-full">Premium Tools</span>
                           </>
                         )}
-                        {platform.id === "aeroops" && (
+                        {platform.id === "webops" && (
                           <>
                             <span className="bg-teal-100 text-teal-700 text-xs font-semibold px-3 py-1 rounded-full">Operations</span>
                             <span className="bg-cyan-100 text-cyan-700 text-xs font-semibold px-3 py-1 rounded-full">Compliance</span>
@@ -563,7 +563,7 @@ export default function ClientPlatformsView({ isOpen, onClose, accessCode }: Cli
                         A successful entrepreneur from Wilmington, NC, Bernie founded Gulfstream Steel and Supply, demonstrating remarkable business acumen and leadership. His experience and guidance have been invaluable in shaping the strategic direction of ROLLINSX.
                       </p>
                       <p className="text-sm text-gray-500 italic">
-                        Fuck Embry Riddle was expensive
+                        "Providing the resources for Brandon's education in web technology has been one of my best investments."
                       </p>
                     </div>
                   </div>
