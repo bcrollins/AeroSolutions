@@ -1,6 +1,7 @@
 import express, { type Express, type Response, type NextFunction } from "express";
 import { Request as ExpressRequest } from "express-serve-static-core";
 import { createServer, type Server } from "http";
+import path from "path";
 import { storage } from "./storage";
 import { insertContactSchema } from "@shared/schema";
 import { z } from "zod";
@@ -148,6 +149,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Apply rate limiting to all API routes
   app.use('/api', rateLimiter.middleware);
+  
+  // Explicit routes for test and login pages
+  app.get('/test', (req: Request, res: Response) => {
+    res.sendFile(path.join(process.cwd(), 'public', 'test.html'));
+  });
+  
+  app.get('/login', (req: Request, res: Response) => {
+    res.sendFile(path.join(process.cwd(), 'public', 'login.html'));
+  });
   
   // Database connection test endpoint
   app.get('/api/test-db', async (req: Request, res: Response) => {

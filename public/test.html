@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Page - AI Platform</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+  <header class="bg-blue-600 text-white p-4">
+    <div class="max-w-4xl mx-auto flex justify-between items-center">
+      <h1 class="text-2xl font-bold">AI Platform</h1>
+      <nav>
+        <a href="/" class="text-white hover:text-blue-200">Home</a>
+      </nav>
+    </div>
+  </header>
+  <main class="max-w-4xl mx-auto mt-8 p-4">
+    <h2 class="text-3xl font-semibold mb-6">Test Page</h2>
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <h3 class="text-xl font-medium mb-4">OpenAI API Test</h3>
+      <div class="mb-4">
+        <p class="mb-2">Test the OpenAI API integration:</p>
+        <a href="/api/test-xai" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600" target="_blank">
+          Test OpenAI API
+        </a>
+      </div>
+      
+      <h3 class="text-xl font-medium mb-4 mt-8">API Generate Endpoint Test</h3>
+      <div class="mb-4">
+        <p class="mb-2">Try the /api/generate endpoint:</p>
+        <div class="mb-4">
+          <textarea id="prompt" class="w-full p-2 border rounded" rows="4" placeholder="Enter your prompt here...">Write a brief paragraph about artificial intelligence.</textarea>
+        </div>
+        <div class="flex space-x-2">
+          <button id="generateBtn" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            Generate
+          </button>
+          <button id="clearBtn" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+            Clear
+          </button>
+        </div>
+      </div>
+      <div class="mt-4">
+        <h4 class="font-medium">Result:</h4>
+        <div id="result" class="mt-2 p-4 bg-gray-100 rounded min-h-[100px]">
+          <p class="text-gray-500 italic">Results will appear here...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const generateBtn = document.getElementById('generateBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const promptInput = document.getElementById('prompt');
+      const resultDiv = document.getElementById('result');
+
+      generateBtn.addEventListener('click', async () => {
+        const prompt = promptInput.value.trim();
+        if (!prompt) {
+          resultDiv.innerHTML = '<p class="text-red-500">Please enter a prompt</p>';
+          return;
+        }
+
+        resultDiv.innerHTML = '<p class="text-gray-500">Loading...</p>';
+        generateBtn.disabled = true;
+        
+        try {
+          const response = await fetch('/api/generate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ prompt })
+          });
+
+          const data = await response.json();
+          
+          if (data.success) {
+            resultDiv.innerHTML = `<p>${data.result}</p>`;
+          } else {
+            resultDiv.innerHTML = `<p class="text-red-500">Error: ${data.message || 'Something went wrong'}</p>`;
+          }
+        } catch (error) {
+          resultDiv.innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
+        } finally {
+          generateBtn.disabled = false;
+        }
+      });
+
+      clearBtn.addEventListener('click', () => {
+        promptInput.value = '';
+        resultDiv.innerHTML = '<p class="text-gray-500 italic">Results will appear here...</p>';
+      });
+    });
+  </script>
+</body>
+</html>
