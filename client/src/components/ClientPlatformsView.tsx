@@ -534,7 +534,7 @@ export default function ClientPlatformsView({ isOpen, onClose, accessCode }: Cli
                       <div className="uppercase tracking-wide text-sm text-blue-700 font-semibold">Founder & Lead Developer</div>
                       <h4 className="mt-1 text-xl font-semibold text-gray-900">Brandon Rollins</h4>
                       <p className="mt-2 text-gray-600">
-                        As a self-taught software engineer and professional pilot, Brandon combines real-world aviation experience with technical expertise to create innovative solutions for the aviation industry. His unique perspective allows him to identify critical pain points and build software that addresses actual needs faced by aviation professionals daily.
+                        As a self-taught software engineer and technology enthusiast, Brandon combines real-world experience with technical expertise to create innovative digital solutions. His unique perspective allows him to identify critical pain points and build software that addresses actual needs faced by businesses and professionals daily.
                       </p>
                       <p className="mt-3 text-gray-600">
                         Brandon has dedicated thousands of hours to developing the ROLLINSX platform suite, creating a comprehensive ecosystem of web software solutions from the ground up using modern technologies and best practices in software development.
@@ -560,7 +560,7 @@ export default function ClientPlatformsView({ isOpen, onClose, accessCode }: Cli
                         </div>
                       </div>
                       <p className="text-gray-600 mb-3">
-                        A successful entrepreneur from Wilmington, NC, Bernie founded Gulfstream Steel and Supply, demonstrating remarkable business acumen and leadership. His experience and guidance have been invaluable in shaping the strategic direction of Aero Solutions.
+                        A successful entrepreneur from Wilmington, NC, Bernie founded Gulfstream Steel and Supply, demonstrating remarkable business acumen and leadership. His experience and guidance have been invaluable in shaping the strategic direction of ROLLINSX.
                       </p>
                       <p className="text-sm text-gray-500 italic">
                         Fuck Embry Riddle was expensive
@@ -583,10 +583,10 @@ export default function ClientPlatformsView({ isOpen, onClose, accessCode }: Cli
                         </div>
                       </div>
                       <p className="text-gray-600 mb-3">
-                        A mother of three, Nicole is the reason Brandon didn't get a "doo bah" degree, instead pursuing his passion for technology and aviation. Her unwavering support and encouragement have been essential to Brandon's journey in building Aero Solutions.
+                        A mother of three, Nicole is the reason Brandon didn't get a "doo bah" degree, instead pursuing his passion for technology and web development. Her unwavering support and encouragement have been essential to Brandon's journey in building ROLLINSX.
                       </p>
                       <p className="text-sm text-gray-500 italic">
-                        "Seeing how Brandon has combined his love for aviation and technology into these sophisticated platforms makes me incredibly proud."
+                        "Seeing how Brandon has combined his passion for web development and technology into these sophisticated platforms makes me incredibly proud."
                       </p>
                     </div>
                   </div>
@@ -609,7 +609,7 @@ export default function ClientPlatformsView({ isOpen, onClose, accessCode }: Cli
           <div className="border-t border-gray-200 p-4 bg-gray-50">
             <div className="flex flex-col sm:flex-row justify-between items-center">
               <p className="text-sm text-gray-500 mb-4 sm:mb-0">
-                © {new Date().getFullYear()} Aero Solutions. All platform previews are provided under NDA.
+                © {new Date().getFullYear()} ROLLINSX. All platform previews are provided under NDA.
               </p>
               <button 
                 onClick={onClose}
@@ -638,7 +638,7 @@ export default function ClientPlatformsView({ isOpen, onClose, accessCode }: Cli
                         loading="lazy"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.src = "/images/aviation-tech.jpeg"; // Fallback image if Wolf of Wall Street image fails
+                          target.src = "/images/web-tech.jpeg"; // Fallback image if Wolf of Wall Street image fails
                         }}
                       />
                     </div>
