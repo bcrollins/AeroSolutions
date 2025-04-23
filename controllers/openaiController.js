@@ -1,167 +1,151 @@
 /**
  * OpenAI Controller
  * 
- * Handles logic for OpenAI-related routes
+ * Handles API routes for OpenAI interactions
  */
 
-const OpenAIService = require('../models/openai');
+const openaiService = require('../models/openai');
 
-class OpenAIController {
-  /**
-   * Generate text using OpenAI
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   */
-  async generateText(req, res) {
-    try {
-      const { prompt, model, max_tokens, temperature } = req.body;
-      
-      // Validate required fields
-      if (!prompt) {
-        return res.status(400).json({
-          success: false,
-          message: 'Prompt is required'
-        });
-      }
-      
-      // Generate text
-      const result = await OpenAIService.generateText({
-        prompt,
-        model,
-        max_tokens,
-        temperature
-      });
-      
-      res.json({
-        success: true,
-        text: result.text,
-        model: result.model,
-        usage: result.usage
-      });
-    } catch (error) {
-      console.error('Error generating text:', error);
-      res.status(500).json({
+/**
+ * Generate text using OpenAI
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const generateText = async (req, res) => {
+  try {
+    const { prompt, model, max_tokens, temperature } = req.body;
+    
+    // Basic validation
+    if (!prompt) {
+      return res.status(400).json({
         success: false,
-        message: 'Error generating text',
-        error: error.message
+        message: 'Prompt is required'
       });
     }
+    
+    const result = await openaiService.generateText({
+      prompt,
+      model,
+      max_tokens,
+      temperature
+    });
+    
+    return res.status(200).json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    console.error('Error in generateText controller:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to generate text',
+      error: error.message
+    });
   }
-  
-  /**
-   * Generate JSON using OpenAI
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   */
-  async generateJson(req, res) {
-    try {
-      const { prompt, model, max_tokens, temperature } = req.body;
-      
-      // Validate required fields
-      if (!prompt) {
-        return res.status(400).json({
-          success: false,
-          message: 'Prompt is required'
-        });
-      }
-      
-      // Generate JSON
-      const result = await OpenAIService.generateJSON({
-        prompt,
-        model,
-        max_tokens,
-        temperature
-      });
-      
-      res.json({
-        success: true,
-        json: result.json,
-        model: result.model,
-        usage: result.usage
-      });
-    } catch (error) {
-      console.error('Error generating JSON:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Error generating JSON',
-        error: error.message
-      });
-    }
-  }
-  
-  /**
-   * Analyze an image using OpenAI
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   */
-  async analyzeImage(req, res) {
-    try {
-      const { image, prompt, model, max_tokens } = req.body;
-      
-      // Validate required fields
-      if (!image) {
-        return res.status(400).json({
-          success: false,
-          message: 'Image data is required'
-        });
-      }
-      
-      // Analyze image
-      const result = await OpenAIService.analyzeImage({
-        image,
-        prompt,
-        model,
-        max_tokens
-      });
-      
-      res.json({
-        success: true,
-        analysis: result.analysis,
-        model: result.model,
-        usage: result.usage
-      });
-    } catch (error) {
-      console.error('Error analyzing image:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Error analyzing image',
-        error: error.message
-      });
-    }
-  }
-  
-  /**
-   * Test OpenAI connection
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   */
-  async testConnection(req, res) {
-    try {
-      const result = await OpenAIService.testConnection();
-      
-      if (result.success) {
-        res.json({
-          success: true,
-          message: result.message,
-          model: result.model
-        });
-      } else {
-        res.status(500).json({
-          success: false,
-          message: 'OpenAI API connection failed',
-          error: result.error,
-          details: result.details
-        });
-      }
-    } catch (error) {
-      console.error('Error testing OpenAI connection:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Error testing OpenAI connection',
-        error: error.message
-      });
-    }
-  }
-}
+};
 
-module.exports = new OpenAIController();
+/**
+ * Generate JSON using OpenAI
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const generateJSON = async (req, res) => {
+  try {
+    const { prompt, model, max_tokens, temperature } = req.body;
+    
+    // Basic validation
+    if (!prompt) {
+      return res.status(400).json({
+        success: false,
+        message: 'Prompt is required'
+      });
+    }
+    
+    const result = await openaiService.generateJSON({
+      prompt,
+      model,
+      max_tokens,
+      temperature
+    });
+    
+    return res.status(200).json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    console.error('Error in generateJSON controller:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to generate JSON',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Analyze an image using OpenAI
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const analyzeImage = async (req, res) => {
+  try {
+    const { image, prompt, model, max_tokens } = req.body;
+    
+    // Basic validation
+    if (!image) {
+      return res.status(400).json({
+        success: false,
+        message: 'Image data is required'
+      });
+    }
+    
+    const result = await openaiService.analyzeImage({
+      image,
+      prompt,
+      model,
+      max_tokens
+    });
+    
+    return res.status(200).json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    console.error('Error in analyzeImage controller:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to analyze image',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Test OpenAI API connection
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const testConnection = async (req, res) => {
+  try {
+    const result = await openaiService.testConnection();
+    
+    return res.status(200).json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    console.error('Error in testConnection controller:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to test OpenAI connection',
+      error: error.message
+    });
+  }
+};
+
+module.exports = {
+  generateText,
+  generateJSON,
+  analyzeImage,
+  testConnection
+};
