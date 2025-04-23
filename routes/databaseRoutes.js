@@ -1,91 +1,41 @@
 /**
  * Database Routes
  * 
- * This module defines routes for database management operations.
+ * This module defines routes for database management and monitoring.
  */
 
 const express = require('express');
 const router = express.Router();
 
-// Controller
-const databaseController = require('../controllers/databaseController');
+// Import controller methods
+const {
+  checkStatus,
+  initializeDatabase,
+  getTablesInfo
+} = require('../controllers/databaseController');
 
-// Middleware
-const { sensitiveOperationsLimiter } = require('../middlewares/rateLimiter');
+// Import middleware
+const { standardLimiter, strictLimiter } = require('../middlewares/rateLimiter');
 
 /**
  * @route   GET /api/database/status
  * @desc    Check database connection status
- * @access  Admin
- * 
- * Response:
- * {
- *   "success": true,
- *   "data": {
- *     "status": "connected",
- *     "timestamp": "2025-04-23T12:34:56.789Z"
- *   }
- * }
+ * @access  Public (with rate limiting)
  */
-router.get('/status',
-  sensitiveOperationsLimiter,
-  // Authentication middleware would go here
-  databaseController.checkStatus
-);
+router.get('/status', standardLimiter, checkStatus);
 
 /**
  * @route   POST /api/database/init
  * @desc    Initialize database schema
- * @access  Admin
- * 
- * Response:
- * {
- *   "success": true,
- *   "data": {
- *     "message": "Database initialized successfully",
- *     "timestamp": "2025-04-23T12:34:56.789Z"
- *   }
- * }
+ * @access  Public (with strict rate limiting)
  */
-router.post('/init',
-  sensitiveOperationsLimiter,
-  // Authentication middleware would go here
-  databaseController.initializeDatabase
-);
+router.post('/init', strictLimiter, initializeDatabase);
 
 /**
  * @route   GET /api/database/tables
  * @desc    Get information about database tables
- * @access  Admin
- * 
- * Response:
- * {
- *   "success": true,
- *   "data": {
- *     "tables": [
- *       {
- *         "name": "contacts",
- *         "rowCount": 12,
- *         "columns": [
- *           {
- *             "column_name": "id",
- *             "data_type": "integer",
- *             "is_nullable": "NO"
- *           },
- *           ...
- *         ]
- *       },
- *       ...
- *     ],
- *     "count": 3,
- *     "timestamp": "2025-04-23T12:34:56.789Z"
- *   }
- * }
+ * @access  Public (with rate limiting)
  */
-router.get('/tables',
-  sensitiveOperationsLimiter,
-  // Authentication middleware would go here
-  databaseController.getTablesInfo
-);
+router.get('/tables', standardLimiter, getTablesInfo);
 
 module.exports = router;

@@ -6,13 +6,13 @@
  */
 
 const OpenAI = require('openai');
-const db = require('../config/database');
 const logger = require('../config/logger');
+const db = require('../config/database');
 const { createError } = require('../middlewares/errorHandler');
 
-// Initialize OpenAI client - secret key from environment variable
+// Initialize OpenAI client
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY
 });
 
 /**
@@ -26,25 +26,21 @@ const openai = new OpenAI({
  */
 async function logApiUsage(endpoint, req, tokensUsed, requestTime, success = true, errorType = null) {
   try {
-    // Get user ID if authenticated (would be set by auth middleware)
+    // Get user ID if authenticated
     const userId = req.user ? req.user.id : null;
     
-    // Get anonymized IP address
-    const ipAddress = logger.anonymize(req.ip);
-    
-    // Insert usage log into database
+    // Log to database
     await db.query(
-      `INSERT INTO api_usage_logs
-       (endpoint, ip_address, user_id, tokens_used, request_time, success, error_type)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [endpoint, ipAddress, userId, tokensUsed, requestTime, success, errorType]
+      `INSERT INTO api_usage_logs 
+      (endpoint, ip_address, user_id, tokens_used, request_time, success, error_type) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [endpoint, req.ip, userId, tokensUsed, requestTime, success, errorType]
     );
   } catch (err) {
-    // Just log the error, don't let it affect the response
+    // Just log the error but don't fail the request
     logger.error('Failed to log API usage', {
       error: err.message,
-      endpoint,
-      tokensUsed
+      stack: err.stack
     });
   }
 }
@@ -59,62 +55,64 @@ async function generateCompletion(req, res, next) {
   const startTime = Date.now();
   
   try {
-    // Body is already validated by validator middleware
-    const { prompt, model = 'gpt-4o', maxTokens = 500, temperature = 0.7 } = req.body;
+    // Use validated body from middleware
+    const { prompt, model, maxTokens, temperature } = req.validatedBody;
     
-    // Log the request
-    logger.info('OpenAI completion request', {
-      model,
-      promptLength: prompt.length,
-      maxTokens
-    });
-    
-    // Call OpenAI API
-    const completion = await openai.completions.create({
-      model, // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-      prompt,
+    // Create completion
+    const response = await openai.chat.completions.create({
+      model: model, // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      messages: [{ role: 'user', content: prompt }],
       max_tokens: maxTokens,
-      temperature
+      temperature: temperature
     });
     
-    // Log usage
-    const tokensUsed = completion.usage ? completion.usage.total_tokens : 0;
-    const requestTime = Date.now() - startTime;
+    // Extract content from response
+    const completion = response.choices[0].message.content;
     
-    await logApiUsage('/api/openai/completion', req, tokensUsed, requestTime);
+    // Log API usage
+    await logApiUsage(
+      '/api/openai/completion',
+      req,
+      response.usage?.total_tokens || 0,
+      Date.now() - startTime
+    );
     
-    // Send response
-    res.json({
+    // Return successful response
+    return res.json({
       success: true,
       data: {
-        text: completion.choices[0].text,
-        usage: completion.usage,
-        model
+        completion,
+        model: response.model,
+        usage: response.usage
       }
     });
   } catch (err) {
     // Log error
-    logger.error('OpenAI completion error', {
-      error: err.message,
-      stack: err.stack
-    });
+    await logApiUsage(
+      '/api/openai/completion',
+      req,
+      0,
+      Date.now() - startTime,
+      false,
+      err.message
+    );
     
-    // Log failed API usage
-    const requestTime = Date.now() - startTime;
-    await logApiUsage('/api/openai/completion', req, 0, requestTime, false, err.message);
-    
-    // Check for specific OpenAI errors
+    // Handle API errors
     if (err.response) {
       return next(createError(
-        'OpenAI API error: ' + err.response.data.error.message, 
-        err.response.status,
+        'OpenAI API error: ' + err.message,
+        err.status || 500,
         'OPENAI_API_ERROR',
-        err.response.data.error
+        err.response.data
       ));
     }
     
-    // Generic error
-    next(createError('Failed to generate completion', 500, 'COMPLETION_ERROR'));
+    // Handle other errors
+    return next(createError(
+      'Failed to generate completion: ' + err.message,
+      500,
+      'COMPLETION_GENERATION_ERROR'
+    ));
   }
 }
 
@@ -128,73 +126,74 @@ async function generateChatCompletion(req, res, next) {
   const startTime = Date.now();
   
   try {
-    // Body is already validated by validator middleware
-    const { 
-      messages, 
-      model = 'gpt-4o', 
-      maxTokens = 1000, 
-      temperature = 0.7,
-      responseFormat = 'text'
-    } = req.body;
-    
-    // Log the request
-    logger.info('OpenAI chat request', {
+    // Use validated body from middleware
+    const {
+      messages,
       model,
-      messageCount: messages.length,
-      maxTokens
-    });
+      maxTokens,
+      temperature,
+      responseFormat
+    } = req.validatedBody;
     
-    // Format options for response format
-    const formattedResponseFormat = responseFormat === 'json_object' ? 
-      { type: 'json_object' } : undefined;
-    
-    // Call OpenAI API
-    const chatCompletion = await openai.chat.completions.create({
-      model, // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+    // Create chat completion with response format option if needed
+    let options = {
+      model: model, // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
       messages,
       max_tokens: maxTokens,
-      temperature,
-      response_format: formattedResponseFormat
-    });
+      temperature
+    };
     
-    // Log usage
-    const tokensUsed = chatCompletion.usage ? chatCompletion.usage.total_tokens : 0;
-    const requestTime = Date.now() - startTime;
+    // Add response format if json is requested
+    if (responseFormat === 'json_object') {
+      options.response_format = { type: 'json_object' };
+    }
     
-    await logApiUsage('/api/openai/chat', req, tokensUsed, requestTime);
+    const response = await openai.chat.completions.create(options);
     
-    // Send response
-    res.json({
+    // Log API usage
+    await logApiUsage(
+      '/api/openai/chat',
+      req,
+      response.usage?.total_tokens || 0,
+      Date.now() - startTime
+    );
+    
+    // Return successful response
+    return res.json({
       success: true,
       data: {
-        message: chatCompletion.choices[0].message,
-        usage: chatCompletion.usage,
-        model
+        message: response.choices[0].message,
+        model: response.model,
+        usage: response.usage
       }
     });
   } catch (err) {
     // Log error
-    logger.error('OpenAI chat completion error', {
-      error: err.message,
-      stack: err.stack
-    });
+    await logApiUsage(
+      '/api/openai/chat',
+      req,
+      0,
+      Date.now() - startTime,
+      false,
+      err.message
+    );
     
-    // Log failed API usage
-    const requestTime = Date.now() - startTime;
-    await logApiUsage('/api/openai/chat', req, 0, requestTime, false, err.message);
-    
-    // Check for specific OpenAI errors
+    // Handle API errors
     if (err.response) {
       return next(createError(
-        'OpenAI API error: ' + err.response.data.error.message, 
-        err.response.status,
+        'OpenAI API error: ' + err.message,
+        err.status || 500,
         'OPENAI_API_ERROR',
-        err.response.data.error
+        err.response.data
       ));
     }
     
-    // Generic error
-    next(createError('Failed to generate chat completion', 500, 'CHAT_COMPLETION_ERROR'));
+    // Handle other errors
+    return next(createError(
+      'Failed to generate chat completion: ' + err.message,
+      500,
+      'CHAT_GENERATION_ERROR'
+    ));
   }
 }
 
@@ -208,25 +207,17 @@ async function generateImage(req, res, next) {
   const startTime = Date.now();
   
   try {
-    // Body is already validated by validator middleware
-    const { 
-      prompt, 
-      n = 1, 
-      size = '1024x1024', 
-      quality = 'standard',
-      responseFormat = 'url'
-    } = req.body;
-    
-    // Log the request
-    logger.info('OpenAI image generation request', {
-      promptLength: prompt.length,
+    // Use validated body from middleware
+    const {
+      prompt,
       n,
       size,
-      quality
-    });
+      quality,
+      responseFormat
+    } = req.validatedBody;
     
-    // Call OpenAI API
-    const image = await openai.images.generate({
+    // Create image
+    const response = await openai.images.generate({
       model: 'dall-e-3',
       prompt,
       n,
@@ -235,46 +226,82 @@ async function generateImage(req, res, next) {
       response_format: responseFormat
     });
     
-    // Log usage - DALL-E doesn't return token usage
-    const requestTime = Date.now() - startTime;
-    await logApiUsage('/api/openai/image', req, 0, requestTime);
+    // Log API usage (DALL-E doesn't return token counts)
+    await logApiUsage(
+      '/api/openai/image',
+      req,
+      0, // No token count for images
+      Date.now() - startTime
+    );
     
-    // Send response
-    res.json({
+    // Return successful response
+    return res.json({
       success: true,
       data: {
-        images: image.data,
-        created: image.created
+        images: response.data,
+        created: response.created
       }
     });
   } catch (err) {
     // Log error
-    logger.error('OpenAI image generation error', {
-      error: err.message,
-      stack: err.stack
-    });
+    await logApiUsage(
+      '/api/openai/image',
+      req,
+      0,
+      Date.now() - startTime,
+      false,
+      err.message
+    );
     
-    // Log failed API usage
-    const requestTime = Date.now() - startTime;
-    await logApiUsage('/api/openai/image', req, 0, requestTime, false, err.message);
-    
-    // Check for specific OpenAI errors
+    // Handle API errors
     if (err.response) {
       return next(createError(
-        'OpenAI API error: ' + err.response.data.error.message, 
-        err.response.status,
+        'OpenAI API error: ' + err.message,
+        err.status || 500,
         'OPENAI_API_ERROR',
-        err.response.data.error
+        err.response.data
       ));
     }
     
-    // Generic error
-    next(createError('Failed to generate image', 500, 'IMAGE_GENERATION_ERROR'));
+    // Handle other errors
+    return next(createError(
+      'Failed to generate image: ' + err.message,
+      500,
+      'IMAGE_GENERATION_ERROR'
+    ));
+  }
+}
+
+/**
+ * Check API key validity
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
+async function checkApiKey(req, res, next) {
+  try {
+    // Try a simple models list call to check if API key is valid
+    await openai.models.list();
+    
+    return res.json({
+      success: true,
+      data: {
+        status: 'valid',
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (err) {
+    return next(createError(
+      'Invalid API key or OpenAI connection issue: ' + err.message,
+      401,
+      'INVALID_API_KEY'
+    ));
   }
 }
 
 module.exports = {
   generateCompletion,
   generateChatCompletion,
-  generateImage
+  generateImage,
+  checkApiKey
 };

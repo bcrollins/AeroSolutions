@@ -1,21 +1,21 @@
 /**
  * Error Handler Middleware
  * 
- * This middleware provides centralized error handling for the application.
- * It standardizes error responses and logs errors appropriately.
+ * This module provides middleware functions for handling errors in the API.
+ * It includes a central error handler and 404 middleware.
  */
 
 const logger = require('../config/logger');
 
 /**
- * Creates an API error object with consistent format
- * @param {string} message - Human-readable error message
+ * Create a standardized error object
+ * @param {string} message - Error message
  * @param {number} statusCode - HTTP status code
- * @param {string} code - Machine-readable error code
+ * @param {string} code - Error code for client identification
  * @param {Object} details - Additional error details
  * @returns {Error} - Error object with additional properties
  */
-function createError(message, statusCode = 500, code = 'INTERNAL_SERVER_ERROR', details = null) {
+function createError(message, statusCode = 500, code = 'INTERNAL_SERVER_ERROR', details = {}) {
   const error = new Error(message);
   error.statusCode = statusCode;
   error.code = code;
@@ -24,69 +24,74 @@ function createError(message, statusCode = 500, code = 'INTERNAL_SERVER_ERROR', 
 }
 
 /**
- * Express middleware for handling errors
+ * Global error handling middleware
  * @param {Error} err - Error object
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
 function errorHandlerMiddleware(err, req, res, next) {
-  // Set defaults if properties are missing
+  // Get error details or set defaults
   const statusCode = err.statusCode || 500;
-  const errorCode = err.code || 'INTERNAL_SERVER_ERROR';
   const message = err.message || 'An unexpected error occurred';
-  const details = err.details || null;
+  const code = err.code || 'INTERNAL_SERVER_ERROR';
+  const details = err.details || {};
   
-  // Log the error (with different levels based on severity)
-  if (statusCode >= 500) {
-    logger.error('Server error', {
+  // Log the error (but not for 404s)
+  if (statusCode !== 404) {
+    const logLevel = statusCode >= 500 ? 'error' : 'warn';
+    logger[logLevel](`${code}: ${message}`, {
+      statusCode,
       path: req.originalUrl || req.url,
       method: req.method,
-      error: message,
-      code: errorCode,
       ip: logger.anonymize(req.ip),
+      details,
       stack: err.stack
-    });
-  } else {
-    logger.warn('Client error', {
-      path: req.originalUrl || req.url,
-      method: req.method,
-      error: message,
-      code: errorCode,
-      ip: logger.anonymize(req.ip)
     });
   }
   
-  // Send standardized error response
+  // Send response to client
   res.status(statusCode).json({
     success: false,
     error: {
       message,
-      code: errorCode,
-      details,
-      timestamp: new Date().toISOString()
+      code,
+      status: statusCode,
+      ...(Object.keys(details).length > 0 && { details })
     }
   });
 }
 
 /**
- * Middleware to handle 404 errors for undefined routes
+ * 404 Not Found middleware
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
 function notFoundMiddleware(req, res, next) {
   const err = createError(
-    `Not found: ${req.method} ${req.originalUrl || req.url}`,
+    `Cannot ${req.method} ${req.originalUrl || req.url}`,
     404,
-    'RESOURCE_NOT_FOUND'
+    'NOT_FOUND'
   );
   
   next(err);
 }
 
+/**
+ * Async handler wrapper to avoid try/catch blocks
+ * @param {Function} fn - Async function to wrap
+ * @returns {Function} - Express middleware function
+ */
+function asyncHandler(fn) {
+  return (req, res, next) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+}
+
 module.exports = {
   createError,
   errorHandlerMiddleware,
-  notFoundMiddleware
+  notFoundMiddleware,
+  asyncHandler
 };

@@ -4,8 +4,6 @@
  * This controller provides methods for database management and status.
  */
 
-const fs = require('fs').promises;
-const path = require('path');
 const db = require('../config/database');
 const logger = require('../config/logger');
 const { createError } = require('../middlewares/errorHandler');
@@ -18,31 +16,29 @@ const { createError } = require('../middlewares/errorHandler');
  */
 async function checkStatus(req, res, next) {
   try {
-    // Test database connection with a simple query
-    const result = await db.query('SELECT NOW() as time');
+    const isConnected = await db.checkConnection();
     
-    // Log successful connection
-    logger.info('Database connection test successful', {
-      timestamp: result.rows[0].time
-    });
+    if (!isConnected) {
+      return next(createError(
+        'Database connection test failed',
+        500,
+        'DATABASE_CONNECTION_ERROR'
+      ));
+    }
     
-    // Send success response
-    res.json({
+    return res.json({
       success: true,
       data: {
         status: 'connected',
-        timestamp: result.rows[0].time
+        timestamp: new Date().toISOString()
       }
     });
   } catch (err) {
-    // Log error
-    logger.error('Database connection test failed', {
-      error: err.message,
-      stack: err.stack
-    });
-    
-    // Send error response
-    next(createError('Database is not connected', 500, 'DATABASE_DISCONNECTED'));
+    return next(createError(
+      'Database connection error: ' + err.message,
+      500,
+      'DATABASE_ERROR'
+    ));
   }
 }
 
@@ -54,35 +50,35 @@ async function checkStatus(req, res, next) {
  */
 async function initializeDatabase(req, res, next) {
   try {
-    // Path to SQL schema
-    const schemaPath = path.join(process.cwd(), 'models', 'schema.sql');
+    // Only allow in development or explicitly authorized
+    if (process.env.NODE_ENV === 'production' && process.env.ALLOW_SCHEMA_INIT !== 'true') {
+      return next(createError(
+        'Database initialization not allowed in production',
+        403,
+        'OPERATION_NOT_ALLOWED'
+      ));
+    }
     
-    // Read schema SQL
-    const schemaSql = await fs.readFile(schemaPath, 'utf8');
+    await db.initDatabase();
     
-    // Execute schema SQL
-    await db.query(schemaSql);
-    
-    // Log successful initialization
-    logger.info('Database schema initialized');
-    
-    // Send success response
-    res.json({
+    return res.json({
       success: true,
       data: {
-        message: 'Database initialized successfully',
+        message: 'Database schema initialized successfully',
         timestamp: new Date().toISOString()
       }
     });
   } catch (err) {
-    // Log error
-    logger.error('Database initialization failed', {
+    logger.error('Failed to initialize database schema', {
       error: err.message,
       stack: err.stack
     });
     
-    // Send error response
-    next(createError('Failed to initialize database schema', 500, 'DATABASE_INIT_ERROR'));
+    return next(createError(
+      'Failed to initialize database schema: ' + err.message,
+      500,
+      'DATABASE_INIT_ERROR'
+    ));
   }
 }
 
@@ -94,59 +90,86 @@ async function initializeDatabase(req, res, next) {
  */
 async function getTablesInfo(req, res, next) {
   try {
-    // Get list of tables
-    const tablesResult = await db.query(`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public'
-      ORDER BY table_name
+    // This query approach is not used directly since we need to handle tables that may not exist yet
+    // Instead we'll iterate through tables manually
+    /* Example of a direct query we're not using:
+    const tableInfoQuery = `
+      SELECT
+        table_name,
+        (SELECT COUNT(*) FROM information_schema.columns WHERE table_name = t.table_name) AS column_count
+      FROM
+        information_schema.tables t
+      WHERE
+        table_schema = 'public'
+        AND table_type = 'BASE TABLE'
+      ORDER BY
+        table_name;
+    `;
+    */
+    
+    // This query could fail if a table doesn't exist yet
+    // So we'll get the table list first and then get counts if available
+    const tableListResult = await db.query(`
+      SELECT
+        table_name
+      FROM
+        information_schema.tables 
+      WHERE
+        table_schema = 'public'
+        AND table_type = 'BASE TABLE'
+      ORDER BY
+        table_name;
     `);
     
     const tables = [];
     
-    // For each table, get additional info
-    for (const tableRow of tablesResult.rows) {
+    // For each table, get row count and column info
+    for (const tableRow of tableListResult.rows) {
       const tableName = tableRow.table_name;
       
-      // Get column information
-      const columnsResult = await db.query(`
-        SELECT column_name, data_type, is_nullable
-        FROM information_schema.columns
-        WHERE table_schema = 'public' AND table_name = $1
-        ORDER BY ordinal_position
+      // Get column count
+      const columnResult = await db.query(`
+        SELECT COUNT(*) AS column_count
+        FROM information_schema.columns 
+        WHERE table_name = $1
       `, [tableName]);
       
-      // Get row count
-      const countResult = await db.query(`
-        SELECT COUNT(*) as row_count
-        FROM "${tableName}"
-      `);
+      // Try to get row count
+      let rowCount = 0;
+      try {
+        const countResult = await db.query(`SELECT COUNT(*) AS row_count FROM "${tableName}"`);
+        rowCount = parseInt(countResult.rows[0].row_count) || 0;
+      } catch (countErr) {
+        logger.warn(`Could not get row count for table ${tableName}`, {
+          error: countErr.message
+        });
+      }
       
       tables.push({
         name: tableName,
-        rowCount: parseInt(countResult.rows[0].row_count),
-        columns: columnsResult.rows
+        columns: parseInt(columnResult.rows[0].column_count) || 0,
+        rows: rowCount
       });
     }
     
-    // Send response
-    res.json({
+    return res.json({
       success: true,
       data: {
         tables,
-        count: tables.length,
         timestamp: new Date().toISOString()
       }
     });
   } catch (err) {
-    // Log error
-    logger.error('Failed to get database tables info', {
+    logger.error('Failed to get tables info', {
       error: err.message,
       stack: err.stack
     });
     
-    // Send error response
-    next(createError('Failed to get database tables information', 500, 'DATABASE_INFO_ERROR'));
+    return next(createError(
+      'Failed to get database tables info: ' + err.message,
+      500,
+      'DATABASE_INFO_ERROR'
+    ));
   }
 }
 
