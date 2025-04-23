@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FaTimes, FaPlaneDeparture, FaServer, FaUserTie, FaPlane } from "react-icons/fa";
+import { FaTimes, FaSyncAlt, FaServer, FaUserTie } from "react-icons/fa";
 import { motion } from "framer-motion";
 import PlatformPreview from "./PlatformPreview";
 import wolfOfWallStreetImage from "../assets/wolf-of-wall-street.jpg";
@@ -32,7 +32,7 @@ const platforms: ClientPlatform[] = [
     id: "websync",
     name: "WebSync",
     shortDescription: "Comprehensive web data synchronization platform",
-    icon: <FaPlaneDeparture className="text-3xl" />,
+    icon: <FaSyncAlt className="text-3xl" />,
     description: "WebSync is an advanced web data synchronization platform designed to streamline operations across multiple systems. It integrates user data, content management, scheduling, and other critical information into a unified ecosystem, ensuring real-time updates and data consistency across all departments.",
     features: [
       "Real-time data synchronization across all connected systems",
