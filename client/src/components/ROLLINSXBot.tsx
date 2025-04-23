@@ -174,7 +174,7 @@ export default function ROLLINSXBot({
       });
       
       if (!response.ok) {
-        throw new Error("Failed to get response from ElevateBot");
+        throw new Error("Failed to get response from ROLLINSXBot");
       }
       
       const data = await response.json();
@@ -205,7 +205,7 @@ export default function ROLLINSXBot({
       
       toast({
         title: "Error",
-        description: "Failed to get response from ElevateBot",
+        description: "Failed to get response from ROLLINSXBot",
         variant: "destructive"
       });
     }
@@ -264,7 +264,7 @@ export default function ROLLINSXBot({
       });
       
       if (!response.ok) {
-        throw new Error("Failed to get response from ElevateBot");
+        throw new Error("Failed to get response from ROLLINSXBot");
       }
       
       const data = await response.json();
@@ -295,7 +295,7 @@ export default function ROLLINSXBot({
       
       toast({
         title: "Error",
-        description: "Failed to get response from ElevateBot",
+        description: "Failed to get response from ROLLINSXBot",
         variant: "destructive"
       });
     }
@@ -327,7 +327,7 @@ export default function ROLLINSXBot({
         <button
           onClick={toggleChatbot}
           className="fixed bottom-6 left-6 bg-[#3B5B9D] hover:bg-[#2A4A8C] text-white p-4 rounded-full shadow-lg z-30 flex items-center justify-center"
-          aria-label="Chat with ElevateBot"
+          aria-label="Chat with ROLLINSXBot"
         >
           {isOpen ? (
             <FaTimes className="text-xl" />
