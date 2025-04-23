@@ -2,7 +2,8 @@
  * Database API Routes
  * 
  * This module defines routes for database management and diagnostics.
- * These routes are primarily for administration and monitoring.
+ * It provides endpoints for checking connection status, viewing tables,
+ * and examining database structure.
  */
 
 const express = require('express');
@@ -13,7 +14,7 @@ const { apiLimiter } = require('../middlewares/rateLimiter');
 /**
  * @route   GET /api/database/test
  * @desc    Test database connection
- * @access  Public
+ * @access  Admin
  * 
  * Response:
  * {
@@ -24,7 +25,7 @@ const { apiLimiter } = require('../middlewares/rateLimiter');
  *   }
  * }
  */
-router.get('/test', databaseController.testConnection);
+router.get('/test', apiLimiter, databaseController.testConnection);
 
 /**
  * @route   GET /api/database/tables
@@ -37,9 +38,12 @@ router.get('/test', databaseController.testConnection);
  *   "data": {
  *     "tables": [
  *       {
- *         "table_name": "users",
  *         "table_schema": "public",
- *         "row_count_estimate": 125
+ *         "table_name": "users",
+ *         "size": "256 KB",
+ *         "table_size": "192 KB",
+ *         "indexes_size": "64 KB",
+ *         "row_count_estimate": 1000
  *       },
  *       ...
  *     ]
@@ -62,6 +66,15 @@ router.get('/tables', apiLimiter, databaseController.getTables);
  *       {
  *         "column_name": "id",
  *         "data_type": "integer",
+ *         "character_maximum_length": null,
+ *         "column_default": "nextval('users_id_seq'::regclass)",
+ *         "is_nullable": "NO"
+ *       },
+ *       {
+ *         "column_name": "username",
+ *         "data_type": "character varying",
+ *         "character_maximum_length": 255,
+ *         "column_default": null,
  *         "is_nullable": "NO"
  *       },
  *       ...
@@ -73,27 +86,28 @@ router.get('/tables/:tableName/columns', apiLimiter, databaseController.getTable
 
 /**
  * @route   GET /api/database/status
- * @desc    Get database status information and statistics
+ * @desc    Get database status information
  * @access  Admin
  * 
  * Response:
  * {
  *   "success": true,
  *   "data": {
- *     "version": "PostgreSQL 14.5",
- *     "uptime": "10 days 5 hours 30 minutes",
+ *     "version": "PostgreSQL 14.5 on x86_64-pc-linux-gnu...",
  *     "connections": {
- *       "active": 5,
- *       "idle": 2,
- *       "max": 100
+ *       "total": 5,
+ *       "active": 2,
+ *       "idle": 3
  *     },
- *     "dbSize": "1.2 GB",
- *     "tablesCount": 15,
+ *     "dbSize": "10 MB",
+ *     "dbSizeBytes": 10485760,
+ *     "tablesCount": 10,
  *     "largestTables": [
  *       {
- *         "name": "logs",
- *         "size": "500 MB",
- *         "rows": 1000000
+ *         "name": "public.users",
+ *         "size": "256 KB",
+ *         "sizeBytes": 262144,
+ *         "rowCountEstimate": 1000
  *       },
  *       ...
  *     ]

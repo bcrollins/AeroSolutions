@@ -1,91 +1,130 @@
 /**
  * Error Handling Middleware
  * 
- * This middleware provides centralized error handling for the application.
- * It standardizes error responses and logs errors for monitoring.
+ * This middleware provides consistent error handling and formatting
+ * for all API errors throughout the application.
  */
 
 const logger = require('../config/logger');
 
 /**
- * Create a standardized API error object
- * @param {string} message - Error message
- * @param {number} statusCode - HTTP status code
- * @param {string} code - Error code for clients
- * @param {Object} details - Additional error details
- * @returns {Object} - Standardized error object
+ * Custom API error class for standard error handling
  */
-function createError(message, statusCode = 500, code = 'SERVER_ERROR', details = null) {
-  const error = new Error(message);
-  error.statusCode = statusCode;
-  error.code = code;
-  error.details = details;
-  return error;
+class ApiError extends Error {
+  /**
+   * Create a new API error
+   * @param {string} message - Error message
+   * @param {number} statusCode - HTTP status code
+   * @param {string} code - Error code for client identification
+   * @param {Object} details - Additional error details
+   */
+  constructor(message, statusCode = 500, code = 'SERVER_ERROR', details = {}) {
+    super(message);
+    this.statusCode = statusCode;
+    this.code = code;
+    this.details = details;
+    this.timestamp = new Date().toISOString();
+  }
 }
 
 /**
- * Global error handling middleware
- * This should be registered after all routes
+ * Create a new API error
+ * @param {string} message - Error message
+ * @param {number} statusCode - HTTP status code
+ * @param {string} code - Error code for client identification
+ * @param {Object} details - Additional error details 
+ * @returns {ApiError} - New API error
  */
-function errorHandler(err, req, res, next) {
-  // Extract error information
-  const statusCode = err.statusCode || 500;
-  const message = err.message || 'Internal Server Error';
-  const code = err.code || 'SERVER_ERROR';
-  const details = err.details || null;
+function createError(message, statusCode = 500, code = 'SERVER_ERROR', details = {}) {
+  return new ApiError(message, statusCode, code, details);
+}
+
+/**
+ * Handle 404 errors for routes not found
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
+function notFoundHandler(req, res, next) {
+  const error = createError(
+    `Route not found: ${req.method} ${req.originalUrl}`,
+    404,
+    'ROUTE_NOT_FOUND'
+  );
   
-  // Log the error
-  const logLevel = statusCode >= 500 ? 'error' : 'warn';
-  logger[logLevel](`API Error: ${message}`, {
-    error: {
-      message,
-      code,
-      statusCode,
-      stack: err.stack
-    },
-    request: {
-      method: req.method,
-      url: req.originalUrl,
-      ip: req.ip,
-      userId: req.user?.id
-    }
+  logger.warn(`404 Not Found: ${req.method} ${req.originalUrl}`, {
+    ip: req.ip,
+    url: req.originalUrl,
+    method: req.method,
+    headers: req.headers
   });
   
-  // Construct response
+  next(error);
+}
+
+/**
+ * Main error handler middleware
+ * @param {Error} err - Error object
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
+function errorHandler(err, req, res, next) {
+  // If headers already sent, delegate to Express' default error handler
+  if (res.headersSent) {
+    return next(err);
+  }
+  
+  // Get status code and default to 500
+  const statusCode = err.statusCode || 500;
+  
+  // Prepare error response
   const errorResponse = {
     success: false,
     error: {
-      message,
-      code,
-      statusCode
+      message: err.message || 'Internal Server Error',
+      code: err.code || 'SERVER_ERROR',
+      status: statusCode,
+      timestamp: err.timestamp || new Date().toISOString()
     }
   };
   
-  // Add details if available
-  if (details) {
-    errorResponse.error.details = details;
+  // Include error details if available
+  if (err.details && Object.keys(err.details).length > 0) {
+    errorResponse.error.details = err.details;
   }
   
-  // In development, include stack trace
+  // Include stack trace in development mode
   if (process.env.NODE_ENV !== 'production') {
-    errorResponse.error.stack = err.stack?.split('\n');
+    errorResponse.error.stack = err.stack;
+  }
+  
+  // Log the error with appropriate level based on status code
+  const logMeta = {
+    url: req.originalUrl,
+    method: req.method,
+    ip: req.ip,
+    statusCode: statusCode,
+    errorCode: err.code,
+    stack: err.stack,
+    details: err.details
+  };
+  
+  if (statusCode >= 500) {
+    logger.error(`Server Error: ${err.message}`, logMeta);
+  } else if (statusCode >= 400) {
+    logger.warn(`Client Error: ${err.message}`, logMeta);
+  } else {
+    logger.info(`Handled Error: ${err.message}`, logMeta);
   }
   
   // Send error response
   res.status(statusCode).json(errorResponse);
 }
 
-/**
- * Not found handler middleware
- * This should be registered after all routes to catch 404s
- */
-function notFoundHandler(req, res, next) {
-  const error = createError(`Route not found: ${req.originalUrl}`, 404, 'NOT_FOUND');
-  next(error);
-}
-
 module.exports = {
+  ApiError,
   createError,
-  errorHandler,
-  notFoundHandler
+  notFoundHandler,
+  errorHandler
 };

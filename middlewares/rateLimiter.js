@@ -1,79 +1,126 @@
 /**
  * Rate Limiting Middleware
  * 
- * Provides different rate limiters for API endpoints based on 
- * their resource intensity or potential for abuse.
+ * This middleware implements rate limiting for API endpoints to 
+ * prevent abuse and ensure fair usage of resources.
  */
 
 const rateLimit = require('express-rate-limit');
 const logger = require('../config/logger');
-const { createError } = require('./errorHandler');
 
-/**
- * Handle rate limit exceeded
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
- */
-function handleRateLimitExceeded(req, res, next) {
-  logger.warn('Rate limit exceeded', {
+// Custom handler for rate limit exceeded
+const limitExceededHandler = (req, res, next, options) => {
+  const message = `Rate limit exceeded: ${options.message || 'Too many requests'}`;
+  
+  logger.warn(message, {
     ip: req.ip,
-    url: req.originalUrl,
+    endpoint: req.originalUrl,
     method: req.method,
-    userId: req.user?.id
+    limit: options.max,
+    windowMs: options.windowMs
   });
   
-  next(createError(
-    'Too many requests, please try again later',
-    429,
-    'RATE_LIMIT_EXCEEDED',
-    { retryAfter: res.getHeader('Retry-After') || 60 }
-  ));
-}
+  res.status(options.statusCode).json({
+    success: false,
+    error: {
+      code: 'RATE_LIMIT_EXCEEDED',
+      message: options.message || 'Too many requests, please try again later.',
+      type: 'rate_limit',
+      details: {
+        retryAfter: Math.ceil(options.windowMs / 1000),
+        limit: options.max,
+        windowMs: options.windowMs
+      }
+    }
+  });
+};
 
-// Standard API rate limiter (general purpose API endpoints)
+// Default rate limiter for standard API endpoints
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  handler: handleRateLimitExceeded,
-  keyGenerator: (req) => req.ip // Use IP address as key
+  max: 100, // 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again after 15 minutes',
+  standardHeaders: true, // Return rate limit info in headers
+  legacyHeaders: false, // Disable X-RateLimit-* headers
+  handler: limitExceededHandler,
+  keyGenerator: (req) => req.ip, // Use IP address as the key
+  skip: (req, res) => {
+    // Skip rate limiting for certain endpoints or conditions if needed
+    return false;
+  },
+  onLimitReached: (req, res, options) => {
+    logger.warn('API rate limit reached', {
+      ip: req.ip,
+      endpoint: req.originalUrl,
+      method: req.method
+    });
+  }
 });
 
-// Contact form rate limiter (prevent form spam)
-const contactLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 5, // Limit each IP to 5 submissions per hour
-  standardHeaders: true,
-  legacyHeaders: false,
-  handler: handleRateLimitExceeded,
-  keyGenerator: (req) => req.ip
-});
-
-// Stricter rate limiter for OpenAI API routes (prevent abuse and high costs)
+// More restrictive rate limiter for OpenAI API endpoints
 const openaiLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000, // 5 minutes
-  max: 30, // Limit each IP to 30 requests per 5 minutes
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 50, // 50 requests per windowMs
+  message: 'Too many OpenAI API requests from this IP, please try again after 1 hour',
   standardHeaders: true,
   legacyHeaders: false,
-  handler: handleRateLimitExceeded,
-  keyGenerator: (req) => req.ip
+  handler: limitExceededHandler,
+  keyGenerator: (req) => req.ip,
+  skip: (req, res) => {
+    // Skip for status endpoint
+    if (req.path === '/status' && req.method === 'GET') {
+      return true;
+    }
+    return false;
+  },
+  onLimitReached: (req, res, options) => {
+    logger.warn('OpenAI API rate limit reached', {
+      ip: req.ip,
+      endpoint: req.originalUrl,
+      method: req.method
+    });
+  }
 });
 
-// Login/Auth limiter to prevent brute force attacks
+// Strict rate limiter for auth-related endpoints
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // Limit each IP to 10 login attempts per 15 minutes
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 20, // 20 requests per windowMs
+  message: 'Too many authentication attempts from this IP, please try again after 1 hour',
   standardHeaders: true,
   legacyHeaders: false,
-  handler: handleRateLimitExceeded,
-  keyGenerator: (req) => req.ip
+  handler: limitExceededHandler,
+  keyGenerator: (req) => req.ip,
+  onLimitReached: (req, res, options) => {
+    logger.warn('Auth rate limit reached', {
+      ip: req.ip,
+      endpoint: req.originalUrl,
+      method: req.method
+    });
+  }
+});
+
+// Contact form submission limiter
+const contactLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
+  max: 5, // 5 submissions per day
+  message: 'Too many contact form submissions from this IP, please try again tomorrow',
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: limitExceededHandler,
+  keyGenerator: (req) => req.ip,
+  onLimitReached: (req, res, options) => {
+    logger.warn('Contact form submission rate limit reached', {
+      ip: req.ip,
+      endpoint: req.originalUrl,
+      method: req.method
+    });
+  }
 });
 
 module.exports = {
   apiLimiter,
-  contactLimiter,
   openaiLimiter,
-  authLimiter
+  authLimiter,
+  contactLimiter
 };

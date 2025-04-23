@@ -2,111 +2,129 @@
  * OpenAI API Routes
  * 
  * This module defines routes for interacting with the OpenAI API.
- * Routes include text generation, JSON generation, image analysis, and connection testing.
+ * It includes endpoints for text completion, chat responses, and image generation.
  */
 
 const express = require('express');
 const router = express.Router();
 const openaiController = require('../controllers/openaiController');
-const { validateOpenAITextRequest, validateOpenAIImageRequest } = require('../middlewares/validator');
 const { openaiLimiter } = require('../middlewares/rateLimiter');
 
 /**
- * @route   POST /api/openai/text
- * @desc    Generate text using OpenAI
- * @access  Public (rate limited)
- * 
- * Request body:
- * {
- *   "prompt": "Your text prompt here",
- *   "model": "gpt-4o" (optional, default: "gpt-4o"),
- *   "max_tokens": 1000 (optional, default: 1000),
- *   "temperature": 0.7 (optional, default: 0.7)
- * }
- * 
- * Response:
- * {
- *   "success": true,
- *   "data": {
- *     "text": "Generated text response",
- *     "model": "gpt-4o",
- *     "usage": {
- *       "prompt_tokens": 10,
- *       "completion_tokens": 20,
- *       "total_tokens": 30
- *     }
- *   }
- * }
- */
-router.post('/text', openaiLimiter, validateOpenAITextRequest, openaiController.generateText);
-
-/**
- * @route   POST /api/openai/json
- * @desc    Generate structured JSON data using OpenAI
- * @access  Public (rate limited)
- * 
- * Request body:
- * {
- *   "prompt": "Generate JSON for...",
- *   "model": "gpt-4o" (optional, default: "gpt-4o"),
- *   "max_tokens": 1000 (optional, default: 1000),
- *   "temperature": 0.7 (optional, default: 0.7)
- * }
- * 
- * Response:
- * {
- *   "success": true,
- *   "data": {
- *     "json": { ... parsed JSON object ... },
- *     "model": "gpt-4o",
- *     "usage": {
- *       "prompt_tokens": 15,
- *       "completion_tokens": 25,
- *       "total_tokens": 40
- *     }
- *   }
- * }
- */
-router.post('/json', openaiLimiter, validateOpenAITextRequest, openaiController.generateJSON);
-
-/**
- * @route   POST /api/openai/image-analysis
- * @desc    Analyze an image using OpenAI Vision
- * @access  Public (rate limited)
- * 
- * Request body:
- * {
- *   "imageUrl": "https://example.com/image.jpg",
- *   "prompt": "Analyze this image" (optional),
- *   "model": "gpt-4o" (optional, default: "gpt-4o")
- * }
- * 
- * Response:
- * {
- *   "success": true,
- *   "data": {
- *     "analysis": "Detailed analysis of the image...",
- *     "model": "gpt-4o"
- *   }
- * }
- */
-router.post('/image-analysis', openaiLimiter, validateOpenAIImageRequest, openaiController.analyzeImage);
-
-/**
- * @route   GET /api/openai/test
- * @desc    Test OpenAI API connection
+ * @route   GET /api/openai/status
+ * @desc    Check OpenAI API status
  * @access  Public
  * 
  * Response:
  * {
  *   "success": true,
- *   "message": "OpenAI API connection test successful",
  *   "data": {
- *     "response": "API connection successful",
- *     "model": "gpt-3.5-turbo"
+ *     "apiStatus": "operational", // or "error", "unconfigured", "unknown"
+ *     "hasApiKey": true,
+ *     "error": null, // or error message if apiStatus is "error"
+ *     "models": [
+ *       {
+ *         "id": "gpt-4o",
+ *         "owned_by": "openai"
+ *       },
+ *       ...
+ *     ]
  *   }
  * }
  */
-router.get('/test', openaiController.testConnection);
+router.get('/status', openaiLimiter, openaiController.checkStatus);
+
+/**
+ * @route   POST /api/openai/completion
+ * @desc    Get text completion from OpenAI
+ * @access  Public (rate limited)
+ * 
+ * Request body:
+ * {
+ *   "prompt": "Complete this sentence: The quick brown fox",
+ *   "model": "text-davinci-003", (optional, default: text-davinci-003)
+ *   "maxTokens": 150, (optional, default: 150)
+ *   "temperature": 0.7 (optional, default: 0.7)
+ * }
+ * 
+ * Response:
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "text": "jumps over the lazy dog.",
+ *     "model": "text-davinci-003",
+ *     "usage": {
+ *       "prompt_tokens": 9,
+ *       "completion_tokens": 6,
+ *       "total_tokens": 15
+ *     }
+ *   }
+ * }
+ */
+router.post('/completion', openaiLimiter, openaiController.getCompletion);
+
+/**
+ * @route   POST /api/openai/chat
+ * @desc    Get chat completion from OpenAI
+ * @access  Public (rate limited)
+ * 
+ * Request body:
+ * {
+ *   "messages": [
+ *     {"role": "system", "content": "You are a helpful assistant."},
+ *     {"role": "user", "content": "Who won the world series in 2020?"}
+ *   ],
+ *   "model": "gpt-4o", (optional, default: gpt-4o)
+ *   "maxTokens": 1000, (optional, default: 1000)
+ *   "temperature": 0.7 (optional, default: 0.7)
+ * }
+ * 
+ * Response:
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "message": {
+ *       "role": "assistant",
+ *       "content": "The Los Angeles Dodgers won the World Series in 2020..."
+ *     },
+ *     "model": "gpt-4o",
+ *     "usage": {
+ *       "prompt_tokens": 27,
+ *       "completion_tokens": 20,
+ *       "total_tokens": 47
+ *     }
+ *   }
+ * }
+ */
+router.post('/chat', openaiLimiter, openaiController.getChatCompletion);
+
+/**
+ * @route   POST /api/openai/image
+ * @desc    Generate image from OpenAI DALL-E
+ * @access  Public (rate limited)
+ * 
+ * Request body:
+ * {
+ *   "prompt": "A beautiful sunset over the ocean",
+ *   "n": 1, (optional, default: 1)
+ *   "size": "1024x1024", (optional, default: 1024x1024)
+ *   "quality": "standard", (optional, default: standard)
+ *   "responseFormat": "url" (optional, default: url)
+ * }
+ * 
+ * Response:
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "images": [
+ *       {
+ *         "url": "https://oaidalleapiprodscus.blob.core.windows.net/..."
+ *       }
+ *     ],
+ *     "created": 1589478378
+ *   }
+ * }
+ */
+router.post('/image', openaiLimiter, openaiController.generateImage);
 
 module.exports = router;

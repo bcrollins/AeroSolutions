@@ -1,75 +1,106 @@
 /**
  * Request Logging Middleware
  * 
- * Logs HTTP requests for monitoring and debugging
+ * This middleware logs information about incoming API requests
+ * for monitoring and debugging purposes.
  */
 
-const morgan = require('morgan');
 const logger = require('../config/logger');
 
-// Define a custom token for response time
-morgan.token('response-time-ms', (req, res) => {
-  if (!req._startAt || !res._startAt) {
-    return '';
+/**
+ * Log API request details
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
+function requestLogger(req, res, next) {
+  // Get request start time
+  const start = Date.now();
+  
+  // Log request details
+  const requestInfo = {
+    method: req.method,
+    url: req.originalUrl,
+    ip: req.ip || req.connection.remoteAddress,
+    userAgent: req.headers['user-agent'],
+    body: sanitizeRequestBody(req.body),
+    query: req.query,
+    params: req.params
+  };
+  
+  logger.debug(`API Request: ${req.method} ${req.originalUrl}`, requestInfo);
+  
+  // Add response interceptor to log response details
+  const originalSend = res.send;
+  res.send = function(body) {
+    // Calculate request duration
+    const duration = Date.now() - start;
+    
+    // Log response details
+    const responseInfo = {
+      statusCode: res.statusCode,
+      duration: `${duration}ms`,
+      contentLength: body ? body.length : 0,
+      url: req.originalUrl,
+      method: req.method
+    };
+    
+    // Log at appropriate level based on status code
+    if (res.statusCode >= 500) {
+      logger.error(`API Response: ${res.statusCode} ${req.method} ${req.originalUrl} (${duration}ms)`, responseInfo);
+    } else if (res.statusCode >= 400) {
+      logger.warn(`API Response: ${res.statusCode} ${req.method} ${req.originalUrl} (${duration}ms)`, responseInfo);
+    } else {
+      logger.info(`API Response: ${res.statusCode} ${req.method} ${req.originalUrl} (${duration}ms)`, responseInfo);
+    }
+    
+    // Continue with the original send
+    originalSend.call(this, body);
+  };
+  
+  next();
+}
+
+/**
+ * Sanitize request body to remove sensitive information
+ * @param {Object} body - Request body
+ * @returns {Object} - Sanitized body
+ */
+function sanitizeRequestBody(body) {
+  // Don't log if no body or not an object
+  if (!body || typeof body !== 'object') {
+    return body;
   }
   
-  const ms = (res._startAt[0] - req._startAt[0]) * 1000 +
-             (res._startAt[1] - req._startAt[1]) * 1e-6;
+  // Clone the body to avoid modifying the original
+  const sanitized = { ...body };
   
-  return ms.toFixed(2);
-});
-
-// Define a custom token for user ID
-morgan.token('user-id', (req) => {
-  return req.user ? req.user.id : 'anonymous';
-});
-
-// Define a custom token for truncated request body
-morgan.token('request-body', (req) => {
-  if (!req.body || Object.keys(req.body).length === 0) {
-    return '';
-  }
-  
-  // Clone request body to avoid modification
-  const body = { ...req.body };
+  // Sensitive fields to mask
+  const sensitiveFields = [
+    'password', 'token', 'secret', 'apiKey', 'api_key', 'key',
+    'accessToken', 'access_token', 'refreshToken', 'refresh_token',
+    'authToken', 'auth_token', 'credentials', 'credit_card', 'creditCard',
+    'cvv', 'cvc', 'pin', 'ssn', 'social_security'
+  ];
   
   // Mask sensitive fields
-  const sensitiveFields = ['password', 'token', 'apiKey', 'secret', 'creditCard'];
-  
-  sensitiveFields.forEach(field => {
-    if (body[field]) {
-      body[field] = '********';
+  Object.keys(sanitized).forEach(key => {
+    const lowerKey = key.toLowerCase();
+    
+    // Check if the key contains any sensitive field name
+    const isSensitive = sensitiveFields.some(field => 
+      lowerKey.includes(field.toLowerCase())
+    );
+    
+    if (isSensitive) {
+      sanitized[key] = '[REDACTED]';
+    } else if (typeof sanitized[key] === 'object' && sanitized[key] !== null) {
+      // Recursively sanitize nested objects
+      sanitized[key] = sanitizeRequestBody(sanitized[key]);
     }
   });
   
-  // Truncate long values
-  Object.keys(body).forEach(key => {
-    if (typeof body[key] === 'string' && body[key].length > 100) {
-      body[key] = body[key].substring(0, 97) + '...';
-    }
-  });
-  
-  // Return JSON string of sanitized body
-  try {
-    return JSON.stringify(body);
-  } catch (error) {
-    return '[Error serializing request body]';
-  }
-});
-
-// Create request logger middleware
-const requestLogger = morgan(
-  ':method :url :status :response-time-ms ms - :res[content-length] - :user-id :request-body',
-  {
-    stream: logger.stream,
-    skip: (req) => {
-      // Skip logging for static assets or health check endpoints
-      return req.url.startsWith('/public/') || 
-             req.url.startsWith('/assets/') || 
-             req.url === '/health' || 
-             req.url === '/favicon.ico';
-    }
-  }
-);
+  return sanitized;
+}
 
 module.exports = requestLogger;

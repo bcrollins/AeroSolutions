@@ -1,7 +1,9 @@
 /**
  * Database Controller
  * 
- * Handles logic for database-related routes
+ * This controller provides functionality for database diagnostics
+ * and management. It allows checking database status, viewing tables,
+ * and examining table structures.
  */
 
 const db = require('../config/database');
@@ -12,17 +14,23 @@ const { createError } = require('../middlewares/errorHandler');
  * Test database connection
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
  */
 async function testConnection(req, res, next) {
   try {
-    const result = await db.testConnection();
+    logger.debug('Testing database connection');
+    
+    const result = await db.query('SELECT NOW() as timestamp');
+    
+    logger.info('Database connection test successful', {
+      timestamp: result.rows[0].timestamp
+    });
     
     res.json({
       success: true,
+      message: 'Database connection successful',
       data: {
-        connected: result,
-        connectionString: process.env.DATABASE_URL ? 'configured' : 'missing',
-        timestamp: new Date().toISOString()
+        timestamp: result.rows[0].timestamp
       }
     });
   } catch (error) {
@@ -40,46 +48,62 @@ async function testConnection(req, res, next) {
 }
 
 /**
- * Get all tables
+ * Get all tables in the database
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
  */
 async function getTables(req, res, next) {
   try {
-    // Query to get all tables in the current database
+    logger.debug('Getting database tables');
+    
     const query = `
       SELECT 
-        table_name, 
-        pg_size_pretty(pg_total_relation_size(quote_ident(table_name))) as size,
-        pg_relation_size(quote_ident(table_name)) as raw_size,
-        (SELECT COUNT(*) FROM information_schema.columns WHERE table_name = t.table_name) as column_count,
-        obj_description(quote_ident(table_name)::regclass::oid, 'pg_class') as description
+        table_schema,
+        table_name,
+        pg_total_relation_size('"' || table_schema || '"."' || table_name || '"') AS size_in_bytes,
+        pg_relation_size('"' || table_schema || '"."' || table_name || '"') AS table_size_in_bytes,
+        pg_indexes_size('"' || table_schema || '"."' || table_name || '"') AS indexes_size_in_bytes,
+        (SELECT reltuples FROM pg_class WHERE oid = ('"' || table_schema || '"."' || table_name || '"')::regclass) AS row_count_estimate
       FROM 
-        information_schema.tables t
+        information_schema.tables
       WHERE 
-        table_schema = 'public' 
+        table_schema NOT IN ('pg_catalog', 'information_schema') 
         AND table_type = 'BASE TABLE'
       ORDER BY 
-        raw_size DESC;
+        table_schema, table_name;
     `;
     
     const result = await db.query(query);
     
+    // Format the response for better readability
+    const tables = result.rows.map(table => ({
+      table_schema: table.table_schema,
+      table_name: table.table_name,
+      size: formatBytes(table.size_in_bytes),
+      table_size: formatBytes(table.table_size_in_bytes),
+      indexes_size: formatBytes(table.indexes_size_in_bytes),
+      row_count_estimate: parseInt(table.row_count_estimate)
+    }));
+    
+    logger.info('Retrieved database tables', {
+      count: tables.length
+    });
+    
     res.json({
       success: true,
       data: {
-        tables: result.rows,
-        count: result.rowCount
+        tables
       }
     });
   } catch (error) {
-    logger.error('Failed to get tables list', {
+    logger.error('Failed to get database tables', {
       error: error.message,
       stack: error.stack
     });
     
     next(createError(
-      'Failed to get tables list: ' + error.message,
+      'Failed to get database tables: ' + error.message,
       500,
       'DATABASE_ERROR'
     ));
@@ -87,123 +111,73 @@ async function getTables(req, res, next) {
 }
 
 /**
- * Get columns for specific table
+ * Get columns for a specific table
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
  */
 async function getTableColumns(req, res, next) {
   try {
     const { tableName } = req.params;
     
-    // Validate that table exists
-    const tableCheckQuery = `
-      SELECT to_regclass('public.${tableName}') IS NOT NULL as exists;
+    // Validate table name to prevent SQL injection
+    if (!/^[a-zA-Z0-9_]+$/.test(tableName)) {
+      return next(createError(
+        'Invalid table name. Only alphanumeric characters and underscores are allowed.',
+        400,
+        'INVALID_TABLE_NAME'
+      ));
+    }
+    
+    logger.debug('Getting columns for table', { tableName });
+    
+    const query = `
+      SELECT 
+        column_name,
+        data_type,
+        character_maximum_length,
+        column_default,
+        is_nullable
+      FROM 
+        information_schema.columns
+      WHERE 
+        table_name = $1
+        AND table_schema NOT IN ('pg_catalog', 'information_schema')
+      ORDER BY 
+        ordinal_position;
     `;
     
-    const tableExists = await db.query(tableCheckQuery);
+    const result = await db.query(query, [tableName]);
     
-    if (!tableExists.rows[0].exists) {
+    if (result.rows.length === 0) {
       return next(createError(
-        `Table '${tableName}' does not exist`,
+        `Table '${tableName}' not found or has no columns`,
         404,
         'TABLE_NOT_FOUND'
       ));
     }
     
-    // Query to get detailed column information
-    const columnsQuery = `
-      SELECT 
-        column_name, 
-        data_type, 
-        character_maximum_length,
-        column_default,
-        is_nullable,
-        CASE 
-          WHEN pk.column_name IS NOT NULL THEN true 
-          ELSE false 
-        END as is_primary_key,
-        obj_description(
-          pg_attribute.attrelid, 
-          pg_attribute.attnum
-        ) as description
-      FROM 
-        information_schema.columns
-      LEFT JOIN (
-        SELECT 
-          pg_attribute.attname as column_name
-        FROM 
-          pg_index, pg_class, pg_attribute, pg_namespace
-        WHERE 
-          pg_class.oid = '${tableName}'::regclass
-          AND indrelid = pg_class.oid 
-          AND pg_class.relnamespace = pg_namespace.oid
-          AND pg_attribute.attrelid = pg_class.oid
-          AND pg_attribute.attnum = any(pg_index.indkey)
-          AND indisprimary
-      ) pk ON pk.column_name = columns.column_name
-      LEFT JOIN 
-        pg_catalog.pg_attribute ON 
-          pg_attribute.attname = columns.column_name
-          AND pg_attribute.attrelid = '${tableName}'::regclass
-      WHERE 
-        table_name = '${tableName}'
-        AND table_schema = 'public'
-      ORDER BY 
-        ordinal_position;
-    `;
-    
-    const result = await db.query(columnsQuery);
-    
-    // Query to get table indexes
-    const indexesQuery = `
-      SELECT
-        idx.indexname as index_name,
-        idx.indexdef as index_definition,
-        idx_stat.idx_scan as usage_count,
-        pg_size_pretty(pg_relation_size(quote_ident(idx.indexname)::regclass)) as size
-      FROM
-        pg_indexes idx
-      LEFT JOIN
-        pg_stat_user_indexes idx_stat ON idx.indexname = idx_stat.indexrelname
-      WHERE
-        idx.tablename = '${tableName}'
-      ORDER BY
-        idx_stat.idx_scan DESC NULLS LAST;
-    `;
-    
-    const indexesResult = await db.query(indexesQuery);
-    
-    // Get approximate row count
-    const rowCountQuery = `
-      SELECT 
-        reltuples::bigint as row_count_estimate
-      FROM 
-        pg_class
-      WHERE 
-        oid = '${tableName}'::regclass;
-    `;
-    
-    const rowCountResult = await db.query(rowCountQuery);
+    logger.info('Retrieved table columns', {
+      tableName,
+      columnCount: result.rows.length
+    });
     
     res.json({
       success: true,
       data: {
         tableName,
-        columns: result.rows,
-        columnCount: result.rowCount,
-        indexes: indexesResult.rows,
-        indexCount: indexesResult.rowCount,
-        rowCountEstimate: rowCountResult.rows[0]?.row_count_estimate || 0
+        columns: result.rows
       }
     });
   } catch (error) {
-    logger.error(`Failed to get columns for table '${req.params.tableName}'`, {
+    logger.error('Failed to get table columns', {
       error: error.message,
-      stack: error.stack
+      stack: error.stack,
+      tableName: req.params.tableName
     });
     
     next(createError(
-      `Failed to get columns for table '${req.params.tableName}': ${error.message}`,
+      'Failed to get table columns: ' + error.message,
       500,
       'DATABASE_ERROR'
     ));
@@ -211,86 +185,93 @@ async function getTableColumns(req, res, next) {
 }
 
 /**
- * Get database status and statistics
+ * Get database status information
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
  */
 async function getStatus(req, res, next) {
   try {
-    // Get database size
-    const dbSizeQuery = `SELECT pg_size_pretty(pg_database_size(current_database())) as size;`;
-    const dbSizeResult = await db.query(dbSizeQuery);
+    logger.debug('Getting database status');
     
-    // Get connection count and client info
+    // Get PostgreSQL version
+    const versionQuery = 'SELECT version();';
+    const versionResult = await db.query(versionQuery);
+    const version = versionResult.rows[0].version;
+    
+    // Get current connections
     const connectionsQuery = `
       SELECT 
-        count(*) as connection_count,
-        count(*) FILTER (WHERE state = 'active') as active_connections,
-        count(*) FILTER (WHERE state = 'idle') as idle_connections
+        count(*) AS total,
+        sum(CASE WHEN state = 'active' THEN 1 ELSE 0 END) AS active,
+        sum(CASE WHEN state = 'idle' THEN 1 ELSE 0 END) AS idle
       FROM 
-        pg_stat_activity 
-      WHERE 
-        datname = current_database();
+        pg_stat_activity;
     `;
     const connectionsResult = await db.query(connectionsQuery);
+    const connections = connectionsResult.rows[0];
+    
+    // Get database size
+    const sizeQuery = `
+      SELECT 
+        pg_size_pretty(pg_database_size(current_database())) AS size,
+        pg_database_size(current_database()) AS size_bytes;
+    `;
+    const sizeResult = await db.query(sizeQuery);
+    const dbSize = sizeResult.rows[0];
+    
+    // Get largest tables
+    const tablesQuery = `
+      SELECT 
+        table_schema || '.' || table_name AS name,
+        pg_size_pretty(pg_total_relation_size('"' || table_schema || '"."' || table_name || '"')) AS size,
+        pg_total_relation_size('"' || table_schema || '"."' || table_name || '"') AS size_bytes,
+        (SELECT reltuples FROM pg_class WHERE oid = ('"' || table_schema || '"."' || table_name || '"')::regclass) AS row_count_estimate
+      FROM 
+        information_schema.tables
+      WHERE 
+        table_schema NOT IN ('pg_catalog', 'information_schema') 
+        AND table_type = 'BASE TABLE'
+      ORDER BY 
+        pg_total_relation_size('"' || table_schema || '"."' || table_name || '"') DESC
+      LIMIT 5;
+    `;
+    const tablesResult = await db.query(tablesQuery);
+    const largestTables = tablesResult.rows;
     
     // Get table count
-    const tableCountQuery = `
-      SELECT count(*) as table_count
-      FROM information_schema.tables
-      WHERE table_schema = 'public' AND table_type = 'BASE TABLE';
-    `;
-    const tableCountResult = await db.query(tableCountQuery);
-    
-    // Get transaction statistics
-    const transactionStatsQuery = `
+    const countQuery = `
       SELECT 
-        sum(xact_commit) as commits, 
-        sum(xact_rollback) as rollbacks,
-        sum(blks_read) as blocks_read,
-        sum(blks_hit) as blocks_hit,
-        sum(tup_returned) as rows_returned,
-        sum(tup_fetched) as rows_fetched,
-        sum(tup_inserted) as rows_inserted,
-        sum(tup_updated) as rows_updated,
-        sum(tup_deleted) as rows_deleted
+        count(*) AS table_count
       FROM 
-        pg_stat_database 
+        information_schema.tables
       WHERE 
-        datname = current_database();
+        table_schema NOT IN ('pg_catalog', 'information_schema') 
+        AND table_type = 'BASE TABLE';
     `;
-    const transactionStatsResult = await db.query(transactionStatsQuery);
+    const countResult = await db.query(countQuery);
+    const tablesCount = parseInt(countResult.rows[0].table_count);
     
-    // Calculate cache hit ratio
-    const cacheHitRatio = transactionStatsResult.rows[0].blocks_hit / 
-      (transactionStatsResult.rows[0].blocks_read + transactionStatsResult.rows[0].blocks_hit);
+    logger.info('Retrieved database status');
     
     res.json({
       success: true,
       data: {
-        timestamp: new Date().toISOString(),
-        databaseName: process.env.PGDATABASE || 'unknown',
-        databaseSize: dbSizeResult.rows[0].size,
+        version,
         connections: {
-          total: parseInt(connectionsResult.rows[0].connection_count),
-          active: parseInt(connectionsResult.rows[0].active_connections),
-          idle: parseInt(connectionsResult.rows[0].idle_connections)
+          total: parseInt(connections.total),
+          active: parseInt(connections.active),
+          idle: parseInt(connections.idle)
         },
-        tables: {
-          count: parseInt(tableCountResult.rows[0].table_count)
-        },
-        transactions: {
-          commits: parseInt(transactionStatsResult.rows[0].commits),
-          rollbacks: parseInt(transactionStatsResult.rows[0].rollbacks),
-          cacheHitRatio: cacheHitRatio.toFixed(4)
-        },
-        operations: {
-          rowsReturned: parseInt(transactionStatsResult.rows[0].rows_returned),
-          rowsFetched: parseInt(transactionStatsResult.rows[0].rows_fetched),
-          rowsInserted: parseInt(transactionStatsResult.rows[0].rows_inserted),
-          rowsUpdated: parseInt(transactionStatsResult.rows[0].rows_updated),
-          rowsDeleted: parseInt(transactionStatsResult.rows[0].rows_deleted)
-        }
+        dbSize: dbSize.size,
+        dbSizeBytes: parseInt(dbSize.size_bytes),
+        tablesCount,
+        largestTables: largestTables.map(table => ({
+          name: table.name,
+          size: table.size,
+          sizeBytes: parseInt(table.size_bytes),
+          rowCountEstimate: parseInt(table.row_count_estimate)
+        }))
       }
     });
   } catch (error) {
@@ -305,6 +286,24 @@ async function getStatus(req, res, next) {
       'DATABASE_ERROR'
     ));
   }
+}
+
+/**
+ * Format bytes to human-readable format
+ * @param {number} bytes - Size in bytes
+ * @param {number} decimals - Number of decimal places
+ * @returns {string} - Formatted size string
+ */
+function formatBytes(bytes, decimals = 2) {
+  if (!bytes) return '0 Bytes';
+  
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
+  
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
 module.exports = {

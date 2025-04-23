@@ -1,16 +1,16 @@
 /**
  * Contact Controller
  * 
- * Handles logic for contact form submissions
+ * This controller handles all operations related to contact form submissions,
+ * including submission, retrieval, status updates, and management.
  */
 
 const db = require('../config/database');
 const logger = require('../config/logger');
 const { createError } = require('../middlewares/errorHandler');
-const nodemailer = require('nodemailer');
 
 /**
- * Submit a contact form
+ * Submit a new contact form
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
@@ -19,15 +19,36 @@ async function submitContact(req, res, next) {
   try {
     const { name, email, phone, subject, message, companyName } = req.body;
     
+    logger.debug('Processing contact form submission', { 
+      email, 
+      subject,
+      ip: req.ip
+    });
+    
+    // Store client information for tracking/analytics
+    const clientInfo = {
+      ip_address: req.ip,
+      user_agent: req.headers['user-agent'] || 'Unknown'
+    };
+    
     // Insert into database
     const query = `
-      INSERT INTO contact_submissions 
-        (name, email, phone, subject, message, company_name, status, ip_address, user_agent) 
+      INSERT INTO contact_submissions (
+        name, 
+        email, 
+        phone, 
+        subject, 
+        message, 
+        company_name, 
+        status,
+        ip_address,
+        user_agent
+      ) 
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-      RETURNING id, created_at;
+      RETURNING id, created_at
     `;
     
-    const result = await db.query(query, [
+    const values = [
       name,
       email,
       phone || null,
@@ -35,73 +56,41 @@ async function submitContact(req, res, next) {
       message,
       companyName || null,
       'pending', // Default status
-      req.ip,
-      req.headers['user-agent'] || 'Unknown'
-    ]);
+      clientInfo.ip_address,
+      clientInfo.user_agent
+    ];
     
-    const submissionId = result.rows[0].id;
+    const result = await db.query(query, values);
+    const submission = result.rows[0];
     
-    // Send notification email to admin
+    logger.info('Contact form submitted successfully', {
+      id: submission.id,
+      email,
+      subject
+    });
+    
+    // Send email notification if needed (commented out for now)
+    /*
     try {
-      if (process.env.NOTIFICATION_EMAIL) {
-        // Initialize nodemailer transport
-        const transporter = nodemailer.createTransport({
-          host: process.env.EMAIL_HOST || 'smtp.example.com',
-          port: process.env.EMAIL_PORT || 587,
-          secure: process.env.EMAIL_SECURE === 'true',
-          auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASSWORD
-          }
-        });
-        
-        // Prepare email content
-        const mailOptions = {
-          from: process.env.EMAIL_FROM || 'noreply@example.com',
-          to: process.env.NOTIFICATION_EMAIL,
-          subject: `New Contact Submission: ${subject}`,
-          html: `
-            <h2>New Contact Form Submission</h2>
-            <p><strong>ID:</strong> ${submissionId}</p>
-            <p><strong>Name:</strong> ${name}</p>
-            <p><strong>Email:</strong> ${email}</p>
-            <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
-            <p><strong>Company:</strong> ${companyName || 'Not provided'}</p>
-            <p><strong>Subject:</strong> ${subject}</p>
-            <p><strong>Message:</strong></p>
-            <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px;">
-              ${message.replace(/\n/g, '<br>')}
-            </div>
-            <p><strong>IP Address:</strong> ${req.ip}</p>
-            <p><strong>User Agent:</strong> ${req.headers['user-agent'] || 'Unknown'}</p>
-            <p><strong>Submission Time:</strong> ${result.rows[0].created_at}</p>
-          `
-        };
-        
-        // Send email asynchronously (don't await)
-        transporter.sendMail(mailOptions)
-          .catch(emailError => {
-            logger.error('Failed to send notification email', {
-              error: emailError.message,
-              stack: emailError.stack,
-              submissionId
-            });
-          });
-      }
+      await sendNotificationEmail({
+        to: process.env.NOTIFICATION_EMAIL,
+        subject: `New Contact Form: ${subject}`,
+        content: `New contact form from ${name} (${email}): ${message}`
+      });
     } catch (emailError) {
-      // Log error but don't fail the request
-      logger.error('Error setting up email notification', {
+      logger.error('Failed to send notification email', {
         error: emailError.message,
         stack: emailError.stack
       });
+      // Don't fail the request if email fails
     }
+    */
     
-    // Return success response
-    res.json({
+    res.status(201).json({
       success: true,
       data: {
-        id: submissionId,
-        timestamp: result.rows[0].created_at
+        id: submission.id,
+        timestamp: submission.created_at
       },
       message: 'Contact form submitted successfully'
     });
@@ -121,67 +110,89 @@ async function submitContact(req, res, next) {
 }
 
 /**
- * Get all contact submissions
+ * Get all contact submissions with pagination and filtering
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
 async function getAllContacts(req, res, next) {
   try {
-    // Extract query parameters
+    // Extract query parameters with defaults
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const status = req.query.status || null;
+    const status = req.query.status;
     const sortBy = req.query.sortBy || 'created_at';
-    const sortOrder = req.query.sortOrder === 'asc' ? 'ASC' : 'DESC';
+    const sortOrder = req.query.sortOrder?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
     
-    // Calculate offset for pagination
-    const offset = (page - 1) * limit;
+    // Validate sortBy to prevent SQL injection
+    const allowedSortFields = [
+      'id', 'name', 'email', 'subject', 'status', 'created_at', 'updated_at'
+    ];
     
-    // Prepare query parameters
+    if (!allowedSortFields.includes(sortBy)) {
+      return next(createError(
+        `Invalid sort field: ${sortBy}. Allowed fields: ${allowedSortFields.join(', ')}`,
+        400,
+        'INVALID_SORT_FIELD'
+      ));
+    }
+    
+    logger.debug('Getting contact submissions', { page, limit, status, sortBy, sortOrder });
+    
+    // Build the query
+    let query = `
+      SELECT 
+        id, name, email, phone, subject, message, company_name, status, created_at, updated_at
+      FROM 
+        contact_submissions
+    `;
+    
     const queryParams = [];
     let whereClause = '';
     
     // Add status filter if provided
     if (status) {
-      whereClause = 'WHERE status = $1';
+      whereClause = ' WHERE status = $1';
       queryParams.push(status);
     }
     
-    // Create base query
-    const baseQuery = `
-      FROM contact_submissions
-      ${whereClause}
-    `;
+    // Add where clause if needed
+    query += whereClause;
+    
+    // Add sorting
+    query += ` ORDER BY ${sortBy} ${sortOrder}`;
+    
+    // Add pagination
+    const offset = (page - 1) * limit;
+    query += ` LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}`;
+    queryParams.push(limit, offset);
+    
+    // Execute the query
+    const result = await db.query(query, queryParams);
     
     // Get total count for pagination
-    const countQuery = `SELECT COUNT(*) as total ${baseQuery}`;
-    const countResult = await db.query(countQuery, queryParams);
+    const countQuery = `
+      SELECT COUNT(*) as total FROM contact_submissions${whereClause}
+    `;
+    const countResult = await db.query(countQuery, status ? [status] : []);
     const total = parseInt(countResult.rows[0].total);
     
-    // Main query for data
-    const dataQueryParams = [...queryParams, limit, offset];
-    const dataQuery = `
-      SELECT 
-        id, name, email, phone, subject, 
-        message, company_name, status, 
-        ip_address, user_agent, created_at, updated_at
-      ${baseQuery}
-      ORDER BY ${sortBy} ${sortOrder}
-      LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}
-    `;
-    
-    const dataResult = await db.query(dataQuery, dataQueryParams);
-    
-    // Prepare pagination metadata
+    // Calculate pagination info
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;
     const hasPreviousPage = page > 1;
     
+    logger.info('Retrieved contact submissions', {
+      count: result.rows.length,
+      total,
+      page,
+      totalPages
+    });
+    
     res.json({
       success: true,
       data: {
-        contacts: dataResult.rows,
+        contacts: result.rows,
         pagination: {
           total,
           totalPages,
@@ -208,46 +219,46 @@ async function getAllContacts(req, res, next) {
 }
 
 /**
- * Get contact submission counts by status
+ * Get contact counts by status
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
 async function getContactCounts(req, res, next) {
   try {
+    logger.debug('Getting contact submission counts by status');
+    
     const query = `
-      SELECT 
-        status, 
-        COUNT(*) as count
-      FROM 
+      SELECT
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+        SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress,
+        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+        SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected
+      FROM
         contact_submissions
-      GROUP BY 
-        status
-      ORDER BY 
-        status
     `;
     
     const result = await db.query(query);
+    const counts = result.rows[0];
     
-    // Get total count
-    const totalQuery = `
-      SELECT COUNT(*) as total
-      FROM contact_submissions
-    `;
+    // Convert string counts to numbers
+    const statusCounts = {
+      pending: parseInt(counts.pending),
+      in_progress: parseInt(counts.in_progress),
+      completed: parseInt(counts.completed),
+      rejected: parseInt(counts.rejected)
+    };
     
-    const totalResult = await db.query(totalQuery);
-    const total = parseInt(totalResult.rows[0].total);
-    
-    // Format the response
-    const statusCounts = result.rows.reduce((acc, row) => {
-      acc[row.status] = parseInt(row.count);
-      return acc;
-    }, {});
+    logger.info('Retrieved contact submission counts', {
+      total: parseInt(counts.total),
+      statusCounts
+    });
     
     res.json({
       success: true,
       data: {
-        total,
+        total: parseInt(counts.total),
         statusCounts
       }
     });
@@ -266,7 +277,7 @@ async function getContactCounts(req, res, next) {
 }
 
 /**
- * Get contact submission by ID
+ * Get a specific contact submission by ID
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
@@ -275,20 +286,29 @@ async function getContactById(req, res, next) {
   try {
     const { id } = req.params;
     
+    // Validate ID
+    if (!id || isNaN(parseInt(id))) {
+      return next(createError(
+        'Invalid contact submission ID',
+        400,
+        'INVALID_ID'
+      ));
+    }
+    
+    logger.debug('Getting contact submission by ID', { id });
+    
     const query = `
       SELECT 
-        id, name, email, phone, subject, 
-        message, company_name, status, 
-        ip_address, user_agent, created_at, updated_at
+        * 
       FROM 
-        contact_submissions
+        contact_submissions 
       WHERE 
         id = $1
     `;
     
     const result = await db.query(query, [id]);
     
-    if (result.rowCount === 0) {
+    if (result.rows.length === 0) {
       return next(createError(
         `Contact submission with ID ${id} not found`,
         404,
@@ -296,14 +316,19 @@ async function getContactById(req, res, next) {
       ));
     }
     
+    const submission = result.rows[0];
+    
+    logger.info('Retrieved contact submission', { id });
+    
     res.json({
       success: true,
-      data: result.rows[0]
+      data: submission
     });
   } catch (error) {
-    logger.error(`Failed to get contact submission with ID ${req.params.id}`, {
+    logger.error('Failed to get contact submission', {
       error: error.message,
-      stack: error.stack
+      stack: error.stack,
+      id: req.params.id
     });
     
     next(createError(
@@ -325,24 +350,32 @@ async function updateContactStatus(req, res, next) {
     const { id } = req.params;
     const { status, notes } = req.body;
     
+    // Validate ID
+    if (!id || isNaN(parseInt(id))) {
+      return next(createError(
+        'Invalid contact submission ID',
+        400,
+        'INVALID_ID'
+      ));
+    }
+    
     // Validate status
     const validStatuses = ['pending', 'in_progress', 'completed', 'rejected'];
-    if (!validStatuses.includes(status)) {
+    if (!status || !validStatuses.includes(status)) {
       return next(createError(
-        `Invalid status value. Must be one of: ${validStatuses.join(', ')}`,
+        `Invalid status. Must be one of: ${validStatuses.join(', ')}`,
         400,
         'INVALID_STATUS'
       ));
     }
     
-    // Check if record exists first
-    const checkQuery = `
-      SELECT id FROM contact_submissions WHERE id = $1
-    `;
+    logger.debug('Updating contact submission status', { id, status });
     
+    // Check if submission exists
+    const checkQuery = 'SELECT id FROM contact_submissions WHERE id = $1';
     const checkResult = await db.query(checkQuery, [id]);
     
-    if (checkResult.rowCount === 0) {
+    if (checkResult.rows.length === 0) {
       return next(createError(
         `Contact submission with ID ${id} not found`,
         404,
@@ -350,31 +383,39 @@ async function updateContactStatus(req, res, next) {
       ));
     }
     
-    // Update the record
+    // Update the submission
     const updateQuery = `
-      UPDATE contact_submissions
+      UPDATE 
+        contact_submissions 
       SET 
-        status = $1,
-        notes = $2,
-        updated_at = NOW()
+        status = $1, 
+        notes = $2, 
+        updated_at = NOW() 
       WHERE 
-        id = $3
+        id = $3 
       RETURNING 
         id, status, updated_at
     `;
     
-    const updateResult = await db.query(updateQuery, [status, notes || null, id]);
+    const result = await db.query(updateQuery, [status, notes || null, id]);
+    
+    logger.info('Updated contact submission status', {
+      id,
+      status,
+      previousStatus: checkResult.rows[0].status
+    });
     
     res.json({
       success: true,
-      data: updateResult.rows[0],
+      data: result.rows[0],
       message: 'Contact submission status updated successfully'
     });
   } catch (error) {
-    logger.error(`Failed to update status for contact submission with ID ${req.params.id}`, {
+    logger.error('Failed to update contact submission status', {
       error: error.message,
       stack: error.stack,
-      body: req.body
+      id: req.params.id,
+      status: req.body.status
     });
     
     next(createError(
@@ -386,7 +427,7 @@ async function updateContactStatus(req, res, next) {
 }
 
 /**
- * Delete contact submission
+ * Delete a contact submission
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
@@ -395,14 +436,22 @@ async function deleteContact(req, res, next) {
   try {
     const { id } = req.params;
     
-    // Check if record exists first
-    const checkQuery = `
-      SELECT id FROM contact_submissions WHERE id = $1
-    `;
+    // Validate ID
+    if (!id || isNaN(parseInt(id))) {
+      return next(createError(
+        'Invalid contact submission ID',
+        400,
+        'INVALID_ID'
+      ));
+    }
     
+    logger.debug('Deleting contact submission', { id });
+    
+    // Check if submission exists
+    const checkQuery = 'SELECT id FROM contact_submissions WHERE id = $1';
     const checkResult = await db.query(checkQuery, [id]);
     
-    if (checkResult.rowCount === 0) {
+    if (checkResult.rows.length === 0) {
       return next(createError(
         `Contact submission with ID ${id} not found`,
         404,
@@ -410,24 +459,24 @@ async function deleteContact(req, res, next) {
       ));
     }
     
-    // Delete the record
-    const deleteQuery = `
-      DELETE FROM contact_submissions
-      WHERE id = $1
-      RETURNING id
-    `;
+    // Delete the submission
+    const deleteQuery = 'DELETE FROM contact_submissions WHERE id = $1 RETURNING id';
+    const result = await db.query(deleteQuery, [id]);
     
-    await db.query(deleteQuery, [id]);
+    logger.info('Deleted contact submission', { id });
     
     res.json({
       success: true,
-      data: { id: parseInt(id) },
+      data: {
+        id: result.rows[0].id
+      },
       message: 'Contact submission deleted successfully'
     });
   } catch (error) {
-    logger.error(`Failed to delete contact submission with ID ${req.params.id}`, {
+    logger.error('Failed to delete contact submission', {
       error: error.message,
-      stack: error.stack
+      stack: error.stack,
+      id: req.params.id
     });
     
     next(createError(
