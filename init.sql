@@ -1,52 +1,41 @@
--- Database Schema Initialization
--- This SQL file creates the tables required by the OpenAI API service
+-- Database initialization script
+-- This will create necessary tables if they don't exist
 
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
-  username TEXT NOT NULL UNIQUE,
-  email TEXT NOT NULL UNIQUE,
-  password TEXT NOT NULL,
-  role TEXT NOT NULL DEFAULT 'user',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+  username VARCHAR(255) UNIQUE NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255),
+  full_name VARCHAR(255),
+  profile_image VARCHAR(255),
+  bio TEXT,
+  role VARCHAR(50) DEFAULT 'user',
+  verified BOOLEAN DEFAULT FALSE,
+  verification_token VARCHAR(255),
+  stripe_customer_id VARCHAR(255),
+  subscription_status VARCHAR(50),
+  onboarding_complete BOOLEAN DEFAULT FALSE,
+  onboarding_step INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Contact submissions table
 CREATE TABLE IF NOT EXISTS contact_submissions (
   id SERIAL PRIMARY KEY,
-  name TEXT NOT NULL,
-  email TEXT NOT NULL,
-  subject TEXT NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  subject VARCHAR(255),
   message TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+  status VARCHAR(50) DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- OpenAI requests table
-CREATE TABLE IF NOT EXISTS openai_requests (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(id),
-  type TEXT NOT NULL,
-  prompt TEXT NOT NULL,
-  model TEXT NOT NULL,
-  response TEXT,
-  tokens INTEGER DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
-);
-
--- Subscriptions table
-CREATE TABLE IF NOT EXISTS subscriptions (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(id) NOT NULL,
-  plan TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'active',
-  start_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-  end_date TIMESTAMP WITH TIME ZONE,
-  stripe_customer_id TEXT,
-  stripe_subscription_id TEXT,
-  cancel_at_period_end BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
-);
+-- Simple health check function
+CREATE OR REPLACE FUNCTION db_health_check() RETURNS TEXT AS $$
+BEGIN
+  RETURN 'Database is operational';
+END;
+$$ LANGUAGE plpgsql;
