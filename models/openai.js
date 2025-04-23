@@ -1,231 +1,245 @@
 /**
  * OpenAI Model
  * 
- * Handles interactions with the OpenAI API
+ * This module provides a client for interacting with the OpenAI API.
+ * It handles authentication, request formatting, and response parsing.
  */
 
-const { Configuration, OpenAIApi } = require('openai');
+const OpenAI = require('openai');
 const logger = require('../config/logger');
+const db = require('../config/database');
 
-// Initialize OpenAI configuration
-const configuration = new Configuration({
+// Initialize OpenAI client with API key from environment variables
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-// Create the OpenAI API instance
-const openai = new OpenAIApi(configuration);
-
 /**
- * Default model to use (gpt-4o is the newest as of May 13, 2024)
+ * Log API usage to database for tracking
+ * @param {string} endpoint - API endpoint used
+ * @param {string} ip - User IP address
+ * @param {number} userId - User ID if authenticated
+ * @param {number} tokens - Number of tokens used
+ * @param {number} requestTime - Request time in milliseconds
+ * @param {boolean} success - Whether the request was successful
+ * @param {string} errorType - Error type if request failed
  */
-const DEFAULT_MODEL = process.env.OPENAI_MODEL || 'gpt-4o';
-
-/**
- * Generate text completion using OpenAI
- * @param {string} prompt - The prompt text
- * @param {object} options - Generation options
- * @returns {Promise<object>} - OpenAI response
- */
-async function generateText(prompt, options = {}) {
+async function logApiUsage(endpoint, ip, userId = null, tokens = 0, requestTime, success = true, errorType = null) {
   try {
-    const model = options.model || DEFAULT_MODEL;
-    const maxTokens = options.max_tokens || 1000;
-    const temperature = options.temperature || 0.7;
-
-    logger.info(`Generating text with model: ${model}`);
-    
-    const response = await openai.createChatCompletion({
-      model: model,
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: maxTokens,
-      temperature: temperature
+    await db.query(
+      `INSERT INTO api_usage_logs 
+        (endpoint, ip_address, user_id, tokens_used, request_time, success, error_type) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [endpoint, ip, userId, tokens, requestTime, success, errorType]
+    );
+  } catch (err) {
+    logger.error('Failed to log API usage', {
+      error: err.message,
+      endpoint,
+      ip: logger.anonymize(ip)
     });
-
-    return {
-      success: true,
-      data: response.data,
-      text: response.data.choices[0].message.content,
-      usage: response.data.usage
-    };
-  } catch (error) {
-    logger.error(`OpenAI text generation error: ${error.message}`);
-    return {
-      success: false,
-      error: {
-        message: error.message,
-        code: error.response?.status || 'UNKNOWN'
-      }
-    };
   }
 }
 
 /**
- * Generate JSON using OpenAI
- * @param {string} prompt - The prompt text
- * @param {object} options - Generation options
- * @returns {Promise<object>} - OpenAI response with JSON
+ * Create a completion using the text completion API
+ * @param {string} prompt - Text prompt
+ * @param {Object} options - Additional options
+ * @returns {Promise<Object>} - API response
  */
-async function generateJSON(prompt, options = {}) {
+async function createCompletion(prompt, options = {}) {
+  const startTime = Date.now();
+  const endpoint = 'completions';
+  let success = false;
+  let errorType = null;
+  
   try {
-    const model = options.model || DEFAULT_MODEL;
-    const maxTokens = options.max_tokens || 1000;
+    // The newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+    const model = options.model || 'gpt-4o';
+    const maxTokens = options.maxTokens || 1000;
     const temperature = options.temperature || 0.7;
     
-    logger.info(`Generating JSON with model: ${model}`);
-    
-    const systemPrompt = 'You are a helpful assistant that always responds with valid JSON. ' +
-                         'Ensure your response can be parsed with JSON.parse().';
-    
-    const response = await openai.createChatCompletion({
-      model: model,
+    // Create the chat completion (using chat instead of older completion API)
+    const response = await openai.chat.completions.create({
+      model,
       messages: [
-        { role: 'system', content: systemPrompt },
         { role: 'user', content: prompt }
       ],
       max_tokens: maxTokens,
-      temperature: temperature,
-      response_format: { type: "json_object" }
+      temperature,
+      response_format: options.responseFormat ? { type: options.responseFormat } : undefined
     });
-
-    const jsonContent = response.data.choices[0].message.content;
     
-    try {
-      // Verify the response is valid JSON
-      const parsedJSON = JSON.parse(jsonContent);
-      
-      return {
-        success: true,
-        data: response.data,
-        json: parsedJSON,
-        usage: response.data.usage
-      };
-    } catch (parseError) {
-      logger.error(`JSON parsing error: ${parseError.message}`);
-      return {
-        success: false,
-        error: {
-          message: 'Generated content is not valid JSON',
-          details: parseError.message,
-          content: jsonContent
-        }
-      };
-    }
-  } catch (error) {
-    logger.error(`OpenAI JSON generation error: ${error.message}`);
-    return {
-      success: false,
-      error: {
-        message: error.message,
-        code: error.response?.status || 'UNKNOWN'
-      }
-    };
+    success = true;
+    
+    // Log API usage
+    const tokens = response.usage ? response.usage.total_tokens : 0;
+    logApiUsage(
+      endpoint, 
+      options.ip || 'unknown', 
+      options.userId,
+      tokens,
+      Date.now() - startTime,
+      true
+    );
+    
+    return response;
+  } catch (err) {
+    // Handle and log errors
+    errorType = err.type || 'unknown_error';
+    
+    logger.error('OpenAI completion error', {
+      error: err.message,
+      type: errorType,
+      model: options.model,
+      promptLength: prompt ? prompt.length : 0
+    });
+    
+    // Log failed API usage
+    logApiUsage(
+      endpoint, 
+      options.ip || 'unknown', 
+      options.userId,
+      0,
+      Date.now() - startTime,
+      false,
+      errorType
+    );
+    
+    throw err;
   }
 }
 
 /**
- * Analyze an image using OpenAI Vision
- * @param {string} imageUrl - URL or base64 image data
- * @param {string} prompt - Optional prompt for analysis
- * @param {object} options - Analysis options
- * @returns {Promise<object>} - OpenAI response with analysis
+ * Create a chat completion
+ * @param {Array} messages - Array of message objects with role and content
+ * @param {Object} options - Additional options
+ * @returns {Promise<Object>} - API response
  */
-async function analyzeImage(imageUrl, prompt = 'Describe this image in detail', options = {}) {
+async function createChatCompletion(messages, options = {}) {
+  const startTime = Date.now();
+  const endpoint = 'chat/completions';
+  let success = false;
+  let errorType = null;
+  
   try {
-    const model = options.model || 'gpt-4o'; // Using GPT-4o for vision capabilities
-    const maxTokens = options.max_tokens || 500;
+    // The newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+    const model = options.model || 'gpt-4o';
+    const maxTokens = options.maxTokens || 1000;
     const temperature = options.temperature || 0.7;
     
-    logger.info(`Analyzing image with model: ${model}`);
-    
-    const imageData = imageUrl.startsWith('data:') 
-      ? imageUrl 
-      : { url: imageUrl };
-
-    const response = await openai.createChatCompletion({
-      model: model,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: prompt },
-            { type: 'image_url', image_url: imageData }
-          ]
-        }
-      ],
+    const response = await openai.chat.completions.create({
+      model,
+      messages,
       max_tokens: maxTokens,
-      temperature: temperature
+      temperature,
+      response_format: options.responseFormat ? { type: options.responseFormat } : undefined
     });
-
-    return {
-      success: true,
-      data: response.data,
-      analysis: response.data.choices[0].message.content,
-      usage: response.data.usage
-    };
-  } catch (error) {
-    logger.error(`OpenAI image analysis error: ${error.message}`);
-    return {
-      success: false,
-      error: {
-        message: error.message,
-        code: error.response?.status || 'UNKNOWN'
-      }
-    };
+    
+    success = true;
+    
+    // Log API usage
+    const tokens = response.usage ? response.usage.total_tokens : 0;
+    logApiUsage(
+      endpoint, 
+      options.ip || 'unknown', 
+      options.userId,
+      tokens,
+      Date.now() - startTime,
+      true
+    );
+    
+    return response;
+  } catch (err) {
+    // Handle and log errors
+    errorType = err.type || 'unknown_error';
+    
+    logger.error('OpenAI chat completion error', {
+      error: err.message,
+      type: errorType,
+      model: options.model,
+      messagesCount: messages ? messages.length : 0
+    });
+    
+    // Log failed API usage
+    logApiUsage(
+      endpoint, 
+      options.ip || 'unknown', 
+      options.userId,
+      0,
+      Date.now() - startTime,
+      false,
+      errorType
+    );
+    
+    throw err;
   }
 }
 
 /**
- * Test the OpenAI API connection
- * @returns {Promise<object>} - Connection test result
+ * Generate an image using DALL-E
+ * @param {string} prompt - Image description
+ * @param {Object} options - Additional options
+ * @returns {Promise<Object>} - API response with image data
  */
-async function testConnection() {
+async function generateImage(prompt, options = {}) {
+  const startTime = Date.now();
+  const endpoint = 'images/generations';
+  let success = false;
+  let errorType = null;
+  
   try {
-    // Try a simple completion as a test
-    const model = DEFAULT_MODEL;
-    const response = await openai.createChatCompletion({
-      model,
-      messages: [{ role: 'user', content: 'Hello, are you working?' }],
-      max_tokens: 20,
-      temperature: 0.7
+    const response = await openai.images.generate({
+      model: options.model || 'dall-e-3',
+      prompt,
+      n: options.n || 1,
+      size: options.size || '1024x1024',
+      quality: options.quality || 'standard',
+      response_format: options.responseFormat || 'url'
     });
     
-    return {
-      success: true,
-      model,
-      message: 'OpenAI API connection successful',
-      data: {
-        model: response.data.model,
-        text: response.data.choices[0].message.content,
-        usage: response.data.usage
-      }
-    };
-  } catch (error) {
-    logger.error(`OpenAI connection test error: ${error.message}`);
+    success = true;
     
-    let errorMessage = error.message;
-    let errorCode = error.response?.status || 'UNKNOWN';
+    // Log API usage (DALL-E doesn't return token usage)
+    logApiUsage(
+      endpoint, 
+      options.ip || 'unknown', 
+      options.userId,
+      0, // No token count available for image generation
+      Date.now() - startTime,
+      true
+    );
     
-    if (error.response?.status === 401) {
-      errorMessage = 'Authentication error: Invalid API key. Please check your OPENAI_API_KEY environment variable.';
-    } else if (!process.env.OPENAI_API_KEY) {
-      errorMessage = 'Missing API key: OPENAI_API_KEY environment variable is not set.';
-      errorCode = 'CONFIG_ERROR';
-    }
+    return response;
+  } catch (err) {
+    // Handle and log errors
+    errorType = err.type || 'unknown_error';
     
-    return {
-      success: false,
-      error: {
-        message: errorMessage,
-        code: errorCode
-      }
-    };
+    logger.error('OpenAI image generation error', {
+      error: err.message,
+      type: errorType,
+      promptLength: prompt ? prompt.length : 0
+    });
+    
+    // Log failed API usage
+    logApiUsage(
+      endpoint, 
+      options.ip || 'unknown', 
+      options.userId,
+      0,
+      Date.now() - startTime,
+      false,
+      errorType
+    );
+    
+    throw err;
   }
 }
 
+// Export functions
 module.exports = {
-  generateText,
-  generateJSON,
-  analyzeImage,
-  testConnection,
-  DEFAULT_MODEL
+  openai,
+  createCompletion,
+  createChatCompletion,
+  generateImage
 };

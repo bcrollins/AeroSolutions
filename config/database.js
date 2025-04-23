@@ -8,32 +8,18 @@
 const { Pool } = require('pg');
 const logger = require('./logger');
 
-// Create a database configuration object
-const dbConfig = {
-  // Use DATABASE_URL environment variable for connection string
+// Create connection pool using environment variables
+const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  
-  // Configure SSL based on environment
-  ssl: process.env.NODE_ENV === 'production' ? 
-    { rejectUnauthorized: false } : 
-    false,
-  
-  // Connection pool configuration
-  max: parseInt(process.env.DB_POOL_SIZE) || 10, // Maximum number of clients
-  idleTimeoutMillis: 30000, // How long a client is kept inactive (30 seconds)
-  connectionTimeoutMillis: 5000, // Max time to wait for connection (5 seconds)
-};
-
-// Create a connection pool
-const pool = new Pool(dbConfig);
-
-// Log pool events
-pool.on('connect', () => {
-  logger.info('Database connection established');
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  max: process.env.PG_MAX_CONNECTIONS ? parseInt(process.env.PG_MAX_CONNECTIONS) : 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000
 });
 
+// Log connection errors
 pool.on('error', (err) => {
-  logger.error('Database connection error', {
+  logger.error('Unexpected error on idle client', {
     error: err.message,
     stack: err.stack
   });
@@ -46,35 +32,29 @@ pool.on('error', (err) => {
  * @returns {Promise<Object>} - Query result
  */
 async function query(text, params = []) {
-  const startTime = Date.now();
-  
+  const start = Date.now();
   try {
-    const result = await pool.query(text, params);
+    const res = await pool.query(text, params);
+    const duration = Date.now() - start;
     
-    // Log query performance for slow queries
-    const duration = Date.now() - startTime;
-    if (duration > 200) { // Log queries slower than 200ms
-      logger.warn('Slow database query', {
-        query: text,
-        duration: duration + 'ms',
-        rowCount: result.rowCount
+    // Log query for debugging (obfuscate sensitive data in params)
+    if (process.env.LOG_QUERIES === 'true') {
+      logger.debug('Executed query', {
+        text,
+        params: params.map(p => typeof p === 'string' && p.length > 20 ? p.substring(0, 10) + '...' : p),
+        rowCount: res.rowCount,
+        duration
       });
     }
     
-    return result;
+    return res;
   } catch (err) {
-    // Add query information to error
-    err.query = text;
-    err.params = params;
-    
-    // Log the error
+    // Log the error with query details
     logger.error('Database query error', {
+      text,
       error: err.message,
-      query: text,
-      duration: Date.now() - startTime + 'ms'
+      code: err.code
     });
-    
-    // Rethrow the error
     throw err;
   }
 }
@@ -84,16 +64,7 @@ async function query(text, params = []) {
  * @returns {Promise<void>} - Resolution when all connections are closed
  */
 async function end() {
-  try {
-    await pool.end();
-    logger.info('Database connection pool closed');
-  } catch (err) {
-    logger.error('Error closing database connection pool', {
-      error: err.message,
-      stack: err.stack
-    });
-    throw err;
-  }
+  return pool.end();
 }
 
 /**
@@ -101,23 +72,36 @@ async function end() {
  * @returns {Promise<void>} - Resolution when initialization is complete 
  */
 async function initDatabase() {
-  try {
-    // Read the schema file and execute it
-    const fs = require('fs').promises;
-    const path = require('path');
+  // Create tables if they don't exist
+  await query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      username VARCHAR(100) UNIQUE NOT NULL,
+      email VARCHAR(255) UNIQUE NOT NULL,
+      password_hash VARCHAR(255) NOT NULL,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
     
-    const schemaPath = path.join(process.cwd(), 'models', 'schema.sql');
-    const schemaSQL = await fs.readFile(schemaPath, 'utf8');
+    CREATE TABLE IF NOT EXISTS api_usage_logs (
+      id SERIAL PRIMARY KEY,
+      endpoint VARCHAR(255) NOT NULL,
+      ip_address VARCHAR(100),
+      user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      tokens_used INTEGER DEFAULT 0,
+      request_time INTEGER NOT NULL,
+      success BOOLEAN DEFAULT TRUE,
+      error_type VARCHAR(255),
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
     
-    await query(schemaSQL);
-    logger.info('Database schema initialized successfully');
-  } catch (err) {
-    logger.error('Failed to initialize database schema', {
-      error: err.message,
-      stack: err.stack
-    });
-    throw err;
-  }
+    CREATE INDEX IF NOT EXISTS idx_api_usage_user_id ON api_usage_logs(user_id);
+    CREATE INDEX IF NOT EXISTS idx_api_usage_endpoint ON api_usage_logs(endpoint);
+    CREATE INDEX IF NOT EXISTS idx_api_usage_created_at ON api_usage_logs(created_at);
+  `);
+  
+  logger.info('Database initialized successfully');
+  return true;
 }
 
 /**
@@ -126,20 +110,17 @@ async function initDatabase() {
  */
 async function checkConnection() {
   try {
-    const result = await query('SELECT NOW() as time');
-    logger.info('Database connection is working', {
-      timestamp: result.rows[0].time
-    });
-    return true;
+    const result = await query('SELECT 1');
+    return result.rows.length > 0;
   } catch (err) {
     logger.error('Database connection check failed', {
-      error: err.message
+      error: err.message,
+      stack: err.stack
     });
     return false;
   }
 }
 
-// Export the database interface
 module.exports = {
   query,
   end,

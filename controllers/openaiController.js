@@ -1,240 +1,138 @@
 /**
- * OpenAI API Controller
+ * OpenAI Controller
  * 
- * This controller handles interactions with the OpenAI API.
- * It provides methods for completion, chat, and image generation.
+ * This controller handles API interactions with OpenAI models.
+ * It provides methods for text completions, chat completions, and image generation.
  */
 
-const OpenAI = require('openai');
-const logger = require('../config/logger');
-const db = require('../config/database');
 const { createError } = require('../middlewares/errorHandler');
-
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+const openai = require('../models/openai');
+const logger = require('../config/logger');
 
 /**
- * Log API usage for tracking and billing
- * @param {string} endpoint - API endpoint used
- * @param {Object} req - Express request object
- * @param {number} tokensUsed - Number of tokens used
- * @param {number} requestTime - Request time in milliseconds
- * @param {boolean} success - Whether the request was successful
- * @param {string} errorType - Error type if the request failed
- */
-async function logApiUsage(endpoint, req, tokensUsed, requestTime, success = true, errorType = null) {
-  try {
-    // Get user ID if authenticated
-    const userId = req.user ? req.user.id : null;
-    
-    // Log to database
-    await db.query(
-      `INSERT INTO api_usage_logs 
-      (endpoint, ip_address, user_id, tokens_used, request_time, success, error_type) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [endpoint, req.ip, userId, tokensUsed, requestTime, success, errorType]
-    );
-  } catch (err) {
-    // Just log the error but don't fail the request
-    logger.error('Failed to log API usage', {
-      error: err.message,
-      stack: err.stack
-    });
-  }
-}
-
-/**
- * Generate text completion with OpenAI
+ * Handle text completion requests
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
-async function generateCompletion(req, res, next) {
-  const startTime = Date.now();
-  
+async function handleCompletion(req, res, next) {
   try {
-    // Use validated body from middleware
-    const { prompt, model, maxTokens, temperature } = req.validatedBody;
+    // Extract validated body from the request
+    const { prompt, model, maxTokens, temperature, responseFormat } = req.validatedBody;
     
-    // Create completion
-    const response = await openai.chat.completions.create({
-      model: model, // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: maxTokens,
-      temperature: temperature
-    });
+    // Client IP for tracking/rate limiting
+    const ip = req.ip || req.connection.remoteAddress;
     
-    // Extract content from response
-    const completion = response.choices[0].message.content;
-    
-    // Log API usage
-    await logApiUsage(
-      '/api/openai/completion',
-      req,
-      response.usage?.total_tokens || 0,
-      Date.now() - startTime
-    );
-    
-    // Return successful response
-    return res.json({
-      success: true,
-      data: {
-        completion,
-        model: response.model,
-        usage: response.usage
-      }
-    });
-  } catch (err) {
-    // Log error
-    await logApiUsage(
-      '/api/openai/completion',
-      req,
-      0,
-      Date.now() - startTime,
-      false,
-      err.message
-    );
-    
-    // Handle API errors
-    if (err.response) {
-      return next(createError(
-        'OpenAI API error: ' + err.message,
-        err.status || 500,
-        'OPENAI_API_ERROR',
-        err.response.data
-      ));
-    }
-    
-    // Handle other errors
-    return next(createError(
-      'Failed to generate completion: ' + err.message,
-      500,
-      'COMPLETION_GENERATION_ERROR'
-    ));
-  }
-}
-
-/**
- * Generate chat completion with OpenAI
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
- */
-async function generateChatCompletion(req, res, next) {
-  const startTime = Date.now();
-  
-  try {
-    // Use validated body from middleware
-    const {
-      messages,
+    // Call OpenAI API
+    const response = await openai.createCompletion(prompt, {
       model,
       maxTokens,
       temperature,
-      responseFormat
-    } = req.validatedBody;
+      responseFormat,
+      ip
+    });
     
-    // Create chat completion with response format option if needed
-    let options = {
-      model: model, // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-      messages,
-      max_tokens: maxTokens,
-      temperature
-    };
+    // Extract completion text from response
+    const completionText = response.choices && response.choices[0] ? 
+      response.choices[0].message?.content : '';
     
-    // Add response format if json is requested
-    if (responseFormat === 'json_object') {
-      options.response_format = { type: 'json_object' };
-    }
-    
-    const response = await openai.chat.completions.create(options);
-    
-    // Log API usage
-    await logApiUsage(
-      '/api/openai/chat',
-      req,
-      response.usage?.total_tokens || 0,
-      Date.now() - startTime
-    );
-    
-    // Return successful response
+    // Return response
     return res.json({
       success: true,
       data: {
-        message: response.choices[0].message,
-        model: response.model,
-        usage: response.usage
+        completion: completionText,
+        model: model,
+        usage: response.usage || {}
       }
     });
   } catch (err) {
-    // Log error
-    await logApiUsage(
-      '/api/openai/chat',
-      req,
-      0,
-      Date.now() - startTime,
-      false,
-      err.message
-    );
+    logger.error('OpenAI completion handler error', {
+      error: err.message,
+      stack: err.stack
+    });
     
-    // Handle API errors
-    if (err.response) {
-      return next(createError(
-        'OpenAI API error: ' + err.message,
-        err.status || 500,
-        'OPENAI_API_ERROR',
-        err.response.data
-      ));
-    }
-    
-    // Handle other errors
     return next(createError(
-      'Failed to generate chat completion: ' + err.message,
+      'Failed to generate completion: ' + err.message,
       500,
-      'CHAT_GENERATION_ERROR'
+      'OPENAI_API_ERROR'
     ));
   }
 }
 
 /**
- * Generate image with OpenAI DALL-E
+ * Handle chat completion requests
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
-async function generateImage(req, res, next) {
-  const startTime = Date.now();
-  
+async function handleChatCompletion(req, res, next) {
   try {
-    // Use validated body from middleware
-    const {
-      prompt,
-      n,
-      size,
-      quality,
-      responseFormat
-    } = req.validatedBody;
+    // Extract validated body from the request
+    const { messages, model, maxTokens, temperature, responseFormat } = req.validatedBody;
     
-    // Create image
-    const response = await openai.images.generate({
-      model: 'dall-e-3',
-      prompt,
-      n,
-      size,
-      quality,
-      response_format: responseFormat
+    // Client IP for tracking/rate limiting
+    const ip = req.ip || req.connection.remoteAddress;
+    
+    // Call OpenAI API
+    const response = await openai.createChatCompletion(messages, {
+      model,
+      maxTokens,
+      temperature,
+      responseFormat,
+      ip
     });
     
-    // Log API usage (DALL-E doesn't return token counts)
-    await logApiUsage(
-      '/api/openai/image',
-      req,
-      0, // No token count for images
-      Date.now() - startTime
-    );
+    // Extract completion text from response
+    const completionMessage = response.choices && response.choices[0] ? 
+      response.choices[0].message : null;
     
-    // Return successful response
+    // Return response
+    return res.json({
+      success: true,
+      data: {
+        message: completionMessage,
+        model: model,
+        usage: response.usage || {}
+      }
+    });
+  } catch (err) {
+    logger.error('OpenAI chat completion handler error', {
+      error: err.message,
+      stack: err.stack
+    });
+    
+    return next(createError(
+      'Failed to generate chat completion: ' + err.message,
+      500,
+      'OPENAI_API_ERROR'
+    ));
+  }
+}
+
+/**
+ * Handle image generation requests
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
+async function handleImageGeneration(req, res, next) {
+  try {
+    // Extract validated body from the request
+    const { prompt, n, size, quality, responseFormat } = req.validatedBody;
+    
+    // Client IP for tracking/rate limiting
+    const ip = req.ip || req.connection.remoteAddress;
+    
+    // Call OpenAI API
+    const response = await openai.generateImage(prompt, {
+      n,
+      size,
+      quality,
+      responseFormat,
+      ip
+    });
+    
+    // Return response
     return res.json({
       success: true,
       data: {
@@ -243,65 +141,21 @@ async function generateImage(req, res, next) {
       }
     });
   } catch (err) {
-    // Log error
-    await logApiUsage(
-      '/api/openai/image',
-      req,
-      0,
-      Date.now() - startTime,
-      false,
-      err.message
-    );
+    logger.error('OpenAI image generation handler error', {
+      error: err.message,
+      stack: err.stack
+    });
     
-    // Handle API errors
-    if (err.response) {
-      return next(createError(
-        'OpenAI API error: ' + err.message,
-        err.status || 500,
-        'OPENAI_API_ERROR',
-        err.response.data
-      ));
-    }
-    
-    // Handle other errors
     return next(createError(
       'Failed to generate image: ' + err.message,
       500,
-      'IMAGE_GENERATION_ERROR'
-    ));
-  }
-}
-
-/**
- * Check API key validity
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
- */
-async function checkApiKey(req, res, next) {
-  try {
-    // Try a simple models list call to check if API key is valid
-    await openai.models.list();
-    
-    return res.json({
-      success: true,
-      data: {
-        status: 'valid',
-        timestamp: new Date().toISOString()
-      }
-    });
-  } catch (err) {
-    return next(createError(
-      'Invalid API key or OpenAI connection issue: ' + err.message,
-      401,
-      'INVALID_API_KEY'
+      'OPENAI_API_ERROR'
     ));
   }
 }
 
 module.exports = {
-  generateCompletion,
-  generateChatCompletion,
-  generateImage,
-  checkApiKey
+  handleCompletion,
+  handleChatCompletion,
+  handleImageGeneration
 };

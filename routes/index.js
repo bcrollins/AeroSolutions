@@ -1,65 +1,56 @@
 /**
  * Routes Index
  * 
- * This module serves as a central location to register all API routes.
- * It exports a function that sets up all routes on the Express application.
+ * This module sets up all API routes and middleware for the application.
  */
 
 const express = require('express');
 const path = require('path');
 const openaiRoutes = require('./openaiRoutes');
 const databaseRoutes = require('./databaseRoutes');
-const { errorHandlerMiddleware, notFoundMiddleware } = require('../middlewares/errorHandler');
 const requestLogger = require('../middlewares/requestLogger');
-const { standardLimiter } = require('../middlewares/rateLimiter');
+const { errorHandlerMiddleware, notFoundMiddleware } = require('../middlewares/errorHandler');
 
 /**
- * Configure routes on the Express application
+ * Configure all application routes and middleware
  * @param {Object} app - Express application instance
  */
 function setupRoutes(app) {
-  // Apply global middleware
+  // Parse JSON request body
   app.use(express.json());
+  
+  // Parse URL-encoded request body (for forms)
   app.use(express.urlencoded({ extended: true }));
+  
+  // Log all incoming requests
   app.use(requestLogger);
   
-  // Serve static files from public directory
-  app.use(express.static(path.join(process.cwd(), 'public')));
+  // Serve static files from the public directory
+  app.use(express.static(path.join(__dirname, '../public')));
   
-  // Apply rate limiting to all API routes
-  app.use('/api', standardLimiter);
-  
-  // Mount API routes
+  // API Routes
   app.use('/api/openai', openaiRoutes);
   app.use('/api/database', databaseRoutes);
   
-  // Root route - landing page
+  // Health check endpoint
+  app.get('/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+  
+  // Root route (landing page)
   app.get('/', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
-  });
-
-  // API status route
-  app.get('/api/status', (req, res) => {
-    res.json({
-      success: true,
-      data: {
-        status: 'operational',
-        version: process.env.npm_package_version || '1.0.0',
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development'
-      }
-    });
+    res.sendFile(path.join(__dirname, '../public/index.html'));
   });
   
-  // Documentation route
-  app.get('/docs', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'public', 'docs.html'));
+  // API documentation route
+  app.get('/api/docs', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/api-docs.html'));
   });
   
-  // Handle 404 errors for undefined routes
+  // Handle 404 errors
   app.use(notFoundMiddleware);
   
-  // Global error handler
+  // Handle all other errors
   app.use(errorHandlerMiddleware);
 }
 
