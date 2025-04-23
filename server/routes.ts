@@ -717,6 +717,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .trim()
   ], (req, res, next) => {
     console.log(`Redirecting old /api/elevate-bot endpoint to new /api/rollinsxbot/support endpoint`);
+    // Transform the request body to match the expected format in rollinsxbot
+    if (req.body && req.body.message) {
+      req.body.query = req.body.message;
+    }
     req.url = '/api/rollinsxbot/support';
     app._router.handle(req, res, next);
   });
@@ -804,6 +808,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .trim()
   ], (req, res, next) => {
     console.log(`Redirecting old /api/elevate-bot-legacy endpoint to new /api/rollinsxbot/support endpoint`);
+    // Transform the request body to match the expected format in rollinsxbot
+    if (req.body && req.body.message) {
+      req.body.query = req.body.message;
+    }
     req.url = '/api/rollinsxbot/support';
     app._router.handle(req, res, next);
   });
