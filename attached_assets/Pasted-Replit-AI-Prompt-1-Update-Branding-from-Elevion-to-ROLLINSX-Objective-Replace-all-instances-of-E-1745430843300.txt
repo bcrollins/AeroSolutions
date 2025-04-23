@@ -1,0 +1,209 @@
+Replit AI Prompt 1: Update Branding from Elevion to ROLLINSX
+
+Objective
+
+Replace all instances of "Elevion" with "ROLLINSX" across the entire Replit app, including source code, configuration files, documentation, and UI text. Ensure the app remains functional and consistent after the rebranding.
+
+Instructions
+
+Execute the following steps in the Replit AI environment. Complete each step fully before proceeding. If a step is not applicable (e.g., no documentation), note it and continue. Assume the app may use a web tech stack (e.g., Node.js/Express, Python/Flask, React, HTML/CSS/JS).
+
+Step 1: Search for "Elevion"
+
+
+
+
+
+Search the project directory for all instances of "Elevion" (case-sensitive and case-insensitive).
+
+
+
+Files to check:
+
+
+
+
+
+Source code (.js, .py, .html, .css, .jsx, .ts, .tsx)
+
+
+
+Configuration (package.json, .env, .replit, replit.nix)
+
+
+
+Documentation (README.md, code comments)
+
+
+
+UI elements (HTML, JSX, templates)
+
+
+
+Command:
+
+grep -r -i "Elevion" .
+
+
+
+Save results to rebrand_targets.txt.
+
+Step 2: Update Source Code
+
+
+
+
+
+Replace "Elevion" with "ROLLINSX" in all source code files.
+
+
+
+Examples:
+
+
+
+
+
+JavaScript: Change const appName = "Elevion"; to const appName = "ROLLINSX";
+
+
+
+React: Change <h1>Elevion</h1> to <h1>ROLLINSX</h1>
+
+
+
+Python: Change app.config['APP_NAME'] = 'Elevion' to app.config['APP_NAME'] = 'ROLLINSX'
+
+
+
+Command (backup files first):
+
+find . -type f -name "*.js" -exec sed -i.bak 's/Elevion/ROLLINSX/g' {} \;
+find . -type f -name "*.py" -exec sed -i.bak 's/Elevion/ROLLINSX/g' {} \;
+find . -type f -name "*.html" -exec sed -i.bak 's/Elevion/ROLLINSX/g' {} \;
+find . -type f -name "*.jsx" -exec sed -i.bak 's/Elevion/ROLLINSX/g' {} \;
+
+
+
+Verify: Re-run grep -r -i "Elevion" . to ensure no instances remain.
+
+Step 3: Update Configuration Files
+
+
+
+
+
+Update app name in:
+
+
+
+
+
+package.json: Change "name": "elevion" to "name": "rollinsx"
+
+
+
+.env: Change APP_NAME=Elevion to APP_NAME=ROLLINSX
+
+
+
+.replit: Ensure run command is valid (e.g., run = "node index.js")
+
+
+
+replit.nix: Update any relevant package names
+
+
+
+Example for package.json:
+
+{
+  "name": "rollinsx",
+  "version": "1.0.0",
+  "main": "index.js"
+}
+
+
+
+Command:
+
+sed -i.bak 's/"name": "elevion"/"name": "rollinsx"/g' package.json
+sed -i.bak 's/APP_NAME=Elevion/APP_NAME=ROLLINSX/g' .env
+
+
+
+Verify: Check package.json, .env, and .replit.
+
+Step 4: Update Documentation
+
+
+
+
+
+Update README.md and code comments.
+
+
+
+Example for README.md:
+
+
+
+
+
+Original: # Elevion
+
+
+
+Updated: # ROLLINSX
+
+
+
+Command:
+
+sed -i.bak 's/Elevion/ROLLINSX/g' README.md
+
+
+
+Verify: Review README.md and re-run grep -r -i "Elevion" ..
+
+Step 5: Test Changes
+
+
+
+
+
+Restart the Replit server (host: 0.0.0.0, port: 8080).
+
+
+
+Example for Node.js:
+
+app.listen(8080, '0.0.0.0', () => console.log('ROLLINSX running'));
+
+
+
+Check console logs for errors.
+
+
+
+Access the app via https://<project-name>.<username>.repl.co and verify "ROLLINSX" appears in UI.
+
+
+
+If errors, revert to .bak files and check rebrand_targets.txt.
+
+Deliverable
+
+
+
+
+
+App with all "Elevion" instances replaced by "ROLLINSX".
+
+
+
+Updated rebrand_targets.txt showing no remaining "Elevion".
+
+
+
+Functional app with no errors.

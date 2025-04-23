@@ -1,0 +1,214 @@
+Replit AI Prompt 2: Apply ROLLINSX Color Scheme
+
+Objective
+
+Incorporate the ROLLINSX brand color scheme (Midnight Blue #1E3A8A, Steel Gray #4B5563, Pure White #FFFFFF, Golden Amber #D4A017, Sky Blue #60A5FA) across the app’s CSS, UI components, and any relevant code. Ensure accessibility and consistency.
+
+Instructions
+
+Execute the following steps in the Replit AI environment. Assume the app uses a web tech stack (e.g., CSS, React, Flask templates).
+
+Step 1: Define Color Variables
+
+
+
+
+
+Create or update a central CSS file (e.g., styles.css or index.css) with color variables.
+
+
+
+Code:
+
+:root {
+  --midnight-blue: #1E3A8A;
+  --steel-gray: #4B5563;
+  --pure-white: #FFFFFF;
+  --golden-amber: #D4A017;
+  --sky-blue: #60A5FA;
+  --dark-blue-shade: #172554;
+  --light-gray-tint: #E5E7EB;
+  --pale-blue-tint: #DBEAFE;
+}
+
+Step 2: Update CSS
+
+
+
+
+
+Apply the color scheme to key UI elements:
+
+
+
+
+
+Body: White background, Steel Gray text.
+
+
+
+Header/Navbar: Midnight Blue background, White text.
+
+
+
+Primary Buttons: Golden Amber background, Midnight Blue text.
+
+
+
+Secondary Buttons/Links: Sky Blue background, White text.
+
+
+
+Cards/Sections: White background, Steel Gray borders.
+
+
+
+Example CSS:
+
+body {
+  background-color: var(--pure-white);
+  color: var(--steel-gray);
+}
+.navbar {
+  background-color: var(--midnight-blue);
+  color: var(--pure-white);
+}
+.btn-primary {
+  background-color: var(--golden-amber);
+  color: var(--midnight-blue);
+  border: none;
+  padding: 10px 20px;
+}
+.btn-secondary {
+  background-color: var(--sky-blue);
+  color: var(--pure-white);
+  border: none;
+  padding: 10px 20px;
+}
+.card {
+  background-color: var(--pure-white);
+  border: 1px solid var(--light-gray-tint);
+}
+
+
+
+Replace existing colors in all CSS files with these variables.
+
+Step 3: Update React/JSX (if applicable)
+
+
+
+
+
+Update components to use the new colors.
+
+
+
+Example for App.jsx:
+
+function App() {
+  return (
+    <div style={{ backgroundColor: 'var(--pure-white)', color: 'var(--steel-gray)' }}>
+      <nav style={{ backgroundColor: 'var(--midnight-blue)', color: 'var(--pure-white)' }}>
+        <h1>ROLLINSX</h1>
+      </nav>
+      <button style={{ backgroundColor: 'var(--golden-amber)', color: 'var(--midnight-blue)' }}>
+        Get Started
+      </button>
+    </div>
+  );
+}
+
+
+
+Update all .jsx or .tsx files.
+
+Step 4: Update HTML/Templates (if applicable)
+
+
+
+
+
+Update HTML or template files (e.g., Flask index.html).
+
+
+
+Example:
+
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="navbar">
+    <h1>ROLLINSX</h1>
+  </nav>
+  <button class="btn-primary">Get Started</button>
+</body>
+</html>
+
+Step 5: Verify Accessibility
+
+
+
+
+
+Ensure contrast ratios meet WCAG AA:
+
+
+
+
+
+Midnight Blue on White: 9.1:1
+
+
+
+Golden Amber on Midnight Blue: 4.8:1
+
+
+
+Command to check CSS:
+
+grep -r -i "#FFFFFF" .
+grep -r -i "#1E3A8A" .
+
+
+
+Test in browser dev tools for contrast.
+
+Step 6: Test UI
+
+
+
+
+
+Restart the server (0.0.0.0:8080).
+
+
+
+Access https://<project-name>.<username>.repl.co.
+
+
+
+Verify colors in navbar, buttons, and text.
+
+
+
+If errors, check CSS file paths or variable definitions.
+
+Deliverable
+
+
+
+
+
+App with ROLLINSX color scheme applied to all UI elements.
+
+
+
+Updated styles.css with color variables.
+
+
+
+Accessible and consistent UI.

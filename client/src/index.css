@@ -25,54 +25,58 @@
 @layer base {
   :root {
     /* ROLLINSX Brand Colors */
-    --slate-blue: 219 43% 42%; /* #3B5B9D */
-    --electric-cyan: 180 100% 41%; /* #00D1D1 */
-    --light-gray: 210 17% 94%; /* #EDEFF2 */
-    --sunset-orange: 14 100% 63%; /* #FF7043 */
+    --midnight-blue: 222 64% 33%; /* #1E3A8A */
+    --steel-gray: 220 9% 35%; /* #4B5563 */
+    --pure-white: 0 0% 100%; /* #FFFFFF */
+    --golden-amber: 43 80% 46%; /* #D4A017 */
+    --sky-blue: 213 94% 68%; /* #60A5FA */
+    --dark-blue-shade: 221 79% 21%; /* #172554 */
+    --light-gray-tint: 220 13% 91%; /* #E5E7EB */
+    --pale-blue-tint: 213 100% 94%; /* #DBEAFE */
     
-    --background: 210 17% 94%; /* light-gray */
-    --foreground: 219 43% 42%; /* slate-blue */
+    --background: 0 0% 100%; /* pure-white */
+    --foreground: 220 9% 35%; /* steel-gray */
     --card: 0 0% 100%;
-    --card-foreground: 219 43% 42%; /* slate-blue */
+    --card-foreground: 220 9% 35%; /* steel-gray */
     --popover: 0 0% 100%;
-    --popover-foreground: 219 43% 42%; /* slate-blue */
-    --primary: 219 43% 42%; /* slate-blue */
-    --primary-foreground: 0 0% 100%; /* #FFFFFF - White */
-    --secondary: 180 100% 41%; /* electric-cyan */
-    --secondary-foreground: 0 0% 0%; /* #000000 - Black */
-    --muted: 210 17% 94%; /* light-gray */
-    --muted-foreground: 219 43% 42%; /* slate-blue */
-    --accent: 14 100% 63%; /* sunset-orange */
-    --accent-foreground: 0 0% 100%; /* #FFFFFF - White */
+    --popover-foreground: 220 9% 35%; /* steel-gray */
+    --primary: 222 64% 33%; /* midnight-blue */
+    --primary-foreground: 0 0% 100%; /* #FFFFFF - pure-white */
+    --secondary: 213 94% 68%; /* sky-blue */
+    --secondary-foreground: 0 0% 100%; /* #FFFFFF - pure-white */
+    --muted: 220 13% 91%; /* light-gray-tint */
+    --muted-foreground: 220 9% 35%; /* steel-gray */
+    --accent: 43 80% 46%; /* golden-amber */
+    --accent-foreground: 222 64% 33%; /* midnight-blue */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 210 17% 85%; /* light-gray darker */
-    --input: 210 17% 88%; /* light-gray slightly darker */
-    --ring: 180 100% 41%; /* electric-cyan */
+    --border: 220 13% 91%; /* light-gray-tint */
+    --input: 220 13% 91%; /* light-gray-tint */
+    --ring: 213 94% 68%; /* sky-blue */
     --radius: 0.5rem;
   }
  
   .dark {
     /* ROLLINSX Dark Theme Colors */
-    --background: 219 43% 22%; /* Darker slate-blue */
-    --foreground: 210 17% 94%; /* light-gray */
-    --card: 219 43% 25%; /* Slightly lighter than background */
-    --card-foreground: 210 17% 94%; /* light-gray */
-    --popover: 219 43% 25%; /* Match card */
-    --popover-foreground: 210 17% 94%; /* light-gray */
-    --primary: 180 100% 41%; /* electric-cyan */
-    --primary-foreground: 0 0% 0%; /* #000000 - Black */
-    --secondary: 219 43% 42%; /* slate-blue */
-    --secondary-foreground: 0 0% 100%; /* #FFFFFF - White */
-    --muted: 219 43% 32%; /* In-between slate-blue */
-    --muted-foreground: 210 17% 85%; /* Slightly darker light-gray */
-    --accent: 14 100% 63%; /* sunset-orange */
-    --accent-foreground: 0 0% 100%; /* #FFFFFF - White */
+    --background: 221 79% 21%; /* dark-blue-shade */
+    --foreground: 0 0% 100%; /* pure-white */
+    --card: 222 64% 33%; /* midnight-blue */
+    --card-foreground: 0 0% 100%; /* pure-white */
+    --popover: 222 64% 33%; /* midnight-blue */
+    --popover-foreground: 0 0% 100%; /* pure-white */
+    --primary: 213 94% 68%; /* sky-blue */
+    --primary-foreground: 221 79% 21%; /* dark-blue-shade */
+    --secondary: 43 80% 46%; /* golden-amber */
+    --secondary-foreground: 221 79% 21%; /* dark-blue-shade */
+    --muted: 222 47% 45%; /* lighter midnight-blue */
+    --muted-foreground: 220 13% 91%; /* light-gray-tint */
+    --accent: 43 80% 46%; /* golden-amber */
+    --accent-foreground: 0 0% 100%; /* pure-white */
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 219 43% 32%; /* Match muted */
-    --input: 219 43% 30%; /* Slightly darker than border */
-    --ring: 180 100% 41%; /* electric-cyan */
+    --border: 222 47% 45%; /* lighter midnight-blue */
+    --input: 222 47% 40%; /* slightly darker than border */
+    --ring: 213 94% 68%; /* sky-blue */
   }
 
   * {
