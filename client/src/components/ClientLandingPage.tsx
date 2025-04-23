@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FaPlaneDeparture, FaServer, FaUserTie, FaPlane, FaArrowLeft, FaTimes, FaLink, FaFire, FaRocket } from "react-icons/fa";
+import { FaSyncAlt, FaServer, FaUserTie, FaCode, FaArrowLeft, FaTimes, FaLink, FaFire, FaRocket } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import PlatformPreview from "./PlatformPreview";
 import WebConnectPlatformView from "./WebConnectPlatformView";
@@ -43,13 +43,13 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
 
   const platforms: ClientPlatform[] = [
     {
-      id: "aerolink",
-      name: "AeroLink",
-      shortDescription: "Ultimate connectivity solution for aviation systems",
+      id: "weblink",
+      name: "WebLink",
+      shortDescription: "Ultimate connectivity solution for enterprise systems",
       icon: <FaLink className="text-3xl" />,
-      description: "AeroLink is our flagship enterprise platform that revolutionizes how aviation systems communicate. It provides seamless integration between disparate aviation technologies, creating a unified digital ecosystem that enhances operational efficiency, data accuracy, and decision-making capabilities across the entire aviation industry.",
+      description: "WebLink is our flagship enterprise platform that revolutionizes how business systems communicate. It provides seamless integration between disparate technologies, creating a unified digital ecosystem that enhances operational efficiency, data accuracy, and decision-making capabilities across your entire organization.",
       features: [
-        "Cross-platform integration with all major aviation software systems",
+        "Cross-platform integration with all major enterprise software systems",
         "Real-time data streaming with millisecond latency",
         "Military-grade encryption for secure data transmission",
         "AI-powered predictive maintenance alerts",
@@ -71,11 +71,11 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
       screenshots: [
         { 
           image: "https://images.unsplash.com/photo-1517586979036-b7d1e86b3345?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80", 
-          caption: "AeroLink Command Center showing real-time system integration status" 
+          caption: "WebLink Command Center showing real-time system integration status" 
         },
         { 
           image: "https://images.unsplash.com/photo-1581472723648-909f4851d4ae?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80", 
-          caption: "AeroLink's global data visualization dashboard" 
+          caption: "WebLink's global data visualization dashboard" 
         },
         { 
           image: "https://images.unsplash.com/photo-1526659666037-6119ad61ee05?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80", 
@@ -83,11 +83,11 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
         }
       ],
       useCases: [
-        "Global airlines connecting reservation, maintenance, and crew management systems",
-        "Airport authorities integrating gate management with airline systems",
-        "Aircraft manufacturers linking production, maintenance, and customer systems",
-        "Military aviation units securing communication between tactical and strategic systems",
-        "Aviation regulators automating compliance monitoring across industry participants"
+        "Global enterprises connecting reservation, maintenance, and staff management systems",
+        "Business authorities integrating resource management with corporate systems",
+        "Software manufacturers linking production, maintenance, and customer systems",
+        "Corporate IT units securing communication between tactical and strategic systems",
+        "Industry regulators automating compliance monitoring across business participants"
       ],
       apiEndpoints: [
         {
@@ -113,17 +113,17 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
       ]
     },
     {
-      id: "aerosync",
-      name: "AeroSync",
-      shortDescription: "Comprehensive aviation data synchronization platform",
-      icon: <FaPlaneDeparture className="text-3xl" />,
-      description: "AeroSync is an advanced aviation data synchronization platform designed to streamline operations across multiple systems. It integrates flight data, maintenance records, crew scheduling, and other critical information into a unified ecosystem, ensuring real-time updates and data consistency across all departments.",
+      id: "websync",
+      name: "WebSync",
+      shortDescription: "Comprehensive data synchronization platform",
+      icon: <FaSyncAlt className="text-3xl" />,
+      description: "WebSync is an advanced data synchronization platform designed to streamline operations across multiple systems. It integrates business data, maintenance records, staff scheduling, and other critical information into a unified ecosystem, ensuring real-time updates and data consistency across all departments.",
       features: [
         "Real-time data synchronization across all connected systems",
         "Automated conflict resolution for simultaneous updates",
         "Role-based access control with detailed permission settings",
         "Comprehensive audit trail and change tracking",
-        "Integration with major aviation software systems",
+        "Integration with major business software systems",
         "Custom workflow automation tools",
         "Advanced reporting and analytics dashboard",
         "Mobile access with offline capabilities"
@@ -141,11 +141,11 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
       screenshots: [
         { 
           image: "https://images.unsplash.com/photo-1551373884-8a0750f6c71f?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80", 
-          caption: "AeroSync Dashboard showing real-time synchronization status" 
+          caption: "WebSync Dashboard showing real-time synchronization status" 
         },
         { 
           image: "https://images.unsplash.com/photo-1577400808258-62d255afacea?ixlib=rb-4.0.3&auto=format&fit=crop&w=2071&q=80", 
-          caption: "Integration configuration panel with multiple aviation systems" 
+          caption: "Integration configuration panel with multiple enterprise systems" 
         },
         { 
           image: "https://images.unsplash.com/photo-1605292356963-b8a9595a1c84?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80", 
@@ -153,11 +153,11 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
         }
       ],
       useCases: [
-        "Airlines synchronizing flight data across scheduling, maintenance, and crew management systems",
-        "MRO facilities integrating inventory management with maintenance tracking",
-        "Aviation training centers synchronizing student records with simulator usage",
-        "Aircraft leasing companies managing fleet data across multiple operators",
-        "Airport operations coordinating ground services with flight information"
+        "Enterprises synchronizing business data across scheduling, maintenance, and staff management systems",
+        "Facilities integrating inventory management with maintenance tracking",
+        "Training centers synchronizing student records with equipment usage",
+        "Service companies managing resource data across multiple operators",
+        "Operations departments coordinating services with business information"
       ],
       apiEndpoints: [
         {
@@ -183,17 +183,17 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
       ]
     },
     {
-      id: "aeroops",
-      name: "AeroOps",
-      shortDescription: "End-to-end aviation operations management platform",
+      id: "webops",
+      name: "WebOps",
+      shortDescription: "End-to-end operations management platform",
       icon: <FaServer className="text-3xl" />,
-      description: "AeroOps is a comprehensive platform designed to help airlines and aviation companies manage their operations efficiently. It offers powerful tools for flight scheduling, crew management, regulatory compliance, and operational analytics. The platform streamlines complex operational processes, making it a critical solution for aviation professionals seeking to optimize their operations and reduce costs.",
+      description: "WebOps is a comprehensive platform designed to help businesses manage their operations efficiently. It offers powerful tools for resource scheduling, staff management, regulatory compliance, and operational analytics. The platform streamlines complex operational processes, making it a critical solution for professionals seeking to optimize their operations and reduce costs.",
       features: [
-        "Intelligent flight scheduling with conflict detection",
-        "Crew management with qualification tracking and fatigue risk monitoring",
+        "Intelligent resource scheduling with conflict detection",
+        "Staff management with qualification tracking and workload monitoring",
         "Regulatory compliance monitoring and automatic updates",
-        "Maintenance tracking and integration with AeroSync",
-        "Fuel optimization algorithms and consumption tracking",
+        "Maintenance tracking and integration with WebSync",
+        "Resource optimization algorithms and utilization tracking",
         "Disruption management with automated recovery scenarios",
         "Performance analytics with customizable KPIs",
         "Real-time operational control dashboards"
@@ -211,39 +211,39 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
       screenshots: [
         { 
           image: "https://images.unsplash.com/photo-1578574577315-3fbeb0cecdc2?ixlib=rb-4.0.3&auto=format&fit=crop&w=2072&q=80", 
-          caption: "AeroOps control center with real-time flight tracking" 
+          caption: "WebOps control center with real-time resource tracking" 
         },
         { 
           image: "https://images.unsplash.com/photo-1540339832862-474599807836?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80", 
-          caption: "Crew scheduling interface with qualification overlays" 
+          caption: "Staff scheduling interface with qualification overlays" 
         },
         { 
           image: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?ixlib=rb-4.0.3&auto=format&fit=crop&w=2074&q=80", 
-          caption: "Flight optimization panel showing fuel efficiency metrics" 
+          caption: "Resource optimization panel showing efficiency metrics" 
         }
       ],
       useCases: [
-        "Regional airlines optimizing crew utilization across multiple bases",
-        "Charter operators managing on-demand flight scheduling",
-        "Flight departments ensuring regulatory compliance across jurisdictions",
-        "Low-cost carriers maximizing aircraft utilization with tight turnarounds",
-        "Helicopter operators managing complex mission-based operations"
+        "Regional businesses optimizing staff utilization across multiple locations",
+        "Service providers managing on-demand resource scheduling",
+        "Operations departments ensuring regulatory compliance across jurisdictions",
+        "E-commerce companies maximizing fulfillment efficiency with tight timelines",
+        "Technology providers managing complex project-based operations"
       ],
       apiEndpoints: [
         {
           method: "GET",
-          endpoint: "/api/v1/flights",
-          description: "Retrieve scheduled flights with filtering options"
+          endpoint: "/api/v1/resources",
+          description: "Retrieve scheduled resources with filtering options"
         },
         {
           method: "POST",
-          endpoint: "/api/v1/flights/optimize",
-          description: "Run optimization algorithms on flight schedules with specified parameters"
+          endpoint: "/api/v1/resources/optimize",
+          description: "Run optimization algorithms on resource schedules with specified parameters"
         },
         {
           method: "GET",
-          endpoint: "/api/v1/crew/availability",
-          description: "Check crew availability with qualification filters"
+          endpoint: "/api/v1/staff/availability",
+          description: "Check staff availability with qualification filters"
         },
         {
           method: "POST",
@@ -293,11 +293,11 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
         }
       ],
       useCases: [
-        "Aviation industry executives managing global teams and operations",
-        "Corporate flight department directors coordinating executive travel",
-        "Airline C-suite executives balancing operational and strategic priorities",
-        "Airport authority leaders managing stakeholder communications",
-        "Aviation consultancy principals managing multiple client engagements"
+        "Technology industry executives managing global teams and operations",
+        "Corporate department directors coordinating executive projects",
+        "Enterprise C-suite executives balancing operational and strategic priorities",
+        "Business authority leaders managing stakeholder communications",
+        "Technology consultancy principals managing multiple client engagements"
       ],
       apiEndpoints: [
         {
@@ -326,7 +326,7 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
       id: "aeroflight",
       name: "AeroFlight",
       shortDescription: "Advanced flight simulation and training platform",
-      icon: <FaPlane className="text-3xl" />,
+      icon: <FaCode className="text-3xl" />,
       description: "AeroFlight is a sophisticated flight simulation platform designed for pilot training and proficiency. It provides high-fidelity aircraft models, realistic weather simulation, and comprehensive performance analysis tools. The platform supports both desktop and full-motion simulator configurations, making it versatile for various training needs from individual pilots to large flight schools and airlines.",
       features: [
         "High-fidelity aircraft models with accurate flight dynamics",
