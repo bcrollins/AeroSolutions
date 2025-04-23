@@ -1,82 +1,77 @@
 /**
  * Rate Limiter Middleware
  * 
- * This middleware implements rate limiting for API endpoints to prevent
- * abuse and ensure fair usage of resources.
+ * This middleware provides rate limiting for API endpoints.
+ * It helps protect against abuse and ensures fair usage.
  */
 
 const rateLimit = require('express-rate-limit');
 const logger = require('../config/logger');
 
-// Customize rate limit exceeded message
-const rateLimitExceededMessage = {
-  success: false,
-  error: {
-    message: 'Too many requests from this IP, please try again after some time',
-    code: 'RATE_LIMIT_EXCEEDED'
-  }
-};
-
-// Helper function to log rate limit hits
-const logRateLimitHit = (req, res, options) => {
-  logger.warn('Rate limit exceeded', {
-    ip: logger.anonymize(req.ip),
-    path: req.originalUrl || req.url,
-    limit: options.max,
-    windowMs: options.windowMs
+// Helper to create a rate limiter with consistent error responses
+function createRateLimiter(options) {
+  return rateLimit({
+    // Default window: 15 minutes
+    windowMs: options.windowMs || 15 * 60 * 1000,
+    
+    // Default max requests per window
+    max: options.max || 100,
+    
+    // Standardized rate limit exceeded message
+    message: {
+      success: false,
+      error: {
+        message: options.message || 'Too many requests, please try again later.',
+        code: 'RATE_LIMIT_EXCEEDED',
+        details: {
+          retryAfter: Math.ceil(options.windowMs / 1000),
+          limit: options.max
+        }
+      }
+    },
+    
+    // Use consistent headers with configurable prefix
+    standardHeaders: true,
+    legacyHeaders: false,
+    
+    // Skip rate limiting in test environment
+    skip: () => process.env.NODE_ENV === 'test',
+    
+    // Log rate limit hits
+    onLimitReached: (req, res, options) => {
+      logger.warn('Rate limit exceeded', {
+        ip: logger.anonymize(req.ip),
+        path: req.originalUrl || req.url,
+        limit: options.max,
+        windowMs: options.windowMs
+      });
+    }
   });
-};
+}
 
-/**
- * General API rate limiter - less strict
- * Allows 50 requests per minute per IP
- */
-const apiLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 50, // 50 requests per minute
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  message: rateLimitExceededMessage,
-  handler: (req, res, next, options) => {
-    logRateLimitHit(req, res, options);
-    res.status(options.statusCode).json(options.message);
-  }
+// General API rate limiter (100 requests per 15 minutes)
+const apiLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: 'Too many API requests from this IP, please try again after 15 minutes'
 });
 
-/**
- * OpenAI endpoints rate limiter - more strict due to cost
- * Allows 10 requests per minute per IP
- */
-const openaiLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 10, // 10 requests per minute
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: rateLimitExceededMessage,
-  handler: (req, res, next, options) => {
-    logRateLimitHit(req, res, options);
-    res.status(options.statusCode).json(options.message);
-  }
+// More restrictive rate limiter for OpenAI endpoints (30 requests per 15 minutes)
+const openaiLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  message: 'Too many OpenAI requests from this IP, please try again after 15 minutes'
 });
 
-/**
- * Contact form rate limiter - prevents spam
- * Allows 5 submissions per hour per IP
- */
-const contactLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 5, // 5 requests per hour
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: rateLimitExceededMessage,
-  handler: (req, res, next, options) => {
-    logRateLimitHit(req, res, options);
-    res.status(options.statusCode).json(options.message);
-  }
+// Very restrictive rate limiter for sensitive operations (5 requests per hour)
+const sensitiveOperationsLimiter = createRateLimiter({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: 'Too many sensitive operations from this IP, please try again after 1 hour'
 });
 
 module.exports = {
   apiLimiter,
   openaiLimiter,
-  contactLimiter
+  sensitiveOperationsLimiter
 };

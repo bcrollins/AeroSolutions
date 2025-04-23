@@ -1,7 +1,7 @@
 /**
  * Database Routes
  * 
- * This module defines routes for database management and status.
+ * This module defines routes for database management operations.
  */
 
 const express = require('express');
@@ -10,12 +10,15 @@ const router = express.Router();
 // Controller
 const databaseController = require('../controllers/databaseController');
 
+// Middleware
+const { sensitiveOperationsLimiter } = require('../middlewares/rateLimiter');
+
 /**
  * @route   GET /api/database/status
  * @desc    Check database connection status
- * @access  Public
+ * @access  Admin
  * 
- * Response (Connected):
+ * Response:
  * {
  *   "success": true,
  *   "data": {
@@ -23,22 +26,17 @@ const databaseController = require('../controllers/databaseController');
  *     "timestamp": "2025-04-23T12:34:56.789Z"
  *   }
  * }
- * 
- * Response (Not Connected):
- * {
- *   "success": false,
- *   "error": {
- *     "message": "Database is not connected",
- *     "code": "DATABASE_DISCONNECTED"
- *   }
- * }
  */
-router.get('/status', databaseController.checkStatus);
+router.get('/status',
+  sensitiveOperationsLimiter,
+  // Authentication middleware would go here
+  databaseController.checkStatus
+);
 
 /**
  * @route   POST /api/database/init
  * @desc    Initialize database schema
- * @access  Admin (should be protected)
+ * @access  Admin
  * 
  * Response:
  * {
@@ -49,12 +47,16 @@ router.get('/status', databaseController.checkStatus);
  *   }
  * }
  */
-router.post('/init', databaseController.initializeDatabase);
+router.post('/init',
+  sensitiveOperationsLimiter,
+  // Authentication middleware would go here
+  databaseController.initializeDatabase
+);
 
 /**
  * @route   GET /api/database/tables
- * @desc    Get database tables information
- * @access  Admin (should be protected)
+ * @desc    Get information about database tables
+ * @access  Admin
  * 
  * Response:
  * {
@@ -63,7 +65,7 @@ router.post('/init', databaseController.initializeDatabase);
  *     "tables": [
  *       {
  *         "name": "contacts",
- *         "rowCount": 10,
+ *         "rowCount": 12,
  *         "columns": [
  *           {
  *             "column_name": "id",
@@ -80,6 +82,10 @@ router.post('/init', databaseController.initializeDatabase);
  *   }
  * }
  */
-router.get('/tables', databaseController.getTablesInfo);
+router.get('/tables',
+  sensitiveOperationsLimiter,
+  // Authentication middleware would go here
+  databaseController.getTablesInfo
+);
 
 module.exports = router;

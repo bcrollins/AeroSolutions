@@ -1,7 +1,7 @@
 /**
- * Contact Form Routes
+ * Contact Routes
  * 
- * This module defines routes for contact form operations.
+ * This module defines routes for contact form submissions.
  */
 
 const express = require('express');
@@ -11,11 +11,11 @@ const router = express.Router();
 const contactController = require('../controllers/contactController');
 
 // Middleware
-const { contactLimiter } = require('../middlewares/rateLimiter');
+const { apiLimiter, sensitiveOperationsLimiter } = require('../middlewares/rateLimiter');
 const { validateContactRequest } = require('../middlewares/validator');
 
 /**
- * @route   POST /api/contact/submit
+ * @route   POST /api/contact
  * @desc    Submit a contact form
  * @access  Public (rate limited)
  * 
@@ -23,10 +23,10 @@ const { validateContactRequest } = require('../middlewares/validator');
  * {
  *   "name": "John Doe",
  *   "email": "john@example.com",
- *   "phone": "+1 555-1234",         (optional)
+ *   "phone": "555-123-4567",       (optional)
  *   "subject": "Service Inquiry",
- *   "message": "I'd like to inquire about your services...",
- *   "company": "Acme Corp"          (optional)
+ *   "message": "I'm interested in your services...",
+ *   "company": "Acme Inc."         (optional)
  * }
  * 
  * Response:
@@ -34,47 +34,62 @@ const { validateContactRequest } = require('../middlewares/validator');
  *   "success": true,
  *   "data": {
  *     "id": 123,
- *     "message": "Contact form submitted successfully",
  *     "timestamp": "2025-04-23T12:34:56.789Z"
- *   }
+ *   },
+ *   "message": "Contact form submitted successfully"
  * }
  */
-router.post('/submit',
-  contactLimiter,
+router.post('/',
+  apiLimiter,
   validateContactRequest,
   contactController.submitContact
 );
 
 /**
- * @route   GET /api/contact/list
- * @desc    Get list of contact submissions (admin only)
+ * @route   GET /api/contact
+ * @desc    Get all contact submissions (paginated)
  * @access  Admin
  * 
  * Query parameters:
  * - page: Page number (default: 1)
- * - limit: Items per page (default: 20)
+ * - limit: Items per page (default: 10, max: 50)
  * 
  * Response:
  * {
  *   "success": true,
  *   "data": {
- *     "contacts": [...],
+ *     "contacts": [
+ *       {
+ *         "id": 123,
+ *         "name": "John Doe",
+ *         "email": "john@example.com",
+ *         "subject": "Service Inquiry",
+ *         "created_at": "2025-04-23T12:34:56.789Z"
+ *       },
+ *       ...
+ *     ],
  *     "pagination": {
- *       "total": 100,
  *       "page": 1,
- *       "limit": 20,
- *       "pages": 5,
- *       "hasMore": true
+ *       "limit": 10,
+ *       "totalItems": 45,
+ *       "totalPages": 5
  *     }
  *   }
  * }
  */
-router.get('/list', contactController.getContacts);
+router.get('/',
+  sensitiveOperationsLimiter,
+  // Authentication middleware would go here
+  contactController.getContacts
+);
 
 /**
  * @route   GET /api/contact/:id
- * @desc    Get a specific contact submission (admin only)
+ * @desc    Get a specific contact submission by ID
  * @access  Admin
+ * 
+ * Path parameters:
+ * - id: Contact ID
  * 
  * Response:
  * {
@@ -83,10 +98,19 @@ router.get('/list', contactController.getContacts);
  *     "id": 123,
  *     "name": "John Doe",
  *     "email": "john@example.com",
+ *     "phone": "555-123-4567",
+ *     "subject": "Service Inquiry",
+ *     "message": "I'm interested in your services...",
+ *     "company_name": "Acme Inc.",
+ *     "created_at": "2025-04-23T12:34:56.789Z",
  *     ...
  *   }
  * }
  */
-router.get('/:id', contactController.getContactById);
+router.get('/:id',
+  sensitiveOperationsLimiter,
+  // Authentication middleware would go here
+  contactController.getContactById
+);
 
 module.exports = router;

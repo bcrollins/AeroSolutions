@@ -1,14 +1,14 @@
 /**
  * Logger Configuration
  * 
- * This module configures the application logging system using Winston.
- * It provides a centralized logging setup with different log levels,
- * formats, and transports.
+ * This module configures and exports a Winston logger instance.
+ * It provides standardized logging with structured output.
  */
 
 const winston = require('winston');
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
 
 // Ensure logs directory exists
 const logsDir = path.join(process.cwd(), 'logs');
@@ -16,99 +16,106 @@ if (!fs.existsSync(logsDir)) {
   fs.mkdirSync(logsDir, { recursive: true });
 }
 
-// Define log format
+// Define log file paths
+const errorLogPath = path.join(logsDir, 'error.log');
+const combinedLogPath = path.join(logsDir, 'combined.log');
+
+// Custom log format with timestamps, log level, and structured data
 const logFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.errors({ stack: true }),
-  winston.format.splat(),
-  winston.format.json()
-);
-
-// Define console format (more readable for development)
-const consoleFormat = winston.format.combine(
-  winston.format.colorize(),
-  winston.format.timestamp({ format: 'HH:mm:ss' }),
-  winston.format.printf(({ timestamp, level, message, ...rest }) => {
-    let logMessage = `${timestamp} [${level}]: ${message}`;
-    
-    // Add additional metadata if present
-    if (Object.keys(rest).length > 0) {
-      // Filter out sensitive info
-      const sanitized = { ...rest };
-      if (sanitized.stack) delete sanitized.stack;
-      if (Object.keys(sanitized).length > 0) {
-        logMessage += ` ${JSON.stringify(sanitized)}`;
-      }
-    }
-    
-    return logMessage;
+  winston.format.printf(({ level, message, timestamp, ...meta }) => {
+    const metaStr = Object.keys(meta).length ? JSON.stringify(meta) : '';
+    return `${timestamp} [${level.toUpperCase()}]: ${message} ${metaStr}`;
   })
 );
 
-// Create the logger instance
+// Create and configure Winston logger
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: logFormat,
   defaultMeta: { service: 'api-server' },
   transports: [
-    // Write to all logs with level 'info' and below to combined.log
-    new winston.transports.File({ 
-      filename: path.join(logsDir, 'combined.log'),
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
+    // Console logger - colorized for better readability
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        logFormat
+      )
     }),
-    
-    // Write all logs with level 'error' and below to error.log
-    new winston.transports.File({ 
-      filename: path.join(logsDir, 'error.log'),
+    // Error log file - only log error level and above
+    new winston.transports.File({
+      filename: errorLogPath,
       level: 'error',
       maxsize: 5242880, // 5MB
       maxFiles: 5,
     }),
-    
-    // Console output with prettier format
-    new winston.transports.Console({
-      format: consoleFormat
-    })
-  ],
-  exceptionHandlers: [
-    new winston.transports.File({ 
-      filename: path.join(logsDir, 'exceptions.log'),
+    // Combined log file - log all levels
+    new winston.transports.File({
+      filename: combinedLogPath,
       maxsize: 5242880, // 5MB
       maxFiles: 5,
-    })
+    }),
   ],
-  rejectionHandlers: [
-    new winston.transports.File({ 
-      filename: path.join(logsDir, 'rejections.log'),
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
-    })
-  ]
+  // Don't exit on uncaught exceptions
+  exitOnError: false
 });
 
 /**
- * Anonymize sensitive data like IP addresses for privacy
- * @param {string} ip - IP address to anonymize
- * @returns {string} - Anonymized IP address
+ * Function to anonymize potentially sensitive data like IP addresses
+ * 
+ * @param {string} value - The value to anonymize
+ * @returns {string} - The anonymized value
  */
-logger.anonymize = function(ip) {
-  if (!ip) return 'unknown';
+logger.anonymize = function(value) {
+  if (!value) return 'unknown';
   
-  // IPv4
-  if (ip.includes('.')) {
-    const parts = ip.split('.');
-    return `${parts[0]}.${parts[1]}.xxx.xxx`;
+  // If it's an IP address, hash the last part
+  if (value.includes('.')) {
+    // IPv4 address
+    const parts = value.split('.');
+    if (parts.length === 4) {
+      // Only hash the last octet
+      parts[3] = crypto.createHash('sha256').update(parts[3]).digest('hex').substring(0, 8);
+      return parts.join('.');
+    }
+  } else if (value.includes(':')) {
+    // IPv6 address - hash last 64 bits
+    const parts = value.split(':');
+    if (parts.length > 4) {
+      // Anonymize the last 4 segments
+      for (let i = 4; i < parts.length; i++) {
+        if (parts[i]) {
+          parts[i] = crypto.createHash('sha256').update(parts[i]).digest('hex').substring(0, 4);
+        }
+      }
+      return parts.join(':');
+    }
   }
   
-  // IPv6
-  if (ip.includes(':')) {
-    const parts = ip.split(':');
-    return `${parts[0]}:${parts[1]}:xxxx:xxxx:xxxx:xxxx`;
-  }
-  
-  return 'unknown';
+  // For other values, hash the whole thing and take first 8 chars
+  return crypto.createHash('sha256').update(value).digest('hex').substring(0, 8);
 };
 
-// Export the logger
+// Log unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Promise Rejection', {
+    reason: reason.toString(),
+    stack: reason.stack || 'No stack trace available'
+  });
+});
+
+// Log uncaught exceptions
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught Exception', {
+    error: error.message,
+    stack: error.stack || 'No stack trace available'
+  });
+  
+  // Give logger time to write to files before exiting
+  setTimeout(() => {
+    process.exit(1);
+  }, 1000);
+});
+
 module.exports = logger;

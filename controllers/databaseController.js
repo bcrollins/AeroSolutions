@@ -4,6 +4,8 @@
  * This controller provides methods for database management and status.
  */
 
+const fs = require('fs').promises;
+const path = require('path');
 const db = require('../config/database');
 const logger = require('../config/logger');
 const { createError } = require('../middlewares/errorHandler');
@@ -16,33 +18,31 @@ const { createError } = require('../middlewares/errorHandler');
  */
 async function checkStatus(req, res, next) {
   try {
-    const isConnected = await db.checkConnection();
+    // Test database connection with a simple query
+    const result = await db.query('SELECT NOW() as time');
     
-    if (isConnected) {
-      logger.info('Database status check: Connected');
-      res.json({
-        success: true,
-        data: {
-          status: 'connected',
-          timestamp: new Date().toISOString()
-        }
-      });
-    } else {
-      logger.warn('Database status check: Disconnected');
-      res.status(503).json({
-        success: false,
-        error: {
-          message: 'Database is not connected',
-          code: 'DATABASE_DISCONNECTED'
-        }
-      });
-    }
-  } catch (error) {
-    logger.error('Database status check error', {
-      error: error.message,
-      stack: error.stack
+    // Log successful connection
+    logger.info('Database connection test successful', {
+      timestamp: result.rows[0].time
     });
-    next(createError('Error checking database status', 500, 'DATABASE_STATUS_ERROR'));
+    
+    // Send success response
+    res.json({
+      success: true,
+      data: {
+        status: 'connected',
+        timestamp: result.rows[0].time
+      }
+    });
+  } catch (err) {
+    // Log error
+    logger.error('Database connection test failed', {
+      error: err.message,
+      stack: err.stack
+    });
+    
+    // Send error response
+    next(createError('Database is not connected', 500, 'DATABASE_DISCONNECTED'));
   }
 }
 
@@ -54,10 +54,19 @@ async function checkStatus(req, res, next) {
  */
 async function initializeDatabase(req, res, next) {
   try {
-    logger.info('Database initialization requested');
+    // Path to SQL schema
+    const schemaPath = path.join(process.cwd(), 'models', 'schema.sql');
     
-    await db.initDatabase();
+    // Read schema SQL
+    const schemaSql = await fs.readFile(schemaPath, 'utf8');
     
+    // Execute schema SQL
+    await db.query(schemaSql);
+    
+    // Log successful initialization
+    logger.info('Database schema initialized');
+    
+    // Send success response
     res.json({
       success: true,
       data: {
@@ -65,12 +74,15 @@ async function initializeDatabase(req, res, next) {
         timestamp: new Date().toISOString()
       }
     });
-  } catch (error) {
-    logger.error('Database initialization error', {
-      error: error.message,
-      stack: error.stack
+  } catch (err) {
+    // Log error
+    logger.error('Database initialization failed', {
+      error: err.message,
+      stack: err.stack
     });
-    next(createError('Error initializing database', 500, 'DATABASE_INIT_ERROR'));
+    
+    // Send error response
+    next(createError('Failed to initialize database schema', 500, 'DATABASE_INIT_ERROR'));
   }
 }
 
@@ -82,52 +94,42 @@ async function initializeDatabase(req, res, next) {
  */
 async function getTablesInfo(req, res, next) {
   try {
-    // Query to get the list of tables
-    const tablesQuery = `
-      SELECT 
-        table_name,
-        (SELECT COUNT(*) FROM information_schema.columns WHERE table_name = t.table_name) as column_count
-      FROM 
-        information_schema.tables t
-      WHERE 
-        table_schema = 'public'
-      ORDER BY 
-        table_name
-    `;
-    
-    const tablesResult = await db.query(tablesQuery);
+    // Get list of tables
+    const tablesResult = await db.query(`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public'
+      ORDER BY table_name
+    `);
     
     const tables = [];
     
-    // For each table, get row count and column details
-    for (const table of tablesResult.rows) {
+    // For each table, get additional info
+    for (const tableRow of tablesResult.rows) {
+      const tableName = tableRow.table_name;
+      
+      // Get column information
+      const columnsResult = await db.query(`
+        SELECT column_name, data_type, is_nullable
+        FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = $1
+        ORDER BY ordinal_position
+      `, [tableName]);
+      
       // Get row count
-      const countResult = await db.query(`SELECT COUNT(*) FROM "${table.table_name}"`);
-      const rowCount = parseInt(countResult.rows[0].count);
-      
-      // Get column details
-      const columnsQuery = `
-        SELECT 
-          column_name, 
-          data_type,
-          is_nullable
-        FROM 
-          information_schema.columns
-        WHERE 
-          table_name = $1
-        ORDER BY 
-          ordinal_position
-      `;
-      
-      const columnsResult = await db.query(columnsQuery, [table.table_name]);
+      const countResult = await db.query(`
+        SELECT COUNT(*) as row_count
+        FROM "${tableName}"
+      `);
       
       tables.push({
-        name: table.table_name,
-        rowCount,
+        name: tableName,
+        rowCount: parseInt(countResult.rows[0].row_count),
         columns: columnsResult.rows
       });
     }
     
+    // Send response
     res.json({
       success: true,
       data: {
@@ -136,13 +138,15 @@ async function getTablesInfo(req, res, next) {
         timestamp: new Date().toISOString()
       }
     });
-  } catch (error) {
-    logger.error('Error fetching database tables info', {
-      error: error.message,
-      stack: error.stack
+  } catch (err) {
+    // Log error
+    logger.error('Failed to get database tables info', {
+      error: err.message,
+      stack: err.stack
     });
     
-    next(createError('Error retrieving database information', 500, 'DATABASE_INFO_ERROR'));
+    // Send error response
+    next(createError('Failed to get database tables information', 500, 'DATABASE_INFO_ERROR'));
   }
 }
 

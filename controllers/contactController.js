@@ -17,59 +17,46 @@ const { createError } = require('../middlewares/errorHandler');
  */
 async function submitContact(req, res, next) {
   try {
-    // Extract validated data (safe since it passed validation middleware)
+    // Data has already been validated by the validator middleware
     const { name, email, phone, subject, message, company } = req.body;
     
-    // Get IP and user agent for tracking
-    const ip_address = logger.anonymize(req.ip);
-    const user_agent = req.get('user-agent') || 'unknown';
+    // Capture additional information for security/analytics
+    const ipAddress = logger.anonymize(req.ip);
+    const userAgent = req.get('user-agent');
     
-    // Log contact submission attempt
-    logger.info('Contact form submission received', {
-      email,
-      subject,
-      ip: ip_address
-    });
-    
-    // Store in database
+    // Insert into database
     const result = await db.query(
       `INSERT INTO contacts 
-        (name, email, phone, subject, message, company_name, ip_address, user_agent) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+       (name, email, phone, subject, message, company_name, ip_address, user_agent)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING id, created_at`,
-      [name, email, phone || null, subject, message, company || null, ip_address, user_agent]
+      [name, email, phone, subject, message, company, ipAddress, userAgent]
     );
     
-    // Check if insertion was successful
-    if (!result.rows || result.rows.length === 0) {
-      return next(createError('Failed to save contact submission', 500, 'CONTACT_SAVE_ERROR'));
-    }
-    
-    // Log success
-    logger.info('Contact form submission saved', {
+    // Log successful submission (excluding personal data)
+    logger.info('Contact form submitted', {
       id: result.rows[0].id,
-      email,
-      createdAt: result.rows[0].created_at
+      subject
     });
     
-    // Return success response
+    // Send success response
     res.status(201).json({
       success: true,
       data: {
         id: result.rows[0].id,
-        message: 'Contact form submitted successfully',
         timestamp: result.rows[0].created_at
-      }
+      },
+      message: 'Contact form submitted successfully'
     });
-  } catch (error) {
-    // Log error details
+  } catch (err) {
+    // Log error
     logger.error('Contact form submission error', {
-      error: error.message,
-      stack: error.stack
+      error: err.message,
+      stack: err.stack
     });
     
-    // Forward to error handler
-    next(createError('Error processing contact form', 500, 'CONTACT_SUBMISSION_ERROR'));
+    // Send error response
+    next(createError('Failed to submit contact form', 500, 'CONTACT_SUBMISSION_ERROR'));
   }
 }
 
@@ -81,18 +68,16 @@ async function submitContact(req, res, next) {
  */
 async function getContacts(req, res, next) {
   try {
-    // Extract pagination parameters with defaults
+    // Simple pagination parameters
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const limit = Math.min(parseInt(req.query.limit) || 10, 50); // Max 50 per page
     const offset = (page - 1) * limit;
     
-    // Query to get paginated results
+    // Get contacts
     const result = await db.query(
-      `SELECT id, name, email, phone, subject, 
-        LEFT(message, 100) as message_preview, 
-        company_name, created_at 
-       FROM contacts 
-       ORDER BY created_at DESC 
+      `SELECT id, name, email, subject, created_at
+       FROM contacts
+       ORDER BY created_at DESC
        LIMIT $1 OFFSET $2`,
       [limit, offset]
     );
@@ -101,32 +86,22 @@ async function getContacts(req, res, next) {
     const countResult = await db.query('SELECT COUNT(*) FROM contacts');
     const totalCount = parseInt(countResult.rows[0].count);
     
-    // Calculate pagination metadata
-    const totalPages = Math.ceil(totalCount / limit);
-    
-    // Return response
+    // Send response
     res.json({
       success: true,
       data: {
         contacts: result.rows,
         pagination: {
-          total: totalCount,
           page,
           limit,
-          pages: totalPages,
-          hasMore: page < totalPages
+          totalItems: totalCount,
+          totalPages: Math.ceil(totalCount / limit)
         }
       }
     });
-  } catch (error) {
-    // Log error details
-    logger.error('Error fetching contacts', {
-      error: error.message,
-      stack: error.stack
-    });
-    
-    // Forward to error handler
-    next(createError('Error retrieving contact submissions', 500, 'CONTACT_FETCH_ERROR'));
+  } catch (err) {
+    // Send error response
+    next(createError('Failed to retrieve contacts', 500, 'CONTACTS_RETRIEVAL_ERROR'));
   }
 }
 
@@ -144,32 +119,24 @@ async function getContactById(req, res, next) {
       return next(createError('Invalid contact ID', 400, 'INVALID_CONTACT_ID'));
     }
     
-    // Query to get contact details
+    // Get contact details
     const result = await db.query(
-      'SELECT * FROM contacts WHERE id = $1',
+      `SELECT * FROM contacts WHERE id = $1`,
       [id]
     );
     
-    // Check if contact exists
-    if (!result.rows || result.rows.length === 0) {
+    if (result.rows.length === 0) {
       return next(createError('Contact not found', 404, 'CONTACT_NOT_FOUND'));
     }
     
-    // Return contact details
+    // Send response
     res.json({
       success: true,
       data: result.rows[0]
     });
-  } catch (error) {
-    // Log error details
-    logger.error('Error fetching contact details', {
-      error: error.message,
-      stack: error.stack,
-      contactId: req.params.id
-    });
-    
-    // Forward to error handler
-    next(createError('Error retrieving contact details', 500, 'CONTACT_DETAIL_ERROR'));
+  } catch (err) {
+    // Send error response
+    next(createError('Failed to retrieve contact details', 500, 'CONTACT_RETRIEVAL_ERROR'));
   }
 }
 

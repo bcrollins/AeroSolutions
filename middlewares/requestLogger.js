@@ -1,59 +1,68 @@
 /**
  * Request Logger Middleware
  * 
- * This middleware logs all incoming HTTP requests with details such as
- * method, path, status code, and response time.
+ * This middleware logs information about incoming HTTP requests.
+ * It logs request method, path, IP address (anonymized), and timing.
  */
 
 const logger = require('../config/logger');
 
 /**
- * Middleware to log HTTP requests
+ * Request logger middleware function
+ * 
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
 function requestLogger(req, res, next) {
-  // Get timestamp when request started
+  // Start time for request timing
   const startTime = Date.now();
   
-  // Store original end function
-  const originalEnd = res.end;
+  // Capture the original IP address and anonymize it
+  const ip = logger.anonymize(req.ip);
   
-  // Override end function
-  res.end = function(chunk, encoding) {
-    // Calculate response time
-    const responseTime = Date.now() - startTime;
+  // Extract basic request information
+  const method = req.method;
+  const url = req.originalUrl || req.url;
+  const userAgent = req.get('user-agent') || 'unknown';
+  
+  // Log incoming request
+  logger.info('Request received', {
+    method,
+    url,
+    ip,
+    userAgent: userAgent.substring(0, 100) // Truncate long user agent strings
+  });
+  
+  // Capture the response
+  const originalSend = res.send;
+  res.send = function(data) {
+    // Calculate request duration
+    const duration = Date.now() - startTime;
     
-    // Log the request with anonymized IP
-    const logData = {
-      method: req.method,
-      path: req.originalUrl || req.url,
+    // Log response information
+    logger.info('Response sent', {
+      method,
+      url,
       statusCode: res.statusCode,
-      responseTime: `${responseTime}ms`,
-      ip: logger.anonymize(req.ip),
-      userAgent: req.get('user-agent') || 'unknown'
-    };
+      duration: duration + 'ms',
+      contentLength: data ? data.length : 0
+    });
     
-    // Use appropriate log level based on status code
-    if (res.statusCode >= 500) {
-      logger.error('Request completed with server error', logData);
-    } else if (res.statusCode >= 400) {
-      logger.warn('Request completed with client error', logData);
-    } else {
-      logger.info('Request completed successfully', logData);
+    // Log errors with more detail
+    if (res.statusCode >= 400) {
+      logger.warn('Error response', {
+        method,
+        url,
+        statusCode: res.statusCode,
+        ip,
+        duration: duration + 'ms'
+      });
     }
     
-    // Call original end function
-    originalEnd.call(res, chunk, encoding);
+    // Call the original send function
+    return originalSend.call(this, data);
   };
-  
-  // Debug level log for incoming requests
-  logger.debug('Incoming request', {
-    method: req.method,
-    path: req.originalUrl || req.url,
-    ip: logger.anonymize(req.ip)
-  });
   
   next();
 }
