@@ -1,74 +1,126 @@
-# AI Platform
+# AI-Powered Web Platform
 
-This project is a web application that uses OpenAI API for text generation.
+A cutting-edge AI-powered web platform that transforms digital solution concepts into tangible prototypes through intelligent design generation and comprehensive service visualization.
 
-## Two Server Options
+## Features
 
-### 1. Original Full-Featured Server
+- Text generation with OpenAI GPT-4o
+- User authentication and management
+- Subscription plans with Stripe integration
+- Content optimization and analytics
+- SEO enhancement tools
+- Landing page optimization
+- Marketplace for digital assets and services
+- A/B testing capabilities
+- Internationalization support
+- Mobile-responsive design
 
-The original server includes all features, including PostgreSQL database integration, authentication, and OpenAI API integration.
+## Tech Stack
+
+- **Frontend**: React, TypeScript, Tailwind CSS, shadcn/ui
+- **Backend**: Node.js, Express, TypeScript
+- **Database**: PostgreSQL with Drizzle ORM
+- **AI**: OpenAI API (GPT-4o) integration
+- **Payments**: Stripe integration
+- **Authentication**: JWT, Passport.js
+- **Validation**: Zod, Express-validator
+- **Data Fetching**: React Query, Axios
+- **Routing**: wouter
+- **Internationalization**: i18next
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18 or higher
+- PostgreSQL database
+- OpenAI API key
+- Stripe API key (for payment features)
+
+### Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```
+DATABASE_URL=postgresql://username:password@localhost:5432/dbname
+OPENAI_API_KEY=your_openai_api_key
+STRIPE_SECRET_KEY=your_stripe_secret_key
+STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+JWT_SECRET=your_jwt_secret
+SESSION_SECRET=your_session_secret
+```
+
+### Installation
+
+1. Clone the repository
+2. Install dependencies
+
+```bash
+npm install
+```
+
+3. Push the database schema
+
+```bash
+npm run db:push
+```
+
+4. Start the development server
 
 ```bash
 npm run dev
 ```
 
-### 2. Simple Server (0.0.0.0:8080)
+### Alternative: Simple Server
 
-A simplified version that runs on 0.0.0.0:8080 is available:
+For a simplified version that runs on port 8080, use:
 
 ```bash
 node simple-server.js
 ```
 
-## Available Routes
+## Project Structure
 
-- `/` - Landing page
-- `/test` - Test page with OpenAI API testing UI
-- `/login` - Login page
-- `/api/test-db` - Test database connection
-- `/api/test-xai` - Test OpenAI API connection
-- `/api/generate` - Generate text using OpenAI API
+- `/client`: React frontend application
+- `/server`: Node.js/Express backend application
+- `/shared`: Shared code (TypeScript types, schemas)
+- `/public`: Static assets
+- `/docs`: Project documentation
+- `/models`: Data models and schema definitions
+- `/controllers`: Route controllers
+- `/config`: Configuration files
+- `/tests`: Test files
 
-## Configuration
+## API Endpoints
 
-To use the simplified server with Replit:
+- `/api/generate`: Generate text using OpenAI
+- `/api/test-xai`: Test OpenAI API connection
+- `/api/test-db`: Test database connection
+- `/api/auth/*`: Authentication endpoints
+- `/api/user/*`: User management endpoints
+- `/api/marketplace/*`: Marketplace endpoints
+- `/api/subscription/*`: Subscription management endpoints
 
-1. Rename `.replit.simple` to `.replit`
-2. The simplified server will run on port 8080
+## Development
 
-## API Usage
+### Running in Development Mode
 
-### Text Generation API
-
-Endpoint: `/api/generate`
-Method: POST
-
-Request Body:
-```json
-{
-  "prompt": "Your text prompt here",
-  "model": "gpt-4o",            // Optional, defaults to gpt-4o
-  "max_tokens": 500,            // Optional, defaults to 500
-  "temperature": 0.7            // Optional, defaults to 0.7
-}
+```bash
+npm run dev
 ```
 
-Response:
-```json
-{
-  "success": true,
-  "result": "Generated text will appear here",
-  "model": "gpt-4o",
-  "usage": {
-    "prompt_tokens": 10,
-    "completion_tokens": 50,
-    "total_tokens": 60
-  }
-}
+### Building for Production
+
+```bash
+npm run build
 ```
 
-## Environment Variables
+### Running in Production Mode
 
-- `PORT` - Server port (defaults to 8080 for simple server, 5000 for full server)
-- `DATABASE_URL` - PostgreSQL connection string
-- `OPENAI_API_KEY` - OpenAI API key
+```bash
+npm start
+```
+
+## Documentation
+
+For more detailed documentation, see the [Project Context](docs/project-context.md) document.
