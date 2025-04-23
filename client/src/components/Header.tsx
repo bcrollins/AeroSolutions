@@ -59,7 +59,7 @@ export default function Header() {
                 {item.dropdown ? (  
                   <button  
                     onClick={item.label === 'Solutions' ? toggleSolutionsDropdown : toggleSupportDropdown}  
-                    className="font-inter text-sm uppercase tracking-wide text-light-gray hover:text-sunset-orange flex items-center transition-colors duration-200"  
+                    className="font-inter text-sm uppercase tracking-wide text-gray-200 hover:text-[#D4A017] flex items-center transition-colors duration-200"  
                   >  
                     {item.label}  
                     <ChevronDown className="ml-1 w-4 h-4" />  
@@ -67,7 +67,7 @@ export default function Header() {
                 ) : (  
                   <Link  
                     href={item.path}  
-                    className="font-inter text-sm uppercase tracking-wide text-light-gray hover:text-sunset-orange transition-colors duration-200"  
+                    className="font-inter text-sm uppercase tracking-wide text-gray-200 hover:text-[#D4A017] transition-colors duration-200"  
                   >  
                     {item.label}  
                   </Link>  
@@ -95,7 +95,7 @@ export default function Header() {
             </button>
             <Link  
               href="/login"  
-              className="font-inter text-sm uppercase tracking-wide text-sunset-orange hover:text-electric-cyan transition-colors duration-200"  
+              className="font-inter text-sm uppercase tracking-wide text-[#D4A017] hover:text-[#00D1D1] transition-colors duration-200"  
             >  
               Login  
             </Link>  
@@ -103,7 +103,7 @@ export default function Header() {
 
           {/* Mobile Menu Toggle */}  
           <button  
-            className="md:hidden text-light-gray focus:outline-none"  
+            className="md:hidden text-gray-200 focus:outline-none"  
             onClick={toggleMobileMenu}  
           >  
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}  
@@ -120,7 +120,7 @@ export default function Header() {
                     <div>  
                       <button  
                         onClick={item.label === 'Solutions' ? toggleSolutionsDropdown : toggleSupportDropdown}  
-                        className="font-inter text-sm uppercase tracking-wide text-light-gray flex items-center"  
+                        className="font-inter text-sm uppercase tracking-wide text-gray-200 hover:text-[#D4A017] flex items-center"  
                       >  
                         {item.label}  
                         <ChevronDown className="ml-1 w-4 h-4" />  
@@ -132,7 +132,7 @@ export default function Header() {
                               key={subItem.label}  
                               href={subItem.path}  
                               onClick={toggleMobileMenu}  
-                              className="block text-light-gray hover:text-sunset-orange"  
+                              className="block text-gray-200 hover:text-[#D4A017]"  
                             >  
                               {subItem.label}  
                             </Link>  
@@ -144,7 +144,7 @@ export default function Header() {
                     <Link  
                       href={item.path}  
                       onClick={toggleMobileMenu}  
-                      className="font-inter text-sm uppercase tracking-wide text-light-gray hover:text-sunset-orange"  
+                      className="font-inter text-sm uppercase tracking-wide text-gray-200 hover:text-[#D4A017]"  
                     >  
                       {item.label}  
                     </Link>  
@@ -156,14 +156,14 @@ export default function Header() {
                   toggleMobileMenu();
                   toggleClientPreview();
                 }}
-                className="font-inter text-sm uppercase tracking-wide text-electric-cyan hover:text-sunset-orange border border-electric-cyan px-3 py-1 rounded-md hover:border-sunset-orange"
+                className="font-inter text-sm uppercase tracking-wide text-[#00D1D1] hover:text-[#D4A017] border border-[#00D1D1] px-3 py-1 rounded-md hover:border-[#D4A017]"
               >
                 Client Preview
               </button>
               <Link  
                 href="/login"  
                 onClick={toggleMobileMenu}  
-                className="font-inter text-sm uppercase tracking-wide text-sunset-orange hover:text-electric-cyan"  
+                className="font-inter text-sm uppercase tracking-wide text-[#D4A017] hover:text-[#00D1D1]"  
               >  
                 Login  
               </Link>  
