@@ -1,140 +1,133 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
-import bcrypt from 'bcrypt';
+import { storage } from '../storage';
 
-// Secret key for JWT signing - in production, use environment variable
-const JWT_SECRET = process.env.JWT_SECRET || 'elevion-secret-key';
+// JWT secret key - Should be moved to environment variables in production
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_EXPIRATION = '24h';
 
-// Generate JWT token
-export const generateToken = (payload: any, expiresIn = '24h'): string => {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn });
+// Define public paths that don't require authentication
+const publicPaths = [
+  '/',
+  '/api/status',
+  '/api/auth/login',
+  '/api/auth/register',
+  '/api/openai/status',
+  '/api/subscription/status',
+  '/api/subscription/plans'
+];
+
+// Check if a path is public
+const isPublicPath = (path: string): boolean => {
+  return publicPaths.some(publicPath => 
+    path === publicPath || 
+    path.startsWith('/public/') || 
+    path.match(/\.(css|js|svg|png|jpg|jpeg|gif|ico)$/)
+  );
 };
 
-// Verify JWT token
-export const verifyToken = (token: string): any => {
-  try {
-    return jwt.verify(token, JWT_SECRET);
-  } catch (error) {
-    return null;
-  }
-};
-
-// Generate a random token for verification or password reset
-export const generateRandomToken = (): string => {
-  return crypto.randomBytes(32).toString('hex');
-};
-
-// Hash password using bcrypt
-export const hashPassword = (password: string): string => {
-  const salt = bcrypt.genSaltSync(10);
-  return bcrypt.hashSync(password, salt);
-};
-
-// Verify password using bcrypt
-export const verifyPassword = (plainPassword: string, hashedPassword: string): boolean => {
-  return bcrypt.compareSync(plainPassword, hashedPassword);
-};
-
-// Generate email verification link
-export const generateVerificationLink = (userId: number, token: string, baseUrl: string): string => {
-  return `${baseUrl}/api/auth/verify-email?uid=${userId}&token=${token}`;
-};
-
-// Generate password reset link
-export const generatePasswordResetLink = (userId: number, token: string, baseUrl: string): string => {
-  return `${baseUrl}/reset-password?uid=${userId}&token=${token}`;
-};
-
-// Check if a user is an admin
-export const isAdmin = (req: Request): boolean => {
-  return !!(req.user && req.user.role === 'admin');
-};
-
-// Authentication middleware using JWT
+/**
+ * Authentication middleware
+ * @param req - Express request object
+ * @param res - Express response object
+ * @param next - Express next function
+ */
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  try {
-    // Get the token from the Authorization header
-    const authHeader = req.headers.authorization;
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ 
-        success: false,
-        message: 'Authentication required. No token provided.'
-      });
-    }
-    
-    const token = authHeader.split(' ')[1];
-    
-    // Verify the token
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET);
-      
-      // Add the decoded user to the request
-      (req as any).user = decoded;
-      
-      next();
-    } catch (error) {
-      return res.status(401).json({ 
-        success: false,
-        message: 'Invalid or expired token'
-      });
-    }
-  } catch (error) {
-    console.error('Auth middleware error:', error);
-    return res.status(500).json({ 
-      success: false,
-      message: 'Internal server error during authentication'
-    });
+  // Skip authentication for public paths
+  if (isPublicPath(req.path)) {
+    return next();
   }
-};
 
-// Admin middleware to check if user has admin role
-export const adminMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  if (!(req as any).user) {
+  // Get token from headers, query or cookies
+  const token = 
+    req.headers.authorization?.split(' ')[1] || 
+    req.query.token as string || 
+    req.cookies?.token;
+  
+  if (!token) {
     return res.status(401).json({ 
       success: false, 
       message: 'Authentication required' 
     });
   }
-  
-  if ((req as any).user.role !== 'admin') {
-    return res.status(403).json({ 
+
+  try {
+    // Verify token
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
+    
+    // Set user property on request
+    storage.getUser(decoded.id).then(user => {
+      if (!user) {
+        return res.status(401).json({ 
+          success: false, 
+          message: 'User not found' 
+        });
+      }
+      
+      // Remove sensitive fields
+      const { password, ...userWithoutPassword } = user;
+      req.user = userWithoutPassword;
+      next();
+    }).catch(error => {
+      console.error('Error fetching user:', error);
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Authentication error' 
+      });
+    });
+  } catch (error) {
+    console.error('JWT verification error:', error);
+    return res.status(401).json({ 
       success: false, 
-      message: 'Admin privileges required' 
+      message: 'Invalid or expired token' 
     });
   }
-  
+};
+
+/**
+ * Admin authorization middleware
+ * Must be used after authMiddleware
+ * @param req - Express request object
+ * @param res - Express response object
+ * @param next - Express next function
+ */
+export const adminMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return res.status(401).json({ 
+      success: false, 
+      message: 'Authentication required' 
+    });
+  }
+
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ 
+      success: false, 
+      message: 'Admin access required' 
+    });
+  }
+
   next();
 };
 
 /**
- * Middleware to require authentication
- * 
- * @param req The Express request object
- * @param res The Express response object
- * @param next The Express next function
+ * Generate JWT token for authenticated user
+ * @param userId - User ID
+ * @returns JWT token
  */
-export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
-  if (!(req as any).isAuthenticated || !(req as any).isAuthenticated()) {
-    return res.status(401).json({
-      success: false,
-      message: "Authentication required"
-    });
-  }
-  next();
+export const generateToken = (userId: number): string => {
+  return jwt.sign({ id: userId }, JWT_SECRET, { expiresIn: JWT_EXPIRATION });
 };
 
-export default {
-  generateToken,
-  verifyToken,
-  authMiddleware,
-  adminMiddleware,
-  requireAuth,
-  hashPassword,
-  verifyPassword,
-  generateRandomToken,
-  generateVerificationLink,
-  generatePasswordResetLink,
-  isAdmin
+/**
+ * Verify JWT token
+ * @param token - JWT token
+ * @returns Decoded token payload or null if invalid
+ */
+export const verifyToken = (token: string): { id: number } | null => {
+  try {
+    return jwt.verify(token, JWT_SECRET) as { id: number };
+  } catch (error) {
+    console.error('Token verification error:', error);
+    return null;
+  }
 };

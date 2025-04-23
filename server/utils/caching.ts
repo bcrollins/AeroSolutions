@@ -1,122 +1,115 @@
 import { Request, Response, NextFunction } from 'express';
 
-// Cache durations in seconds
-export const CACHE_DURATIONS = {
-  STATIC: 60 * 60 * 24 * 7, // 7 days for static assets
-  IMAGES: 60 * 60 * 24 * 30, // 30 days for images
-  DATA: 60 * 60, // 1 hour for API data
-  HTML: 0, // No cache for HTML by default
+// Cache control types
+type CacheControlOptions = {
+  public?: boolean;
+  private?: boolean;
+  maxAge?: number;
+  sMaxAge?: number;
+  noCache?: boolean;
+  noStore?: boolean;
+  mustRevalidate?: boolean;
+  proxyRevalidate?: boolean;
+  immutable?: boolean;
 };
 
 /**
- * Generate Cache-Control headers based on content type and settings
+ * Apply cache control headers
+ * @param options - Cache control options
  */
-export function generateCacheHeaders(maxAge: number, isPublic = true, staleWhileRevalidate = 0) {
-  const directives = [
-    isPublic ? 'public' : 'private',
-    `max-age=${maxAge}`,
-  ];
+function setCacheControl(res: Response, options: CacheControlOptions): void {
+  const directives: string[] = [];
   
-  if (staleWhileRevalidate > 0) {
-    directives.push(`stale-while-revalidate=${staleWhileRevalidate}`);
-  }
+  // Add cache visibility
+  if (options.public) directives.push('public');
+  if (options.private) directives.push('private');
   
-  return directives.join(', ');
+  // Add cache duration
+  if (options.maxAge !== undefined) directives.push(`max-age=${options.maxAge}`);
+  if (options.sMaxAge !== undefined) directives.push(`s-maxage=${options.sMaxAge}`);
+  
+  // Add cache behavior
+  if (options.noCache) directives.push('no-cache');
+  if (options.noStore) directives.push('no-store');
+  if (options.mustRevalidate) directives.push('must-revalidate');
+  if (options.proxyRevalidate) directives.push('proxy-revalidate');
+  if (options.immutable) directives.push('immutable');
+  
+  res.setHeader('Cache-Control', directives.join(', '));
 }
 
 /**
- * Apply appropriate cache headers based on file type
- */
-export function setCacheHeaders(req: Request, res: Response) {
-  const path = req.path.toLowerCase();
-  let maxAge = CACHE_DURATIONS.STATIC;
-  let staleWhileRevalidate = 60 * 60; // 1 hour stale-while-revalidate by default
-  
-  // Determine cache duration based on file type
-  if (path.match(/\.(jpe?g|png|gif|webp|svg|ico)$/i)) {
-    maxAge = CACHE_DURATIONS.IMAGES;
-    staleWhileRevalidate = 60 * 60 * 24; // 1 day
-  } else if (path.match(/\.(css|js|woff2|ttf|otf|eot|woff)$/i)) {
-    // The longer cache time is justified since our assets have content hashes in the filename
-    maxAge = CACHE_DURATIONS.STATIC;
-  } else if (path.match(/\.(html|htm)$/i) || path === '/') {
-    maxAge = CACHE_DURATIONS.HTML;
-    staleWhileRevalidate = 0;
-  } else if (path.startsWith('/api/')) {
-    maxAge = CACHE_DURATIONS.DATA;
-  }
-  
-  // Set Cache-Control header
-  const cacheControl = generateCacheHeaders(maxAge, true, staleWhileRevalidate);
-  res.setHeader('Cache-Control', cacheControl);
-  
-  // Add Vary header for content negotiation - helps CDNs cache properly
-  res.setHeader('Vary', 'Accept-Encoding');
-  
-  // Set ETag for efficient caching with validation
-  if (!res.getHeader('ETag')) {
-    res.setHeader('ETag', `W/"${Date.now().toString(36)}"`);
-  }
-  
-  return res;
-}
-
-/**
- * Middleware to apply caching headers automatically
+ * Middleware for applying cache control headers based on path patterns
  */
 export function cachingMiddleware() {
   return (req: Request, res: Response, next: NextFunction) => {
-    // Skip for non-GET/HEAD requests
-    if (!['GET', 'HEAD'].includes(req.method)) {
-      return next();
+    const path = req.path;
+    
+    // API routes - minimal caching
+    if (path.startsWith('/api/')) {
+      setCacheControl(res, {
+        private: true,
+        maxAge: 5,  // 5 seconds
+        mustRevalidate: true
+      });
     }
-    
-    // Store the original send function
-    const originalSend = res.send;
-    
-    // Override the send function to apply caching headers before sending
-    res.send = function(body) {
-      setCacheHeaders(req, res);
-      return originalSend.call(this, body);
-    };
+    // Static assets - aggressive caching
+    else if (path.match(/\.(css|js|jpg|jpeg|png|gif|svg|ico|woff|woff2|ttf|eot)$/)) {
+      setCacheControl(res, {
+        public: true,
+        maxAge: 86400,  // 1 day
+        sMaxAge: 604800,  // 1 week
+        immutable: true
+      });
+    }
+    // HTML content - moderate caching
+    else if (path.endsWith('.html') || path === '/') {
+      setCacheControl(res, {
+        public: true,
+        maxAge: 300,  // 5 minutes
+        mustRevalidate: true
+      });
+    }
+    // Default - cautious caching
+    else {
+      setCacheControl(res, {
+        private: true,
+        maxAge: 60,  // 1 minute
+        mustRevalidate: true
+      });
+    }
     
     next();
   };
 }
 
 /**
- * Middleware to handle conditional requests (If-None-Match, If-Modified-Since)
+ * Middleware for conditional request handling (ETag, If-Modified-Since)
  */
 export function conditionalRequestMiddleware() {
   return (req: Request, res: Response, next: NextFunction) => {
-    // Only process GET/HEAD requests
-    if (!['GET', 'HEAD'].includes(req.method)) {
-      return next();
-    }
+    const originalSend = res.send;
     
-    // Set Last-Modified header if not present
-    if (!res.getHeader('Last-Modified')) {
-      res.setHeader('Last-Modified', new Date().toUTCString());
-    }
-    
-    // Implement HTTP conditional request handling
-    const ifNoneMatch = req.headers['if-none-match'];
-    const ifModifiedSince = req.headers['if-modified-since'];
-    
-    if (ifNoneMatch && res.getHeader('ETag') === ifNoneMatch) {
-      res.status(304).end();
-      return;
-    }
-    
-    if (ifModifiedSince) {
-      const lastModified = new Date(res.getHeader('Last-Modified') as string).getTime();
-      const ifModifiedSinceDate = new Date(ifModifiedSince as string).getTime();
-      
-      if (lastModified <= ifModifiedSinceDate) {
-        res.status(304).end();
-        return;
+    // Override send method to handle ETags
+    res.send = function(body) {
+      // Skip for certain content types or empty responses
+      if (!res.get('Content-Type') || !body) {
+        return originalSend.call(this, body);
       }
-    }
+      
+      // Generate simple ETag based on content length and hash
+      const etag = `W/"${body.length}-${Date.now().toString(36)}"`;
+      res.setHeader('ETag', etag);
+      
+      // Handle 304 Not Modified responses
+      const ifNoneMatch = req.headers['if-none-match'];
+      if (ifNoneMatch === etag) {
+        res.status(304).end();
+        return this;
+      }
+      
+      return originalSend.call(this, body);
+    };
     
     next();
   };

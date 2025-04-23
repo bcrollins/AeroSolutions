@@ -1,129 +1,132 @@
 import { Request, Response, NextFunction } from 'express';
-import { validationResult } from 'express-validator';
 import { z } from 'zod';
 
 /**
- * Middleware that validates request body against a Zod schema
- * 
- * @param schema The Zod schema to validate against
- * @returns Express middleware function
+ * Middleware factory to validate request using Zod schema
+ * @param schema - Zod schema for validation
+ * @param source - Source of data to validate (default: 'body')
  */
-export function validateZodSchema(schema: z.ZodType<any, any, any>) {
-  return async (req: Request, res: Response, next: NextFunction) => {
+export function validateRequest(schema: z.Schema, source: 'body' | 'query' | 'params' = 'body') {
+  return (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await schema.safeParseAsync(req.body);
+      // Select data source to validate
+      const data = req[source];
+      
+      // Validate data against schema
+      const result = schema.safeParse(data);
       
       if (!result.success) {
+        const errors = result.error.format();
+        
         return res.status(400).json({
           success: false,
-          error: 'Validation error',
-          details: result.error.errors
+          message: 'Validation failed',
+          errors
         });
       }
       
-      // Update the request body with the parsed data
-      req.body = result.data;
-      
+      // Replace validated data
+      req[source] = result.data;
       next();
     } catch (error) {
       console.error('Validation error:', error);
+      
       return res.status(500).json({
         success: false,
-        error: 'Internal server error during validation'
+        message: 'Validation error'
       });
     }
   };
 }
 
 /**
- * Middleware that validates request parameters against a Zod schema
- * 
- * @param schema The Zod schema to validate against
- * @returns Express middleware function
+ * Validate OpenAI text completion request
  */
-export function validateParams(schema: z.ZodType<any, any, any>) {
-  return async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const result = await schema.safeParseAsync(req.params);
-      
-      if (!result.success) {
-        return res.status(400).json({
-          success: false,
-          error: 'Parameter validation error',
-          details: result.error.errors
-        });
-      }
-      
-      // Update the request parameters with the parsed data
-      req.params = result.data;
-      
-      next();
-    } catch (error) {
-      console.error('Parameter validation error:', error);
-      return res.status(500).json({
-        success: false,
-        error: 'Internal server error during parameter validation'
-      });
-    }
-  };
-}
+export const validateCompletionRequest = (req: Request, res: Response, next: NextFunction) => {
+  const schema = z.object({
+    prompt: z.string().min(1, 'Prompt is required'),
+    model: z.string().optional(),
+    maxTokens: z.number().positive().optional(),
+    temperature: z.number().min(0).max(1).optional()
+  });
+  
+  const result = schema.safeParse(req.body);
+  
+  if (!result.success) {
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid request data',
+      details: result.error.errors
+    });
+  }
+  
+  req.body = result.data;
+  next();
+};
 
 /**
- * Middleware that validates request query parameters against a Zod schema
- * 
- * @param schema The Zod schema to validate against
- * @returns Express middleware function
+ * Validate OpenAI image generation request
  */
-export function validateQuery(schema: z.ZodType<any, any, any>) {
-  return async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const result = await schema.safeParseAsync(req.query);
-      
-      if (!result.success) {
-        return res.status(400).json({
-          success: false,
-          error: 'Query validation error',
-          details: result.error.errors
-        });
-      }
-      
-      // Update the request query with the parsed data
-      req.query = result.data;
-      
-      next();
-    } catch (error) {
-      console.error('Query validation error:', error);
-      return res.status(500).json({
-        success: false,
-        error: 'Internal server error during query validation'
-      });
-    }
-  };
-}
+export const validateImageRequest = (req: Request, res: Response, next: NextFunction) => {
+  const schema = z.object({
+    prompt: z.string().min(1, 'Prompt is required'),
+    size: z.enum(['256x256', '512x512', '1024x1024']).optional()
+  });
+  
+  const result = schema.safeParse(req.body);
+  
+  if (!result.success) {
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid request data',
+      details: result.error.errors
+    });
+  }
+  
+  req.body = result.data;
+  next();
+};
 
 /**
- * Middleware that checks for express-validator validation errors
- * 
- * @param errorMessage The error message to display if validation fails
- * @returns Express middleware function
+ * Validate OpenAI sentiment analysis request
  */
-export function validateRequest(errorMessage: string) {
-  return (req: Request, res: Response, next: NextFunction) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        message: errorMessage,
-        errors: errors.array()
-      });
-    }
-    next();
-  };
-}
+export const validateSentimentRequest = (req: Request, res: Response, next: NextFunction) => {
+  const schema = z.object({
+    text: z.string().min(1, 'Text is required')
+  });
+  
+  const result = schema.safeParse(req.body);
+  
+  if (!result.success) {
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid request data',
+      details: result.error.errors
+    });
+  }
+  
+  req.body = result.data;
+  next();
+};
 
-export default {
-  validateZodSchema,
-  validateParams,
-  validateQuery,
-  validateRequest
+/**
+ * Validate OpenAI text summarization request
+ */
+export const validateSummaryRequest = (req: Request, res: Response, next: NextFunction) => {
+  const schema = z.object({
+    text: z.string().min(10, 'Text must be at least 10 characters')
+  });
+  
+  const result = schema.safeParse(req.body);
+  
+  if (!result.success) {
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid request data',
+      details: result.error.errors
+    });
+  }
+  
+  req.body = result.data;
+  next();
 };

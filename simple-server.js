@@ -1,178 +1,189 @@
 import express from 'express';
+import { Pool } from 'pg';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-import dotenv from 'dotenv';
-import { OpenAI } from 'openai';
 
-// Load environment variables
-dotenv.config();
+// ES Module compatibility for __dirname equivalent
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// Database configuration
-import pg from 'pg';
-const { Pool } = pg;
-
-// Create a pool instance
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
-
-// Test database connection
-async function testDatabaseConnection() {
-  try {
-    const client = await pool.connect();
-    const result = await client.query('SELECT NOW() as now');
-    client.release();
-    console.log('Database connection test successful at:', result.rows[0].now);
-    return true;
-  } catch (error) {
-    console.error('Database connection test failed:', error);
-    return false;
-  }
+// Check for OpenAI API key
+if (!process.env.OPENAI_API_KEY) {
+  console.warn('Warning: OPENAI_API_KEY environment variable is not set. OpenAI API calls will fail.');
 }
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-// Get current file's directory
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Initialize Express app
+// Create Express application
 const app = express();
-
-// Middleware
 app.use(express.json());
 app.use(express.static('public'));
 
-// Basic routes for HTML pages
-app.get('/test', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'test.html'));
-});
+// Database connection check
+async function testDatabaseConnection() {
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+  });
 
-app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-
-// Database test endpoint
-app.get('/api/test-db', async (req, res) => {
   try {
-    // Test the database connection
-    const success = await testDatabaseConnection();
-    
-    if (success) {
-      const result = await pool.query('SELECT NOW() as now');
-      return res.status(200).json({
-        status: 'success',
-        time: { now: result.rows[0].now },
-        message: 'Database connection successful'
-      });
-    } else {
-      return res.status(500).json({
-        status: 'error',
-        message: 'Database connection test failed'
-      });
-    }
+    const result = await pool.query('SELECT NOW() as current_time');
+    console.log('Database connection successful:', result.rows[0].current_time);
+    return true;
   } catch (error) {
-    console.error('Error testing database connection:', error);
-    return res.status(500).json({
-      status: 'error',
-      message: 'Database connection error',
-      error: error.message
-    });
+    console.error('Database connection failed:', error.message);
+    return false;
+  } finally {
+    await pool.end();
   }
+}
+
+// Create a basic landing page if it doesn't exist
+const publicDir = path.join(__dirname, 'public');
+const indexPath = path.join(publicDir, 'index.html');
+
+if (!fs.existsSync(publicDir)) {
+  fs.mkdirSync(publicDir, { recursive: true });
+}
+
+if (!fs.existsSync(indexPath)) {
+  const landingPage = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenAI API Service - Simple Server</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #2a2a72;
+    }
+    .card {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      margin: 20px 0;
+    }
+    .status {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-weight: bold;
+      margin-left: 10px;
+    }
+    .active {
+      background: #d4edda;
+      color: #155724;
+    }
+    .inactive {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    code {
+      background: #f1f1f1;
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-family: 'Courier New', Courier, monospace;
+    }
+  </style>
+</head>
+<body>
+  <h1>OpenAI API Service</h1>
+  
+  <div class="card">
+    <h2>Server Status <span class="status active">Running</span></h2>
+    <p>The simple server is currently running on port 8080.</p>
+  </div>
+
+  <div class="card">
+    <h2>API Status</h2>
+    <p>OpenAI API Key: <code>${process.env.OPENAI_API_KEY ? 'Configured' : 'Not configured'}</code></p>
+    <p>Database: <span id="db-status">Checking...</span></p>
+  </div>
+
+  <div class="card">
+    <h2>Available Endpoints</h2>
+    <ul>
+      <li><code>GET /api/status</code> - Check API status</li>
+      <li><code>POST /api/test</code> - Test endpoint that returns the request body</li>
+    </ul>
+  </div>
+
+  <script>
+    // Check database status via API
+    fetch('/api/status')
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('db-status').textContent = data.database ? 'Connected' : 'Not connected';
+        document.getElementById('db-status').className = data.database ? 'status active' : 'status inactive';
+      })
+      .catch(error => {
+        document.getElementById('db-status').textContent = 'Error checking status';
+        document.getElementById('db-status').className = 'status inactive';
+      });
+  </script>
+</body>
+</html>`;
+
+  fs.writeFileSync(indexPath, landingPage);
+  console.log('Created landing page at', indexPath);
+}
+
+// API routes
+app.get('/api/status', async (req, res) => {
+  const dbConnected = await testDatabaseConnection();
+  
+  res.json({
+    success: true,
+    server: 'running',
+    database: dbConnected,
+    openai: process.env.OPENAI_API_KEY ? 'configured' : 'not configured',
+    timestamp: new Date()
+  });
 });
 
-// API endpoint to generate text using OpenAI
-app.post('/api/generate', async (req, res) => {
-  try {
-    const { prompt } = req.body;
-    
-    if (!prompt) {
-      return res.status(400).json({
-        success: false,
-        message: 'Prompt is required'
-      });
-    }
-
-    // Check if OpenAI API key is available
-    if (!process.env.OPENAI_API_KEY) {
-      console.warn('OPENAI_API_KEY not found in environment variables, using mock response');
-      return res.json({
-        success: true,
-        result: `This is a demonstration response for: "${prompt}"`,
-        model: "gpt-4o",
-        usage: { prompt_tokens: prompt.length, completion_tokens: 20, total_tokens: prompt.length + 20 }
-      });
-    }
-
-    // Call OpenAI API
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-      messages: [
-        { 
-          "role": "system", 
-          "content": "You are a helpful assistant that provides concise, accurate answers." 
-        },
-        { 
-          "role": "user", 
-          "content": prompt 
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 1000
-    });
-
-    // Log the request to the database
-    try {
-      await pool.query(
-        'INSERT INTO logs (level, message, context, source) VALUES ($1, $2, $3, $4)',
-        ['info', 'OpenAI API request', JSON.stringify({ prompt }), '/api/generate']
-      );
-    } catch (dbError) {
-      console.error('Error logging to database:', dbError);
-      // Continue processing even if logging fails
-    }
-
-    // Return the OpenAI response
-    res.json({
-      success: true,
-      result: completion.choices[0].message.content,
-      model: completion.model,
-      usage: completion.usage
-    });
-  } catch (error) {
-    console.error('Error in /api/generate endpoint:', error);
-    
-    // Log the error to the database
-    try {
-      await pool.query(
-        'INSERT INTO logs (level, message, context, source) VALUES ($1, $2, $3, $4)',
-        ['error', 'Error generating content', JSON.stringify({ error: error.message }), '/api/generate']
-      );
-    } catch (dbError) {
-      console.error('Error logging to database:', dbError);
-      // Continue processing even if logging fails
-    }
-    
-    res.status(500).json({
-      success: false,
-      message: 'Error generating content',
-      error: error.message
-    });
-  }
+app.post('/api/test', (req, res) => {
+  res.json({
+    success: true,
+    received: req.body,
+    timestamp: new Date()
+  });
 });
 
-// Start server
+// Root route
+app.get('/', (req, res) => {
+  res.sendFile(indexPath);
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'Endpoint not found',
+    path: req.path
+  });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  res.status(500).json({
+    success: false,
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'production' ? null : err.message
+  });
+});
+
+// Start server on port 8080 and listen on all interfaces
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on http://0.0.0.0:${PORT}`);
-  console.log('Available routes:');
-  console.log('  - / (Landing page)');
-  console.log('  - /test (OpenAI API testing page)');
-  console.log('  - /login (Login page)');
-  console.log('  - /api/generate (Generate text with OpenAI API)');
+  console.log(`Simple server running at http://0.0.0.0:${PORT}`);
+  console.log('API status available at /api/status');
 });
