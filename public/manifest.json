@@ -1,6 +1,6 @@
 {
-  "name": "Aero Solutions: Aviation Software Development",
-  "short_name": "Aero Solutions",
+  "name": "ROLLINSX: Web Development",
+  "short_name": "ROLLINSX",
   "description": "Full-stack aviation software development company specializing in custom solutions built by pilots for pilots.",
   "start_url": "/",
   "display": "standalone",
@@ -64,14 +64,14 @@
       "sizes": "1280x800",
       "type": "image/png",
       "platform": "wide",
-      "label": "Aero Solutions Homepage on Desktop"
+      "label": "ROLLINSX Homepage on Desktop"
     },
     {
       "src": "/screenshots/platforms-mobile.png",
       "sizes": "750x1334",
       "type": "image/png",
       "platform": "narrow",
-      "label": "Aviation Platforms on Mobile"
+      "label": "ROLLINSX Platforms on Mobile"
     }
   ],
   "shortcuts": [
@@ -93,7 +93,7 @@
   "related_applications": [
     {
       "platform": "webapp",
-      "url": "https://aerosolutions.dev/manifest.json"
+      "url": "https://rollinsx.dev/manifest.json"
     }
   ]
 }

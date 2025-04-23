@@ -1,6 +1,6 @@
 {
-  "name": "Aero Solutions",
-  "short_name": "AeroSol",
+  "name": "ROLLINSX",
+  "short_name": "ROLLINSX",
   "description": "Premier aviation software development and solutions provider",
   "theme_color": "#1E3A8A",
   "background_color": "#ffffff",
@@ -65,14 +65,14 @@
       "sizes": "1280x800",
       "type": "image/png",
       "platform": "wide",
-      "label": "Aero Solutions Homepage"
+      "label": "ROLLINSX Homepage"
     },
     {
       "src": "/screenshots/mobile-home.png",
       "sizes": "750x1334",
       "type": "image/png",
       "platform": "narrow",
-      "label": "Aero Solutions Mobile View"
+      "label": "ROLLINSX Mobile View"
     }
   ],
   "shortcuts": [
