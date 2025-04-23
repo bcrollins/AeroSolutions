@@ -4,8 +4,33 @@
  * Handles logic for contact-related routes
  */
 
-const ContactModel = require('../models/contact');
-const { validationResult } = require('express-validator');
+const { body } = require('express-validator');
+const contactModel = require('../models/contact');
+const logger = require('../config/logger');
+const { handleValidationErrors } = require('../middlewares/validator');
+
+// Validation rules for contact submission
+const contactValidationRules = [
+  body('name')
+    .notEmpty().withMessage('Name is required')
+    .isLength({ min: 2, max: 100 }).withMessage('Name must be between 2 and 100 characters'),
+  
+  body('email')
+    .notEmpty().withMessage('Email is required')
+    .isEmail().withMessage('Must be a valid email address')
+    .normalizeEmail(),
+  
+  body('subject')
+    .notEmpty().withMessage('Subject is required')
+    .isLength({ min: 5, max: 200 }).withMessage('Subject must be between 5 and 200 characters'),
+  
+  body('message')
+    .notEmpty().withMessage('Message is required')
+    .isLength({ min: 10 }).withMessage('Message must be at least 10 characters long'),
+  
+  // Apply validation
+  handleValidationErrors
+];
 
 /**
  * Submit a contact form
@@ -14,40 +39,26 @@ const { validationResult } = require('express-validator');
  */
 async function submitContact(req, res) {
   try {
-    // Validate request
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        errors: errors.array()
-      });
-    }
-    
     const { name, email, subject, message } = req.body;
     
+    // Log contact submission
+    logger.info(`Contact form submission from ${name} (${email}): ${subject}`);
+    
     // Submit contact form
-    const result = await ContactModel.submit({
+    const contact = await contactModel.submit({
       name,
       email,
       subject,
       message
     });
     
-    // Log submission
-    console.info('Contact form submitted:', {
-      name,
-      email,
-      subject: subject || '(No subject)',
-      date: new Date().toISOString()
-    });
-    
     return res.status(201).json({
       success: true,
-      data: result,
-      message: 'Contact form submitted successfully'
+      message: 'Contact form submitted successfully',
+      data: contact
     });
   } catch (error) {
-    console.error('Error in contactController.submitContact:', error);
+    logger.error('Error in contactController.submitContact:', error);
     return res.status(500).json({
       success: false,
       message: 'Failed to submit contact form',
@@ -63,41 +74,31 @@ async function submitContact(req, res) {
  */
 async function getAllContacts(req, res) {
   try {
-    // Check if user is admin (middleware should handle this)
-    if (!req.user || req.user.role !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        message: 'Unauthorized access'
-      });
-    }
+    const { 
+      limit = 100, 
+      offset = 0, 
+      status, 
+      sortBy = 'created_at', 
+      sortOrder = 'DESC' 
+    } = req.query;
     
-    // Parse query parameters
-    const options = {
-      limit: req.query.limit ? parseInt(req.query.limit) : 100,
-      offset: req.query.offset ? parseInt(req.query.offset) : 0,
-      status: req.query.status,
-      sortBy: req.query.sortBy || 'created_at',
-      sortOrder: req.query.sortOrder || 'DESC'
-    };
+    logger.info('Fetching all contact submissions', { limit, offset, status, sortBy, sortOrder });
     
-    // Get contact submissions
-    const contacts = await ContactModel.findAll(options);
-    
-    // Get counts by status
-    const counts = await ContactModel.getCounts();
+    const contacts = await contactModel.findAll({
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      status,
+      sortBy,
+      sortOrder
+    });
     
     return res.status(200).json({
       success: true,
       data: contacts,
-      count: contacts.length,
-      counts,
-      pagination: {
-        limit: options.limit,
-        offset: options.offset
-      }
+      count: contacts.length
     });
   } catch (error) {
-    console.error('Error in contactController.getAllContacts:', error);
+    logger.error('Error in contactController.getAllContacts:', error);
     return res.status(500).json({
       success: false,
       message: 'Failed to retrieve contact submissions',
@@ -113,18 +114,11 @@ async function getAllContacts(req, res) {
  */
 async function getContactById(req, res) {
   try {
-    // Check if user is admin (middleware should handle this)
-    if (!req.user || req.user.role !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        message: 'Unauthorized access'
-      });
-    }
-    
     const { id } = req.params;
     
-    // Get contact submission
-    const contact = await ContactModel.findById(parseInt(id));
+    logger.info(`Fetching contact submission with ID ${id}`);
+    
+    const contact = await contactModel.findById(parseInt(id));
     
     if (!contact) {
       return res.status(404).json({
@@ -138,7 +132,7 @@ async function getContactById(req, res) {
       data: contact
     });
   } catch (error) {
-    console.error('Error in contactController.getContactById:', error);
+    logger.error('Error in contactController.getContactById:', error);
     return res.status(500).json({
       success: false,
       message: 'Failed to retrieve contact submission',
@@ -154,14 +148,6 @@ async function getContactById(req, res) {
  */
 async function updateContactStatus(req, res) {
   try {
-    // Check if user is admin (middleware should handle this)
-    if (!req.user || req.user.role !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        message: 'Unauthorized access'
-      });
-    }
-    
     const { id } = req.params;
     const { status } = req.body;
     
@@ -170,21 +156,28 @@ async function updateContactStatus(req, res) {
     if (!validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid status value',
-        validValues: validStatuses
+        message: `Invalid status. Must be one of: ${validStatuses.join(', ')}`
       });
     }
     
-    // Update contact status
-    const contact = await ContactModel.updateStatus(parseInt(id), status);
+    logger.info(`Updating contact submission ${id} status to ${status}`);
+    
+    const contact = await contactModel.updateStatus(parseInt(id), status);
+    
+    if (!contact) {
+      return res.status(404).json({
+        success: false,
+        message: 'Contact submission not found'
+      });
+    }
     
     return res.status(200).json({
       success: true,
-      data: contact,
-      message: 'Contact status updated successfully'
+      message: 'Contact status updated successfully',
+      data: contact
     });
   } catch (error) {
-    console.error('Error in contactController.updateContactStatus:', error);
+    logger.error('Error in contactController.updateContactStatus:', error);
     return res.status(500).json({
       success: false,
       message: 'Failed to update contact status',
@@ -200,20 +193,13 @@ async function updateContactStatus(req, res) {
  */
 async function deleteContact(req, res) {
   try {
-    // Check if user is admin (middleware should handle this)
-    if (!req.user || req.user.role !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        message: 'Unauthorized access'
-      });
-    }
-    
     const { id } = req.params;
     
-    // Delete contact submission
-    const success = await ContactModel.remove(parseInt(id));
+    logger.info(`Deleting contact submission with ID ${id}`);
     
-    if (!success) {
+    const deleted = await contactModel.remove(parseInt(id));
+    
+    if (!deleted) {
       return res.status(404).json({
         success: false,
         message: 'Contact submission not found'
@@ -225,7 +211,7 @@ async function deleteContact(req, res) {
       message: 'Contact submission deleted successfully'
     });
   } catch (error) {
-    console.error('Error in contactController.deleteContact:', error);
+    logger.error('Error in contactController.deleteContact:', error);
     return res.status(500).json({
       success: false,
       message: 'Failed to delete contact submission',
@@ -234,10 +220,37 @@ async function deleteContact(req, res) {
   }
 }
 
+/**
+ * Get contact submission counts by status
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+async function getContactCounts(req, res) {
+  try {
+    logger.info('Fetching contact submission counts by status');
+    
+    const counts = await contactModel.getCounts();
+    
+    return res.status(200).json({
+      success: true,
+      data: counts
+    });
+  } catch (error) {
+    logger.error('Error in contactController.getContactCounts:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve contact counts',
+      error: error.message
+    });
+  }
+}
+
 module.exports = {
+  contactValidationRules,
   submitContact,
   getAllContacts,
   getContactById,
   updateContactStatus,
-  deleteContact
+  deleteContact,
+  getContactCounts
 };
