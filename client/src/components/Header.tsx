@@ -1,4 +1,4 @@
-import { useState } from 'react';  
+import { useState, useEffect } from 'react';  
 import { Link } from 'wouter';  
 import { Menu, X, ChevronDown } from 'lucide-react';  
 import ClientPreviewModal from "./ClientPreviewModal";
@@ -10,9 +10,42 @@ export default function Header() {
   const [isSupportDropdownOpen, setIsSupportDropdownOpen] = useState(false);  
   const [clientPreviewOpen, setClientPreviewOpen] = useState(false);
 
+  // Close all dropdowns
+  const closeAllDropdowns = () => {
+    setIsSolutionsDropdownOpen(false);
+    setIsSupportDropdownOpen(false);
+  };
+  
+  // Add event listener to close dropdowns when clicking outside
+  useState(() => {
+    const handleDocumentClick = () => {
+      closeAllDropdowns();
+    };
+    
+    // Only add the listener if either dropdown is open
+    if (isSolutionsDropdownOpen || isSupportDropdownOpen) {
+      document.addEventListener('click', handleDocumentClick);
+      return () => {
+        document.removeEventListener('click', handleDocumentClick);
+      };
+    }
+  }, [isSolutionsDropdownOpen, isSupportDropdownOpen]);
+
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);  
-  const toggleSolutionsDropdown = () => setIsSolutionsDropdownOpen(!isSolutionsDropdownOpen);  
-  const toggleSupportDropdown = () => setIsSupportDropdownOpen(!isSupportDropdownOpen);  
+  
+  const toggleSolutionsDropdown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsSolutionsDropdownOpen(!isSolutionsDropdownOpen);
+    // Close the other dropdown when opening this one
+    if (!isSolutionsDropdownOpen) setIsSupportDropdownOpen(false);
+  };
+  
+  const toggleSupportDropdown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsSupportDropdownOpen(!isSupportDropdownOpen);
+    // Close the other dropdown when opening this one
+    if (!isSupportDropdownOpen) setIsSolutionsDropdownOpen(false);
+  };
   const toggleClientPreview = () => setClientPreviewOpen(!clientPreviewOpen);
 
   const menuItems = [  
@@ -78,6 +111,10 @@ export default function Header() {
                       <Link  
                         key={subItem.label}  
                         href={subItem.path}  
+                        onClick={() => {
+                          setIsSolutionsDropdownOpen(false);
+                          setIsSupportDropdownOpen(false);
+                        }}
                         className="block px-4 py-2 text-[#1E3A8A] hover:bg-[#00D1D1] hover:text-white transition-colors duration-200"  
                       >  
                         {subItem.label}  
@@ -131,7 +168,11 @@ export default function Header() {
                             <Link  
                               key={subItem.label}  
                               href={subItem.path}  
-                              onClick={toggleMobileMenu}  
+                              onClick={() => {
+                                toggleMobileMenu();
+                                setIsSolutionsDropdownOpen(false);
+                                setIsSupportDropdownOpen(false);
+                              }}  
                               className="block text-gray-200 hover:text-[#D4A017]"  
                             >  
                               {subItem.label}  

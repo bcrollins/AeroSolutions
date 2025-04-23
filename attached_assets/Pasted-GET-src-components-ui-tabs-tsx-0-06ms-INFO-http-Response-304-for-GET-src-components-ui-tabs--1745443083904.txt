@@ -1,0 +1,261 @@
+GET /src/components/ui/tabs.tsx - 0.06ms
+[INFO] [http] Response 304 for GET /src/components/ui/tabs.tsx (0ms)
+[INFO] [http] Request GET /src/components/MarketplaceItems.tsx
+GET /src/components/MarketplaceItems.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/MarketplaceItems.tsx (0ms)
+[INFO] [http] Request GET /src/components/Advertisement.tsx
+GET /src/components/Advertisement.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/Advertisement.tsx (0ms)
+[INFO] [http] Request GET /src/components/ui/input.tsx
+GET /src/components/ui/input.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/ui/input.tsx (0ms)
+[INFO] [http] Request GET /src/data/marketplaceCategories.ts
+GET /src/data/marketplaceCategories.ts - 0.05ms
+[INFO] [http] Response 304 for GET /src/data/marketplaceCategories.ts (0ms)
+[INFO] [http] Request GET /src/components/ui/skeleton.tsx
+GET /src/components/ui/skeleton.tsx - 0.07ms
+[INFO] [http] Response 304 for GET /src/components/ui/skeleton.tsx (0ms)
+[INFO] [http] Request GET /src/components/PaymentForm.tsx
+GET /src/components/PaymentForm.tsx - 0.07ms
+[INFO] [http] Response 304 for GET /src/components/PaymentForm.tsx (1ms)
+[INFO] [http] Request GET /src/components/ui/label.tsx
+GET /src/components/ui/label.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/ui/label.tsx (0ms)
+[INFO] [http] Request GET /src/components/ui/accordion.tsx
+GET /src/components/ui/accordion.tsx - 0.10ms
+[INFO] [http] Response 304 for GET /src/components/ui/accordion.tsx (0ms)
+[INFO] [http] Request GET /@fs/home/runner/workspace/attached_assets/D22397D6-2EF2-45C5-A107-D6BD5E7210F4.jpeg?import
+GET /@fs/home/runner/workspace/attached_assets/D22397D6-2EF2-45C5-A107-D6BD5E7210F4.jpeg?import - 0.36ms
+[INFO] [http] Response 304 for GET /@fs/home/runner/workspace/attached_assets/D22397D6-2EF2-45C5-A107-D6BD5E7210F4.jpeg?import (0ms)
+[INFO] [http] Request GET /src/components/ui/badge.tsx
+GET /src/components/ui/badge.tsx - 0.06ms
+[INFO] [http] Response 304 for GET /src/components/ui/badge.tsx (0ms)
+[INFO] [http] Request GET /@fs/home/runner/workspace/attached_assets/IMG_0165.jpeg?import
+GET /@fs/home/runner/workspace/attached_assets/IMG_0165.jpeg?import - 0.31ms
+[INFO] [http] Response 304 for GET /@fs/home/runner/workspace/attached_assets/IMG_0165.jpeg?import (0ms)
+[INFO] [http] Request GET /src/main.tsx?v=ZuAiVPhoR2wC7tYxPrf1u
+GET /src/main.tsx?v=ZuAiVPhoR2wC7tYxPrf1u - 0.33ms
+[INFO] [http] Response 200 for GET /src/main.tsx?v=ZuAiVPhoR2wC7tYxPrf1u (0ms)
+[INFO] [http] Request GET /@fs/home/runner/workspace/attached_assets/a22i5967.jpeg?import
+GET /@fs/home/runner/workspace/attached_assets/a22i5967.jpeg?import - 0.27ms
+[INFO] [http] Response 304 for GET /@fs/home/runner/workspace/attached_assets/a22i5967.jpeg?import (0ms)
+[INFO] [http] Request GET /@fs/home/runner/workspace/attached_assets/IMG_1431.jpeg?import
+GET /@fs/home/runner/workspace/attached_assets/IMG_1431.jpeg?import - 0.30ms
+[INFO] [http] Response 304 for GET /@fs/home/runner/workspace/attached_assets/IMG_1431.jpeg?import (0ms)
+[INFO] [http] Request GET /src/components/ui/alert.tsx
+GET /src/components/ui/alert.tsx - 0.04ms
+[INFO] [http] Response 304 for GET /src/components/ui/alert.tsx (1ms)
+[INFO] [http] Request GET /src/components/MainLayout.tsx
+GET /src/components/MainLayout.tsx - 0.06ms
+[INFO] [http] Response 304 for GET /src/components/MainLayout.tsx (0ms)
+[INFO] [http] Request GET /src/components/ui/textarea.tsx
+GET /src/components/ui/textarea.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/ui/textarea.tsx (0ms)
+[INFO] [http] Request GET /@react-refresh
+GET /@react-refresh - 0.05ms
+[INFO] [http] Response 304 for GET /@react-refresh (0ms)
+[INFO] [http] Request GET /src/components/ui/dropdown-menu.tsx
+GET /src/components/ui/dropdown-menu.tsx - 0.04ms
+[INFO] [http] Response 304 for GET /src/components/ui/dropdown-menu.tsx (0ms)
+[INFO] [http] Request GET /src/components/ContentGenerator.tsx
+GET /src/components/ContentGenerator.tsx - 0.04ms
+[INFO] [http] Response 304 for GET /src/components/ContentGenerator.tsx (0ms)
+[INFO] [http] Request GET /src/components/AdminLayout.tsx
+GET /src/components/AdminLayout.tsx - 0.04ms
+[INFO] [http] Response 304 for GET /src/components/AdminLayout.tsx (0ms)
+[INFO] [http] Request GET /src/components/ServiceRecommendations.tsx
+GET /src/components/ServiceRecommendations.tsx - 0.04ms
+[INFO] [http] Response 304 for GET /src/components/ServiceRecommendations.tsx (0ms)
+[INFO] [http] Request GET /src/components/ui/table.tsx
+GET /src/components/ui/table.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/ui/table.tsx (0ms)
+[INFO] [http] Request GET /src/components/BlogPost.tsx
+GET /src/components/BlogPost.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/BlogPost.tsx (0ms)
+[INFO] [http] Request GET /src/components/FeedbackForm.tsx
+GET /src/components/FeedbackForm.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/FeedbackForm.tsx (0ms)
+[INFO] [http] Request GET /src/components/BlogSeoAnalysis.tsx
+GET /src/components/BlogSeoAnalysis.tsx - 0.06ms
+[INFO] [http] Response 304 for GET /src/components/BlogSeoAnalysis.tsx (0ms)
+[INFO] [http] Request GET /src/components/MockupSuggestionForm.tsx
+GET /src/components/MockupSuggestionForm.tsx - 0.07ms
+[INFO] [http] Response 304 for GET /src/components/MockupSuggestionForm.tsx (0ms)
+[INFO] [http] Request GET /src/components/ui/page-header.tsx
+GET /src/components/ui/page-header.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/ui/page-header.tsx (0ms)
+[INFO] [http] Request GET /src/components/SeoStrategySuggestions.tsx
+GET /src/components/SeoStrategySuggestions.tsx - 0.04ms
+[INFO] [http] Response 304 for GET /src/components/SeoStrategySuggestions.tsx (0ms)
+[INFO] [http] Request GET /src/components/MockupEngagementAnalytics.tsx
+GET /src/components/MockupEngagementAnalytics.tsx - 0.04ms
+[INFO] [http] Response 304 for GET /src/components/MockupEngagementAnalytics.tsx (0ms)
+[INFO] [http] Request GET /src/components/MarketplaceServiceEngagement.tsx
+GET /src/components/MarketplaceServiceEngagement.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/MarketplaceServiceEngagement.tsx (0ms)
+[INFO] [http] Request GET /src/components/AchievementDisplay.tsx
+GET /src/components/AchievementDisplay.tsx - 0.04ms
+[INFO] [http] Response 304 for GET /src/components/AchievementDisplay.tsx (0ms)
+[INFO] [http] Request GET /src/components/ui/breadcrumb.tsx
+GET /src/components/ui/breadcrumb.tsx - 0.04ms
+[INFO] [http] Response 304 for GET /src/components/ui/breadcrumb.tsx (0ms)
+[INFO] [http] Request GET /src/components/ui/select.tsx
+GET /src/components/ui/select.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/ui/select.tsx (0ms)
+[INFO] [http] Request GET /src/components/SocialPostSuggestions.tsx
+GET /src/components/SocialPostSuggestions.tsx - 0.04ms
+[INFO] [http] Response 304 for GET /src/components/SocialPostSuggestions.tsx (0ms)
+[INFO] [http] Request GET /src/components/ui/dialog.tsx
+GET /src/components/ui/dialog.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/ui/dialog.tsx (0ms)
+[INFO] [http] Request GET /src/components/ContentEngagementAnalytics.tsx
+GET /src/components/ContentEngagementAnalytics.tsx - 0.04ms
+[INFO] [http] Response 304 for GET /src/components/ContentEngagementAnalytics.tsx (0ms)
+[INFO] [http] Request GET /src/components/WebsiteColorSuggestions.tsx
+GET /src/components/WebsiteColorSuggestions.tsx - 0.04ms
+[INFO] [http] Response 304 for GET /src/components/WebsiteColorSuggestions.tsx (0ms)
+[INFO] [http] Request GET /src/components/WebsiteLayoutSuggestions.tsx
+GET /src/components/WebsiteLayoutSuggestions.tsx - 0.07ms
+[INFO] [http] Response 304 for GET /src/components/WebsiteLayoutSuggestions.tsx (0ms)
+[INFO] [http] Request GET /src/components/WebsiteCtaSuggestions.tsx
+GET /src/components/WebsiteCtaSuggestions.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/WebsiteCtaSuggestions.tsx (1ms)
+[INFO] [http] Request GET /src/components/ParticleConfigPanel.tsx
+GET /src/components/ParticleConfigPanel.tsx - 0.08ms
+[INFO] [http] Response 304 for GET /src/components/ParticleConfigPanel.tsx (0ms)
+[INFO] [http] Request GET /src/components/WebsiteConversionAnalytics.tsx
+GET /src/components/WebsiteConversionAnalytics.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/WebsiteConversionAnalytics.tsx (0ms)
+[INFO] [http] Request GET /src/components/ParticleBackground.tsx
+GET /src/components/ParticleBackground.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/ParticleBackground.tsx (0ms)
+[INFO] [http] Request GET /src/components/WebsiteImageSuggestions.tsx
+GET /src/components/WebsiteImageSuggestions.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/WebsiteImageSuggestions.tsx (0ms)
+[INFO] [http] Request GET /src/components/UIAnalytics.tsx
+GET /src/components/UIAnalytics.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/UIAnalytics.tsx (0ms)
+[INFO] [http] Request GET /src/components/UIHeatmap.tsx
+GET /src/components/UIHeatmap.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/UIHeatmap.tsx (0ms)
+[INFO] [http] Request GET /src/components/UIMetricsDisplay.tsx
+GET /src/components/UIMetricsDisplay.tsx - 0.08ms
+[INFO] [http] Response 304 for GET /src/components/UIMetricsDisplay.tsx (0ms)
+[INFO] [http] Request GET /src/components/UIAnalyticsExport.tsx
+GET /src/components/UIAnalyticsExport.tsx - 0.06ms
+[INFO] [http] Response 304 for GET /src/components/UIAnalyticsExport.tsx (0ms)
+[INFO] [http] Request GET /src/components/MarketplaceAdGenerator.tsx
+GET /src/components/MarketplaceAdGenerator.tsx - 0.06ms
+[INFO] [http] Response 304 for GET /src/components/MarketplaceAdGenerator.tsx (0ms)
+[INFO] [http] Request GET /src/components/ui/collapsible.tsx
+GET /src/components/ui/collapsible.tsx - 0.07ms
+[INFO] [http] Response 304 for GET /src/components/ui/collapsible.tsx (1ms)
+[INFO] [http] Request GET /src/components/withLandingPageOptimization.tsx
+GET /src/components/withLandingPageOptimization.tsx - 0.08ms
+[INFO] [http] Response 304 for GET /src/components/withLandingPageOptimization.tsx (1ms)
+[INFO] [http] Request GET /src/components/SocialFeed.tsx
+GET /src/components/SocialFeed.tsx - 0.12ms
+[INFO] [http] Response 304 for GET /src/components/SocialFeed.tsx (0ms)
+[INFO] [http] Request GET /src/components/PlatformDetailModal.tsx
+GET /src/components/PlatformDetailModal.tsx - 0.04ms
+[INFO] [http] Response 304 for GET /src/components/PlatformDetailModal.tsx (0ms)
+[INFO] [http] Request GET /src/components/ui/avatar.tsx
+GET /src/components/ui/avatar.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/ui/avatar.tsx (0ms)
+[INFO] [http] Request GET /src/components/PriceOptimizationHistory.tsx
+GET /src/components/PriceOptimizationHistory.tsx - 0.04ms
+[INFO] [http] Response 304 for GET /src/components/PriceOptimizationHistory.tsx (0ms)
+[INFO] [http] Request GET /src/components/PriceOptimizationRecommendations.tsx
+GET /src/components/PriceOptimizationRecommendations.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/PriceOptimizationRecommendations.tsx (0ms)
+[INFO] [http] Request GET /src/hooks/useAuth.ts
+GET /src/hooks/useAuth.ts - 0.05ms
+[INFO] [http] Response 304 for GET /src/hooks/useAuth.ts (0ms)
+[INFO] [http] Request GET /src/components/ui/form.tsx
+GET /src/components/ui/form.tsx - 0.07ms
+[INFO] [http] Response 304 for GET /src/components/ui/form.tsx (1ms)
+[INFO] [http] Request GET /src/components/ui/checkbox.tsx
+GET /src/components/ui/checkbox.tsx - 0.07ms
+[INFO] [http] Response 304 for GET /src/components/ui/checkbox.tsx (0ms)
+[INFO] [http] Request GET /src/components/ui/progress.tsx
+GET /src/components/ui/progress.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/ui/progress.tsx (0ms)
+[INFO] [http] Request GET /src/components/PageHeader.tsx
+GET /src/components/PageHeader.tsx - 0.07ms
+[INFO] [http] Response 304 for GET /src/components/PageHeader.tsx (0ms)
+[INFO] [http] Request GET /src/components/BugMonitoringDashboard.tsx
+GET /src/components/BugMonitoringDashboard.tsx - 0.06ms
+[INFO] [http] Response 304 for GET /src/components/BugMonitoringDashboard.tsx (0ms)
+[INFO] [http] Request GET /src/components/BrandConsistencyDashboard.tsx
+GET /src/components/BrandConsistencyDashboard.tsx - 0.07ms
+[INFO] [http] Response 304 for GET /src/components/BrandConsistencyDashboard.tsx (1ms)
+[INFO] [http] Request GET /src/components/platform/PlatformCompatibilityDebugger.tsx
+GET /src/components/platform/PlatformCompatibilityDebugger.tsx - 0.08ms
+[INFO] [http] Response 304 for GET /src/components/platform/PlatformCompatibilityDebugger.tsx (0ms)
+[INFO] [http] Request GET /src/lib/utils.ts
+GET /src/lib/utils.ts - 0.04ms
+[INFO] [http] Response 304 for GET /src/lib/utils.ts (0ms)
+[INFO] [http] Request GET /src/components/ClientPreviewModal.tsx
+GET /src/components/ClientPreviewModal.tsx - 0.04ms
+[INFO] [http] Response 304 for GET /src/components/ClientPreviewModal.tsx (0ms)
+[INFO] [http] Request GET /src/components/ROLLINSXLogo.tsx
+GET /src/components/ROLLINSXLogo.tsx - 0.06ms
+[INFO] [http] Response 304 for GET /src/components/ROLLINSXLogo.tsx (0ms)
+[INFO] [http] Request GET /src/components/platform/PlatformCompatibilityProvider.tsx
+GET /src/components/platform/PlatformCompatibilityProvider.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/platform/PlatformCompatibilityProvider.tsx (0ms)
+[INFO] [http] Request GET /src/components/PostSentimentIndicator.tsx
+GET /src/components/PostSentimentIndicator.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/PostSentimentIndicator.tsx (0ms)
+[INFO] [http] Request GET /src/components/SocialShareButtons.tsx
+GET /src/components/SocialShareButtons.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/SocialShareButtons.tsx (0ms)
+[INFO] [http] Request GET /src/components/ui/radio-group.tsx
+GET /src/components/ui/radio-group.tsx - 0.06ms
+[INFO] [http] Response 304 for GET /src/components/ui/radio-group.tsx (1ms)
+[INFO] [http] Request GET /src/components/Navbar.tsx
+GET /src/components/Navbar.tsx - 0.07ms
+[INFO] [http] Response 304 for GET /src/components/Navbar.tsx (0ms)
+[INFO] [http] Request GET /src/hooks/useAdmin.tsx
+GET /src/hooks/useAdmin.tsx - 0.04ms
+[INFO] [http] Response 304 for GET /src/hooks/useAdmin.tsx (0ms)
+[INFO] [http] Request GET /src/components/ui/sheet.tsx
+GET /src/components/ui/sheet.tsx - 0.06ms
+[INFO] [http] Response 304 for GET /src/components/ui/sheet.tsx (0ms)
+[INFO] [http] Request GET /src/components/ui/scroll-area.tsx
+GET /src/components/ui/scroll-area.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/ui/scroll-area.tsx (0ms)
+[INFO] [http] Request GET /src/components/ui/tooltip.tsx
+GET /src/components/ui/tooltip.tsx - 0.07ms
+[INFO] [http] Response 304 for GET /src/components/ui/tooltip.tsx (0ms)
+[INFO] [http] Request GET /src/components/ProtectedImage.tsx
+GET /src/components/ProtectedImage.tsx - 0.06ms
+[INFO] [http] Response 304 for GET /src/components/ProtectedImage.tsx (1ms)
+[INFO] [http] Request GET /src/components/ui/slider.tsx
+GET /src/components/ui/slider.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/ui/slider.tsx (0ms)
+[INFO] [http] Request GET /src/components/ui/switch.tsx
+GET /src/components/ui/switch.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/ui/switch.tsx (0ms)
+[INFO] [http] Request GET /src/styles/react-color-palette.css
+GET /src/styles/react-color-palette.css - 0.37ms
+[INFO] [http] Response 304 for GET /src/styles/react-color-palette.css (0ms)
+[INFO] [http] Request GET /src/components/ui/calendar.tsx
+GET /src/components/ui/calendar.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/ui/calendar.tsx (0ms)
+[INFO] [http] Request GET /src/components/ui/popover.tsx
+GET /src/components/ui/popover.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/ui/popover.tsx (0ms)
+[INFO] [http] Request GET /src/components/LandingPageOptimizer.tsx
+GET /src/components/LandingPageOptimizer.tsx - 0.05ms
+[INFO] [http] Response 304 for GET /src/components/LandingPageOptimizer.tsx (0ms)
+[INFO] [http] Request GET /src/components/ui/hover-card.tsx
+GET /src/components/ui/hover-card.tsx - 0.04ms
+[INFO] [http] Response 304 for GET /src/components/ui/hover-card.tsx (0ms)
+[INFO] [http] Request GET /src/components/ui/alert-dialog.tsx
+GET /src/components/ui/alert-dialog.tsx - 0.06ms
+[INFO] [http] Response 304 for GET /src/components/ui/alert-dialog.tsx (0ms)
+[INFO] [http] Request GET /src/components/ui/navigation-menu.tsx
+GET /src/components/ui/navigation-menu.tsx - 0.13ms
+[INFO] [http] Response 304 for GET /src/components/ui/navigation-menu.tsx (0ms)
+[INFO] [http] Request GET /src/hooks/usePlatform.tsx
