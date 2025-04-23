@@ -15,7 +15,7 @@ export default function ROLLINSXBot({ isOpen: externalIsOpen, initialOption }: R
 
   // Handle external props changes
   useEffect(() => {
-    console.log("ElevateBot props changed:", { externalIsOpen, initialOption });
+    console.log("ROLLINSXBot props changed:", { externalIsOpen, initialOption });
     
     if (externalIsOpen !== undefined) {
       setIsOpen(externalIsOpen);
@@ -82,7 +82,7 @@ export default function ROLLINSXBot({ isOpen: externalIsOpen, initialOption }: R
       <button
         onClick={toggleChatbot}
         className="fixed bottom-6 right-6 bg-[#3B5B9D] hover:bg-[#2A4A8C] text-white p-4 rounded-full shadow-lg z-30 flex items-center justify-center"
-        aria-label="Chat with ElevateBot"
+        aria-label="Chat with ROLLINSXBot"
       >
         {isOpen ? (
           <FaTimes className="text-xl" />
@@ -114,7 +114,7 @@ export default function ROLLINSXBot({ isOpen: externalIsOpen, initialOption }: R
                   <FaRocket className="text-[#00D1D1]" />
                 </div>
                 <div>
-                  <h3 className="font-bold font-poppins">ElevateBot</h3>
+                  <h3 className="font-bold font-poppins">ROLLINSXBot</h3>
                   <span className="text-xs text-[#00D1D1] font-inter">Online</span>
                 </div>
               </div>
@@ -139,7 +139,7 @@ export default function ROLLINSXBot({ isOpen: externalIsOpen, initialOption }: R
                     </div>
                   ) : typingComplete ? (
                     <p className="text-gray-800 font-lato">
-                      Hello! I'm ElevateBot, your web development assistant. How can I help your business succeed online today?
+                      Hello! I'm ROLLINSXBot, your web development assistant. How can I help your business succeed online today?
                     </p>
                   ) : null}
                 </div>

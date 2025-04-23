@@ -35,7 +35,7 @@ export default function AIServices() {
         <title>AI-Powered Services | ROLLINSX</title>
         <meta
           name="description"
-          content="Experience ROLLINSX's AI-powered tools including personalized service recommendations, intelligent content analysis, and our ElevateBot assistant."
+          content="Experience ROLLINSX's AI-powered tools including personalized service recommendations, intelligent content analysis, and our ROLLINSXBot assistant."
         />
       </Helmet>
 
@@ -54,7 +54,7 @@ export default function AIServices() {
             </p>
             <div className="flex flex-wrap gap-4">
               <Button onClick={openBot} className="bg-[#3B5B9D] hover:bg-[#2A4A8C]">
-                <MessageSquare className="mr-2 h-4 w-4" /> Try ElevateBot
+                <MessageSquare className="mr-2 h-4 w-4" /> Try ROLLINSXBot
               </Button>
               <Button variant="outline" className="border-[#3B5B9D] text-[#3B5B9D]">
                 Learn More <ArrowRight className="ml-2 h-4 w-4" />
@@ -75,7 +75,7 @@ export default function AIServices() {
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { icon: <MessageSquare className="w-4 h-4" />, text: "ElevateBot" },
+                    { icon: <MessageSquare className="w-4 h-4" />, text: "ROLLINSXBot" },
                     { icon: <ListChecks className="w-4 h-4" />, text: "Recommendations" },
                     { icon: <FileCode className="w-4 h-4" />, text: "Code Analysis" },
                     { icon: <Search className="w-4 h-4" />, text: "Smart Search" }
@@ -100,7 +100,7 @@ export default function AIServices() {
                   <ListChecks className="mr-2 h-4 w-4" /> Recommendations
                 </TabsTrigger>
                 <TabsTrigger value="elevatebot" className="text-base px-5">
-                  <MessageSquare className="mr-2 h-4 w-4" /> ElevateBot
+                  <MessageSquare className="mr-2 h-4 w-4" /> ROLLINSXBot
                 </TabsTrigger>
                 <TabsTrigger value="analytics" className="text-base px-5">
                   <BarChart3 className="mr-2 h-4 w-4" /> AI Analytics
