@@ -1,9 +1,8 @@
 /**
  * Database Controller
  * 
- * This controller provides functionality for database diagnostics
- * and management. It allows checking database status, viewing tables,
- * and examining table structures.
+ * This controller provides methods for interacting with the database,
+ * checking its status, and querying database objects.
  */
 
 const db = require('../config/database');
@@ -18,19 +17,17 @@ const { createError } = require('../middlewares/errorHandler');
  */
 async function testConnection(req, res, next) {
   try {
-    logger.debug('Testing database connection');
+    // Simple query to test the connection
+    const result = await db.query('SELECT NOW() as time');
     
-    const result = await db.query('SELECT NOW() as timestamp');
-    
-    logger.info('Database connection test successful', {
-      timestamp: result.rows[0].timestamp
-    });
+    logger.info('Database connection test successful');
     
     res.json({
       success: true,
       message: 'Database connection successful',
       data: {
-        timestamp: result.rows[0].timestamp
+        timestamp: result.rows[0].time,
+        environment: process.env.NODE_ENV || 'development'
       }
     });
   } catch (error) {
@@ -40,9 +37,10 @@ async function testConnection(req, res, next) {
     });
     
     next(createError(
-      'Database connection test failed: ' + error.message,
+      'Database connection failed',
       500,
-      'DATABASE_CONNECTION_ERROR'
+      'DATABASE_CONNECTION_ERROR',
+      { details: error.message }
     ));
   }
 }
@@ -55,57 +53,45 @@ async function testConnection(req, res, next) {
  */
 async function getTables(req, res, next) {
   try {
-    logger.debug('Getting database tables');
-    
-    const query = `
+    // Query to get all tables with their size and row count estimate
+    const result = await db.query(`
       SELECT 
-        table_schema,
-        table_name,
-        pg_total_relation_size('"' || table_schema || '"."' || table_name || '"') AS size_in_bytes,
-        pg_relation_size('"' || table_schema || '"."' || table_name || '"') AS table_size_in_bytes,
-        pg_indexes_size('"' || table_schema || '"."' || table_name || '"') AS indexes_size_in_bytes,
-        (SELECT reltuples FROM pg_class WHERE oid = ('"' || table_schema || '"."' || table_name || '"')::regclass) AS row_count_estimate
+        t.table_schema,
+        t.table_name,
+        pg_size_pretty(pg_total_relation_size('"' || t.table_schema || '"."' || t.table_name || '"')) as size,
+        pg_size_pretty(pg_relation_size('"' || t.table_schema || '"."' || t.table_name || '"')) as table_size,
+        pg_size_pretty(pg_indexes_size('"' || t.table_schema || '"."' || t.table_name || '"')) as indexes_size,
+        pg_stat_get_live_tuples('"' || t.table_schema || '"."' || t.table_name || '"'::regclass) as row_count_estimate
       FROM 
-        information_schema.tables
+        information_schema.tables t
       WHERE 
-        table_schema NOT IN ('pg_catalog', 'information_schema') 
-        AND table_type = 'BASE TABLE'
+        t.table_schema NOT IN ('pg_catalog', 'information_schema')
+        AND t.table_type = 'BASE TABLE'
       ORDER BY 
-        table_schema, table_name;
-    `;
+        t.table_schema, t.table_name
+    `);
     
-    const result = await db.query(query);
-    
-    // Format the response for better readability
-    const tables = result.rows.map(table => ({
-      table_schema: table.table_schema,
-      table_name: table.table_name,
-      size: formatBytes(table.size_in_bytes),
-      table_size: formatBytes(table.table_size_in_bytes),
-      indexes_size: formatBytes(table.indexes_size_in_bytes),
-      row_count_estimate: parseInt(table.row_count_estimate)
-    }));
-    
-    logger.info('Retrieved database tables', {
-      count: tables.length
+    logger.info('Successfully retrieved database tables', {
+      tableCount: result.rows.length
     });
     
     res.json({
       success: true,
       data: {
-        tables
+        tables: result.rows
       }
     });
   } catch (error) {
-    logger.error('Failed to get database tables', {
+    logger.error('Failed to retrieve database tables', {
       error: error.message,
       stack: error.stack
     });
     
     next(createError(
-      'Failed to get database tables: ' + error.message,
+      'Failed to retrieve database tables',
       500,
-      'DATABASE_ERROR'
+      'DATABASE_QUERY_ERROR',
+      { details: error.message }
     ));
   }
 }
@@ -120,18 +106,16 @@ async function getTableColumns(req, res, next) {
   try {
     const { tableName } = req.params;
     
-    // Validate table name to prevent SQL injection
-    if (!/^[a-zA-Z0-9_]+$/.test(tableName)) {
+    if (!tableName) {
       return next(createError(
-        'Invalid table name. Only alphanumeric characters and underscores are allowed.',
+        'Table name is required',
         400,
-        'INVALID_TABLE_NAME'
+        'INVALID_PARAMETERS'
       ));
     }
     
-    logger.debug('Getting columns for table', { tableName });
-    
-    const query = `
+    // Query to get all columns for the specified table
+    const result = await db.query(`
       SELECT 
         column_name,
         data_type,
@@ -144,21 +128,10 @@ async function getTableColumns(req, res, next) {
         table_name = $1
         AND table_schema NOT IN ('pg_catalog', 'information_schema')
       ORDER BY 
-        ordinal_position;
-    `;
+        ordinal_position
+    `, [tableName]);
     
-    const result = await db.query(query, [tableName]);
-    
-    if (result.rows.length === 0) {
-      return next(createError(
-        `Table '${tableName}' not found or has no columns`,
-        404,
-        'TABLE_NOT_FOUND'
-      ));
-    }
-    
-    logger.info('Retrieved table columns', {
-      tableName,
+    logger.info(`Successfully retrieved columns for table "${tableName}"`, {
       columnCount: result.rows.length
     });
     
@@ -170,16 +143,17 @@ async function getTableColumns(req, res, next) {
       }
     });
   } catch (error) {
-    logger.error('Failed to get table columns', {
+    logger.error('Failed to retrieve table columns', {
       error: error.message,
       stack: error.stack,
       tableName: req.params.tableName
     });
     
     next(createError(
-      'Failed to get table columns: ' + error.message,
+      'Failed to retrieve table columns',
       500,
-      'DATABASE_ERROR'
+      'DATABASE_QUERY_ERROR',
+      { details: error.message }
     ));
   }
 }
@@ -192,118 +166,85 @@ async function getTableColumns(req, res, next) {
  */
 async function getStatus(req, res, next) {
   try {
-    logger.debug('Getting database status');
-    
-    // Get PostgreSQL version
-    const versionQuery = 'SELECT version();';
-    const versionResult = await db.query(versionQuery);
+    // Get database version
+    const versionResult = await db.query('SELECT version()');
     const version = versionResult.rows[0].version;
     
-    // Get current connections
-    const connectionsQuery = `
+    // Get active connections
+    const connectionsResult = await db.query(`
       SELECT 
-        count(*) AS total,
-        sum(CASE WHEN state = 'active' THEN 1 ELSE 0 END) AS active,
-        sum(CASE WHEN state = 'idle' THEN 1 ELSE 0 END) AS idle
+        count(*) as total,
+        sum(CASE WHEN state = 'active' THEN 1 ELSE 0 END) as active,
+        sum(CASE WHEN state = 'idle' THEN 1 ELSE 0 END) as idle
       FROM 
-        pg_stat_activity;
-    `;
-    const connectionsResult = await db.query(connectionsQuery);
+        pg_stat_activity
+    `);
     const connections = connectionsResult.rows[0];
     
     // Get database size
-    const sizeQuery = `
+    const sizeResult = await db.query(`
       SELECT 
-        pg_size_pretty(pg_database_size(current_database())) AS size,
-        pg_database_size(current_database()) AS size_bytes;
-    `;
-    const sizeResult = await db.query(sizeQuery);
-    const dbSize = sizeResult.rows[0];
+        pg_size_pretty(pg_database_size(current_database())) as size,
+        pg_database_size(current_database()) as size_bytes
+    `);
+    const dbSize = sizeResult.rows[0].size;
+    const dbSizeBytes = parseInt(sizeResult.rows[0].size_bytes);
     
-    // Get largest tables
-    const tablesQuery = `
+    // Get table count
+    const tableCountResult = await db.query(`
       SELECT 
-        table_schema || '.' || table_name AS name,
-        pg_size_pretty(pg_total_relation_size('"' || table_schema || '"."' || table_name || '"')) AS size,
-        pg_total_relation_size('"' || table_schema || '"."' || table_name || '"') AS size_bytes,
-        (SELECT reltuples FROM pg_class WHERE oid = ('"' || table_schema || '"."' || table_name || '"')::regclass) AS row_count_estimate
+        count(*) as count
       FROM 
         information_schema.tables
       WHERE 
-        table_schema NOT IN ('pg_catalog', 'information_schema') 
+        table_schema NOT IN ('pg_catalog', 'information_schema')
+        AND table_type = 'BASE TABLE'
+    `);
+    const tablesCount = parseInt(tableCountResult.rows[0].count);
+    
+    // Get largest tables
+    const largestTablesResult = await db.query(`
+      SELECT 
+        table_schema || '.' || table_name as name,
+        pg_size_pretty(pg_total_relation_size('"' || table_schema || '"."' || table_name || '"')) as size,
+        pg_total_relation_size('"' || table_schema || '"."' || table_name || '"') as size_bytes,
+        pg_stat_get_live_tuples('"' || table_schema || '"."' || table_name || '"'::regclass) as row_count_estimate
+      FROM 
+        information_schema.tables
+      WHERE 
+        table_schema NOT IN ('pg_catalog', 'information_schema')
         AND table_type = 'BASE TABLE'
       ORDER BY 
         pg_total_relation_size('"' || table_schema || '"."' || table_name || '"') DESC
-      LIMIT 5;
-    `;
-    const tablesResult = await db.query(tablesQuery);
-    const largestTables = tablesResult.rows;
+      LIMIT 5
+    `);
     
-    // Get table count
-    const countQuery = `
-      SELECT 
-        count(*) AS table_count
-      FROM 
-        information_schema.tables
-      WHERE 
-        table_schema NOT IN ('pg_catalog', 'information_schema') 
-        AND table_type = 'BASE TABLE';
-    `;
-    const countResult = await db.query(countQuery);
-    const tablesCount = parseInt(countResult.rows[0].table_count);
-    
-    logger.info('Retrieved database status');
+    logger.info('Successfully retrieved database status');
     
     res.json({
       success: true,
       data: {
         version,
-        connections: {
-          total: parseInt(connections.total),
-          active: parseInt(connections.active),
-          idle: parseInt(connections.idle)
-        },
-        dbSize: dbSize.size,
-        dbSizeBytes: parseInt(dbSize.size_bytes),
+        connections,
+        dbSize,
+        dbSizeBytes,
         tablesCount,
-        largestTables: largestTables.map(table => ({
-          name: table.name,
-          size: table.size,
-          sizeBytes: parseInt(table.size_bytes),
-          rowCountEstimate: parseInt(table.row_count_estimate)
-        }))
+        largestTables: largestTablesResult.rows
       }
     });
   } catch (error) {
-    logger.error('Failed to get database status', {
+    logger.error('Failed to retrieve database status', {
       error: error.message,
       stack: error.stack
     });
     
     next(createError(
-      'Failed to get database status: ' + error.message,
+      'Failed to retrieve database status',
       500,
-      'DATABASE_ERROR'
+      'DATABASE_QUERY_ERROR',
+      { details: error.message }
     ));
   }
-}
-
-/**
- * Format bytes to human-readable format
- * @param {number} bytes - Size in bytes
- * @param {number} decimals - Number of decimal places
- * @returns {string} - Formatted size string
- */
-function formatBytes(bytes, decimals = 2) {
-  if (!bytes) return '0 Bytes';
-  
-  const k = 1024;
-  const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
-  
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
 module.exports = {

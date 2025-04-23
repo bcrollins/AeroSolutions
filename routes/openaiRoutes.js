@@ -1,38 +1,18 @@
 /**
- * OpenAI API Routes
+ * OpenAI Routes
  * 
- * This module defines routes for interacting with the OpenAI API.
- * It includes endpoints for text completion, chat responses, and image generation.
+ * This module defines routes for OpenAI API integration.
  */
 
 const express = require('express');
 const router = express.Router();
-const openaiController = require('../controllers/openaiController');
-const { openaiLimiter } = require('../middlewares/rateLimiter');
 
-/**
- * @route   GET /api/openai/status
- * @desc    Check OpenAI API status
- * @access  Public
- * 
- * Response:
- * {
- *   "success": true,
- *   "data": {
- *     "apiStatus": "operational", // or "error", "unconfigured", "unknown"
- *     "hasApiKey": true,
- *     "error": null, // or error message if apiStatus is "error"
- *     "models": [
- *       {
- *         "id": "gpt-4o",
- *         "owned_by": "openai"
- *       },
- *       ...
- *     ]
- *   }
- * }
- */
-router.get('/status', openaiLimiter, openaiController.checkStatus);
+// Controller
+const openaiController = require('../controllers/openaiController');
+
+// Middleware
+const { openaiLimiter } = require('../middlewares/rateLimiter');
+const validator = require('../middlewares/validator');
 
 /**
  * @route   POST /api/openai/completion
@@ -42,8 +22,8 @@ router.get('/status', openaiLimiter, openaiController.checkStatus);
  * Request body:
  * {
  *   "prompt": "Complete this sentence: The quick brown fox",
- *   "model": "text-davinci-003", (optional, default: text-davinci-003)
- *   "maxTokens": 150, (optional, default: 150)
+ *   "model": "gpt-4o", (optional, default: "gpt-4o")
+ *   "maxTokens": 100, (optional, default: 1024)
  *   "temperature": 0.7 (optional, default: 0.7)
  * }
  * 
@@ -52,16 +32,20 @@ router.get('/status', openaiLimiter, openaiController.checkStatus);
  *   "success": true,
  *   "data": {
  *     "text": "jumps over the lazy dog.",
- *     "model": "text-davinci-003",
+ *     "model": "gpt-4o",
  *     "usage": {
- *       "prompt_tokens": 9,
+ *       "prompt_tokens": 8,
  *       "completion_tokens": 6,
- *       "total_tokens": 15
+ *       "total_tokens": 14
  *     }
  *   }
  * }
  */
-router.post('/completion', openaiLimiter, openaiController.getCompletion);
+router.post('/completion', 
+  openaiLimiter,
+  validator.validateCompletionRequest,
+  openaiController.getCompletion
+);
 
 /**
  * @route   POST /api/openai/chat
@@ -72,11 +56,12 @@ router.post('/completion', openaiLimiter, openaiController.getCompletion);
  * {
  *   "messages": [
  *     {"role": "system", "content": "You are a helpful assistant."},
- *     {"role": "user", "content": "Who won the world series in 2020?"}
+ *     {"role": "user", "content": "Tell me about the solar system."}
  *   ],
- *   "model": "gpt-4o", (optional, default: gpt-4o)
- *   "maxTokens": 1000, (optional, default: 1000)
- *   "temperature": 0.7 (optional, default: 0.7)
+ *   "model": "gpt-4o", (optional, default: "gpt-4o")
+ *   "maxTokens": 1000, (optional, default: 1024)
+ *   "temperature": 0.7, (optional, default: 0.7)
+ *   "responseFormat": "json_object" (optional, default: null)
  * }
  * 
  * Response:
@@ -85,18 +70,22 @@ router.post('/completion', openaiLimiter, openaiController.getCompletion);
  *   "data": {
  *     "message": {
  *       "role": "assistant",
- *       "content": "The Los Angeles Dodgers won the World Series in 2020..."
+ *       "content": "The solar system consists of the Sun and everything that orbits around it..."
  *     },
  *     "model": "gpt-4o",
  *     "usage": {
- *       "prompt_tokens": 27,
- *       "completion_tokens": 20,
- *       "total_tokens": 47
+ *       "prompt_tokens": 30,
+ *       "completion_tokens": 120,
+ *       "total_tokens": 150
  *     }
  *   }
  * }
  */
-router.post('/chat', openaiLimiter, openaiController.getChatCompletion);
+router.post('/chat', 
+  openaiLimiter,
+  validator.validateChatRequest,
+  openaiController.getChatCompletion
+);
 
 /**
  * @route   POST /api/openai/image
@@ -105,11 +94,11 @@ router.post('/chat', openaiLimiter, openaiController.getChatCompletion);
  * 
  * Request body:
  * {
- *   "prompt": "A beautiful sunset over the ocean",
+ *   "prompt": "A futuristic city with flying cars",
  *   "n": 1, (optional, default: 1)
- *   "size": "1024x1024", (optional, default: 1024x1024)
- *   "quality": "standard", (optional, default: standard)
- *   "responseFormat": "url" (optional, default: url)
+ *   "size": "1024x1024", (optional, default: "1024x1024")
+ *   "quality": "standard", (optional, default: "standard")
+ *   "responseFormat": "url" (optional, default: "url")
  * }
  * 
  * Response:
@@ -118,13 +107,44 @@ router.post('/chat', openaiLimiter, openaiController.getChatCompletion);
  *   "data": {
  *     "images": [
  *       {
- *         "url": "https://oaidalleapiprodscus.blob.core.windows.net/..."
+ *         "url": "https://..."
  *       }
  *     ],
- *     "created": 1589478378
+ *     "created": 1683044108
  *   }
  * }
  */
-router.post('/image', openaiLimiter, openaiController.generateImage);
+router.post('/image', 
+  openaiLimiter,
+  validator.validateImageRequest,
+  openaiController.generateImage
+);
+
+/**
+ * @route   GET /api/openai/status
+ * @desc    Check OpenAI API status
+ * @access  Public
+ * 
+ * Response:
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "apiStatus": "available",
+ *     "hasApiKey": true,
+ *     "apiVersion": null,
+ *     "availableModels": [
+ *       {
+ *         "id": "gpt-4o",
+ *         "owned_by": "openai"
+ *       },
+ *       {
+ *         "id": "gpt-4-turbo",
+ *         "owned_by": "openai"
+ *       }
+ *     ]
+ *   }
+ * }
+ */
+router.get('/status', openaiController.checkStatus);
 
 module.exports = router;

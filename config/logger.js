@@ -1,80 +1,108 @@
 /**
- * Logger Configuration
+ * Logging Configuration
  * 
- * Winston logger configuration for application-wide logging
+ * This module configures a Winston logger with appropriate transports and formats
+ * for structured logging across the application.
  */
 
 const winston = require('winston');
 const path = require('path');
 const fs = require('fs');
 
-// Ensure logs directory exists
-const logsDir = path.join(process.cwd(), 'logs');
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir, { recursive: true });
+// Create logs directory if it doesn't exist
+const logDir = path.join(__dirname, '..', 'logs');
+if (!fs.existsSync(logDir)) {
+  fs.mkdirSync(logDir, { recursive: true });
 }
 
-// Define log formats
+// Define log levels and colors
+const logLevels = {
+  error: 0,
+  warn: 1,
+  info: 2,
+  http: 3,
+  debug: 4
+};
+
+const logColors = {
+  error: 'red',
+  warn: 'yellow',
+  info: 'green',
+  http: 'magenta',
+  debug: 'blue'
+};
+
+// Add colors to Winston
+winston.addColors(logColors);
+
+// Environment-based logging level
+const level = process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug');
+
+// Custom format for console output
 const consoleFormat = winston.format.combine(
-  winston.format.colorize(),
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-  winston.format.printf(
-    info => `${info.timestamp} ${info.level}: ${info.message}${info.splat !== undefined ? `${info.splat}` : ''}${
-      info.stack !== undefined ? `\n${info.stack}` : ''
-    }`
-  )
+  winston.format.colorize({ all: true }),
+  winston.format.printf(({ timestamp, level, message, ...meta }) => {
+    const metaString = Object.keys(meta).length ? JSON.stringify(meta, null, 2) : '';
+    return `${timestamp} [${level}]: ${message}${metaString ? `\n${metaString}` : ''}`;
+  })
 );
 
+// Format for file logging
 const fileFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.json()
 );
 
-// Create the logger instance
+// Create the Winston logger
 const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
-  defaultMeta: { service: 'api-platform' },
+  level,
+  levels: logLevels,
+  format: fileFormat,
   transports: [
-    // Console transport for development
+    // Console transport for all logs
     new winston.transports.Console({
       format: consoleFormat
     }),
     
-    // File transports for production
+    // File transport for error logs
     new winston.transports.File({
-      filename: path.join(logsDir, 'error.log'),
-      level: 'error',
-      format: fileFormat,
-      maxsize: 5242880, // 5MB
-      maxFiles: 5
+      filename: path.join(logDir, 'error.log'),
+      level: 'error'
     }),
+    
+    // File transport for all logs
     new winston.transports.File({
-      filename: path.join(logsDir, 'combined.log'),
-      format: fileFormat,
-      maxsize: 5242880, // 5MB
-      maxFiles: 5
+      filename: path.join(logDir, 'combined.log')
     })
   ],
   exceptionHandlers: [
-    new winston.transports.File({
-      filename: path.join(logsDir, 'exceptions.log'),
-      format: fileFormat,
-      maxsize: 5242880, // 5MB
-      maxFiles: 5
+    new winston.transports.File({ 
+      filename: path.join(logDir, 'exceptions.log')
     })
-  ]
+  ],
+  exitOnError: false
 });
 
-// Add request logger format
-logger.requestFormat = winston.format.printf(({ timestamp, method, url, status, responseTime, ip, userAgent }) => {
-  return `${timestamp} [${method}] ${url} - ${status} (${responseTime}ms) - ${ip} - ${userAgent}`;
-});
-
-// Add stream for Morgan integration
-logger.stream = {
-  write: (message) => {
-    logger.info(message.trim());
-  }
+// Specialized HTTP request logger method
+logger.httpRequest = (req, res, duration) => {
+  const { method, originalUrl, ip, headers } = req;
+  const userAgent = headers['user-agent'];
+  const statusCode = res.statusCode;
+  
+  const logLevel = statusCode >= 500 ? 'error' : 
+                   statusCode >= 400 ? 'warn' : 
+                   'http';
+  
+  logger.log(logLevel, `${method} ${originalUrl} ${statusCode} ${duration}ms`, {
+    method,
+    url: originalUrl,
+    status: statusCode,
+    responseTime: duration,
+    ip,
+    userAgent
+  });
 };
 
+// Export the logger
 module.exports = logger;
