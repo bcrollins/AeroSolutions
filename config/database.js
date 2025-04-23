@@ -3,37 +3,45 @@
  * 
  * This module provides a connection pool for PostgreSQL database connections.
  * It uses environment variables for configuration to keep sensitive information secure.
+ * 
+ * The connection pool automatically manages database connections for efficiency:
+ * - Creates connections on demand up to a maximum limit
+ * - Reuses existing connections when available
+ * - Handles connection errors and reconnection
+ * - Times out idle connections to conserve resources
  */
+
 const { Pool } = require('pg');
 const logger = require('./logger');
 
-// Get database configuration from environment variables
+// Load environment variables with fallbacks for development
 const dbConfig = {
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  // Maximum number of clients in the pool
-  max: parseInt(process.env.DB_POOL_MAX || '10', 10),
-  // Maximum time (ms) a client can stay idle before being closed
-  idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT || '30000', 10),
-  // Maximum time (ms) to wait for a client to become available
-  connectionTimeoutMillis: parseInt(process.env.DB_CONNECTION_TIMEOUT || '5000', 10),
+  // SSL configuration for production environments
+  ssl: process.env.NODE_ENV === 'production' 
+    ? { rejectUnauthorized: false } 
+    : false,
+  // Connection pool settings
+  max: parseInt(process.env.DB_MAX_CONNECTIONS || '10'), // Maximum connections in pool
+  idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT || '30000'), // Close idle connections after 30 seconds
+  connectionTimeoutMillis: parseInt(process.env.DB_CONNECTION_TIMEOUT || '5000') // Connection attempt timeout
 };
 
-// Create a pool of connections
+// Create the connection pool
 const pool = new Pool(dbConfig);
 
-// Error handler for unexpected pool errors
+// Connection error handling
 pool.on('error', (err) => {
-  logger.error('Unexpected error on idle client', { error: err.message, stack: err.stack });
+  logger.error('Unexpected error on idle database connection', {
+    error: err.message,
+    stack: err.stack
+  });
+  // Don't exit process here, instead let pool handle reconnection
 });
 
-// Log pool creation
-logger.info('Database pool created', { 
-  host: process.env.PGHOST || 'from connection string',
-  database: process.env.PGDATABASE || 'from connection string',
-  max: dbConfig.max,
-  idleTimeoutMillis: dbConfig.idleTimeoutMillis,
-  connectionTimeoutMillis: dbConfig.connectionTimeoutMillis
+// Pool connection status monitoring
+pool.on('connect', (client) => {
+  logger.debug('New database connection established');
 });
 
 /**
@@ -48,25 +56,30 @@ async function query(text, params) {
     const result = await pool.query(text, params);
     const duration = Date.now() - start;
     
-    // Log query info (excluding sensitive parameters)
-    logger.debug('Executed query', {
-      query: text,
-      rows: result.rowCount,
-      duration: `${duration}ms`
-    });
+    // Log slow queries (over 1000ms) for performance monitoring
+    if (duration > 1000) {
+      logger.warn('Slow query detected', {
+        query: text,
+        duration,
+        rows: result.rowCount,
+        params
+      });
+    } else {
+      logger.debug('Query executed', { 
+        duration,
+        rows: result.rowCount
+      });
+    }
     
     return result;
   } catch (error) {
-    const duration = Date.now() - start;
-    
-    // Log query error
-    logger.error('Query error', {
+    logger.error('Database query error', {
       query: text,
+      params,
       error: error.message,
       code: error.code,
-      duration: `${duration}ms`
+      duration: Date.now() - start
     });
-    
     throw error;
   }
 }
@@ -76,24 +89,31 @@ async function query(text, params) {
  * @returns {Promise} - Database client
  */
 async function getClient() {
-  try {
-    const client = await pool.connect();
-    const originalRelease = client.release;
-    
-    // Override the release method to log the duration
-    const startTime = Date.now();
-    client.release = () => {
-      const duration = Date.now() - startTime;
-      logger.debug('Client released', { duration: `${duration}ms` });
-      originalRelease.apply(client);
-    };
-    
-    logger.debug('Client acquired');
-    return client;
-  } catch (error) {
-    logger.error('Error acquiring client', { error: error.message });
-    throw error;
-  }
+  const client = await pool.connect();
+  const originalRelease = client.release;
+  
+  // Wrap release function to keep track of connection management
+  client.release = () => {
+    logger.debug('Client returned to pool');
+    return originalRelease.call(client);
+  };
+  
+  // Add convenience transaction wrapper to client
+  client.transactionWrapper = async (callback) => {
+    try {
+      await client.query('BEGIN');
+      const result = await callback(client);
+      await client.query('COMMIT');
+      return result;
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
+  };
+  
+  return client;
 }
 
 /**
@@ -102,14 +122,15 @@ async function getClient() {
  */
 async function testConnection() {
   try {
-    const result = await query('SELECT NOW()');
-    logger.info('Database connection test successful', {
-      timestamp: result.rows[0].now,
+    const result = await query('SELECT NOW() as current_time');
+    logger.info('Database connection successful', {
+      timestamp: result.rows[0].current_time
     });
     return true;
   } catch (error) {
     logger.error('Database connection test failed', {
       error: error.message,
+      stack: error.stack,
       code: error.code
     });
     return false;
@@ -123,9 +144,12 @@ async function testConnection() {
 async function end() {
   try {
     await pool.end();
-    logger.info('Database pool has ended and all connections are closed');
+    logger.info('Database connection pool closed');
   } catch (error) {
-    logger.error('Error closing database pool', { error: error.message });
+    logger.error('Error closing database connections', {
+      error: error.message,
+      stack: error.stack
+    });
     throw error;
   }
 }
@@ -135,5 +159,5 @@ module.exports = {
   getClient,
   testConnection,
   end,
-  pool,
+  pool
 };
