@@ -12,28 +12,28 @@ export default function Platforms() {
       id: 1,
       name: "WebCraft",
       description: "Professional website design and development for small businesses with responsive layouts.",
-      image: "/images/aviation-cockpit.jpeg",
+      image: "/images/web-dashboard.jpeg",
       tags: ["Web Design", "Responsive", "Small Business"]
     },
     {
       id: 2,
       name: "EcomPro",
       description: "Complete e-commerce solution for online stores with payment processing and inventory management.",
-      image: "/images/aviation-tech.jpeg",
+      image: "/images/web-tech.jpeg",
       tags: ["E-commerce", "Online Store", "Sales"]
     },
     {
       id: 3,
       name: "ContentHub",
       description: "Content management system allowing easy updates and publishing for non-technical users.",
-      image: "/images/aviation-controls.jpeg",
+      image: "/images/web-controls.jpeg",
       tags: ["CMS", "Content", "Publishing"]
     },
     {
       id: 4,
       name: "AnalyticEdge",
       description: "Business intelligence dashboard with visitor tracking and performance monitoring.",
-      image: "/images/aviation-cockpit.jpeg",
+      image: "/images/web-dashboard.jpeg",
       tags: ["Analytics", "Business Intelligence", "Reporting"]
     },
     {
