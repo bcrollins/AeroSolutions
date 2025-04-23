@@ -99,7 +99,7 @@ export default function AIServices() {
                 <TabsTrigger value="recommendations" className="text-base px-5">
                   <ListChecks className="mr-2 h-4 w-4" /> Recommendations
                 </TabsTrigger>
-                <TabsTrigger value="elevatebot" className="text-base px-5">
+                <TabsTrigger value="rollinsxbot" className="text-base px-5">
                   <MessageSquare className="mr-2 h-4 w-4" /> ROLLINSXBot
                 </TabsTrigger>
                 <TabsTrigger value="analytics" className="text-base px-5">
@@ -142,15 +142,15 @@ export default function AIServices() {
               </div>
             </TabsContent>
 
-            <TabsContent value="elevatebot" className="mt-0">
+            <TabsContent value="rollinsxbot" className="mt-0">
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="space-y-4">
                   <h2 className="text-2xl font-semibold font-poppins text-[#3B5B9D]">
                     <MessageSquare className="inline mr-2 text-[#00D1D1]" /> 
-                    ElevateBot AI Assistant
+                    ROLLINSXBot AI Assistant
                   </h2>
                   <p className="text-gray-700 font-lato">
-                    Meet ElevateBot, your intelligent business assistant powered by ROLLINSX AI. Get instant answers to your web development questions, technical support, and business guidance.
+                    Meet ROLLINSXBot, your intelligent business assistant powered by ROLLINSX AI. Get instant answers to your web development questions, technical support, and business guidance.
                   </p>
                   <ul className="space-y-2">
                     {[
@@ -170,7 +170,7 @@ export default function AIServices() {
                     ))}
                   </ul>
                   <Button onClick={openBot} className="bg-[#3B5B9D] hover:bg-[#2A4A8C]">
-                    <MessageSquare className="mr-2 h-4 w-4" /> Open ElevateBot
+                    <MessageSquare className="mr-2 h-4 w-4" /> Open ROLLINSXBot
                   </Button>
                 </div>
                 <div className="bg-[#EDEFF2] rounded-xl p-6 border border-gray-200">
@@ -179,7 +179,7 @@ export default function AIServices() {
                       <div className="w-8 h-8 rounded-full bg-[#3B5B9D] flex items-center justify-center mr-2">
                         <MessageSquare className="h-4 w-4 text-white" />
                       </div>
-                      <h3 className="font-medium font-poppins">ElevateBot</h3>
+                      <h3 className="font-medium font-poppins">ROLLINSXBot</h3>
                     </div>
                     <p className="text-gray-700 font-lato text-sm mb-2">
                       Hi there! I'm your ROLLINSX Tech Assistant, powered by ROLLINSX AI. How can I help you with your web development needs today?
@@ -195,7 +195,7 @@ export default function AIServices() {
                       <div className="w-8 h-8 rounded-full bg-[#3B5B9D] flex items-center justify-center mr-2">
                         <MessageSquare className="h-4 w-4 text-white" />
                       </div>
-                      <h3 className="font-medium font-poppins">ElevateBot</h3>
+                      <h3 className="font-medium font-poppins">ROLLINSXBot</h3>
                     </div>
                     <p className="text-gray-700 font-lato text-sm">
                       AI can significantly enhance your website's user experience through personalization, intelligent search, predictive analytics, and automated support. These features can help visitors find what they need faster, engage more deeply with your content, and receive immediate assistance.
@@ -289,7 +289,7 @@ export default function AIServices() {
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Button onClick={openBot} className="bg-[#00D1D1] hover:bg-[#00AFAF] text-white">
-                <MessageSquare className="mr-2 h-4 w-4" /> Chat with ElevateBot
+                <MessageSquare className="mr-2 h-4 w-4" /> Chat with ROLLINSXBot
               </Button>
               <Button variant="outline" className="border-white text-white hover:bg-white hover:text-[#3B5B9D]">
                 Schedule a Consultation
