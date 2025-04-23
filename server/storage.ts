@@ -25,7 +25,7 @@ export interface IStorage {
   createContactSubmission(contact: InsertContact): Promise<Contact>;
   getContactSubmissions(): Promise<Contact[]>;
   getContactById(id: number): Promise<Contact | undefined>;
-  updateContact(id: number): Promise<Contact | undefined>;
+  updateContactStatus(id: number, status: string): Promise<Contact | undefined>;
   deleteContact(id: number): Promise<boolean>;
   
   // OpenAI methods
@@ -112,17 +112,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   /**
-   * Update contact submission (for example, would add status)
+   * Update contact submission status
    * @param id - Contact submission ID
+   * @param status - New status value
    * @returns Updated contact submission or undefined
    */
-  async updateContact(id: number): Promise<Contact | undefined> {
-    // This is a placeholder - with the current database schema there's
-    // no status column to update, but keeping the method signature for future enhancement
+  async updateContactStatus(id: number, status: string): Promise<Contact | undefined> {
     const [contact] = await db
-      .select()
-      .from(contactSubmissions)
-      .where(eq(contactSubmissions.id, id));
+      .update(contactSubmissions)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(contactSubmissions.id, id))
+      .returning();
     return contact;
   }
 
@@ -213,8 +213,9 @@ export class DatabaseStorage implements IStorage {
         await this.createContactSubmission({
           name: 'John Doe',
           email: 'john@example.com',
-          company: 'Example Corp',
-          message: 'I would like to learn more about your OpenAI API service.'
+          subject: 'API Inquiry',
+          message: 'I would like to learn more about your OpenAI API service.',
+          status: 'pending'
         });
         
         console.log('Created sample contact submission');

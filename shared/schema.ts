@@ -11,18 +11,7 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
-  firstName: text("first_name"),
-  lastName: text("last_name"),
   role: text("role").default("user").notNull(),
-  stripeCustomerId: text("stripe_customer_id"),
-  businessType: text("business_type"),
-  preferences: text("preferences"),
-  lastLoginAt: timestamp("last_login_at"),
-  verified: boolean("verified"),
-  verificationToken: text("verification_token"),
-  resetPasswordToken: text("reset_password_token"),
-  resetPasswordExpires: timestamp("reset_password_expires"),
-  onboardingComplete: boolean("onboarding_complete"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -47,14 +36,16 @@ export const contactSubmissions = pgTable("contact_submissions", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull(),
-  company: text("company").notNull(),
+  subject: text("subject").notNull(),
   message: text("message").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull()
+  status: text("status").default("pending").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
 // Contact schema for insert operations
 export const contactInsertSchema = createInsertSchema(contactSubmissions)
-  .omit({ id: true, createdAt: true });
+  .omit({ id: true, createdAt: true, updatedAt: true });
 
 // Type definitions
 export type Contact = typeof contactSubmissions.$inferSelect;
