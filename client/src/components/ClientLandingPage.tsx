@@ -323,72 +323,72 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
       ]
     },
     {
-      id: "aeroflight",
-      name: "AeroFlight",
-      shortDescription: "Advanced flight simulation and training platform",
+      id: "webtrainer",
+      name: "WebTrainer",
+      shortDescription: "Advanced simulation and training platform",
       icon: <FaCode className="text-3xl" />,
-      description: "AeroFlight is a sophisticated flight simulation platform designed for pilot training and proficiency. It provides high-fidelity aircraft models, realistic weather simulation, and comprehensive performance analysis tools. The platform supports both desktop and full-motion simulator configurations, making it versatile for various training needs from individual pilots to large flight schools and airlines.",
+      description: "WebTrainer is a sophisticated simulation platform designed for professional training and skill development. It provides high-fidelity virtual environments, realistic scenario simulation, and comprehensive performance analysis tools. The platform supports both desktop and immersive VR configurations, making it versatile for various training needs from individual professionals to large training centers and enterprises.",
       features: [
-        "High-fidelity aircraft models with accurate flight dynamics",
-        "Real-world navigation data and procedures",
-        "Dynamic weather engine with global meteorological data",
-        "Customizable training scenarios for proficiency development",
+        "High-fidelity simulation models with accurate physics",
+        "Real-world data integration and procedural learning",
+        "Dynamic scenario engine with comprehensive variables",
+        "Customizable training scenarios for skill development",
         "Performance tracking and detailed analytics",
-        "Integration with actual aircraft avionics",
-        "Multi-crew interaction capabilities",
+        "Integration with industry-standard tools and protocols",
+        "Multi-user interaction capabilities",
         "VR support for immersive training experiences"
       ],
       techStack: [
         "Frontend: C++ with custom graphics engine",
-        "Physics: Custom aerodynamics engine",
+        "Physics: Custom simulation engine",
         "Backend: Rust for high-performance computing",
         "Database: Time-series database for telemetry data",
-        "Weather: Integration with global weather APIs",
-        "Navigation: Custom navaid database with AIRAC cycle updates",
-        "Hardware: Interface support for common flight controls",
+        "Data: Integration with real-time data APIs",
+        "Navigation: Custom mapping with global location support",
+        "Hardware: Interface support for various input devices",
         "Audio: Spatial audio engine with accurate environmental modeling"
       ],
       screenshots: [
         { 
           image: "https://images.unsplash.com/photo-1521409818504-e246d5956192?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80", 
-          caption: "AeroFlight cockpit view with realistic weather conditions" 
+          caption: "WebTrainer simulation view with realistic environment" 
         },
         { 
           image: "https://images.unsplash.com/photo-1530745352768-266b00975f8e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80", 
-          caption: "Performance analysis dashboard showing flight metrics" 
+          caption: "Performance analysis dashboard showing detailed metrics" 
         },
         { 
           image: "https://images.unsplash.com/photo-1524741111534-9133a872029a?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80", 
-          caption: "Training scenario builder with route planning" 
+          caption: "Training scenario builder with workflow planning" 
         }
       ],
       useCases: [
-        "Flight schools conducting standardized training programs",
-        "Airlines maintaining pilot currency and qualification",
-        "Individual pilots practicing procedures and emergency scenarios",
-        "Aviation universities teaching flight principles and procedures",
-        "Flight departments conducting recurrent training for corporate pilots"
+        "Training centers conducting standardized professional programs",
+        "Enterprises maintaining staff certifications and qualifications",
+        "Individual professionals practicing procedures and emergency scenarios",
+        "Educational institutions teaching technical skills and procedures",
+        "Corporate training departments conducting specialized training"
       ],
       apiEndpoints: [
         {
           method: "GET",
-          endpoint: "/api/v1/aircraft",
-          description: "Retrieve available aircraft models with specifications"
+          endpoint: "/api/v1/environments",
+          description: "Retrieve available simulation environments with specifications"
         },
         {
           method: "GET",
-          endpoint: "/api/v1/weather",
-          description: "Get current weather conditions for specific locations"
+          endpoint: "/api/v1/conditions",
+          description: "Get current environmental conditions for specific scenarios"
         },
         {
           method: "POST",
           endpoint: "/api/v1/scenarios/create",
-          description: "Create custom flight training scenarios"
+          description: "Create custom training scenarios"
         },
         {
           method: "GET",
-          endpoint: "/api/v1/telemetry/:flightId",
-          description: "Retrieve telemetry data for specific training flights"
+          endpoint: "/api/v1/telemetry/:sessionId",
+          description: "Retrieve telemetry data for specific training sessions"
         }
       ]
     }
@@ -441,13 +441,13 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
                       </svg>
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold">Surprise! Welcome to Brandon's Aviation Software Platforms</h3>
+                      <h3 className="text-xl font-bold">Surprise! Welcome to Brandon's ROLLINSX Software Platforms</h3>
                       <p className="text-sm text-white/80">Something special I've been working on...</p>
                     </div>
                   </div>
                   
                   <p className="mb-4 text-lg">
-                    Hello Mom and Dad! I wanted to show you what I've been building - a suite of advanced aviation software platforms. Each one solves critical problems in the aviation industry and represents thousands of hours of development. I'm so excited to show you my work!
+                    Hello Mom and Dad! I wanted to show you what I've been building - a suite of advanced web software platforms. Each one solves critical problems for modern enterprises and represents thousands of hours of development. I'm so excited to show you my work!
                   </p>
                 
                   <div className="bg-white/10 rounded-lg p-4 mb-4 border border-white/30">
@@ -458,13 +458,13 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
                       <span className="font-semibold">About These Platforms</span>
                     </div>
                     <p className="text-white/90 mb-3">
-                      I've created these sophisticated software platforms specifically for the aviation industry. They handle everything from real-time data synchronization to flight management, executive services, and operations.
+                      I've created these sophisticated software platforms specifically for enterprise businesses. They handle everything from real-time data synchronization to resource management, executive services, and operations.
                     </p>
                     <ul className="space-y-1 ml-7 text-sm text-white/90 list-disc">
                       <li>All platforms are designed with modern technology stacks</li>
-                      <li>They solve real problems for aviation businesses</li>
+                      <li>They solve real problems for today's businesses</li>
                       <li>Each has been carefully crafted with attention to detail</li>
-                      <li>Together they form a comprehensive aviation technology ecosystem</li>
+                      <li>Together they form a comprehensive enterprise technology ecosystem</li>
                     </ul>
                   </div>
                 
@@ -504,7 +504,7 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
                 </div>
                 
                 <p className="mb-4">
-                  Hello, <span className="font-semibold">Special Client</span>! This private environment gives you exclusive access to explore our aviation software platforms. Each platform is fully interactive and showcases the powerful features we've built specifically for aviation industry needs.
+                  Hello, <span className="font-semibold">Special Client</span>! This private environment gives you exclusive access to explore our ROLLINSX software platforms. Each platform is fully interactive and showcases the powerful features we've built specifically for modern enterprise needs.
                 </p>
                 
                 <div className="bg-white/10 rounded-lg p-4 mb-4">
@@ -517,7 +517,7 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
                   <ul className="space-y-1 ml-7 text-sm text-white/90">
                     <li>• Access Code: <span className="font-mono bg-white/20 px-2 py-0.5 rounded">{accessCode}</span></li>
                     <li>• Session Started: <span className="font-mono">{new Date().toLocaleString()}</span></li>
-                    <li>• Authorized Platforms: AeroSync, AeroFlight, ExecSync, AeroOps</li>
+                    <li>• Authorized Platforms: WebSync, WebTrainer, ExecSync, WebOps</li>
                   </ul>
                 </div>
                 
@@ -573,25 +573,25 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
                   <div className="p-5">
                     <p className="text-gray-700 mb-4">{platform.shortDescription}</p>
                     <div className="flex flex-wrap gap-2 mb-4">
-                      {platform.id === "aerosync" && (
+                      {platform.id === "websync" && (
                         <>
                           <span className="bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full">Real-time Sync</span>
                           <span className="bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">Data Integration</span>
                         </>
                       )}
-                      {platform.id === "aeroflight" && (
+                      {platform.id === "webtrainer" && (
                         <>
-                          <span className="bg-indigo-100 text-indigo-700 text-xs font-semibold px-3 py-1 rounded-full">Flight Planning</span>
+                          <span className="bg-indigo-100 text-indigo-700 text-xs font-semibold px-3 py-1 rounded-full">Training Programs</span>
                           <span className="bg-purple-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full">Performance Analytics</span>
                         </>
                       )}
                       {platform.id === "execsync" && (
                         <>
-                          <span className="bg-amber-100 text-amber-700 text-xs font-semibold px-3 py-1 rounded-full">Executive Aviation</span>
+                          <span className="bg-amber-100 text-amber-700 text-xs font-semibold px-3 py-1 rounded-full">Executive Management</span>
                           <span className="bg-red-100 text-red-700 text-xs font-semibold px-3 py-1 rounded-full">Premium Services</span>
                         </>
                       )}
-                      {platform.id === "aeroops" && (
+                      {platform.id === "webops" && (
                         <>
                           <span className="bg-teal-100 text-teal-700 text-xs font-semibold px-3 py-1 rounded-full">Operations</span>
                           <span className="bg-cyan-100 text-cyan-700 text-xs font-semibold px-3 py-1 rounded-full">Compliance</span>
@@ -629,7 +629,7 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
                       <path d="M12 5.5C13.93 5.5 15.5 3.93 15.5 2C15.5 0.07 13.93 -1.5 12 -1.5C10.07 -1.5 8.5 0.07 8.5 2C8.5 3.93 10.07 5.5 12 5.5ZM12 8.5C9.79 8.5 6 9.79 6 12V13H18V12C18 9.79 14.21 8.5 12 8.5Z" fill="currentColor" />
                     </svg>
                   </span>
-                  The Team Behind Aero Solutions
+                  The Team Behind ROLLINSX
                 </h2>
                 
                 {/* Founder Section */}
@@ -638,7 +638,7 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
                     <div className="md:w-2/5 bg-gradient-to-br from-blue-800 to-blue-900">
                       <img 
                         src={familyImage1} 
-                        alt="Brandon Rollins - Professional Pilot & Developer" 
+                        alt="Brandon Rollins - Professional Developer" 
                         className="h-full w-full object-cover"
                       />
                     </div>
@@ -646,14 +646,14 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
                       <div className="uppercase tracking-wide text-sm text-blue-700 font-semibold">Founder & Lead Developer</div>
                       <h4 className="mt-1 text-xl font-semibold text-gray-900">Brandon Rollins</h4>
                       <p className="mt-2 text-gray-600">
-                        As a self-taught software engineer and professional pilot, Brandon combines real-world aviation experience with technical expertise to create innovative solutions for the aviation industry. His unique perspective allows him to identify critical pain points and build software that addresses actual needs faced by aviation professionals daily.
+                        As a self-taught software engineer with extensive experience, Brandon combines real-world business knowledge with technical expertise to create innovative solutions for enterprise needs. His unique perspective allows him to identify critical pain points and build software that addresses actual needs faced by business professionals daily.
                       </p>
                       <p className="mt-3 text-gray-600">
-                        Brandon has dedicated thousands of hours to developing the Aero Solutions platform suite, creating a comprehensive ecosystem of aviation software solutions from the ground up using modern technologies and best practices in software development.
+                        Brandon has dedicated thousands of hours to developing the ROLLINSX platform suite, creating a comprehensive ecosystem of enterprise software solutions from the ground up using modern technologies and best practices in software development.
                       </p>
                       <div className="mt-4 flex flex-wrap gap-2">
                         <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">Full-Stack Development</span>
-                        <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">Aviation</span>
+                        <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">Web Development</span>
                         <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">Microservices</span>
                         <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">Cloud Architecture</span>
                       </div>
@@ -686,10 +686,10 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
                           </div>
                         </div>
                         <p className="text-gray-600 mb-3">
-                          A successful entrepreneur from Wilmington, NC, Bernie founded Gulfstream Steel and Supply, demonstrating remarkable business acumen and leadership. His experience and guidance have been invaluable in shaping the strategic direction of Aero Solutions.
+                          A successful entrepreneur from Wilmington, NC, Bernie founded Gulfstream Steel and Supply, demonstrating remarkable business acumen and leadership. His experience and guidance have been invaluable in shaping the strategic direction of ROLLINSX.
                         </p>
                         <p className="text-sm text-gray-500 italic">
-                          Fuck Embry Riddle was expensive
+                          Proud to support innovation in web technology
                         </p>
                       </div>
                     </div>
@@ -718,10 +718,10 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
                           </div>
                         </div>
                         <p className="text-gray-600 mb-3">
-                          A mother of three, Nicole is the reason Brandon didn't get a "doo bah" degree, instead pursuing his passion for technology and aviation. Her unwavering support and encouragement have been essential to Brandon's journey in building Aero Solutions.
+                          A mother of three, Nicole is the reason Brandon didn't get a "doo bah" degree, instead pursuing his passion for technology and web development. Her unwavering support and encouragement have been essential to Brandon's journey in building ROLLINSX.
                         </p>
                         <p className="text-sm text-gray-500 italic">
-                          "Seeing how Brandon has combined his love for aviation and technology into these sophisticated platforms makes me incredibly proud."
+                          "Seeing how Brandon has combined his love for innovation and technology into these sophisticated platforms makes me incredibly proud."
                         </p>
                       </div>
                     </div>
@@ -748,7 +748,7 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-4 md:mb-0">
-              <p className="text-sm text-gray-700">© {new Date().getFullYear()} Aero Solutions. All platform previews are provided under NDA.</p>
+              <p className="text-sm text-gray-700">© {new Date().getFullYear()} ROLLINSX. All platform previews are provided under NDA.</p>
               <p className="text-xs text-gray-500 mt-1">Accessing with code: {accessCode.substring(0, 3)}*****</p>
             </div>
             <div className="flex space-x-4">
