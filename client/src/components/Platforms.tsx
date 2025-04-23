@@ -40,14 +40,14 @@ export default function Platforms() {
       id: 5,
       name: "AppForge",
       description: "Mobile app development platform for iOS and Android with seamless website integration.",
-      image: "/images/aviation-tech.jpeg",
+      image: "/images/web-tech.jpeg",
       tags: ["Mobile Apps", "iOS", "Android"]
     },
     {
       id: 6,
       name: "IntegrateX",
       description: "API integration platform connecting your website with third-party services and tools.",
-      image: "/images/aviation-controls.jpeg",
+      image: "/images/web-controls.jpeg",
       tags: ["API", "Integration", "Automation"]
     }
   ];

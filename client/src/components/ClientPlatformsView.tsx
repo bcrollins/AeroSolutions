@@ -56,15 +56,15 @@ const platforms: ClientPlatform[] = [
     ],
     screenshots: [
       { 
-        image: "/images/aviation-cockpit.jpeg", 
-        caption: "AeroSync Dashboard showing real-time synchronization status" 
+        image: "/images/web-dashboard.jpeg", 
+        caption: "WebSync Dashboard showing real-time synchronization status" 
       },
       { 
-        image: "/images/aviation-controls.jpeg", 
-        caption: "Integration configuration panel with multiple aviation systems" 
+        image: "/images/web-controls.jpeg", 
+        caption: "Integration configuration panel with multiple web systems" 
       },
       { 
-        image: "/images/aviation-tech.jpeg", 
+        image: "/images/web-tech.jpeg", 
         caption: "Conflict resolution interface with data comparison view" 
       }
     ],
@@ -126,16 +126,16 @@ const platforms: ClientPlatform[] = [
     ],
     screenshots: [
       { 
-        image: "/images/aviation-cockpit.jpeg", 
-        caption: "AeroOps control center with real-time flight tracking" 
+        image: "/images/web-dashboard.jpeg", 
+        caption: "WebOps control center with real-time operations tracking" 
       },
       { 
-        image: "/images/aviation-tech.jpeg", 
-        caption: "Crew scheduling interface with qualification overlays" 
+        image: "/images/web-tech.jpeg", 
+        caption: "Task scheduling interface with staff qualification overlays" 
       },
       { 
-        image: "/images/aviation-controls.jpeg", 
-        caption: "Flight optimization panel showing fuel efficiency metrics" 
+        image: "/images/web-controls.jpeg", 
+        caption: "Resource optimization panel showing efficiency metrics" 
       }
     ],
     useCases: [
@@ -196,15 +196,15 @@ const platforms: ClientPlatform[] = [
     ],
     screenshots: [
       { 
-        image: "/images/aviation-tech.jpeg", 
+        image: "/images/web-tech.jpeg", 
         caption: "ExecSync dashboard showing prioritized tasks and communications" 
       },
       { 
-        image: "/images/aviation-cockpit.jpeg", 
+        image: "/images/web-dashboard.jpeg", 
         caption: "Meeting scheduler with AI-suggested time slots" 
       },
       { 
-        image: "/images/aviation-controls.jpeg", 
+        image: "/images/web-controls.jpeg", 
         caption: "Secure document sharing interface with tracking capabilities" 
       }
     ],
@@ -266,15 +266,15 @@ const platforms: ClientPlatform[] = [
     ],
     screenshots: [
       { 
-        image: "/images/aviation-cockpit.jpeg", 
-        caption: "AeroFlight simulator cockpit view with weather system" 
+        image: "/images/web-dashboard.jpeg", 
+        caption: "WebFlight simulator control view with advanced system" 
       },
       { 
-        image: "/images/aviation-controls.jpeg", 
+        image: "/images/web-controls.jpeg", 
         caption: "Instructor station showing student performance metrics" 
       },
       { 
-        image: "/images/aviation-tech.jpeg", 
+        image: "/images/web-tech.jpeg", 
         caption: "VR training scenario with emergency procedure practice" 
       }
     ],
@@ -327,7 +327,7 @@ export default function ClientPlatformsView({ isOpen, onClose, accessCode }: Cli
           <div className={`${isSpecialCode ? 'bg-gradient-to-r from-blue-900 to-blue-700' : 'bg-luxury'} text-white p-5 flex justify-between items-center`}>
             <div>
               <h2 className="text-2xl font-bold font-montserrat">
-                {isSpecialCode ? 'Family Preview - Aero Solutions Platforms' : 'Client Platform Preview'}
+                {isSpecialCode ? 'Family Preview - ROLLINSX Platforms' : 'Client Platform Preview'}
               </h2>
               <p className="text-sm text-white/80">
                 {isSpecialCode ? 'Special Access: Monte Cristo Family' : `Access Code: ${accessCode}`}
@@ -354,7 +354,7 @@ export default function ClientPlatformsView({ isOpen, onClose, accessCode }: Cli
                         </svg>
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold">Surprise! Welcome to Brandon's Aviation Software Platforms</h3>
+                        <h3 className="text-xl font-bold">Surprise! Welcome to Brandon's ROLLINSX Software Platforms</h3>
                         <p className="text-sm text-white/80">Something special I've been working on...</p>
                       </div>
                     </div>
@@ -517,7 +517,7 @@ export default function ClientPlatformsView({ isOpen, onClose, accessCode }: Cli
           {isSpecialCode && (
             <div className="border-t border-gray-200 p-6 bg-gray-50" id="founder">
               <div className="max-w-4xl mx-auto">
-                <h3 className="text-2xl font-bold text-primary mb-6">The Team Behind Aero Solutions</h3>
+                <h3 className="text-2xl font-bold text-primary mb-6">The Team Behind ROLLINSX</h3>
                 
                 {/* Founder Section */}
                 <div className="bg-white rounded-xl shadow-md overflow-hidden mb-8">
@@ -537,7 +537,7 @@ export default function ClientPlatformsView({ isOpen, onClose, accessCode }: Cli
                         As a self-taught software engineer and professional pilot, Brandon combines real-world aviation experience with technical expertise to create innovative solutions for the aviation industry. His unique perspective allows him to identify critical pain points and build software that addresses actual needs faced by aviation professionals daily.
                       </p>
                       <p className="mt-3 text-gray-600">
-                        Brandon has dedicated thousands of hours to developing the Aero Solutions platform suite, creating a comprehensive ecosystem of aviation software solutions from the ground up using modern technologies and best practices in software development.
+                        Brandon has dedicated thousands of hours to developing the ROLLINSX platform suite, creating a comprehensive ecosystem of web software solutions from the ground up using modern technologies and best practices in software development.
                       </p>
                     </div>
                   </div>
