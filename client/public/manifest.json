@@ -1,14 +1,14 @@
 {
   "name": "ROLLINSX",
   "short_name": "ROLLINSX",
-  "description": "Premier aviation software development and solutions provider",
+  "description": "Premier web software development and solutions provider",
   "theme_color": "#1E3A8A",
   "background_color": "#ffffff",
   "display": "standalone",
   "orientation": "portrait",
   "scope": "/",
   "start_url": "/",
-  "categories": ["business", "aviation", "technology", "productivity"],
+  "categories": ["business", "web", "technology", "productivity"],
   "icons": [
     {
       "src": "/icons/icon-72x72.png",
@@ -86,7 +86,7 @@
     {
       "name": "Our Platforms",
       "short_name": "Platforms",
-      "description": "Explore our aviation platforms",
+      "description": "Explore our web platforms",
       "url": "/platforms",
       "icons": [{ "src": "/icons/platforms-icon.png", "sizes": "192x192" }]
     }

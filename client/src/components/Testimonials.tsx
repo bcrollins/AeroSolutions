@@ -6,23 +6,23 @@ export default function Testimonials() {
   const testimonials: Testimonial[] = [
     {
       id: 1,
-      text: "Aero Solutions transformed our operations with AeroFlight—truly game-changing! Their no-upfront payment model made the decision easy, and the results exceeded our expectations.",
+      text: "ROLLINSX transformed our operations with their custom web platform—truly game-changing! Their no-upfront payment model made the decision easy, and the results exceeded our expectations.",
       name: "Sarah Thompson",
-      title: "CEO, SkyHigh Airlines",
+      title: "CEO, Digital Solutions Inc",
       image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&auto=format&fit=crop&w=1922&q=80"
     },
     {
       id: 2,
-      text: "The team at Aero Solutions delivered exactly what we needed with ExecSync. As a private jet charter, we needed a system that could handle complex scheduling, and they nailed it.",
+      text: "The team at ROLLINSX delivered exactly what we needed with their scheduling platform. As a business with complex needs, we needed a system that could handle intricate scheduling, and they nailed it.",
       name: "Michael Rodriguez",
-      title: "Operations Director, Elite Air Charter",
+      title: "Operations Director, Premier Services",
       image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1974&q=80"
     },
     {
       id: 3,
-      text: "The AeroOps platform revolutionized how we track and manage our maintenance operations. The aviation-specific features show that Aero Solutions truly understands our industry's unique challenges.",
+      text: "The management platform revolutionized how we track and manage our operations. The industry-specific features show that ROLLINSX truly understands our business's unique challenges.",
       name: "Jennifer Lee",
-      title: "CTO, Global Aviation Maintenance",
+      title: "CTO, Global Maintenance Services",
       image: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1974&q=80"
     }
   ];
@@ -61,7 +61,7 @@ export default function Testimonials() {
           </div>
           <h2 className="text-4xl md:text-5xl font-bold font-serif text-primary mb-6 tracking-tight">What Our Clients Say</h2>
           <p className="text-xl text-darkGray max-w-3xl mx-auto leading-relaxed">
-            Hear from aviation industry leaders who have transformed their operations with our software solutions.
+            Hear from industry leaders who have transformed their operations with our web solutions.
           </p>
         </motion.div>
         
