@@ -1,36 +1,45 @@
 /**
- * OpenAI Routes
+ * OpenAI API Routes
+ * 
+ * Handles routing for OpenAI API endpoints
  */
 const express = require('express');
+const { 
+  generateText, 
+  generateJSON, 
+  analyzeImage, 
+  testConnection 
+} = require('../controllers/openaiController');
+const { openaiLimiter } = require('../middlewares/rateLimiter');
+
 const router = express.Router();
-const openaiController = require('../controllers/openaiController');
 
 /**
- * @route   POST /api/openai/text
- * @desc    Generate text using OpenAI
- * @access  Public
+ * @route POST /api/openai/text
+ * @desc Generate text using OpenAI API
+ * @access Public (but can be restricted via middleware)
  */
-router.post('/text', openaiController.generateText);
+router.post('/text', openaiLimiter, generateText);
 
 /**
- * @route   POST /api/openai/json
- * @desc    Generate structured JSON using OpenAI
- * @access  Public
+ * @route POST /api/openai/json
+ * @desc Generate JSON using OpenAI API
+ * @access Public (but can be restricted via middleware)
  */
-router.post('/json', openaiController.generateJSON);
+router.post('/json', openaiLimiter, generateJSON);
 
 /**
- * @route   POST /api/openai/analyze-image
- * @desc    Analyze an image using OpenAI
- * @access  Public
+ * @route POST /api/openai/analyze-image
+ * @desc Analyze image using OpenAI Vision API
+ * @access Public (but can be restricted via middleware)
  */
-router.post('/analyze-image', openaiController.analyzeImage);
+router.post('/analyze-image', openaiLimiter, analyzeImage);
 
 /**
- * @route   GET /api/openai/test
- * @desc    Test OpenAI API connection
- * @access  Public
+ * @route GET /api/openai/test
+ * @desc Test OpenAI API connection
+ * @access Public
  */
-router.get('/test', openaiController.testConnection);
+router.get('/test', testConnection);
 
 module.exports = router;

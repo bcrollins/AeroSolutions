@@ -5,173 +5,258 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Platform API</title>
   <link rel="stylesheet" href="/css/style.css">
-  <meta name="description" content="An advanced AI-driven platform for transforming digital concepts into intelligent, interactive prototypes with seamless design generation and comprehensive service visualization.">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
 </head>
 <body>
-  <header>
-    <nav>
-      <div class="container">
-        <div class="logo">
-          <h1>AI Platform</h1>
-        </div>
-        <ul class="nav-links">
+  <div class="container">
+    <header>
+      <div class="logo">
+        <img src="/img/logo.svg" alt="AI Platform API Logo">
+        <h1>AI Platform API</h1>
+      </div>
+      <nav>
+        <ul>
           <li><a href="#features">Features</a></li>
-          <li><a href="#docs">Documentation</a></li>
-          <li><a href="#about">About</a></li>
-          <li><a href="/api" class="btn">API</a></li>
+          <li><a href="#documentation">Documentation</a></li>
+          <li><a href="#endpoints">Endpoints</a></li>
+          <li><a href="https://github.com/your-repo" target="_blank">GitHub</a></li>
         </ul>
-      </div>
-    </nav>
-  </header>
+      </nav>
+    </header>
 
-  <section class="hero">
-    <div class="container">
-      <div class="hero-content">
-        <h1>Advanced AI-Driven Platform</h1>
-        <p>Transform digital concepts into intelligent, interactive prototypes with seamless design generation and comprehensive service visualization.</p>
-        <div class="hero-buttons">
-          <a href="#features" class="btn btn-primary">Explore Features</a>
-          <a href="/api" class="btn btn-secondary">API Documentation</a>
+    <main>
+      <section class="hero">
+        <div class="hero-content">
+          <h2>Powerful AI Integration</h2>
+          <p>Access advanced OpenAI capabilities through a simple, secure API.</p>
+          <div class="hero-buttons">
+            <a href="#documentation" class="btn btn-primary">Get Started</a>
+            <a href="https://github.com/your-repo" class="btn btn-secondary">View on GitHub</a>
+          </div>
         </div>
-      </div>
-    </div>
-  </section>
+        <div class="hero-image">
+          <img src="/img/hero.svg" alt="AI Platform Illustration">
+        </div>
+      </section>
 
-  <section id="features" class="features">
-    <div class="container">
-      <h2>Key Features</h2>
-      <div class="feature-grid">
-        <div class="feature-card">
-          <div class="feature-icon">🧠</div>
-          <h3>AI-Powered Text Generation</h3>
-          <p>Generate high-quality text content using state-of-the-art language models.</p>
+      <section id="features" class="features">
+        <h2>Core Features</h2>
+        <div class="feature-grid">
+          <div class="feature-card">
+            <div class="feature-icon">🤖</div>
+            <h3>Text Generation</h3>
+            <p>Generate human-like text for various applications using advanced language models.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🔍</div>
+            <h3>Image Analysis</h3>
+            <p>Extract information, context, and insights from images using vision models.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📋</div>
+            <h3>Structured Data</h3>
+            <p>Generate structured JSON data for seamless integration with your applications.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🔒</div>
+            <h3>Secure & Reliable</h3>
+            <p>Built with security best practices and error handling for production usage.</p>
+          </div>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">📊</div>
-          <h3>Structured JSON Responses</h3>
-          <p>Get well-structured data responses in JSON format for seamless integration.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">🖼️</div>
-          <h3>Image Analysis</h3>
-          <p>Analyze images with AI vision capabilities to extract valuable insights.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">🔒</div>
-          <h3>Secure Database Integration</h3>
-          <p>Built with enterprise-grade PostgreSQL database integration and security.</p>
-        </div>
-      </div>
-    </div>
-  </section>
+      </section>
 
-  <section id="docs" class="documentation">
-    <div class="container">
-      <h2>API Documentation</h2>
-      <div class="documentation-wrapper">
-        <div class="endpoint">
-          <h3>Text Generation</h3>
-          <div class="endpoint-details">
-            <p><strong>Endpoint:</strong> <code>POST /api/openai/text</code></p>
-            <p><strong>Description:</strong> Generate text using OpenAI models</p>
-            <div class="code-block">
-              <pre><code>{
-  "prompt": "Write a summary about artificial intelligence",
-  "model": "gpt-4o",
-  "max_tokens": 1000,
-  "temperature": 0.7
-}</code></pre>
+      <section id="documentation" class="documentation">
+        <h2>Documentation</h2>
+        <div class="doc-container">
+          <div class="doc-sidebar">
+            <ul>
+              <li><a href="#getting-started" class="active">Getting Started</a></li>
+              <li><a href="#authentication">Authentication</a></li>
+              <li><a href="#rate-limiting">Rate Limiting</a></li>
+              <li><a href="#error-handling">Error Handling</a></li>
+            </ul>
+          </div>
+          <div class="doc-content">
+            <div id="getting-started" class="doc-section">
+              <h3>Getting Started</h3>
+              <p>To use the AI Platform API, you'll need to:</p>
+              <ol>
+                <li>Register for an API key</li>
+                <li>Include your API key in the request headers</li>
+                <li>Make requests to the appropriate endpoints</li>
+              </ol>
+              <div class="code-block">
+                <pre><code>// Example API request with JavaScript
+fetch('/api/openai/text', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer YOUR_API_KEY'
+  },
+  body: JSON.stringify({
+    prompt: 'Hello, AI!',
+    max_tokens: 50
+  })
+})
+.then(response => response.json())
+.then(data => console.log(data));</code></pre>
+              </div>
             </div>
           </div>
         </div>
+      </section>
 
-        <div class="endpoint">
-          <h3>JSON Generation</h3>
-          <div class="endpoint-details">
-            <p><strong>Endpoint:</strong> <code>POST /api/openai/json</code></p>
-            <p><strong>Description:</strong> Generate structured JSON data using OpenAI models</p>
-            <div class="code-block">
-              <pre><code>{
-  "prompt": "Create a product data structure",
-  "model": "gpt-4o",
-  "max_tokens": 1000,
-  "temperature": 0.7,
-  "schema": {
-    "products": [{"name": "string", "price": "number"}]
+      <section id="endpoints" class="endpoints">
+        <h2>API Endpoints</h2>
+        <div class="endpoint-list">
+          <div class="endpoint-item">
+            <h3>Text Generation</h3>
+            <p class="endpoint-url">POST /api/openai/text</p>
+            <p>Generate text responses using OpenAI's language models.</p>
+            <button class="btn-small" onclick="toggleEndpointDetails('text-details')">View Details</button>
+            <div id="text-details" class="endpoint-details hidden">
+              <h4>Request Body</h4>
+              <div class="code-block">
+                <pre><code>{
+  "prompt": "Write a short story about",
+  "model": "gpt-4o",      // Optional
+  "max_tokens": 500,      // Optional
+  "temperature": 0.7      // Optional
+}</code></pre>
+              </div>
+              <h4>Response</h4>
+              <div class="code-block">
+                <pre><code>{
+  "success": true,
+  "data": {
+    "text": "Once upon a time...",
+    "model": "gpt-4o",
+    "usage": {
+      "prompt_tokens": 5,
+      "completion_tokens": 100,
+      "total_tokens": 105
+    }
   }
 }</code></pre>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="endpoint">
-          <h3>Image Analysis</h3>
-          <div class="endpoint-details">
-            <p><strong>Endpoint:</strong> <code>POST /api/openai/analyze-image</code></p>
-            <p><strong>Description:</strong> Analyze images using OpenAI's vision capabilities</p>
-            <div class="code-block">
-              <pre><code>{
-  "image_url": "https://example.com/image.jpg",
-  "prompt": "Describe this image in detail",
-  "model": "gpt-4o"
+          <div class="endpoint-item">
+            <h3>JSON Generation</h3>
+            <p class="endpoint-url">POST /api/openai/json</p>
+            <p>Generate structured JSON data using OpenAI's models.</p>
+            <button class="btn-small" onclick="toggleEndpointDetails('json-details')">View Details</button>
+            <div id="json-details" class="endpoint-details hidden">
+              <h4>Request Body</h4>
+              <div class="code-block">
+                <pre><code>{
+  "prompt": "Generate a list of 3 book recommendations",
+  "model": "gpt-4o",      // Optional
+  "max_tokens": 500,      // Optional
+  "temperature": 0.7      // Optional
 }</code></pre>
+              </div>
+              <h4>Response</h4>
+              <div class="code-block">
+                <pre><code>{
+  "success": true,
+  "data": {
+    "json": {
+      "recommendations": [
+        {
+          "title": "The Great Gatsby",
+          "author": "F. Scott Fitzgerald",
+          "year": 1925
+        },
+        ...
+      ]
+    },
+    "model": "gpt-4o",
+    "usage": {
+      "prompt_tokens": 8,
+      "completion_tokens": 150,
+      "total_tokens": 158
+    }
+  }
+}</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="endpoint-item">
+            <h3>Image Analysis</h3>
+            <p class="endpoint-url">POST /api/openai/analyze-image</p>
+            <p>Analyze images and extract information using vision models.</p>
+            <button class="btn-small" onclick="toggleEndpointDetails('image-details')">View Details</button>
+            <div id="image-details" class="endpoint-details hidden">
+              <h4>Request Body</h4>
+              <div class="code-block">
+                <pre><code>{
+  "image": "base64_encoded_image_data",
+  "prompt": "Describe this image in detail",  // Optional
+  "max_tokens": 500                           // Optional
+}</code></pre>
+              </div>
+              <h4>Response</h4>
+              <div class="code-block">
+                <pre><code>{
+  "success": true,
+  "data": {
+    "analysis": "The image shows...",
+    "model": "gpt-4o",
+    "usage": {
+      "prompt_tokens": 50,
+      "completion_tokens": 200,
+      "total_tokens": 250
+    }
+  }
+}</code></pre>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      <div class="view-more">
-        <a href="/api" class="btn">View Full Documentation</a>
-      </div>
-    </div>
-  </section>
+      </section>
+    </main>
 
-  <section id="about" class="about">
-    <div class="container">
-      <h2>About the Platform</h2>
-      <p>This advanced AI-driven platform integrates cutting-edge AI technologies with robust backend infrastructure to deliver a comprehensive solution for developers, designers, and businesses. Built using Node.js, Express, PostgreSQL, and OpenAI, the platform provides a reliable and scalable API for intelligent applications.</p>
-      <div class="tech-stack">
-        <h3>Technology Stack</h3>
-        <div class="tech-logos">
-          <div class="tech-logo">Node.js</div>
-          <div class="tech-logo">Express</div>
-          <div class="tech-logo">PostgreSQL</div>
-          <div class="tech-logo">OpenAI</div>
-          <div class="tech-logo">React</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <footer>
-    <div class="container">
+    <footer>
       <div class="footer-content">
         <div class="footer-logo">
-          <h2>AI Platform</h2>
-          <p>Empowering intelligent applications with AI APIs</p>
+          <img src="/img/logo-small.svg" alt="AI Platform API Logo">
+          <p>AI Platform API</p>
         </div>
         <div class="footer-links">
-          <div class="link-group">
-            <h3>Platform</h3>
+          <div class="footer-column">
+            <h4>Resources</h4>
             <ul>
-              <li><a href="#features">Features</a></li>
-              <li><a href="#docs">Documentation</a></li>
-              <li><a href="#about">About</a></li>
+              <li><a href="#documentation">Documentation</a></li>
+              <li><a href="#endpoints">API Reference</a></li>
+              <li><a href="#">Examples</a></li>
             </ul>
           </div>
-          <div class="link-group">
-            <h3>Resources</h3>
+          <div class="footer-column">
+            <h4>Community</h4>
             <ul>
-              <li><a href="/api">API Documentation</a></li>
-              <li><a href="/health">System Status</a></li>
+              <li><a href="#">GitHub</a></li>
+              <li><a href="#">Discord</a></li>
+              <li><a href="#">Twitter</a></li>
+            </ul>
+          </div>
+          <div class="footer-column">
+            <h4>Legal</h4>
+            <ul>
+              <li><a href="#">Terms of Service</a></li>
+              <li><a href="#">Privacy Policy</a></li>
+              <li><a href="#">Cookie Policy</a></li>
             </ul>
           </div>
         </div>
       </div>
-      <div class="copyright">
+      <div class="footer-bottom">
         <p>&copy; 2025 AI Platform API. All rights reserved.</p>
       </div>
-    </div>
-  </footer>
+    </footer>
+  </div>
 
   <script src="/js/main.js"></script>
 </body>
