@@ -1,40 +1,43 @@
 /**
- * Request Validation Middleware
+ * Validation Middleware
  * 
- * This module provides middleware functions for validating API requests.
- * It uses Zod for schema validation.
+ * This module provides middleware for validating request data
+ * using the Zod validation library.
  */
 
 const { z } = require('zod');
 const { createError } = require('./errorHandler');
 
 /**
- * Generate validation middleware for a specific schema
- * @param {Object} schema - Zod schema for validation
+ * Create a validation middleware for request body
+ * @param {Object} schema - Zod schema to validate against
  * @returns {Function} - Express middleware function
  */
-function validate(schema) {
+function validateBody(schema) {
   return (req, res, next) => {
     try {
+      // Validate request body against schema
       const result = schema.safeParse(req.body);
       
       if (!result.success) {
-        // Format Zod validation errors
-        const errors = result.error.format();
+        // If validation fails, format the errors
+        const formattedErrors = formatZodErrors(result.error);
         
+        // Return validation error
         return next(createError(
-          'Invalid request data',
+          'Validation error: ' + formattedErrors.message,
           400,
           'VALIDATION_ERROR',
-          { errors }
+          { errors: formattedErrors.errors }
         ));
       }
       
-      // Store validated data on request object
+      // Attach validated body to request for downstream middleware/routes
       req.validatedBody = result.data;
       next();
     } catch (err) {
-      return next(createError(
+      // Handle unexpected errors
+      next(createError(
         'Validation error: ' + err.message,
         400,
         'VALIDATION_ERROR'
@@ -43,45 +46,70 @@ function validate(schema) {
   };
 }
 
-// Schema for completion requests
+/**
+ * Format Zod validation errors for client consumption
+ * @param {Object} error - Zod error object
+ * @returns {Object} - Formatted error object
+ */
+function formatZodErrors(error) {
+  const errors = {};
+  
+  // Extract field-specific errors
+  error.errors.forEach(err => {
+    const field = err.path.join('.');
+    errors[field] = errors[field] || [];
+    errors[field].push(err.message);
+  });
+  
+  // Create summary message
+  const message = Object.entries(errors)
+    .map(([field, msgs]) => `${field}: ${msgs.join(', ')}`)
+    .join('; ');
+  
+  return {
+    message: message || 'Validation failed',
+    errors
+  };
+}
+
+// Define schemas for OpenAI API validation
+
+// Schema for text completion requests
 const completionSchema = z.object({
-  prompt: z.string().min(1).max(4000),
-  model: z.string().default('gpt-4o'),
-  maxTokens: z.number().int().min(1).max(8192).default(1000),
-  temperature: z.number().min(0).max(2).default(0.7)
+  prompt: z.string().min(1, 'Prompt is required').max(4000, 'Prompt is too long'),
+  model: z.string().optional().default('gpt-4o'),
+  maxTokens: z.number().int().positive().max(4000).optional().default(1000),
+  temperature: z.number().min(0).max(2).optional().default(0.7),
+  responseFormat: z.string().optional()
 });
 
 // Schema for chat completion requests
 const chatSchema = z.object({
   messages: z.array(
     z.object({
-      role: z.enum(['system', 'user', 'assistant', 'function']),
-      content: z.string().min(1).max(8000)
+      role: z.enum(['system', 'user', 'assistant']),
+      content: z.string().min(1).max(4000)
     })
-  ).min(1),
-  model: z.string().default('gpt-4o'),
-  maxTokens: z.number().int().min(1).max(8192).default(1000),
-  temperature: z.number().min(0).max(2).default(0.7),
-  responseFormat: z.enum(['text', 'json_object']).optional()
+  ).min(1, 'At least one message is required'),
+  model: z.string().optional().default('gpt-4o'),
+  maxTokens: z.number().int().positive().max(4000).optional().default(1000),
+  temperature: z.number().min(0).max(2).optional().default(0.7),
+  responseFormat: z.string().optional()
 });
 
 // Schema for image generation requests
 const imageSchema = z.object({
-  prompt: z.string().min(1).max(1000),
-  n: z.number().int().min(1).max(10).default(1),
-  size: z.enum(['1024x1024', '512x512', '256x256']).default('1024x1024'),
-  quality: z.enum(['standard', 'hd']).default('standard'),
-  responseFormat: z.enum(['url', 'b64_json']).default('url')
+  prompt: z.string().min(1, 'Prompt is required').max(1000, 'Prompt is too long'),
+  n: z.number().int().min(1).max(10).optional().default(1),
+  size: z.enum(['256x256', '512x512', '1024x1024']).optional().default('1024x1024'),
+  quality: z.enum(['standard', 'hd']).optional().default('standard'),
+  responseFormat: z.enum(['url', 'b64_json']).optional().default('url')
 });
 
-// Create validator middleware for each schema
-const validateCompletionRequest = validate(completionSchema);
-const validateChatRequest = validate(chatSchema);
-const validateImageRequest = validate(imageSchema);
-
+// Export validation middleware for different requests
 module.exports = {
-  validate,
-  validateCompletionRequest,
-  validateChatRequest,
-  validateImageRequest
+  validateBody,
+  validateCompletionRequest: validateBody(completionSchema),
+  validateChatRequest: validateBody(chatSchema),
+  validateImageRequest: validateBody(imageSchema)
 };

@@ -1,51 +1,64 @@
 /**
  * Request Logger Middleware
  * 
- * This middleware logs incoming requests to the API.
+ * This middleware logs information about incoming HTTP requests
+ * and their responses to help with debugging and monitoring.
  */
 
 const logger = require('../config/logger');
 
 /**
- * Request logging middleware
+ * Log details about the HTTP request and response
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
 function requestLogger(req, res, next) {
-  // Get the start time for calculating request duration
-  req.startTime = Date.now();
+  const startTime = Date.now();
+  const requestId = Math.random().toString(36).substring(2, 10);
   
-  // Get IP address (anonymize it for logging)
-  const ip = logger.anonymize(req.ip);
+  // Store requestId on request object for later use
+  req.requestId = requestId;
   
-  // Log the request
-  logger.info(`${req.method} ${req.originalUrl || req.url}`, {
-    method: req.method,
-    path: req.originalUrl || req.url,
+  // Destructure and mask sensitive information  
+  const { method, originalUrl, ip: rawIp, headers } = req;
+  const ip = logger.anonymize(rawIp || req.connection.remoteAddress);
+  const userAgent = headers['user-agent'];
+  const referer = headers['referer'] || headers['referrer'];
+  
+  // Log request start with minimal details
+  logger.info(`${method} ${originalUrl} - Request started`, {
+    requestId,
+    method,
+    path: originalUrl,
     ip,
-    userAgent: req.get('user-agent'),
-    referrer: req.get('referer') || req.get('referrer')
+    userAgent: userAgent?.substring(0, 100),
+    referer: referer?.substring(0, 100)
   });
   
-  // Log response when it completes
+  // Override end method to log response
   const originalEnd = res.end;
   res.end = function(chunk, encoding) {
-    // Calculate request duration
-    const duration = Date.now() - req.startTime;
+    // Calculate response time
+    const responseTime = Date.now() - startTime;
     
-    // Restore original end function and call it
-    res.end = originalEnd;
-    res.end(chunk, encoding);
+    // Call original end method
+    originalEnd.apply(res, arguments);
     
-    // Log the response
-    const logLevel = res.statusCode >= 400 ? 'warn' : 'info';
-    logger[logLevel](`${res.statusCode} ${req.method} ${req.originalUrl || req.url}`, {
-      method: req.method,
-      path: req.originalUrl || req.url,
-      statusCode: res.statusCode,
-      duration,
-      ip
+    // Get response status code
+    const statusCode = res.statusCode;
+    const logLevel = statusCode >= 400 ? (statusCode >= 500 ? 'error' : 'warn') : 'info';
+    
+    // Log response
+    logger[logLevel](`${method} ${originalUrl} - ${statusCode}`, {
+      requestId,
+      method,
+      path: originalUrl,
+      ip,
+      statusCode,
+      responseTime,
+      contentType: res.getHeader('content-type'),
+      contentLength: res.getHeader('content-length')
     });
   };
   
