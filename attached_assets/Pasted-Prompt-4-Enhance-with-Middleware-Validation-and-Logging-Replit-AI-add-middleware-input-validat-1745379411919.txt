@@ -1,0 +1,120 @@
+Prompt 4: Enhance with Middleware, Validation, and Logging
+
+Replit AI, add middleware, input validation, and logging to improve security and debugging. Ensure all functionality remains intact. Follow these steps:
+
+
+
+
+
+Middleware:
+
+
+
+
+
+Create /middleware/errorHandler.js:
+
+const errorHandler = (err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong!' });
+};
+module.exports = errorHandler;
+
+
+
+Add to index.js:
+
+const errorHandler = require('./middleware/errorHandler');
+app.use(errorHandler);
+
+
+
+Input Validation:
+
+
+
+
+
+Install express-validator via npm install express-validator.
+
+
+
+Update controllers to validate inputs (e.g., in userController.js):
+
+const { body, validationResult } = require('express-validator');
+const userController = {
+  createUser: [
+    body('email').isEmail().normalizeEmail(),
+    body('password').isLength({ min: 6 }),
+    async (req, res) => {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+      try {
+        const user = await User.create(req.body.email, req.body.password);
+        res.json(user);
+      } catch (err) {
+        res.status(500).json({ error: err.message });
+      }
+    }
+  ]
+};
+
+
+
+Logging:
+
+
+
+
+
+Install winston via npm install winston.
+
+
+
+Create /config/logger.js:
+
+const winston = require('winston');
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: [new winston.transports.File({ filename: 'logs/app.log' })]
+});
+module.exports = logger;
+
+
+
+Add logging to controllers (e.g., userController.js):
+
+const logger = require('../config/logger');
+logger.info(`Fetching user with email: ${req.query.email}`);
+
+
+
+Test:
+
+
+
+
+
+Verify validation, error handling, and logging work via console logs and logs/app.log.
+
+
+
+Test the webview to ensure functionality is unchanged.
+
+
+
+Output:
+
+
+
+
+
+Save /middleware/errorHandler.js, /config/logger.js, and updated controllers.
+
+
+
+Confirm the app runs and logs are generated.
