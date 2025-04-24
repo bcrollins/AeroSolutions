@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { UseFormReturn } from 'react-hook-form';
+import { UseFormReturn, FieldValues } from 'react-hook-form';
 import { useToast } from '@/hooks/use-toast';
 import { debounce } from '@/lib/utils';
 

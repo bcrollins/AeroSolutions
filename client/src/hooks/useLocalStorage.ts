@@ -51,7 +51,7 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: SetValue<
       setStoredValue(newValue);
 
       // Dispatch a custom event so other instances can update
-      window.dispatchEvent(new StorageEvent('local-storage', { key }));
+      window.dispatchEvent(new CustomEvent('local-storage-change', { detail: { key } }));
     } catch (error) {
       console.warn(`Error setting localStorage key "${key}":`, error);
     }
@@ -66,8 +66,8 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: SetValue<
     };
 
     // Custom event from other instances of this hook
-    const handleCustomStorageChange = (e: StorageEvent) => {
-      if (e.key === key) {
+    const handleCustomStorageChange = (e: CustomEvent<{ key: string }>) => {
+      if (e.detail.key === key) {
         // Read the latest value from localStorage
         setStoredValue(readValue());
       }
@@ -76,11 +76,11 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: SetValue<
     // This only works for other documents, not the current one
     window.addEventListener('storage', handleStorageChange);
     // This is a custom event, triggered in setValue
-    window.addEventListener('local-storage', handleCustomStorageChange);
+    window.addEventListener('local-storage-change', handleCustomStorageChange as EventListener);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('local-storage', handleCustomStorageChange);
+      window.removeEventListener('local-storage-change', handleCustomStorageChange as EventListener);
     };
   }, [key, readValue]);
 

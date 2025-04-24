@@ -55,7 +55,7 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
         toast({
           title: 'Tour error',
           description: `Element "${step.targetSelector}" not found`,
-          type: 'destructive'
+          type: 'default'
         });
         return;
       }
@@ -92,26 +92,26 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
         case 'top':
           top = targetRect.top - margin;
           left = targetRect.left + targetRect.width / 2 - popperWidth / 2;
-          arrowTop = '100%';
-          arrowLeft = '50%';
+          arrowTop = '100%'; // Using percentage values for CSS positioning
+          arrowLeft = '50%'; // Using percentage values for CSS positioning
           break;
         case 'right':
           top = targetRect.top + targetRect.height / 2 - 100;
           left = targetRect.right + margin;
-          arrowTop = '50%';
-          arrowLeft = `-${arrowSize}px`;
+          arrowTop = '50%'; // Using percentage values for CSS positioning
+          arrowLeft = `-${arrowSize}px`; // String template for CSS values
           break;
         case 'bottom':
           top = targetRect.bottom + margin;
           left = targetRect.left + targetRect.width / 2 - popperWidth / 2;
-          arrowTop = `-${arrowSize}px`;
-          arrowLeft = '50%';
+          arrowTop = `-${arrowSize}px`; // String template for CSS values
+          arrowLeft = '50%'; // Using percentage values for CSS positioning
           break;
         case 'left':
           top = targetRect.top + targetRect.height / 2 - 100;
           left = targetRect.left - popperWidth - margin;
-          arrowTop = '50%';
-          arrowLeft = '100%';
+          arrowTop = '50%'; // Using percentage values for CSS positioning
+          arrowLeft = '100%'; // Using percentage values for CSS positioning
           break;
       }
 

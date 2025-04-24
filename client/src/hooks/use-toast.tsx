@@ -31,6 +31,7 @@ type ToastOptions = {
 export interface Toast extends ToastOptions {
   id: string
   visible: boolean
+  variant?: "default" | "destructive" | "success" | "warning" | "info"
 }
 
 const actionTypes = {
