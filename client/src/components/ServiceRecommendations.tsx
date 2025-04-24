@@ -9,6 +9,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Star } from 'lucide-react';
 import { Link } from 'wouter';
 
+type AuthResponse = {
+  authenticated: boolean;
+  user?: any;
+};
+
 type Recommendation = {
   id: number;
   reason: string;
@@ -31,7 +36,7 @@ const ServiceRecommendations = () => {
     const checkAuth = async () => {
       try {
         const response = await apiRequest('GET', '/api/auth/status');
-        setIsAuthenticated(response.authenticated);
+        setIsAuthenticated(response?.authenticated || false);
       } catch (error) {
         console.error('Auth check error:', error);
         setIsAuthenticated(false);
@@ -45,7 +50,7 @@ const ServiceRecommendations = () => {
     queryKey: ['/api/marketplace/recommend'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/marketplace/recommend');
-      return response.data as RecommendationResponse;
+      return (response?.data || {}) as RecommendationResponse;
     },
     enabled: isAuthenticated,
     retry: 1,
@@ -63,9 +68,9 @@ const ServiceRecommendations = () => {
           </CardDescription>
         </CardHeader>
         <CardFooter>
-          <Link href="/login">
-            <Button>Sign In to See Recommendations</Button>
-          </Link>
+          <Button asChild>
+            <Link href="/login">Sign In to See Recommendations</Link>
+          </Button>
         </CardFooter>
       </Card>
     );
@@ -130,9 +135,9 @@ const ServiceRecommendations = () => {
           </CardDescription>
         </CardHeader>
         <CardFooter>
-          <Link href="/profile">
-            <Button>Update Profile</Button>
-          </Link>
+          <Button asChild>
+            <Link href="/profile">Update Profile</Link>
+          </Button>
         </CardFooter>
       </Card>
     );
@@ -163,8 +168,8 @@ const ServiceRecommendations = () => {
               </div>
             </div>
             <p className="text-sm text-muted-foreground">{rec.reason}</p>
-            <Link href={`/marketplace/${rec.id}`}>
-              <Button variant="link" className="p-0 h-auto mt-2">View Details</Button>
+            <Link href={`/marketplace/${rec.id}`} className="text-primary text-sm mt-2 inline-block hover:underline">
+              View Details
             </Link>
           </div>
         ))}
