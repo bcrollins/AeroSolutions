@@ -36,7 +36,8 @@ const ServiceRecommendations = () => {
     const checkAuth = async () => {
       try {
         const response = await apiRequest('GET', '/api/auth/status');
-        setIsAuthenticated(response?.authenticated || false);
+        const data = await response.json();
+        setIsAuthenticated(data?.authenticated || false);
       } catch (error) {
         console.error('Auth check error:', error);
         setIsAuthenticated(false);
@@ -50,7 +51,8 @@ const ServiceRecommendations = () => {
     queryKey: ['/api/marketplace/recommend'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/marketplace/recommend');
-      return (response?.data || {}) as RecommendationResponse;
+      const responseData = await response.json();
+      return responseData?.data as RecommendationResponse;
     },
     enabled: isAuthenticated,
     retry: 1,
