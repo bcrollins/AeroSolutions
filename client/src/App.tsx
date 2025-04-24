@@ -5,6 +5,7 @@ import { Helmet } from "react-helmet";
 import { useTranslation } from 'react-i18next';
 import ContentProtection from "@/components/ContentProtection";
 import { NotificationProvider } from "@/contexts/NotificationContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import ABTestClient from "@/components/ABTestClient";
 
 // Popup Components
@@ -115,11 +116,12 @@ export default function App() {
   }, [currentPath]);
 
   return (
-    <NotificationProvider>
-      {/* A/B Testing Client - applied to all routes */}
-      <ABTestClient />
-      
-      {/* Global App Metadata - applied to all routes */}
+    <ThemeProvider>
+      <NotificationProvider>
+        {/* A/B Testing Client - applied to all routes */}
+        <ABTestClient />
+        
+        {/* Global App Metadata - applied to all routes */}
       <Helmet>
         {/* Languages support */}
         <html lang="en" />
@@ -855,6 +857,7 @@ export default function App() {
       {/* Global content protection */}
       <ContentProtection />
       <Toaster />
-    </NotificationProvider>
+      </NotificationProvider>
+    </ThemeProvider>
   );
 }

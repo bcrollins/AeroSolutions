@@ -3,6 +3,7 @@ import { Link } from 'wouter';
 import { Menu, X, ChevronDown } from 'lucide-react';  
 import ClientPreviewModal from "./ClientPreviewModal";
 import ROLLINSXLogo from "./ROLLINSXLogo";
+import { ThemeToggle } from "./ThemeToggle";
 
 export default function Header() {  
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);  
