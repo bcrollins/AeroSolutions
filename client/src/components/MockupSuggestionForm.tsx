@@ -41,7 +41,7 @@ export default function MockupSuggestionForm({ onComplete }: MockupSuggestionFor
     setSuggestions(null);
 
     try {
-      const response = await apiRequest("POST", "/api/suggest-mockup", values);
+      const response = await apiRequest("POST", "/api/mockups/suggest-mockup", values);
       
       // Check if response is actually JSON before trying to parse it
       const contentType = response.headers.get("content-type");
