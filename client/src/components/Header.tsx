@@ -136,6 +136,7 @@ export default function Header() {
             >
               Client Preview
             </button>
+            <ThemeToggle />
             <Link  
               href="/login"  
               className="font-inter text-sm uppercase tracking-wide text-[#D4A017] hover:text-[#00D1D1] transition-colors duration-200"  
@@ -207,6 +208,10 @@ export default function Header() {
               >
                 Client Preview
               </button>
+              <div className="flex items-center py-2">
+                <ThemeToggle />
+                <span className="ml-2">Theme</span>
+              </div>
               <Link  
                 href="/login"  
                 onClick={toggleMobileMenu}  

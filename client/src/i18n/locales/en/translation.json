@@ -79,6 +79,11 @@
   "contact_submit": "Submit",
   "contact_success": "Your message has been sent successfully!",
   
-  "seo_title": "Aviation Software Solutions | Aero Solutions",
-  "seo_description": "Leading provider of aviation software solutions for flight operations, management, and optimization."
+  "toggle_theme": "Toggle theme",
+  "light": "Light",
+  "dark": "Dark",
+  "system": "System",
+  
+  "seo_title": "Web Development Solutions | ROLLINSX",
+  "seo_description": "Leading provider of web development solutions and digital transformation services."
 }

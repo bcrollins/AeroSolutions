@@ -118,10 +118,18 @@
     font-family: 'Lato', sans-serif;
     color: var(--color-steel-gray); /* Explicit text color */
   }
+  
+  .dark body {
+    color: var(--color-pure-white); /* Dark mode text color */
+  }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Poppins', sans-serif;
     color: var(--color-midnight-blue); /* Explicit heading color */
+  }
+  
+  .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+    color: var(--color-sky-blue); /* Dark mode heading color */
   }
   
   button, a, nav, .ui-element {
@@ -135,10 +143,18 @@
   color: var(--color-pure-white);
 }
 
+.dark .header {
+  background-color: var(--color-dark-blue-shade);
+}
+
 .hero-section {
   background-color: var(--color-midnight-blue);
   color: var(--color-pure-white);
   background-image: linear-gradient(to bottom right, var(--color-midnight-blue), var(--color-sky-blue));
+}
+
+.dark .hero-section {
+  background-image: linear-gradient(to bottom right, var(--color-dark-blue-shade), var(--color-midnight-blue));
 }
 
 @layer utilities {
