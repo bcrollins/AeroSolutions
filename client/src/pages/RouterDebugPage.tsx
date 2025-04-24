@@ -75,21 +75,30 @@ const RouterDebugPage = () => {
               Click these links to test navigation. Watch the console for route debugging info.
             </p>
             <div className="flex flex-col space-y-2">
-              <Link href="/">
-                <Button variant="outline" size="sm" className="w-full justify-start">
-                  Navigate to Home
-                </Button>
-              </Link>
-              <Link href="/design-tools">
-                <Button variant="outline" size="sm" className="w-full justify-start">
-                  Navigate to Design Tools
-                </Button>
-              </Link>
-              <Link href="/particle-background">
-                <Button variant="outline" size="sm" className="w-full justify-start">
-                  Navigate to Particle Background
-                </Button>
-              </Link>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full justify-start"
+                onClick={() => window.location.href = '/'}
+              >
+                Navigate to Home
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full justify-start"
+                onClick={() => window.location.href = '/design-tools'}
+              >
+                Navigate to Design Tools
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full justify-start"
+                onClick={() => window.location.href = '/particle-background'}
+              >
+                Navigate to Particle Background
+              </Button>
             </div>
           </div>
         </div>
@@ -107,9 +116,9 @@ const RouterDebugPage = () => {
       </div>
       
       <div className="text-right">
-        <Link href="/design-tools">
-          <Button>Back to Design Tools</Button>
-        </Link>
+        <Button onClick={() => window.location.href = '/design-tools'}>
+          Back to Design Tools
+        </Button>
       </div>
     </div>
   );
