@@ -170,9 +170,13 @@ const ServiceRecommendations = () => {
               </div>
             </div>
             <p className="text-sm text-muted-foreground">{rec.reason}</p>
-            <Link href={`/marketplace/${rec.id}`} className="text-primary text-sm mt-2 inline-block hover:underline">
+            <Button 
+              variant="link" 
+              className="p-0 h-auto text-primary text-sm mt-2 hover:underline"
+              onClick={() => window.location.href = `/marketplace/${rec.id}`}
+            >
               View Details
-            </Link>
+            </Button>
           </div>
         ))}
       </CardContent>
