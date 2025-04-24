@@ -1,81 +1,76 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 
-interface ROLLINSXLogoProps {
-  size?: 'sm' | 'md' | 'lg';
-  animated?: boolean;
+interface LogoProps {
   className?: string;
+  size?: 'sm' | 'md' | 'lg';
+  variant?: 'default' | 'light';
 }
 
-const ROLLINSXLogo: React.FC<ROLLINSXLogoProps> = ({ 
-  size = 'md', 
-  animated = false,
-  className = '' 
+const ROLLINSXLogo: React.FC<LogoProps> = ({ 
+  className = '',
+  size = 'md',
+  variant = 'default'
 }) => {
-  // Size mappings
+  // Define sizes for different size props
   const sizeMap = {
     sm: 'w-8 h-8',
-    md: 'w-10 h-10',
+    md: 'w-12 h-12',
     lg: 'w-16 h-16'
   };
-  
-  // Animation variants
-  const variants = {
-    initial: { scale: 0.9, opacity: 0.5 },
-    animate: { scale: 1, opacity: 1 },
-    hover: { scale: 1.05 }
+
+  // Define colors based on variant
+  const colors = {
+    default: {
+      primary: '#000000',      // Black
+      secondary: '#0070F3',    // Blue accent
+      text: '#000000'          // Black text
+    },
+    light: {
+      primary: '#FFFFFF',      // White
+      secondary: '#0070F3',    // Blue accent
+      text: '#FFFFFF'          // White text
+    }
   };
-  
-  // If animated, use motion.div, otherwise use regular div
-  const Component = animated ? motion.div : 'div';
-  
-  // Props to pass to motion component
-  const motionProps = animated ? {
-    initial: 'initial',
-    animate: 'animate',
-    whileHover: 'hover',
-    variants,
-    transition: { duration: 0.3 }
-  } : {};
+
+  const selectedColors = colors[variant];
+  const selectedSize = sizeMap[size];
 
   return (
-    <Component 
-      className={`${sizeMap[size]} ${className} relative flex items-center justify-center`}
-      {...motionProps}
-    >
-      <svg 
-        viewBox="0 0 100 100" 
-        xmlns="http://www.w3.org/2000/svg" 
-        className="w-full h-full"
-        aria-label="ROLLINSX Logo"
+    <div className={`flex items-center ${className}`}>
+      <svg
+        className={selectedSize}
+        viewBox="0 0 64 64"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
       >
-        {/* Minimalistic circular background */}
-        <circle 
-          cx="50" 
-          cy="50" 
-          r="40" 
-          fill="#1E3A8A" /* Midnight Blue */
-        />
+        {/* Logo Shape */}
+        <rect width="64" height="64" rx="8" fill={selectedColors.primary} />
         
-        {/* Minimalistic 'R' */}
+        {/* R Letter */}
         <path 
-          d="M35,30 H55 C65,30 72,37 72,45 C72,53 65,60 55,60 L52,60 L58,70 H48 L42,60 H42 V70 H35 Z M42,37 V53 H52 C58,53 65,49 65,45 C65,41 58,37 52,37 Z" 
-          fill="#FFFFFF" 
-          stroke="none"
+          d="M16 16H28C31.3137 16 34 18.6863 34 22V26C34 29.3137 31.3137 32 28 32H22L32 48H26L16 32V16Z" 
+          fill={selectedColors.secondary}
+          fillRule="evenodd"
+        />
+        <path 
+          d="M22 22H28C28.5523 22 29 22.4477 29 23V26C29 26.5523 28.5523 27 28 27H22V22Z" 
+          fill={selectedColors.primary}
+          fillRule="evenodd"
         />
         
-        {/* Simple golden accent */}
-        <circle 
-          cx="50" 
-          cy="50" 
-          r="35" 
-          fill="none" 
-          stroke="#D4A017" /* Golden Amber */
-          strokeWidth="1.5"
-          strokeDasharray="3,3"
+        {/* X Letter */}
+        <path 
+          d="M36 16L46 32L36 48H42L48 38L54 48H60L50 32L60 16H54L48 26L42 16H36Z" 
+          fill={selectedColors.secondary}
+          fillRule="evenodd"
         />
       </svg>
-    </Component>
+      
+      {/* Text ROLLINSX */}
+      <span className={`ml-2 font-bold text-${size === 'sm' ? 'base' : size === 'md' ? 'xl' : '2xl'}`} style={{ color: selectedColors.text }}>
+        ROLLINSX
+      </span>
+    </div>
   );
 };
 

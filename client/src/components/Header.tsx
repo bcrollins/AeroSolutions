@@ -81,13 +81,12 @@ export default function Header() {
 
   return (  
     <>
-      <header className="header bg-[#1E3A8A] text-white py-4 px-6 sticky top-0 z-50 shadow-md">  
+      <header className="header bg-black text-white py-4 px-6 sticky top-0 z-50 shadow-md">  
         <div className="max-w-7xl mx-auto flex justify-between items-center">  
           {/* Logo */}  
           <Link href="/">  
-            <div className="flex items-center space-x-2">
-              <ROLLINSXLogo size="sm" animated={true} />
-              <div className="text-2xl font-poppins text-[#00D1D1]">rollinsx</div>  
+            <div className="flex items-center">
+              <ROLLINSXLogo size="sm" variant="light" />
             </div>
           </Link>  
 
@@ -98,7 +97,7 @@ export default function Header() {
                 {item.dropdown ? (  
                   <button  
                     onClick={item.label === 'Solutions' ? toggleSolutionsDropdown : toggleSupportDropdown}  
-                    className="font-inter text-sm uppercase tracking-wide text-gray-200 hover:text-[#D4A017] flex items-center transition-colors duration-200"  
+                    className="font-inter text-sm uppercase tracking-wide text-white hover:text-[#0070F3] flex items-center transition-colors duration-200"  
                   >  
                     {item.label}  
                     <ChevronDown className="ml-1 w-4 h-4" />  
@@ -106,13 +105,13 @@ export default function Header() {
                 ) : (  
                   <Link  
                     href={item.path}  
-                    className="font-inter text-sm uppercase tracking-wide text-gray-200 hover:text-[#D4A017] transition-colors duration-200"  
+                    className="font-inter text-sm uppercase tracking-wide text-white hover:text-[#0070F3] transition-colors duration-200"  
                   >  
                     {item.label}  
                   </Link>  
                 )}  
                 {item.dropdown && (item.label === 'Solutions' ? isSolutionsDropdownOpen : isSupportDropdownOpen) && (  
-                  <div className="absolute top-full left-0 mt-2 w-48 bg-[#f5f5f5] rounded-lg shadow-lg z-10">  
+                  <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-10">  
                     {item.dropdown.map((subItem) => (  
                       <Link  
                         key={subItem.label}  
@@ -121,7 +120,7 @@ export default function Header() {
                           setIsSolutionsDropdownOpen(false);
                           setIsSupportDropdownOpen(false);
                         }}
-                        className="block px-4 py-2 text-[#1E3A8A] hover:bg-[#00D1D1] hover:text-white transition-colors duration-200"  
+                        className="block px-4 py-2 text-black hover:bg-[#0070F3] hover:text-white transition-colors duration-200"  
                       >  
                         {subItem.label}  
                       </Link>  
@@ -132,14 +131,14 @@ export default function Header() {
             ))}  
             <button
               onClick={toggleClientPreview}
-              className="font-inter text-sm uppercase tracking-wide text-[#00D1D1] hover:text-[#D4A017] transition-colors duration-200 border border-[#00D1D1] px-3 py-1 rounded-md hover:border-[#D4A017]"
+              className="font-inter text-sm uppercase tracking-wide text-white hover:text-[#0070F3] transition-colors duration-200 border border-white px-3 py-1 rounded-md hover:border-[#0070F3]"
             >
               Client Preview
             </button>
             <ThemeToggle />
             <Link  
               href="/login"  
-              className="font-inter text-sm uppercase tracking-wide text-[#D4A017] hover:text-[#00D1D1] transition-colors duration-200"  
+              className="font-inter text-sm px-4 py-2 rounded-md bg-[#0070F3] text-white hover:bg-[#0050A0] transition-colors duration-200"  
             >  
               Login  
             </Link>  
@@ -147,7 +146,7 @@ export default function Header() {
 
           {/* Mobile Menu Toggle */}  
           <button  
-            className="md:hidden text-gray-200 focus:outline-none"  
+            className="md:hidden text-white focus:outline-none"  
             onClick={toggleMobileMenu}  
           >  
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}  
@@ -156,7 +155,7 @@ export default function Header() {
 
         {/* Mobile Menu */}  
         {isMobileMenuOpen && (  
-          <nav className="md:hidden bg-[#1E3A8A] py-4">  
+          <nav className="md:hidden bg-black border-t border-gray-800 py-4">  
             <div className="flex flex-col space-y-4 px-6">  
               {menuItems.map((item) => (  
                 <div key={item.label}>  
@@ -164,7 +163,7 @@ export default function Header() {
                     <div>  
                       <button  
                         onClick={item.label === 'Solutions' ? toggleSolutionsDropdown : toggleSupportDropdown}  
-                        className="font-inter text-sm uppercase tracking-wide text-gray-200 hover:text-[#D4A017] flex items-center"  
+                        className="font-inter text-sm uppercase tracking-wide text-white hover:text-[#0070F3] flex items-center"  
                       >  
                         {item.label}  
                         <ChevronDown className="ml-1 w-4 h-4" />  
@@ -180,7 +179,7 @@ export default function Header() {
                                 setIsSolutionsDropdownOpen(false);
                                 setIsSupportDropdownOpen(false);
                               }}  
-                              className="block text-gray-200 hover:text-[#D4A017]"  
+                              className="block text-white hover:text-[#0070F3]"  
                             >  
                               {subItem.label}  
                             </Link>  
@@ -192,7 +191,7 @@ export default function Header() {
                     <Link  
                       href={item.path}  
                       onClick={toggleMobileMenu}  
-                      className="font-inter text-sm uppercase tracking-wide text-gray-200 hover:text-[#D4A017]"  
+                      className="font-inter text-sm uppercase tracking-wide text-white hover:text-[#0070F3]"  
                     >  
                       {item.label}  
                     </Link>  
@@ -204,18 +203,18 @@ export default function Header() {
                   toggleMobileMenu();
                   toggleClientPreview();
                 }}
-                className="font-inter text-sm uppercase tracking-wide text-[#00D1D1] hover:text-[#D4A017] border border-[#00D1D1] px-3 py-1 rounded-md hover:border-[#D4A017]"
+                className="font-inter text-sm uppercase tracking-wide text-white hover:text-[#0070F3] border border-white px-3 py-1 rounded-md hover:border-[#0070F3] w-fit"
               >
                 Client Preview
               </button>
               <div className="flex items-center py-2">
                 <ThemeToggle />
-                <span className="ml-2">Theme</span>
+                <span className="ml-2 text-white">Theme</span>
               </div>
               <Link  
                 href="/login"  
                 onClick={toggleMobileMenu}  
-                className="font-inter text-sm uppercase tracking-wide text-[#D4A017] hover:text-[#00D1D1]"  
+                className="font-inter text-sm bg-[#0070F3] text-white py-2 px-4 rounded-md hover:bg-[#0050A0] w-fit transition-colors duration-200"  
               >  
                 Login  
               </Link>  
