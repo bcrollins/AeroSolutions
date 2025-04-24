@@ -42,17 +42,30 @@ export default function MockupSuggestionForm({ onComplete }: MockupSuggestionFor
 
     try {
       const response = await apiRequest("POST", "/api/suggest-mockup", values);
-      const data = await response.json();
-
-      if (data.success) {
-        setSuggestions(data.designIdeas);
-        if (onComplete) {
-          onComplete(data.designIdeas);
+      
+      // Check if response is actually JSON before trying to parse it
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Server returned an invalid response format. Please try again later.");
+      }
+      
+      try {
+        const data = await response.json();
+        
+        if (data.success) {
+          setSuggestions(data.designIdeas);
+          if (onComplete) {
+            onComplete(data.designIdeas);
+          }
+        } else {
+          setError(data.message || "Failed to generate suggestions");
         }
-      } else {
-        setError(data.message || "Failed to generate suggestions");
+      } catch (jsonError) {
+        console.error("JSON parsing error:", jsonError);
+        throw new Error("Failed to parse server response. The response might be malformed.");
       }
     } catch (error: any) {
+      console.error("API request error:", error);
       setError(error.message || "Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);

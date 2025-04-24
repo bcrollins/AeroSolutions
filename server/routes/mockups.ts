@@ -1,5 +1,5 @@
 import express, { Request, Response, Router } from 'express';
-import { callXAI } from '../utils/xaiClient';
+import { callOpenAI } from '../utils/xaiClient';
 import NodeCache from 'node-cache';
 import { db } from '../db';
 import { mockupRequests, mockupEngagement } from '@shared/schema';
