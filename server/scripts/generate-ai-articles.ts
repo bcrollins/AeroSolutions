@@ -115,6 +115,7 @@ async function generateArticle(topic: string, index: number): Promise<{
   seoKeywords: string;
   tags: string[];
   readTimeMinutes: number;
+  isAiGenerated: boolean;
 }> {
   try {
     const systemPrompt = `You are a professional technology journalist specializing in AI for ROLLINSX, a premier AI design and technology company. Write in a clear, authoritative style with deep expertise. Use proper HTML formatting for the article body with h2, h3, p, ul, li, and other appropriate tags. Include real industry examples, current trends, and actionable insights. Target an audience of business professionals and technology decision-makers.`;
@@ -161,6 +162,9 @@ Return the response as a JSON object with the following structure:
       
       // Ensure slug uniqueness by adding an index if needed
       articleData.slug = `${articleData.slug}-${index}`;
+      
+      // Mark as AI-generated
+      articleData.isAiGenerated = true;
       
       return articleData;
     } catch (apiError) {
@@ -234,10 +238,35 @@ function generateFallbackArticle(topic: string, index: number): {
   
   const tags = [...new Set([...baseTagSet, ...randomAdditionalTags, ...topicSpecificTags])].slice(0, 8);
   
+  // Create intro paragraphs with variability
+  const introTemplates = [
+    `<p>In today's rapidly evolving technological landscape, ${cleanTopic} has emerged as a pivotal innovation that is reshaping how businesses operate, compete, and deliver value to customers. This comprehensive exploration examines the current state of this technology, its practical applications, and its future trajectory.</p>`,
+    `<p>As organizations navigate digital transformation initiatives, ${cleanTopic} stands at the forefront of technological advancement, offering unprecedented opportunities to reimagine business processes, customer experiences, and competitive strategies. This analysis provides a detailed examination of its impact and potential.</p>`,
+    `<p>The intersection of business strategy and ${cleanTopic} represents one of the most significant opportunities for innovation in the modern enterprise. This exploration delves into how forward-thinking leaders are harnessing this technology to create sustainable competitive advantages.</p>`
+  ];
+  
+  const intro = introTemplates[Math.floor(Math.random() * introTemplates.length)];
+  
+  // Generate a thoughtful conclusion
+  const conclusionTemplates = [
+    `<p>As ${cleanTopic} continues to mature, its impact on business operations, competitive dynamics, and customer relationships will only deepen. Organizations that thoughtfully implement these technologies with a focus on both capabilities and readiness will create sustainable competitive advantages in an increasingly AI-driven marketplace.</p>
+    <p>By developing a clear strategy for ${cleanTopic} adoption that balances technological innovation with organizational considerations, business leaders can position themselves at the forefront of this transformative wave.</p>`,
+    
+    `<p>${cleanTopic} represents not merely a technological advancement but a fundamental shift in how organizations approach complex business challenges. By understanding its capabilities, addressing implementation challenges thoughtfully, and building the right foundations, companies can unlock significant value and establish lasting competitive advantages in the AI-driven future.</p>`,
+    
+    `<p>The evolution of ${cleanTopic} continues to accelerate, offering organizations unprecedented opportunities to innovate and differentiate. Those who approach implementation strategically, with clear objectives, thoughtful governance, and continuous learning, will be best positioned to thrive in the increasingly AI-driven business landscape.</p>`
+  ];
+  
+  const conclusion = conclusionTemplates[Math.floor(Math.random() * conclusionTemplates.length)];
+
+  // Calculate a realistic read time based on content length
+  const contentLength = 3500 + Math.floor(Math.random() * 1500); // Between 3500-5000 characters
+  const readTimeMinutes = Math.max(Math.ceil(contentLength / 1000), 7); // ~1000 chars per minute reading
+  
   return {
     title,
     content: `<h1>${title}</h1>
-<p>In today's rapidly evolving technological landscape, ${cleanTopic} has emerged as a pivotal innovation that is reshaping how businesses operate, compete, and deliver value to customers. This comprehensive exploration examines the current state of this technology, its practical applications, and its future trajectory.</p>
+${intro}
 
 <h2>Understanding ${cleanTopic}</h2>
 <p>${cleanTopic} represents the convergence of advanced computational techniques, domain expertise, and business strategy. At its core, this technology leverages artificial intelligence and machine learning frameworks to solve complex problems that were previously intractable using conventional methods.</p>
@@ -275,35 +304,36 @@ function generateFallbackArticle(topic: string, index: number): {
 <p>Looking ahead, we anticipate several key developments in the ${cleanTopic} landscape:</p>
 <ol>
   <li>Increased accessibility through low-code/no-code platforms</li>
-  <li>Enhanced explainability to address the "black box" problem</li>
-  <li>Cross-domain integration capabilities</li>
-  <li>Stronger industry-specific applications and solutions</li>
+  <li>Greater focus on explainability and transparency</li>
+  <li>Deeper integration with vertical-specific workflows</li>
+  <li>Emergence of specialized solutions for niche use cases</li>
 </ol>
 
-<p>For organizations seeking to capitalize on ${cleanTopic}, consider the following strategic approach:</p>
-<ol>
-  <li>Begin with clearly defined business objectives rather than technology-first initiatives</li>
-  <li>Invest in developing both technical capabilities and domain knowledge</li>
-  <li>Implement robust governance frameworks to ensure ethical and compliant use</li>
-  <li>Embrace iterative development with continuous learning and improvement</li>
-</ol>
+<p>For organizations seeking to harness the full potential of ${cleanTopic}, we recommend:</p>
+<ul>
+  <li>Begin with well-defined, high-value use cases</li>
+  <li>Invest in building internal capabilities and expertise</li>
+  <li>Establish clear governance and ethical guidelines</li>
+  <li>Measure and communicate business impact consistently</li>
+  <li>Cultivate a culture of continuous learning and adaptation</li>
+</ul>
 
 <h2>Conclusion</h2>
-<p>As ${cleanTopic} continues to mature, its impact on business operations, competitive dynamics, and customer relationships will only deepen. Organizations that thoughtfully implement these technologies with a focus on both capabilities and readiness will create sustainable competitive advantages in an increasingly AI-driven marketplace.</p>
+${conclusion}`,
 
-<p>By developing a clear strategy for ${cleanTopic} adoption that balances technological innovation with organizational considerations, business leaders can position themselves at the forefront of this transformative wave.</p>`,
-
-    summary: `This comprehensive analysis explores how ${cleanTopic} is revolutionizing business operations and strategy in 2025. From enhancing decision-making to transforming customer experiences, discover the practical applications, implementation challenges, and strategic recommendations for leveraging this technology in your organization.`,
+    summary: `An in-depth examination of how ${cleanTopic} is transforming business operations and strategy in the modern enterprise. This article covers key applications, implementation challenges, and strategic recommendations for organizations.`,
     
-    seoTitle: `${cleanTopic}: Business Applications & Implementation Guide`,
+    seoTitle: `${title} | ROLLINSX`,
     
-    seoDescription: `Discover how ${cleanTopic} is transforming business operations, enhancing decision-making, and creating competitive advantages in today's AI-driven marketplace.`,
+    seoDescription: `Discover how ${cleanTopic} is revolutionizing business operations, enhancing decision-making, and creating competitive advantages in today's AI-driven market.`,
     
-    seoKeywords: `${cleanTopic}, artificial intelligence, business innovation, digital transformation, AI implementation, technology strategy`,
+    seoKeywords: `${cleanTopic}, artificial intelligence, business transformation, AI strategy, digital innovation, ${tags.slice(0, 3).join(', ')}`,
     
-    tags: tags.slice(0, 5), // Ensure we don't have too many tags
+    tags,
     
-    readTimeMinutes: 7 // Average reading time for the fallback article
+    readTimeMinutes,
+    
+    isAiGenerated: false // Mark as not AI-generated (fallback content)
   };
 }
 
@@ -318,22 +348,38 @@ async function saveArticle(articleData: any): Promise<any> {
     // Using dynamic SQL with proper escaping for text values
     const safeTitle = articleData.title ? articleData.title.replace(/'/g, "''") : 'AI Article';
     const safeContent = articleData.content ? articleData.content.replace(/'/g, "''") : 'This is a sample article about AI technology.';
+    const safeSummary = articleData.summary ? articleData.summary.replace(/'/g, "''") : 'An article about AI technology';
+    const isAiGenerated = articleData.isAiGenerated === true;
+    
+    // Create metadata JSON to store additional information
+    const metadataObj = {
+      isAiGenerated: isAiGenerated,
+      generationDate: new Date().toISOString(),
+      readTimeMinutes: articleData.readTimeMinutes || 7,
+      tags: Array.isArray(articleData.tags) ? articleData.tags : ['ai', 'technology']
+    };
+    
+    const safeMetadata = JSON.stringify(metadataObj).replace(/'/g, "''");
     
     const sql = `
       INSERT INTO posts (
         title, 
         content, 
+        summary,
         author_id,
         category,
         status,
+        metadata,
         created_at, 
         updated_at
       ) VALUES (
         '${safeTitle}', 
         '${safeContent}', 
+        '${safeSummary}',
         1,
         'AI & Technology',
         'published',
+        '${safeMetadata}',
         NOW(),
         NOW()
       ) RETURNING id
@@ -346,13 +392,16 @@ async function saveArticle(articleData: any): Promise<any> {
     
     // Handle response
     if (res && res.rows && res.rows.length > 0) {
+      logger.info(`Successfully saved article: "${safeTitle.substring(0, 30)}..." (ID: ${res.rows[0].id}, AI-generated: ${isAiGenerated})`);
       return { 
         id: res.rows[0].id,
         title: safeTitle,
         content: safeContent,
+        summary: safeSummary,
         author_id: 1,
         category: 'AI & Technology',
-        status: 'published'
+        status: 'published',
+        metadata: metadataObj
       };
     } else {
       throw new Error('No article was created');
