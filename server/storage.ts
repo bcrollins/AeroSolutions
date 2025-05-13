@@ -23,7 +23,23 @@ import {
   type PlatformCompatibilityIssue, type InsertPlatformCompatibilityIssue,
   aiProducts, aiProductUsage,
   type AiProduct, type InsertAiProduct,
-  type AiProductUsage, type InsertAiProductUsage
+  type AiProductUsage, type InsertAiProductUsage,
+  // New imports for member dashboard
+  courses, courseModules, lessons, quizQuestions, courseResources,
+  userCourseEnrollments, userLessonCompletions, userQuizAttempts, courseRatings,
+  forumThreads, forumReplies, mediaResources,
+  type Course, type InsertCourse, 
+  type CourseModule, type InsertCourseModule,
+  type Lesson, type InsertLesson,
+  type QuizQuestion, type InsertQuizQuestion,
+  type CourseResource, type InsertCourseResource,
+  type UserCourseEnrollment, type InsertUserCourseEnrollment,
+  type UserLessonCompletion, type InsertUserLessonCompletion, 
+  type UserQuizAttempt, type InsertUserQuizAttempt,
+  type CourseRating, type InsertCourseRating,
+  type ForumThread, type InsertForumThread,
+  type ForumReply, type InsertForumReply,
+  type MediaResource, type InsertMediaResource
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gt, lt, sql, desc, asc, ilike, or } from "drizzle-orm";
@@ -191,6 +207,60 @@ export interface IStorage {
   getUserProductUsageHistory(userId: number): Promise<AiProductUsage[]>;
   logAiProductUsage(data: InsertAiProductUsage): Promise<AiProductUsage>;
   updateAiProductUsage(id: number, data: Partial<AiProductUsage>): Promise<AiProductUsage>;
+  
+  // Course operations
+  getAllCourses(limit?: number): Promise<Course[]>;
+  getCoursesBySubscriptionLevel(level: string, limit?: number): Promise<Course[]>;
+  getCourseById(id: number): Promise<Course | undefined>;
+  getCoursesByCategory(category: string, limit?: number): Promise<Course[]>;
+  getFeaturedCourses(limit?: number): Promise<Course[]>;
+  createCourse(course: InsertCourse): Promise<Course>;
+  updateCourse(id: number, course: Partial<InsertCourse>): Promise<Course | undefined>;
+  getCourseModules(courseId: number): Promise<CourseModule[]>;
+  createCourseModule(module: InsertCourseModule): Promise<CourseModule>;
+  getLessonsByCourseId(courseId: number): Promise<Lesson[]>;
+  getLessonsByModuleId(moduleId: number): Promise<Lesson[]>;
+  getLessonById(id: number): Promise<Lesson | undefined>;
+  createLesson(lesson: InsertLesson): Promise<Lesson>;
+  
+  // Course resources operations
+  getCourseResources(courseId: number): Promise<CourseResource[]>;
+  createCourseResource(resource: InsertCourseResource): Promise<CourseResource>;
+  
+  // Quiz operations
+  getQuizQuestionsByLessonId(lessonId: number): Promise<QuizQuestion[]>;
+  createQuizQuestion(question: InsertQuizQuestion): Promise<QuizQuestion>;
+  
+  // Course enrollment operations
+  enrollUserInCourse(enrollment: InsertUserCourseEnrollment): Promise<UserCourseEnrollment>;
+  getUserCourseEnrollments(userId: number): Promise<UserCourseEnrollment[]>;
+  getUserEnrollmentForCourse(userId: number, courseId: number): Promise<UserCourseEnrollment | undefined>;
+  updateUserCourseProgress(userId: number, courseId: number, progress: number, currentLessonId?: number): Promise<UserCourseEnrollment>;
+  markLessonCompleted(completion: InsertUserLessonCompletion): Promise<UserLessonCompletion>;
+  getUserLessonCompletions(userId: number, courseId: number): Promise<UserLessonCompletion[]>;
+  submitQuizAttempt(attempt: InsertUserQuizAttempt): Promise<UserQuizAttempt>;
+  getUserQuizAttempts(userId: number, lessonId: number): Promise<UserQuizAttempt[]>;
+  rateCourse(rating: InsertCourseRating): Promise<CourseRating>;
+  getCourseRatings(courseId: number): Promise<CourseRating[]>;
+  getUserCourseRating(userId: number, courseId: number): Promise<CourseRating | undefined>;
+  
+  // Forum operations
+  getForumThreads(category?: string, limit?: number): Promise<ForumThread[]>;
+  getForumThreadById(id: number): Promise<ForumThread | undefined>;
+  createForumThread(thread: InsertForumThread): Promise<ForumThread>;
+  getForumRepliesByThreadId(threadId: number): Promise<ForumReply[]>;
+  createForumReply(reply: InsertForumReply): Promise<ForumReply>;
+  markReplyAsAcceptedAnswer(replyId: number): Promise<ForumReply>;
+  incrementThreadViews(threadId: number): Promise<void>;
+  getUserForumActivity(userId: number): Promise<{ threads: ForumThread[], replies: ForumReply[] }>;
+  
+  // Media resources operations
+  getAllMediaResources(limit?: number): Promise<MediaResource[]>;
+  getMediaResourcesBySubscriptionLevel(level: string, limit?: number): Promise<MediaResource[]>;
+  getMediaResourcesByCategory(category: string, limit?: number): Promise<MediaResource[]>;
+  getMediaResourceById(id: number): Promise<MediaResource | undefined>;
+  createMediaResource(resource: InsertMediaResource): Promise<MediaResource>;
+  incrementMediaResourceViews(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
