@@ -174,7 +174,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          Discover Your Perfect Plan
+          Subscription Plans
         </motion.h1>
         <motion.p 
           className="text-xl text-muted-foreground mb-8"
@@ -220,8 +220,9 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
       </div>
 
       {/* Subscription plans grid */}
-      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 max-w-6xl mx-auto px-4">
-        {activePlans.map((plan, index) => {
+      <div className="max-w-6xl mx-auto">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 px-4">
+          {activePlans.map((plan, index) => {
           const price = plan.price || '$0.00';
           const isCurrentPlan = currentPlan?.id === plan.id;
           const accent = getAccentColor(plan.name);
