@@ -167,6 +167,23 @@ export interface IStorage {
   incrementIssueOccurrence(id: number): Promise<void>;
   getPlatformIssuesByPlatform(platform: string): Promise<PlatformCompatibilityIssue[]>;
   analyzeCompatibilityIssues(): Promise<{ summary: any, issues: PlatformCompatibilityIssue[] }>;
+  
+  // AI Products methods
+  getAllAiProducts(): Promise<AiProduct[]>;
+  getActiveAiProducts(): Promise<AiProduct[]>;
+  getAiProductsByCategory(category: string): Promise<AiProduct[]>;
+  getAiProductsByRequiredPlan(plan: string): Promise<AiProduct[]>;
+  getAiProduct(id: number): Promise<AiProduct | undefined>;
+  getAiProductBySlug(slug: string): Promise<AiProduct | undefined>;
+  createAiProduct(data: InsertAiProduct): Promise<AiProduct>;
+  updateAiProduct(id: number, data: Partial<AiProduct>): Promise<AiProduct>;
+  deleteAiProduct(id: number): Promise<void>;
+  
+  // AI Product Usage methods
+  getAiProductUsage(userId: number, productId: number): Promise<AiProductUsage | undefined>;
+  getUserProductUsageHistory(userId: number): Promise<AiProductUsage[]>;
+  logAiProductUsage(data: InsertAiProductUsage): Promise<AiProductUsage>;
+  updateAiProductUsage(id: number, data: Partial<AiProductUsage>): Promise<AiProductUsage>;
 }
 
 export class DatabaseStorage implements IStorage {
