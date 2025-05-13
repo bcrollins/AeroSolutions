@@ -641,9 +641,19 @@ export class DatabaseStorage implements IStorage {
       .orderBy(asc(subscriptionPlans.price));
   }
   
+  // This is an alias for getAllSubscriptionPlans to maintain API compatibility
+  async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+    return await this.getAllSubscriptionPlans();
+  }
+  
   async getSubscriptionPlan(id: number): Promise<SubscriptionPlan | undefined> {
     const [plan] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, id));
     return plan;
+  }
+  
+  // This is an alias for getSubscriptionPlan to maintain API compatibility
+  async getSubscriptionPlanById(id: number): Promise<SubscriptionPlan | undefined> {
+    return await this.getSubscriptionPlan(id);
   }
   
   async createUserSubscription(subscription: InsertUserSubscription): Promise<UserSubscription> {
