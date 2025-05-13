@@ -2,6 +2,7 @@ import { motion, useMotionValue, useTransform, useAnimation } from "framer-motio
 import { FaCode, FaLaptop, FaHandshake, FaClock, FaDesktop, FaUsers, FaLaptopCode, FaShieldAlt, FaMobileAlt, FaStore } from "react-icons/fa";
 import { Link } from "wouter";
 import { useState, useEffect } from "react";
+import Logo from "./Logo";
 
 export default function Hero() {
   // Auto-rotation state
@@ -241,11 +242,7 @@ export default function Hero() {
                              style={{ transform: "translateZ(2px)" }}>
                           {/* ROLLINSX logo */}
                           <div className="relative w-32 h-32 flex items-center justify-center">
-                            <img 
-                              src="/images/rollinsx-logo.png" 
-                              alt="ROLLINSX Logo" 
-                              className="w-24 h-24 object-contain z-10"
-                            />
+                            <Logo width={96} height={96} className="z-10" />
                             
                             {/* Glow effect behind logo */}
                             <div className="absolute inset-0 rounded-full bg-[#3B82F6]/20 border border-white/50 shadow-[0_0_15px_rgba(59,130,246,0.6)]"></div>

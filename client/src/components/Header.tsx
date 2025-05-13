@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'wouter';  
 import { Menu, X, ChevronDown } from 'lucide-react';  
 import ClientPreviewModal from "./ClientPreviewModal";
-import ROLLINSXLogo from "./ROLLINSXLogo";
+import Logo from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
 
 export default function Header() {  
@@ -86,11 +86,7 @@ export default function Header() {
           {/* Logo */}  
           <Link href="/">  
             <div className="flex items-center">
-              <img 
-                src="/images/rollinsx-logo.png" 
-                alt="ROLLINSX Logo" 
-                className="h-8 w-auto mr-2" 
-              />
+              <Logo height={24} width={24} className="mr-2" />
               <span className="font-bold tracking-wider text-xl text-white">ROLLINSX</span>
             </div>
           </Link>  
