@@ -18,6 +18,13 @@ interface SubscriptionPlansProps {
   hideCurrentPlan?: boolean;
 }
 
+// Helper function to parse price string to number
+function parsePriceString(price: string): number {
+  // Remove currency symbol and commas, then parse as float
+  const numericString = price.replace(/[^0-9.]/g, '');
+  return parseFloat(numericString) || 0;
+}
+
 // Get icon by plan name
 const getPlanIcon = (planName: string) => {
   const name = planName.toLowerCase();
@@ -220,90 +227,91 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
       </div>
 
       {/* Subscription plans grid */}
-      <div className="max-w-6xl mx-auto">
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 px-4">
+      <div className="bg-muted/50 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-muted-foreground/10 max-w-6xl mx-auto">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
           {activePlans.map((plan, index) => {
-          const price = plan.price || '$0.00';
-          const isCurrentPlan = currentPlan?.id === plan.id;
-          const accent = getAccentColor(plan.name);
-          const gradient = planGradients[plan.name as keyof typeof planGradients] || '';
-          const buttonGradient = getButtonColor(plan.name, plan.isPopular);
-          
-          // Set up animations with staggered delay based on index
-          const animationDelay = 0.2 + (index * 0.1);
-          
-          return (
-            <motion.div
-              key={plan.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: animationDelay }}
-              className={plan.isRecommended ? 'lg:col-span-1 lg:row-span-1 lg:transform lg:scale-105 z-10' : ''}
-            >
-              <Card 
-                className={`flex flex-col h-full overflow-hidden ${gradient} border-2 transition-all duration-300 hover:shadow-lg ${plan.isPopular || plan.isRecommended ? accent : ''}`}
+            const price = plan.price || '$0.00';
+            const isCurrentPlan = currentPlan?.id === plan.id;
+            const accent = getAccentColor(plan.name);
+            const gradient = planGradients[plan.name as keyof typeof planGradients] || '';
+            const buttonGradient = getButtonColor(plan.name, plan.isPopular);
+            
+            // Set up animations with staggered delay based on index
+            const animationDelay = 0.2 + (index * 0.1);
+            
+            return (
+              <motion.div
+                key={plan.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: animationDelay }}
+                className={plan.isRecommended ? 'lg:col-span-1 lg:row-span-1 lg:transform lg:scale-105 z-10' : ''}
               >
-                {(plan.isPopular || plan.isRecommended) && (
-                  <div className="absolute top-0 right-0">
-                    <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-bold px-4 py-1 transform rotate-45 translate-x-[30%] translate-y-[100%] shadow-md">
-                      {plan.isRecommended ? 'BEST VALUE' : 'POPULAR'}
+                <Card 
+                  className={`flex flex-col h-full overflow-hidden ${gradient} border-2 transition-all duration-300 hover:shadow-lg ${plan.isPopular || plan.isRecommended ? accent : ''}`}
+                >
+                  {(plan.isPopular || plan.isRecommended) && (
+                    <div className="absolute top-0 right-0">
+                      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-bold px-4 py-1 transform rotate-45 translate-x-[30%] translate-y-[100%] shadow-md">
+                        {plan.isRecommended ? 'BEST VALUE' : 'POPULAR'}
+                      </div>
                     </div>
-                  </div>
-                )}
-                
-                <CardHeader className="pb-4">
-                  <div className="flex items-center mb-2">
-                    {getPlanIcon(plan.name)}
-                    <CardTitle className="ml-2 text-2xl">{plan.name.replace(' Annual', '')}</CardTitle>
-                  </div>
-                  <CardDescription className="text-base">{plan.description}</CardDescription>
-                </CardHeader>
-                
-                <CardContent className="flex-grow pb-6">
-                  <div className="mb-6 flex items-baseline">
-                    <span className="text-4xl font-bold">{price}</span>
-                    <span className="text-muted-foreground ml-1 text-base">
-                      / {billingInterval === 'monthly' ? 'month' : 'year'}
-                    </span>
-                  </div>
-                  
-                  <ul className="space-y-3">
-                    {plan.features.map((feature, idx) => {
-                      const icon = featureIcons[feature] || <Check className="h-4 w-4 text-green-500" />;
-                      return (
-                        <motion.li 
-                          key={idx} 
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.3, delay: animationDelay + (idx * 0.05) }}
-                          className="flex items-start"
-                        >
-                          <div className="mr-3 mt-1 flex-shrink-0">{icon}</div>
-                          <span className="text-sm">{feature}</span>
-                        </motion.li>
-                      );
-                    })}
-                  </ul>
-                </CardContent>
-                
-                <CardFooter className="pt-2 pb-6">
-                  {isCurrentPlan ? (
-                    <Button disabled className="w-full py-6 text-base font-medium">
-                      Current Plan
-                    </Button>
-                  ) : (
-                    <Button 
-                      onClick={() => handleSelectPlan(plan.id)} 
-                      className={`w-full py-6 text-base font-medium transition-all duration-300 hover:shadow-md ${buttonGradient}`}
-                    >
-                      {hasActiveSubscription ? 'Change Plan' : 'Get Started'}
-                    </Button>
                   )}
-                </CardFooter>
-              </Card>
-            </motion.div>
-          );
-        })}
+                  
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center mb-2">
+                      {getPlanIcon(plan.name)}
+                      <CardTitle className="ml-2 text-2xl">{plan.name.replace(' Annual', '')}</CardTitle>
+                    </div>
+                    <CardDescription className="text-base">{plan.description}</CardDescription>
+                  </CardHeader>
+                  
+                  <CardContent className="flex-grow pb-6">
+                    <div className="mb-6 flex items-baseline">
+                      <span className="text-4xl font-bold">{price}</span>
+                      <span className="text-muted-foreground ml-1 text-base">
+                        / {billingInterval === 'monthly' ? 'month' : 'year'}
+                      </span>
+                    </div>
+                    
+                    <ul className="space-y-3">
+                      {plan.features.map((feature, idx) => {
+                        const icon = featureIcons[feature] || <Check className="h-4 w-4 text-green-500" />;
+                        return (
+                          <motion.li 
+                            key={idx} 
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.3, delay: animationDelay + (idx * 0.05) }}
+                            className="flex items-start"
+                          >
+                            <div className="mr-3 mt-1 flex-shrink-0">{icon}</div>
+                            <span className="text-sm">{feature}</span>
+                          </motion.li>
+                        );
+                      })}
+                    </ul>
+                  </CardContent>
+                  
+                  <CardFooter className="pt-2 pb-6">
+                    {isCurrentPlan ? (
+                      <Button disabled className="w-full py-6 text-base font-medium">
+                        Current Plan
+                      </Button>
+                    ) : (
+                      <Button 
+                        onClick={() => handleSelectPlan(plan.id)} 
+                        className={`w-full py-6 text-base font-medium transition-all duration-300 hover:shadow-md ${buttonGradient}`}
+                      >
+                        {hasActiveSubscription ? 'Change Plan' : 'Get Started'}
+                      </Button>
+                    )}
+                  </CardFooter>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </div>
       </div>
       
       {/* Testimonials section */}
@@ -393,21 +401,21 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.5 }}
           >
-            <h3 className="text-lg font-semibold mb-2">Do you offer a free trial?</h3>
-            <p className="text-sm text-muted-foreground">Yes, we offer a 14-day free trial with full access to the Professional plan. You won't be charged until the trial period ends, and you can cancel anytime before then.</p>
+            <h3 className="text-lg font-semibold mb-2">Is there a free trial available?</h3>
+            <p className="text-sm text-muted-foreground">Yes, we offer a 14-day free trial on all our subscription plans. You can try out all the features without any commitment, and no credit card is required to start your trial.</p>
           </motion.div>
         </div>
       </div>
-      
+
       {/* CTA Section */}
       <motion.div 
-        className="mt-16 max-w-3xl mx-auto text-center"
+        className="mt-16 max-w-3xl mx-auto text-center px-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.6 }}
       >
-        <h2 className="text-2xl font-bold mb-6">Ready to transform your design workflow?</h2>
-        <p className="text-muted-foreground mb-8">Join thousands of designers and teams who have already upgraded their creative process.</p>
+        <h2 className="text-2xl font-bold mb-4">Ready to Transform Your Design Workflow?</h2>
+        <p className="text-muted-foreground mb-8">Join thousands of designers and teams who are already using our platform to create amazing designs.</p>
         <Button 
           onClick={() => handleSelectPlan(2)} // Professional plan (assumed to be id 2)
           className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-8 py-6 text-lg font-medium"
@@ -419,12 +427,5 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
     </div>
   );
 };
-
-// Helper function to parse price string to number
-function parsePriceString(price: string): number {
-  // Remove currency symbol and commas, then parse as float
-  const numericString = price.replace(/[^0-9.]/g, '');
-  return parseFloat(numericString) || 0;
-}
 
 export default SubscriptionPlans;
