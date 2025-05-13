@@ -13,7 +13,7 @@ export default function Services() {
 
   const services = [
     {
-      icon: <FaLaptopCode className="text-4xl mb-4 text-black" />,
+      icon: <FaLaptopCode className="text-4xl mb-4 text-[#3B82F6]" />,
       title: "Web Development",
       slug: "web-development",
       description: "Custom website solutions built by experienced developers who understand the unique challenges of establishing an effective online presence for small businesses.",
@@ -25,7 +25,7 @@ export default function Services() {
       ]
     },
     {
-      icon: <FaGlobe className="text-4xl mb-4 text-black" />,
+      icon: <FaGlobe className="text-4xl mb-4 text-[#3B82F6]" />,
       title: "Proprietary Web Platforms",
       slug: "web-platforms",
       description: "Our suite of specialized web platforms—WebCraft, EcomPro, ContentHub, AnalyticEdge, and AppForge—designed to transform your digital presence.",
@@ -37,7 +37,7 @@ export default function Services() {
       ]
     },
     {
-      icon: <FaCreditCard className="text-4xl mb-4 text-black" />,
+      icon: <FaCreditCard className="text-4xl mb-4 text-[#3B82F6]" />,
       title: "Zero-Risk Payment Model",
       slug: "no-upfront-payment-software",
       description: "Our unique no-payment-until-satisfied model eliminates all financial risk. You only pay when your custom web development solution meets all your requirements.",
@@ -49,7 +49,7 @@ export default function Services() {
       ]
     },
     {
-      icon: <FaServer className="text-4xl mb-4 text-black" />,
+      icon: <FaServer className="text-4xl mb-4 text-[#3B82F6]" />,
       title: "Full-Stack Web Technologies",
       slug: "fullstack-development",
       description: "End-to-end development services covering every aspect of your web project—from concept to deployment and beyond.",
@@ -61,7 +61,7 @@ export default function Services() {
       ]
     },
     {
-      icon: <FaHeadset className="text-4xl mb-4 text-black" />,
+      icon: <FaHeadset className="text-4xl mb-4 text-[#3B82F6]" />,
       title: "Website Support & Maintenance",
       slug: "website-maintenance",
       description: "Comprehensive post-launch support and maintenance services ensuring your website continues to deliver optimal performance and stays up-to-date.",
@@ -73,7 +73,7 @@ export default function Services() {
       ]
     },
     {
-      icon: <FaDatabase className="text-4xl mb-4 text-black" />,
+      icon: <FaDatabase className="text-4xl mb-4 text-[#3B82F6]" />,
       title: "Web & API Integration",
       slug: "web-api-integration",
       description: "Seamlessly connect your website with third-party services and APIs to create a unified ecosystem for improved business operations.",
@@ -108,7 +108,7 @@ export default function Services() {
             <motion.article 
               key={index}
               id={service.slug}
-              className="bg-gray-50 rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 h-full flex flex-col"
+              className="bg-gray-800 rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 h-full flex flex-col"
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, amount: 0.1 }}
@@ -119,10 +119,10 @@ export default function Services() {
                 <div className="flex justify-center items-center w-16 h-16 bg-primary/10 rounded-full mb-6 mx-auto">
                   {service.icon}
                 </div>
-                <h3 className="text-xl font-bold font-montserrat text-primary mb-3 text-center">{service.title}</h3>
+                <h3 className="text-xl font-bold font-montserrat text-white mb-3 text-center">{service.title}</h3>
               </header>
-              <p className="text-gray-700 mb-6 flex-grow">{service.description}</p>
-              <ul className="space-y-3 text-gray-700">
+              <p className="text-gray-300 mb-6 flex-grow">{service.description}</p>
+              <ul className="space-y-3 text-gray-300">
                 {service.features.map((feature, idx) => (
                   <li key={idx} className="flex items-start">
                     <FaCheck className="text-primary mr-2 mt-1 flex-shrink-0" />
