@@ -57,6 +57,8 @@ import BugMonitoringPage from "@/pages/BugMonitoringPage";
 import BrandConsistencyPage from "@/pages/BrandConsistencyPage";
 import TestROLLINSXBot from "@/pages/TestROLLINSXBot";
 import ParticleBackgroundDemo from "@/pages/ParticleBackgroundDemo";
+import AiProductsPage from "@/pages/AiProductsPage";
+import AiProductDetailPage from "@/pages/AiProductDetailPage";
 
 export default function App() {
   const { t, i18n } = useTranslation();
