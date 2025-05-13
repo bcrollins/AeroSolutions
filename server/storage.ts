@@ -1376,6 +1376,225 @@ export class DatabaseStorage implements IStorage {
       };
     }
   }
+
+  // AI Products methods
+  async getAllAiProducts(): Promise<AiProduct[]> {
+    try {
+      const products = await db
+        .select()
+        .from(aiProducts)
+        .orderBy(aiProducts.name);
+      
+      return products;
+    } catch (error) {
+      console.error('Error getting AI products:', error);
+      return [];
+    }
+  }
+
+  async getActiveAiProducts(): Promise<AiProduct[]> {
+    try {
+      const products = await db
+        .select()
+        .from(aiProducts)
+        .where(eq(aiProducts.isActive, true))
+        .orderBy(aiProducts.name);
+      
+      return products;
+    } catch (error) {
+      console.error('Error getting active AI products:', error);
+      return [];
+    }
+  }
+
+  async getAiProductsByCategory(category: string): Promise<AiProduct[]> {
+    try {
+      const products = await db
+        .select()
+        .from(aiProducts)
+        .where(and(eq(aiProducts.category, category), eq(aiProducts.isActive, true)))
+        .orderBy(aiProducts.name);
+      
+      return products;
+    } catch (error) {
+      console.error(`Error getting AI products by category ${category}:`, error);
+      return [];
+    }
+  }
+
+  async getAiProductsByRequiredPlan(plan: string): Promise<AiProduct[]> {
+    try {
+      const products = await db
+        .select()
+        .from(aiProducts)
+        .where(and(eq(aiProducts.requiredPlan, plan), eq(aiProducts.isActive, true)))
+        .orderBy(aiProducts.name);
+      
+      return products;
+    } catch (error) {
+      console.error(`Error getting AI products by required plan ${plan}:`, error);
+      return [];
+    }
+  }
+
+  async getAiProduct(id: number): Promise<AiProduct | undefined> {
+    try {
+      const [product] = await db
+        .select()
+        .from(aiProducts)
+        .where(eq(aiProducts.id, id));
+      
+      return product;
+    } catch (error) {
+      console.error(`Error getting AI product with ID ${id}:`, error);
+      return undefined;
+    }
+  }
+
+  async getAiProductBySlug(slug: string): Promise<AiProduct | undefined> {
+    try {
+      const [product] = await db
+        .select()
+        .from(aiProducts)
+        .where(eq(aiProducts.slug, slug));
+      
+      return product;
+    } catch (error) {
+      console.error(`Error getting AI product with slug ${slug}:`, error);
+      return undefined;
+    }
+  }
+
+  async createAiProduct(data: InsertAiProduct): Promise<AiProduct> {
+    try {
+      const [product] = await db
+        .insert(aiProducts)
+        .values(data)
+        .returning();
+      
+      return product;
+    } catch (error) {
+      console.error('Error creating AI product:', error);
+      throw error;
+    }
+  }
+
+  async updateAiProduct(id: number, data: Partial<AiProduct>): Promise<AiProduct> {
+    try {
+      const [product] = await db
+        .update(aiProducts)
+        .set({
+          ...data,
+          updatedAt: new Date()
+        })
+        .where(eq(aiProducts.id, id))
+        .returning();
+      
+      return product;
+    } catch (error) {
+      console.error(`Error updating AI product with ID ${id}:`, error);
+      throw error;
+    }
+  }
+
+  async deleteAiProduct(id: number): Promise<void> {
+    try {
+      await db
+        .delete(aiProducts)
+        .where(eq(aiProducts.id, id));
+    } catch (error) {
+      console.error(`Error deleting AI product with ID ${id}:`, error);
+      throw error;
+    }
+  }
+
+  // AI Product Usage methods
+  async getAiProductUsage(userId: number, productId: number): Promise<AiProductUsage | undefined> {
+    try {
+      const [usage] = await db
+        .select()
+        .from(aiProductUsage)
+        .where(and(
+          eq(aiProductUsage.userId, userId),
+          eq(aiProductUsage.productId, productId)
+        ));
+      
+      return usage;
+    } catch (error) {
+      console.error(`Error getting AI product usage for user ${userId} and product ${productId}:`, error);
+      return undefined;
+    }
+  }
+
+  async getUserProductUsageHistory(userId: number): Promise<AiProductUsage[]> {
+    try {
+      const usageHistory = await db
+        .select()
+        .from(aiProductUsage)
+        .where(eq(aiProductUsage.userId, userId))
+        .orderBy(desc(aiProductUsage.lastUsedAt));
+      
+      return usageHistory;
+    } catch (error) {
+      console.error(`Error getting AI product usage history for user ${userId}:`, error);
+      return [];
+    }
+  }
+
+  async logAiProductUsage(data: InsertAiProductUsage): Promise<AiProductUsage> {
+    try {
+      // Check if there's an existing record
+      const existingUsage = await this.getAiProductUsage(data.userId, data.productId);
+      
+      if (existingUsage) {
+        // Update existing record
+        const [updatedUsage] = await db
+          .update(aiProductUsage)
+          .set({
+            usageCount: existingUsage.usageCount + 1,
+            lastUsedAt: new Date(),
+            updatedAt: new Date()
+          })
+          .where(eq(aiProductUsage.id, existingUsage.id))
+          .returning();
+        
+        return updatedUsage;
+      } else {
+        // Create new record
+        const [newUsage] = await db
+          .insert(aiProductUsage)
+          .values({
+            ...data,
+            usageCount: 1,
+            lastUsedAt: new Date()
+          })
+          .returning();
+        
+        return newUsage;
+      }
+    } catch (error) {
+      console.error('Error logging AI product usage:', error);
+      throw error;
+    }
+  }
+
+  async updateAiProductUsage(id: number, data: Partial<AiProductUsage>): Promise<AiProductUsage> {
+    try {
+      const [usage] = await db
+        .update(aiProductUsage)
+        .set({
+          ...data,
+          updatedAt: new Date()
+        })
+        .where(eq(aiProductUsage.id, id))
+        .returning();
+      
+      return usage;
+    } catch (error) {
+      console.error(`Error updating AI product usage with ID ${id}:`, error);
+      throw error;
+    }
+  }
 }
 
 // Create a new instance of DatabaseStorage

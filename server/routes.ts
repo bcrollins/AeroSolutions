@@ -56,6 +56,7 @@ import brandConsistencyRouter from './routes/brandConsistency';
 import platformCompatibilityRouter from './routes/platformCompatibility';
 import performanceRouter from './routes/performance';
 import errorsRouter from './routes/errors';
+import aiProductsRouter from './routes/ai-products';
 import { loggerMiddleware, registerGlobalErrorHandlers } from './middlewares/logger';
 import { complianceMonitoringProcess } from './background/complianceMonitor';
 import { twitterPoster } from './utils/twitterPoster';
@@ -227,6 +228,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/sentiment', sentimentRouter);
   app.use('/api/abtesting', abTestingRouter);
   app.use('/api/targeted-ads', targetedAdsRouter);
+  app.use('/api/ai-products', aiProductsRouter);
   
   // Mount our new OpenAI API router
   app.use('/api', apiRouter);
