@@ -18,14 +18,13 @@ export default function Header() {
   // Close all dropdowns
   const closeAllDropdowns = () => {
     setIsSolutionsDropdownOpen(false);
-    setIsSupportDropdownOpen(false);
   };
   
   // Handle click outside for dropdown menus
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       // This only runs if a dropdown is open
-      if (isSolutionsDropdownOpen || isSupportDropdownOpen) {
+      if (isSolutionsDropdownOpen) {
         // Don't close if it's a button click (handled by toggle functions)
         if ((e.target as Element).closest('button')) return;
         
@@ -39,7 +38,7 @@ export default function Header() {
     return () => {
       document.removeEventListener('click', handleClickOutside);
     };
-  }, [isSolutionsDropdownOpen, isSupportDropdownOpen]);
+  }, [isSolutionsDropdownOpen]);
 
   // Close mobile menu when location changes
   useEffect(() => {
@@ -51,42 +50,24 @@ export default function Header() {
   const toggleSolutionsDropdown = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsSolutionsDropdownOpen(!isSolutionsDropdownOpen);
-    // Close the other dropdown when opening this one
-    if (!isSolutionsDropdownOpen) setIsSupportDropdownOpen(false);
-  };
-  
-  const toggleSupportDropdown = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsSupportDropdownOpen(!isSupportDropdownOpen);
-    // Close the other dropdown when opening this one
-    if (!isSupportDropdownOpen) setIsSolutionsDropdownOpen(false);
   };
   const toggleClientPreview = () => setClientPreviewOpen(!clientPreviewOpen);
 
   const menuItems = [  
     { label: 'Home', path: '/' },  
     {  
-      label: 'Solutions',  
+      label: 'AI Products',  
       dropdown: [  
-        { label: 'AI Products', path: '/products' },
-        { label: 'AI Services', path: '/ai-services' },  
-        { label: 'Content Hub', path: '/content-hub' },  
-        { label: 'SEO Tools', path: '/seo-tools' },
-        { label: 'Design Tools', path: '/design-tools' },
-        { label: 'Particle Background', path: '/particle-background' },
+        { label: 'AI Design Tools', path: '/products/design' },
+        { label: 'AI Marketing', path: '/products/marketing' },  
+        { label: 'AI Analytics', path: '/products/analytics' },  
+        { label: 'Content Generator', path: '/products/content' },
+        { label: 'SEO Tools', path: '/products/seo' },
       ],  
     },  
     { label: 'Pricing', path: '/subscriptions' },  
-    {  
-      label: 'Support',  
-      dropdown: [  
-        { label: 'Mockup Suggestions', path: '/mockup-suggestions' },  
-        { label: 'Social Media', path: '/social-media' },  
-        { label: 'Analytics', path: '/website-analytics' },  
-        { label: 'Share Feedback', path: '/feedback' },  
-      ],  
-    },  
-    { label: 'About', path: '/history' },  
+    { label: 'News Hub', path: '/news' },
+    { label: 'Contact', path: '/contact' },  
   ];  
 
   return (  
@@ -109,20 +90,16 @@ export default function Header() {
               <div key={item.label} className="relative">  
                 {item.dropdown ? (  
                   <button  
-                    onClick={item.label === 'Solutions' ? toggleSolutionsDropdown : toggleSupportDropdown}  
+                    onClick={toggleSolutionsDropdown}  
                     className={cn(
                       "font-medium text-sm tracking-wide text-white hover:text-electric-cyan-400 flex items-center transition-colors duration-200",
-                      (item.label === 'Solutions' && isSolutionsDropdownOpen) || (item.label === 'Support' && isSupportDropdownOpen) 
-                        ? "text-electric-cyan-400" 
-                        : ""
+                      isSolutionsDropdownOpen ? "text-electric-cyan-400" : ""
                     )}
                   >  
                     {item.label}  
                     <ChevronDown className={cn(
                       "ml-1 w-4 h-4 transition-transform duration-200",
-                      (item.label === 'Solutions' && isSolutionsDropdownOpen) || (item.label === 'Support' && isSupportDropdownOpen)
-                        ? "rotate-180" 
-                        : ""
+                      isSolutionsDropdownOpen ? "rotate-180" : ""
                     )} />  
                   </button>  
                 ) : (  
@@ -136,7 +113,7 @@ export default function Header() {
                     {item.label}  
                   </Link>  
                 )}  
-                {item.dropdown && (item.label === 'Solutions' ? isSolutionsDropdownOpen : isSupportDropdownOpen) && (  
+                {item.dropdown && isSolutionsDropdownOpen && (  
                   <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-lg shadow-xl z-10 overflow-hidden border border-gray-100">  
                     <div className="py-1">
                       {item.dropdown.map((subItem) => (  
@@ -215,23 +192,19 @@ export default function Header() {
                   {item.dropdown ? (  
                     <div>  
                       <button  
-                        onClick={item.label === 'Solutions' ? toggleSolutionsDropdown : toggleSupportDropdown}  
+                        onClick={toggleSolutionsDropdown}  
                         className={cn(
                           "font-medium text-sm tracking-wide text-white hover:text-electric-cyan-400 flex items-center justify-between w-full",
-                          (item.label === 'Solutions' && isSolutionsDropdownOpen) || (item.label === 'Support' && isSupportDropdownOpen) 
-                            ? "text-electric-cyan-400" 
-                            : ""
+                          isSolutionsDropdownOpen ? "text-electric-cyan-400" : ""
                         )}
                       >  
                         <span>{item.label}</span>  
                         <ChevronDown className={cn(
                           "ml-1 w-5 h-5 transition-transform duration-200",
-                          (item.label === 'Solutions' && isSolutionsDropdownOpen) || (item.label === 'Support' && isSupportDropdownOpen)
-                            ? "rotate-180" 
-                            : ""
+                          isSolutionsDropdownOpen ? "rotate-180" : ""
                         )} />  
                       </button>  
-                      {(item.label === 'Solutions' ? isSolutionsDropdownOpen : isSupportDropdownOpen) && (  
+                      {isSolutionsDropdownOpen && (  
                         <div className="pl-4 mt-3 mb-1 space-y-3 border-l-2 border-gray-700">  
                           {item.dropdown.map((subItem) => (  
                             <Link  
@@ -240,7 +213,6 @@ export default function Header() {
                               onClick={() => {
                                 toggleMobileMenu();
                                 setIsSolutionsDropdownOpen(false);
-                                setIsSupportDropdownOpen(false);
                               }}  
                               className={cn(
                                 "block text-gray-300 hover:text-electric-cyan-400 transition-colors duration-200 text-sm py-1",

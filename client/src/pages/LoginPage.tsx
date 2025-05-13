@@ -204,7 +204,7 @@ export default function LoginPage() {
                     
                     <Button 
                       type="submit" 
-                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      className="w-full bg-electric-cyan-600 hover:bg-electric-cyan-700"
                       disabled={isSubmitting}
                     >
                       {isSubmitting ? (
@@ -220,7 +220,7 @@ export default function LoginPage() {
                     <div className="text-center">
                       <a 
                         href="/forgot-password" 
-                        className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                        className="text-sm text-electric-cyan-600 hover:text-electric-cyan-700 font-medium"
                       >
                         {t('forgot_password')}
                       </a>
@@ -230,7 +230,7 @@ export default function LoginPage() {
               </CardContent>
               <CardFooter className="flex flex-col pt-2">
                 <p className="text-center text-sm text-muted-foreground">
-                  {t('no_account')} <a href="/signup" className="text-blue-600 hover:text-blue-800 font-medium">{t('signup_now')}</a>
+                  {t('no_account')} <a href="/signup" className="text-electric-cyan-600 hover:text-electric-cyan-700 font-medium">{t('signup_now')}</a>
                 </p>
                 
                 {/* Admin login hint */}
