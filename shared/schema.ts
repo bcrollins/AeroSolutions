@@ -619,13 +619,38 @@ export const posts = pgTable("posts", {
   status: text("status").default("published").notNull(), // published, draft, archived
   viewCount: integer("view_count").default(0),
   likeCount: integer("like_count").default(0),
+  
+  // News Hub specific fields
+  postType: text("post_type").default("regular").notNull(), // regular, car_event, ai_qa, news
+  eventDate: timestamp("event_date"), // For car event articles
+  eventLocation: text("event_location"), // For car event articles
+  eventOrganizer: text("event_organizer"), // For car event articles
+  
+  // AI Q&A specific fields
+  question: text("question"), // For Q&A posts
+  aiGeneratedBy: text("ai_generated_by").default("xai"), // xai, openai, etc.
+  readTimeMinutes: integer("read_time_minutes"),
+  
+  // Content management
+  summary: text("summary"), // Short summary/excerpt of the post
+  featuredPost: boolean("featured_post").default(false),
+  premium: boolean("premium").default(false), // If true, requires subscription to access
+  
   // SEO fields
+  slug: text("slug").notNull().unique(),
   seoTitle: text("seo_title"),
   seoDescription: text("seo_description"),
   seoKeywords: text("seo_keywords"),
   schemaMarkup: text("schema_markup"), // JSON-LD schema markup for the blog post
   canonicalUrl: text("canonical_url"), // For managing duplicate content
   focusKeyword: text("focus_keyword"), // Primary keyword for optimization
+  
+  // Social sharing
+  socialImage: text("social_image"), // Image specifically for social sharing
+  twitterCardType: text("twitter_card_type").default("summary_large_image"),
+  
+  // Timestamps
+  publishedAt: timestamp("published_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -637,7 +662,27 @@ export const insertPostSchema = createInsertSchema(posts).pick({
   category: true,
   tags: true,
   imageUrl: true,
-  status: true
+  status: true,
+  postType: true,
+  eventDate: true,
+  eventLocation: true,
+  eventOrganizer: true,
+  question: true,
+  aiGeneratedBy: true,
+  readTimeMinutes: true,
+  summary: true,
+  featuredPost: true,
+  premium: true,
+  slug: true,
+  seoTitle: true,
+  seoDescription: true,
+  seoKeywords: true,
+  schemaMarkup: true,
+  canonicalUrl: true,
+  focusKeyword: true,
+  socialImage: true,
+  twitterCardType: true,
+  publishedAt: true
 });
 
 export type InsertPost = z.infer<typeof insertPostSchema>;
