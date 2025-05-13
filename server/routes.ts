@@ -79,19 +79,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!userId) {
         const product = await storage.getAiProduct(productId);
         return res.json({
-          hasAccess: product?.isPublic || false,
-          requiresSubscription: !product?.isPublic,
-          requiredPlanId: product?.minRequiredPlanId,
+          hasAccess: product?.requiredPlan === 'free' || false,
+          requiresSubscription: product?.requiredPlan !== 'free',
+          requiredPlanId: product?.requiredPlan || null,
         });
       }
       
       // Get user subscription and check access
       const user = await storage.getUser(userId);
+      const userSubscription = await storage.getUserSubscription(userId);
       const canAccess = await storage.canAccessProduct(userId, productId);
+      
+      // Determine current plan from user subscription
+      const currentPlan = userSubscription?.planId 
+        ? await storage.getSubscriptionPlanById(userSubscription.planId) 
+        : null;
       
       return res.json({
         hasAccess: canAccess,
-        currentPlanId: user?.planId,
+        currentPlanId: userSubscription?.planId || null,
+        currentPlanName: currentPlan?.name || 'Free',
         // Additional info could be added here
       });
     } catch (error: any) {

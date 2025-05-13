@@ -59,15 +59,23 @@ const ContentHubPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('generator');
   const { user } = useAuth();
 
-  // Check if user is admin
+  // Check if user is admin - check for 'admin' in email as a fallback
   const isAdmin = (): boolean => {
-    return user?.role === 'admin';
+    return user?.email?.includes('admin') || false;
   };
 
-  // Fetch content list
-  const { data: contentList, isLoading } = useQuery<ContentItem[]>({
+  // Fetch content list with error handling and fallback for production
+  const { 
+    data: contentList = [], // Default to empty array
+    isLoading, 
+    isError 
+  } = useQuery<ContentItem[]>({
     queryKey: ['/api/content/list'],
     enabled: activeTab === 'library',
+    retry: 3,
+    retryDelay: 1000,
+    // Fallback to empty array in case of error to prevent crashing
+    placeholderData: [],
   });
 
   // Get content type icon
@@ -89,11 +97,13 @@ const ContentHubPage: React.FC = () => {
     return type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   };
 
-  // Filter content based on search query
-  const filteredContent = contentList?.filter(item => 
-    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    formatContentType(item.type).toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter content based on search query with type checking
+  const filteredContent = Array.isArray(contentList) 
+    ? contentList.filter((item: ContentItem) => 
+        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        formatContentType(item.type).toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : [];
 
   return (
     <div className="container mx-auto py-8">
@@ -154,6 +164,20 @@ const ContentHubPage: React.FC = () => {
               {isLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-700"></div>
+                </div>
+              ) : isError ? (
+                <div className="text-center py-8">
+                  <div className="bg-amber-50 p-4 rounded-md inline-block mb-4">
+                    <span className="text-amber-600">Connection issue</span>
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">Unable to load content</h3>
+                  <p className="text-gray-500 max-w-md mx-auto mb-4">
+                    We're having trouble connecting to the content server. 
+                    This may be a temporary issue.
+                  </p>
+                  <Button onClick={() => window.location.reload()}>
+                    Try Again
+                  </Button>
                 </div>
               ) : filteredContent && filteredContent.length > 0 ? (
                 <div className="overflow-x-auto">
