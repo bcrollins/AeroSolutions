@@ -88,7 +88,7 @@ export default function Hero() {
       <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#1E3A8A]/10 z-0"></div>
       
       {/* Cyan accent line at top */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#00D1D1] via-[#F3F4F6] to-[#00D1D1]"></div>
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#3B82F6] via-[#F3F4F6] to-[#3B82F6]"></div>
       
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid md:grid-cols-2 gap-16 items-center">
