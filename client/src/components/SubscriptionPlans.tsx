@@ -114,7 +114,7 @@ const SubscriptionPlans: React.FC = () => {
   }
 
   // Get monthly and yearly plans
-  const plans = allPlans.filter(plan => 
+  const plans = allPlans.filter((plan: SubscriptionPlan) => 
     plan.interval === billingInterval
   );
 
@@ -134,9 +134,9 @@ const SubscriptionPlans: React.FC = () => {
   };
 
   // Find equivalent monthly plans to show savings for annual plans
-  const getSavingsText = (plan: any) => {
+  const getSavingsText = (plan: SubscriptionPlan) => {
     if (billingInterval === 'year') {
-      const monthlyEquivalent = allPlans.find(p => 
+      const monthlyEquivalent = allPlans.find((p: SubscriptionPlan) => 
         p.interval === 'month' && p.name.replace(' Annual', '') === plan.name.replace(' Annual', '')
       );
       
@@ -169,7 +169,7 @@ const SubscriptionPlans: React.FC = () => {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {sortedPlans.map((plan: any) => {
+        {sortedPlans.map((plan: SubscriptionPlan) => {
           const isPopular = plan.name === popularPlanName || plan.name.includes(popularPlanName);
           const savingsText = getSavingsText(plan);
           
