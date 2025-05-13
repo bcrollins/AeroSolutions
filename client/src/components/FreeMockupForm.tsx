@@ -137,7 +137,7 @@ export default function FreeMockupForm() {
   return (
     <section 
       id="free-mockup" 
-      className="py-20 px-4 bg-light-gray"
+      className="py-20 px-4 bg-gray-900 text-white"
       aria-labelledby="free-mockup-heading"
     >
       <div className="max-w-5xl mx-auto">
@@ -155,7 +155,7 @@ export default function FreeMockupForm() {
           
           <motion.h2 
             id="free-mockup-heading"
-            className="text-4xl font-bold font-poppins text-slate-blue mb-4"
+            className="text-4xl font-bold font-poppins text-white mb-4"
             variants={fadeInUp}
             custom={1}
           >
@@ -163,7 +163,7 @@ export default function FreeMockupForm() {
           </motion.h2>
           
           <motion.p 
-            className="text-lg font-lato text-slate-blue/80 max-w-3xl mx-auto"
+            className="text-lg font-lato text-gray-300 max-w-3xl mx-auto"
             variants={fadeInUp}
             custom={2}
           >
