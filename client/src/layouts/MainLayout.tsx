@@ -1,34 +1,17 @@
-import React from 'react';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import BreadcrumbNav from '@/components/BreadcrumbNav';
-import { BreadcrumbItem } from '@/hooks/useBreadcrumbs';
+import React, { ReactNode } from 'react';
+import Header from '@/components/Header';
 
 interface MainLayoutProps {
-  children: React.ReactNode;
-  breadcrumbs?: BreadcrumbItem[];
-  hideBreadcrumbs?: boolean;
+  children: ReactNode;
 }
 
-const MainLayout: React.FC<MainLayoutProps> = ({ 
-  children, 
-  breadcrumbs,
-  hideBreadcrumbs = false
-}) => {
+export default function MainLayout({ children }: MainLayoutProps) {
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-      {!hideBreadcrumbs && (
-        <div className="container mx-auto px-4 py-3">
-          <BreadcrumbNav items={breadcrumbs} />
-        </div>
-      )}
-      <main className="flex-grow">
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-1">
         {children}
       </main>
-      <Footer />
     </div>
   );
-};
-
-export default MainLayout;
+}

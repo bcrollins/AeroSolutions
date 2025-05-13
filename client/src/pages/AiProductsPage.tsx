@@ -1,114 +1,75 @@
-import { useTranslation } from "react-i18next";
-import { MainLayout } from "@/layouts/MainLayout";
-import { AiProductsGrid } from "@/components/AiProductsGrid";
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { apiRequest } from "@/lib/queryClient";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { BoxIcon, BulbIcon, ZapIcon, ArrowUpRightIcon } from "lucide-react";
+import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useLocation } from 'wouter';
+import { AiProductsGrid } from '@/components/AiProductsGrid';
+import { Button } from '@/components/ui/button';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useToast } from '@/hooks/use-toast';
+import MainLayout from '@/layouts/MainLayout';
 
 export default function AiProductsPage() {
   const { t } = useTranslation();
-  const [userSubscriptionPlan, setUserSubscriptionPlan] = useState("starter");
-
-  // Fetch user's current subscription plan
-  const { data: user } = useQuery({
-    queryKey: ['/api/users/me'],
-    onSuccess: (data) => {
-      if (data && data.subscriptionPlan) {
-        setUserSubscriptionPlan(data.subscriptionPlan.toLowerCase());
-      }
+  const [_, navigate] = useLocation();
+  const { toast } = useToast();
+  const { userSubscription } = useSubscription();
+  
+  // Show subscription upgrade toast if accessing from a direct URL and not subscribed
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const fromPremium = params.get('from') === 'premium';
+    
+    if (fromPremium && userSubscription.plan === 'starter') {
+      toast({
+        title: t('subscription_required'),
+        description: t('premium_features_require_subscription'),
+        duration: 5000,
+      });
     }
-  });
-
-  // Optional: Fetch featured products or other content you want to highlight
-  const { data: featuredContent } = useQuery({
-    queryKey: ['/api/featured-content'],
-  });
+  }, [t, toast, userSubscription.plan]);
 
   return (
     <MainLayout>
-      <div className="container py-8">
-        <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold tracking-tight">{t('ai_products_platform')}</h1>
-          <p className="mt-4 text-xl text-muted-foreground max-w-3xl mx-auto">
-            {t('ai_products_description')}
-          </p>
-        </div>
-
-        {/* Featured Content Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex flex-col items-center text-center">
-                <div className="rounded-full bg-primary/10 p-3 mb-4">
-                  <BoxIcon className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-lg font-medium mb-2">{t('premium_ai_tools')}</h3>
-                <p className="text-muted-foreground">
-                  {t('premium_ai_tools_description')}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex flex-col items-center text-center">
-                <div className="rounded-full bg-primary/10 p-3 mb-4">
-                  <ZapIcon className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-lg font-medium mb-2">{t('business_intelligence')}</h3>
-                <p className="text-muted-foreground">
-                  {t('business_intelligence_description')}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex flex-col items-center text-center">
-                <div className="rounded-full bg-primary/10 p-3 mb-4">
-                  <BulbIcon className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-lg font-medium mb-2">{t('strategic_insights')}</h3>
-                <p className="text-muted-foreground">
-                  {t('strategic_insights_description')}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Subscription Upgrade Banner (shown if not on Enterprise plan) */}
-        {userSubscriptionPlan !== "enterprise" && (
-          <div className="mb-12 bg-gradient-to-r from-primary to-primary/90 text-primary-foreground rounded-lg p-6">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-bold">{t('unlock_premium_features')}</h2>
-                <p className="mt-2">
-                  {t('unlock_premium_features_description')}
-                </p>
-              </div>
-              <Button variant="secondary" className="whitespace-nowrap" asChild>
-                <a href="/subscriptions">
-                  {t('upgrade_now')}
-                  <ArrowUpRightIcon className="ml-2 h-4 w-4" />
-                </a>
-              </Button>
-            </div>
+      <div className="container mx-auto py-10 px-4 md:px-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight">{t('ai_products')}</h1>
+            <p className="text-muted-foreground mt-2 text-lg">
+              {t('ai_products_description')}
+            </p>
           </div>
-        )}
-
-        {/* Main AI Products Grid */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold tracking-tight mb-6">
-            {t('explore_ai_products')}
-          </h2>
-          <AiProductsGrid userSubscriptionPlan={userSubscriptionPlan} />
+          
+          {userSubscription.plan !== 'enterprise' && (
+            <Button onClick={() => navigate('/subscriptions')} size="lg">
+              {t('upgrade_subscription')}
+            </Button>
+          )}
         </div>
+        
+        <div className="bg-card rounded-lg border shadow-sm p-6 mb-8">
+          <h2 className="text-2xl font-semibold mb-4">{t('subscription_status')}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-background rounded-md p-4 border">
+              <h3 className="font-medium">{t('current_plan')}</h3>
+              <p className="text-2xl font-bold mt-2 capitalize">{userSubscription.plan}</p>
+            </div>
+            
+            <div className="bg-background rounded-md p-4 border">
+              <h3 className="font-medium">{t('status')}</h3>
+              <p className="text-2xl font-bold mt-2 capitalize">{userSubscription.status}</p>
+            </div>
+            
+            {userSubscription.expiresAt && (
+              <div className="bg-background rounded-md p-4 border">
+                <h3 className="font-medium">{t('expires')}</h3>
+                <p className="text-2xl font-bold mt-2">
+                  {new Date(userSubscription.expiresAt).toLocaleDateString()}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        <AiProductsGrid userSubscriptionPlan={userSubscription.plan} />
       </div>
     </MainLayout>
   );

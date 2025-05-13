@@ -740,6 +740,38 @@ export default function App() {
         {/* Removed router debug page to fix compilation error */}
         
         {/* Particle Background Demo page */}
+        <Route path="/products">
+          {() => (
+            <>
+              <Helmet>
+                <title>{t('ai_products')} | ROLLINSX</title>
+                <meta name="description" content="Explore our premium AI-powered products and tools to enhance your business capabilities." />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href="https://rollinsx.dev/products" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <AiProductsPage />
+            </>
+          )}
+        </Route>
+        
+        <Route path="/products/:slug">
+          {(params) => (
+            <>
+              <Helmet>
+                <title>AI Product | ROLLINSX</title>
+                <meta name="description" content="Detailed information about our premium AI-powered product." />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href={`https://rollinsx.dev/products/${params.slug}`} />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <AiProductDetailPage />
+            </>
+          )}
+        </Route>
+
         <Route path="/particle-background">
           {() => {
             console.log("Rendering ParticleBackgroundDemo route");

@@ -1,34 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { AiProductCard } from "./AiProductCard";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Check, Search, SlidersHorizontal, X } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuCheckboxItem,
-} from "@/components/ui/dropdown-menu";
-
-interface AiProduct {
-  id: number;
-  name: string;
-  description: string;
-  shortDescription?: string;
-  slug: string;
-  imageUrl?: string;
-  features?: string[];
-  category?: string;
-  requiredPlan?: string;
-  pricing?: string;
-  isActive: boolean;
-}
+import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Search, Filter, Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { useSubscription } from '@/hooks/useSubscription';
+import { getAllAiProducts } from '@/utils/productData';
+import type { AiProduct } from '@/types';
+import AiProductCard from './AiProductCard';
 
 interface AiProductsGridProps {
   userSubscriptionPlan?: string;
@@ -36,186 +15,153 @@ interface AiProductsGridProps {
 }
 
 export function AiProductsGrid({ 
-  userSubscriptionPlan = "", 
-  defaultCategory 
+  userSubscriptionPlan = 'starter',
+  defaultCategory
 }: AiProductsGridProps) {
   const { t } = useTranslation();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(
-    defaultCategory ? [defaultCategory] : []
-  );
-  const [selectedTab, setSelectedTab] = useState<string>("all");
-
-  // Fetch AI products
-  const { data: products = [], isLoading, error } = useQuery({
-    queryKey: ["/api/ai-products/active"],
-  });
-
-  // Extract unique categories
-  const categories = [
-    ...new Set(
-      (products as AiProduct[]).map((product) => product.category).filter(Boolean)
-    ),
-  ];
-
-  // Calculate if user can access a product based on their subscription
-  const canAccessProduct = (requiredPlan?: string) => {
-    if (!requiredPlan || requiredPlan === "starter") return true;
-    
-    const planLevels: Record<string, number> = {
-      "starter": 1,
-      "professional": 2,
-      "enterprise": 3
-    };
-    
-    const userPlanLevel = planLevels[userSubscriptionPlan.toLowerCase()] || 0;
-    const requiredPlanLevel = planLevels[requiredPlan.toLowerCase()] || 0;
-    
-    return userPlanLevel >= requiredPlanLevel;
-  };
-
-  // Filter products based on search, categories, and selected tab
-  const filteredProducts = (products as AiProduct[]).filter((product) => {
-    // Filter by search term
-    const matchesSearch =
-      !searchTerm ||
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (product.shortDescription && 
-        product.shortDescription.toLowerCase().includes(searchTerm.toLowerCase()));
-
-    // Filter by selected categories
-    const matchesCategory =
-      selectedCategories.length === 0 ||
-      (product.category && selectedCategories.includes(product.category));
-
-    // Filter by selected tab
-    const matchesTab =
-      selectedTab === "all" ||
-      (selectedTab === "accessible" && canAccessProduct(product.requiredPlan)) ||
-      (selectedTab === "premium" && !canAccessProduct(product.requiredPlan));
-
-    return matchesSearch && matchesCategory && matchesTab;
-  });
-
-  const toggleCategory = (category: string) => {
-    if (selectedCategories.includes(category)) {
-      setSelectedCategories(selectedCategories.filter((c) => c !== category));
-    } else {
-      setSelectedCategories([...selectedCategories, category]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(defaultCategory || null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<unknown>(null);
+  const { canAccessProduct } = useSubscription();
+  
+  // Get all products
+  const allProducts = useMemo(() => {
+    try {
+      const products = getAllAiProducts();
+      setIsLoading(false);
+      return products;
+    } catch (error) {
+      setError(error);
+      setIsLoading(false);
+      return [];
     }
-  };
-
-  const clearFilters = () => {
-    setSearchTerm("");
-    setSelectedCategories([]);
-  };
+  }, []);
+  
+  // Filter products based on search and category
+  const filteredProducts = useMemo(() => {
+    if (!allProducts.length) return [];
+    
+    return allProducts.filter(product => {
+      // Filter by search query
+      const matchesSearch = searchQuery 
+        ? product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (product.tags && product.tags.some(tag => 
+            tag.toLowerCase().includes(searchQuery.toLowerCase())
+          ))
+        : true;
+      
+      // Filter by category
+      const matchesCategory = selectedCategory 
+        ? product.category === selectedCategory 
+        : true;
+      
+      return matchesSearch && matchesCategory;
+    });
+  }, [allProducts, searchQuery, selectedCategory]);
+  
+  // Extract all unique categories
+  const categories = useMemo(() => {
+    if (!allProducts.length) return [];
+    
+    return Array.from(new Set(allProducts.map(product => product.category)))
+      .filter(Boolean)
+      .sort();
+  }, [allProducts]);
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row gap-4 items-center">
-        <div className="relative w-full md:w-96">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+      <div className="flex flex-col space-y-4 md:flex-row md:items-center md:space-y-0 md:space-x-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
-            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t('search_ai_products')}
-            className="w-full pl-8"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
           />
-          {searchTerm && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-0 top-0 h-9 w-9"
-              onClick={() => setSearchTerm("")}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
         </div>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-9">
-              <SlidersHorizontal className="mr-2 h-4 w-4" />
-              {t('filter')}
-              {selectedCategories.length > 0 && (
-                <Badge variant="secondary" className="ml-2">
-                  {selectedCategories.length}
-                </Badge>
-              )}
+        
+        <div className="flex items-center space-x-2 overflow-x-auto pb-2 md:pb-0 scrollbar-thin">
+          <Button
+            variant={selectedCategory === null ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setSelectedCategory(null)}
+          >
+            {t('all')}
+          </Button>
+          
+          {categories.map((category) => (
+            <Button
+              key={category}
+              variant={selectedCategory === category ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSelectedCategory(category)}
+            >
+              {category}
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>{t('filter_by_category')}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {categories.map((category) => (
-              <DropdownMenuCheckboxItem
-                key={category}
-                checked={selectedCategories.includes(category)}
-                onCheckedChange={() => toggleCategory(category)}
-              >
-                {category}
-                {selectedCategories.includes(category) && (
-                  <Check className="ml-auto h-4 w-4" />
-                )}
-              </DropdownMenuCheckboxItem>
-            ))}
-            {selectedCategories.length > 0 && (
-              <>
-                <DropdownMenuSeparator />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-center"
-                  onClick={clearFilters}
-                >
-                  {t('clear_filters')}
-                </Button>
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+          ))}
+        </div>
       </div>
-
-      <Tabs defaultValue={selectedTab} onValueChange={setSelectedTab}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="all">{t('all_products')}</TabsTrigger>
-          <TabsTrigger value="accessible">{t('accessible')}</TabsTrigger>
-          <TabsTrigger value="premium">{t('premium')}</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="all" className="mt-6">
-          <ProductsGrid
-            products={filteredProducts}
-            isLoading={isLoading}
-            error={error}
-            userSubscriptionPlan={userSubscriptionPlan}
-            canAccessProduct={canAccessProduct}
-          />
-        </TabsContent>
-        
-        <TabsContent value="accessible" className="mt-6">
-          <ProductsGrid
-            products={filteredProducts}
-            isLoading={isLoading}
-            error={error}
-            userSubscriptionPlan={userSubscriptionPlan}
-            canAccessProduct={canAccessProduct}
-          />
-        </TabsContent>
-        
-        <TabsContent value="premium" className="mt-6">
-          <ProductsGrid
-            products={filteredProducts}
-            isLoading={isLoading}
-            error={error}
-            userSubscriptionPlan={userSubscriptionPlan}
-            canAccessProduct={canAccessProduct}
-          />
-        </TabsContent>
-      </Tabs>
+      
+      {isLoading ? (
+        <div className="flex justify-center items-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2">{t('loading_products')}</span>
+        </div>
+      ) : error ? (
+        <div className="text-center py-12">
+          <p className="text-destructive">{t('error_loading_products')}</p>
+          <p className="text-sm text-muted-foreground mt-2">{String(error)}</p>
+        </div>
+      ) : filteredProducts.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-xl font-medium">{t('no_products_found')}</p>
+          <p className="text-muted-foreground mt-2">
+            {selectedCategory
+              ? t('no_products_in_category', { category: selectedCategory })
+              : t('no_products_matching_search', { query: searchQuery })}
+          </p>
+          <Button 
+            variant="outline" 
+            className="mt-4"
+            onClick={() => {
+              setSearchQuery('');
+              setSelectedCategory(null);
+            }}
+          >
+            {t('clear_filters')}
+          </Button>
+        </div>
+      ) : (
+        <ProductsGrid 
+          products={filteredProducts} 
+          isLoading={isLoading}
+          error={error}
+          userSubscriptionPlan={userSubscriptionPlan}
+          canAccessProduct={canAccessProduct}
+        />
+      )}
+      
+      {!isLoading && !error && filteredProducts.length > 0 && (
+        <div className="pt-6 border-t">
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">
+              {t('showing_products', { count: filteredProducts.length, total: allProducts.length })}
+            </span>
+            
+            <div className="flex space-x-2">
+              <Badge variant="outline">
+                {t('premium')}: {allProducts.filter(p => p.requiredPlan === 'professional').length}
+              </Badge>
+              <Badge variant="outline">
+                {t('enterprise')}: {allProducts.filter(p => p.requiredPlan === 'enterprise').length}
+              </Badge>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -233,65 +179,31 @@ function ProductsGrid({
   isLoading,
   error,
   userSubscriptionPlan,
-  canAccessProduct,
+  canAccessProduct
 }: ProductsGridProps) {
-  const { t } = useTranslation();
-
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div
-            key={i}
-            className="h-[400px] rounded-lg bg-muted animate-pulse"
-          />
-        ))}
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-10">
-        <p>{t('error_loading_products')}</p>
-        <Button
-          variant="outline"
-          className="mt-4"
-          onClick={() => window.location.reload()}
-        >
-          {t('try_again')}
-        </Button>
-      </div>
-    );
-  }
-
-  if (products.length === 0) {
-    return (
-      <div className="text-center py-10">
-        <h3 className="text-lg font-medium">{t('no_products_found')}</h3>
-        <p className="text-muted-foreground mt-2">
-          {t('try_different_search')}
-        </p>
+      <div className="text-center py-12">
+        <p className="text-destructive">Error loading products</p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {products.map((product) => (
-        <AiProductCard
+        <AiProductCard 
           key={product.id}
-          id={product.id}
-          name={product.name}
-          description={product.description}
-          shortDescription={product.shortDescription}
-          slug={product.slug}
-          imageUrl={product.imageUrl}
-          features={product.features}
-          category={product.category}
-          requiredPlan={product.requiredPlan}
-          pricing={product.pricing}
-          isUserSubscribed={canAccessProduct(product.requiredPlan)}
+          product={product}
+          hasAccess={canAccessProduct(product.requiredPlan)}
         />
       ))}
     </div>

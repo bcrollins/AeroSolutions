@@ -59,6 +59,7 @@ export default function Header() {
     {  
       label: 'Solutions',  
       dropdown: [  
+        { label: 'AI Products', path: '/products' },
         { label: 'AI Services', path: '/ai-services' },  
         { label: 'Content Hub', path: '/content-hub' },  
         { label: 'SEO Tools', path: '/seo-tools' },
