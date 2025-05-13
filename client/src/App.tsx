@@ -279,6 +279,20 @@ export default function App() {
             </>
           )}
         </Route>
+        <Route path="/member-dashboard">
+          {() => (
+            <>
+              <Helmet>
+                <title>Member Dashboard | ROLLINSX</title>
+                <meta name="description" content="Access exclusive courses, forum discussions, and premium resources in your ROLLINSX member dashboard." />
+                <meta name="robots" content="noindex, follow" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <MemberDashboard />
+            </>
+          )}
+        </Route>
         <Route path="/marketplace">
           {() => (
             <>

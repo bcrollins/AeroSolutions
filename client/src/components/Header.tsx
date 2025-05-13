@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';  
-import { Link } from 'wouter';  
-import { Menu, X, ChevronDown } from 'lucide-react';  
+import { Link, useLocation } from 'wouter';  
+import { Menu, X, ChevronDown, UserCircle } from 'lucide-react';  
 import ClientPreviewModal from "./ClientPreviewModal";
 import Logo from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Header() {  
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);  
   const [isSolutionsDropdownOpen, setIsSolutionsDropdownOpen] = useState(false);  
   const [isSupportDropdownOpen, setIsSupportDropdownOpen] = useState(false);  
   const [clientPreviewOpen, setClientPreviewOpen] = useState(false);
+  const { user, isAuthenticated } = useAuth();
 
   // Close all dropdowns
   const closeAllDropdowns = () => {
@@ -144,12 +146,24 @@ export default function Header() {
             >  
               Try Free  
             </Link>
-            <Link  
-              href="/login"  
-              className="font-inter text-sm px-4 py-2 rounded-md bg-[#0070F3] text-white hover:bg-[#0050A0] transition-colors duration-200"  
-            >  
-              Login  
-            </Link>  
+            {isAuthenticated ? (
+              <div className="flex items-center gap-3">
+                <Link  
+                  href="/member-dashboard"  
+                  className="font-inter text-sm px-4 py-2 rounded-md bg-[#0070F3] text-white hover:bg-[#0050A0] flex items-center gap-2 transition-colors duration-200"  
+                >  
+                  <UserCircle className="w-4 h-4" />
+                  Dashboard  
+                </Link>
+              </div>
+            ) : (
+              <Link  
+                href="/login"  
+                className="font-inter text-sm px-4 py-2 rounded-md bg-[#0070F3] text-white hover:bg-[#0050A0] transition-colors duration-200"  
+              >  
+                Login  
+              </Link>
+            )}  
           </nav>  
 
           {/* Mobile Menu Toggle */}  
@@ -226,13 +240,24 @@ export default function Header() {
               >  
                 Try Free
               </Link>
-              <Link  
-                href="/login"  
-                onClick={toggleMobileMenu}  
-                className="font-inter text-sm bg-[#0070F3] text-white py-2 px-4 rounded-md hover:bg-[#0050A0] w-fit transition-colors duration-200"  
-              >  
-                Login  
-              </Link>  
+              {isAuthenticated ? (
+                <Link  
+                  href="/member-dashboard"  
+                  onClick={toggleMobileMenu}  
+                  className="font-inter text-sm bg-[#0070F3] text-white py-2 px-4 rounded-md hover:bg-[#0050A0] w-fit transition-colors duration-200 flex items-center gap-2"  
+                >  
+                  <UserCircle className="w-4 h-4" />
+                  Member Dashboard
+                </Link>
+              ) : (
+                <Link  
+                  href="/login"  
+                  onClick={toggleMobileMenu}  
+                  className="font-inter text-sm bg-[#0070F3] text-white py-2 px-4 rounded-md hover:bg-[#0050A0] w-fit transition-colors duration-200"  
+                >  
+                  Login  
+                </Link>
+              )}  
             </div>  
           </nav>  
         )}  

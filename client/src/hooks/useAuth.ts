@@ -1,25 +1,22 @@
-// Basic mock implementation of useAuth hook for landing page optimization demo
-// In a real application, this would connect to the actual auth system
+import { useQuery } from "@tanstack/react-query";
 
 export interface User {
-  id: number;
-  username: string;
-  email: string;
-  role: string;
+  id: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  profileImageUrl?: string;
 }
 
 export function useAuth() {
-  // Mock user for demo purposes
-  const mockUser: User = {
-    id: 1,
-    username: 'demo_admin',
-    email: 'admin@rollinsx.dev',
-    role: 'admin'
-  };
+  const { data: user, isLoading } = useQuery({
+    queryKey: ["/api/auth/user"],
+    retry: false,
+  });
 
   return {
-    user: mockUser,
-    isLoading: false,
-    error: null
+    user,
+    isLoading,
+    isAuthenticated: !!user,
   };
 }
