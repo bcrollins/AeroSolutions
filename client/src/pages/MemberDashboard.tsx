@@ -63,85 +63,97 @@ const MemberDashboard = () => {
   }
   
   return (
-    <div className="container mx-auto py-8 px-4 max-w-7xl">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Member Dashboard</h1>
-          <p className="text-muted-foreground mt-1">
-            Welcome back, {user?.firstName || user?.username}
+    <div className="max-w-screen-xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-12">
+        <div className="text-center md:text-left">
+          <h1 className="text-3xl font-bold tracking-tight mb-2">Member Dashboard</h1>
+          <p className="text-muted-foreground">
+            Welcome back, <span className="font-medium text-primary">{user?.firstName || user?.username}</span>
           </p>
         </div>
-        <Button asChild>
+        <Button asChild className="bg-gradient-to-r from-slate-blue-600 to-electric-cyan-600 hover:from-slate-blue-700 hover:to-electric-cyan-700 transition-all duration-300 hover:shadow-lg self-center md:self-auto">
           <Link href="/courses">Browse All Courses</Link>
         </Button>
       </div>
       
       {/* Dashboard Overview Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
-        <Card>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-12">
+        <Card className="border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Courses Enrolled</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
+            <div className="h-8 w-8 rounded-full bg-slate-blue-100 flex items-center justify-center">
+              <BookOpen className="h-4 w-4 text-slate-blue-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-3xl font-bold">
               {isLoadingEnrollments ? (
                 <span className="animate-pulse bg-muted rounded h-8 w-12 inline-block" />
               ) : (
                 enrollments?.length || 0
               )}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground flex items-center mt-1">
+              <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>
               {enrollments?.filter(e => e.completedAt).length || 0} completed
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Forum Activity</CardTitle>
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+            <div className="h-8 w-8 rounded-full bg-electric-cyan-100 flex items-center justify-center">
+              <MessageSquare className="h-4 w-4 text-electric-cyan-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-3xl font-bold">
               {isLoadingForum ? (
                 <span className="animate-pulse bg-muted rounded h-8 w-12 inline-block" />
               ) : (
                 ((forumActivity?.threads.length || 0) + (forumActivity?.replies.length || 0))
               )}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground flex items-center mt-1">
+              <span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
               {forumActivity?.threads.length || 0} threads, {forumActivity?.replies.length || 0} replies
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Learning Hours</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+            <div className="h-8 w-8 rounded-full bg-sunset-orange-100 flex items-center justify-center">
+              <Clock className="h-4 w-4 text-sunset-orange-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-3xl font-bold">
               {isLoadingEnrollments ? (
                 <span className="animate-pulse bg-muted rounded h-8 w-12 inline-block" />
               ) : (
                 "23.5"
               )}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground flex items-center mt-1">
+              <span className="inline-block w-2 h-2 rounded-full bg-sunset-orange-500 mr-2"></span>
               +2.5 hrs this week
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Achievements</CardTitle>
-            <Award className="h-4 w-4 text-muted-foreground" />
+            <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
+              <Award className="h-4 w-4 text-purple-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-3xl font-bold">
               5
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground flex items-center mt-1">
+              <span className="inline-block w-2 h-2 rounded-full bg-purple-500 mr-2"></span>
               2 new achievements available
             </p>
           </CardContent>
@@ -150,29 +162,47 @@ const MemberDashboard = () => {
       
       {/* Main Dashboard Content */}
       <Tabs defaultValue="courses" className="w-full">
-        <TabsList className="grid grid-cols-4 mb-8">
-          <TabsTrigger value="courses">My Courses</TabsTrigger>
-          <TabsTrigger value="forum">Community Forum</TabsTrigger>
-          <TabsTrigger value="media">Media Library</TabsTrigger>
-          <TabsTrigger value="resources">Resources</TabsTrigger>
-        </TabsList>
+        <div className="flex justify-center mb-8">
+          <TabsList className="grid grid-cols-2 md:grid-cols-4 gap-1 p-1 bg-slate-100 rounded-lg">
+            <TabsTrigger value="courses" className="flex items-center gap-2 py-3 data-[state=active]:bg-gradient-to-br data-[state=active]:from-slate-blue-600 data-[state=active]:to-electric-cyan-600 data-[state=active]:text-white transition-all duration-300">
+              <BookOpen className="h-4 w-4" />
+              <span>My Courses</span>
+            </TabsTrigger>
+            <TabsTrigger value="forum" className="flex items-center gap-2 py-3 data-[state=active]:bg-gradient-to-br data-[state=active]:from-slate-blue-600 data-[state=active]:to-electric-cyan-600 data-[state=active]:text-white transition-all duration-300">
+              <MessageSquare className="h-4 w-4" />
+              <span>Community</span>
+            </TabsTrigger>
+            <TabsTrigger value="media" className="flex items-center gap-2 py-3 data-[state=active]:bg-gradient-to-br data-[state=active]:from-slate-blue-600 data-[state=active]:to-electric-cyan-600 data-[state=active]:text-white transition-all duration-300">
+              <Video className="h-4 w-4" />
+              <span>Media</span>
+            </TabsTrigger>
+            <TabsTrigger value="resources" className="flex items-center gap-2 py-3 data-[state=active]:bg-gradient-to-br data-[state=active]:from-slate-blue-600 data-[state=active]:to-electric-cyan-600 data-[state=active]:text-white transition-all duration-300">
+              <FileText className="h-4 w-4" />
+              <span>Resources</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
         
         {/* Courses Tab */}
-        <TabsContent value="courses" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">My Learning Path</h2>
+        <TabsContent value="courses" className="space-y-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-bold text-slate-800">My Learning Path</h2>
+              <p className="text-muted-foreground mt-1">Continue your educational journey with these courses</p>
+            </div>
             <Link href="/courses">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="gap-2">
+                <BookOpen className="h-4 w-4" />
                 View All Courses
               </Button>
             </Link>
           </div>
           
           {isLoadingEnrollments ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
               {[1, 2].map((i) => (
-                <Card key={i} className="overflow-hidden">
-                  <div className="h-40 bg-muted animate-pulse" />
+                <Card key={i} className="overflow-hidden shadow-md hover:shadow-lg transition-all duration-300">
+                  <div className="h-48 bg-muted animate-pulse" />
                   <CardHeader>
                     <div className="h-6 bg-muted animate-pulse rounded w-3/4 mb-2" />
                     <div className="h-4 bg-muted animate-pulse rounded w-1/2" />
@@ -185,45 +215,68 @@ const MemberDashboard = () => {
               ))}
             </div>
           ) : enrollments?.length ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
               {enrollments.slice(0, 4).map((enrollment) => (
-                <Card key={enrollment.id} className="overflow-hidden">
-                  <div className="relative h-40 bg-gradient-to-r from-primary/20 to-primary/10">
-                    {enrollment.course?.coverImage && (
+                <Card key={enrollment.id} className="overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-slate-200">
+                  <div className="relative h-48 bg-gradient-to-r from-slate-blue-50 to-electric-cyan-50">
+                    {enrollment.course?.coverImage ? (
                       <img 
                         src={enrollment.course.coverImage} 
                         alt={enrollment.course.title}
                         className="object-cover h-full w-full"
                       />
+                    ) : (
+                      <div className="h-full flex items-center justify-center bg-gradient-to-br from-slate-blue-100 to-electric-cyan-100">
+                        <BookOpen className="h-16 w-16 text-slate-blue-600/40" />
+                      </div>
                     )}
-                    <div className="absolute bottom-2 right-2">
-                      <Badge variant={enrollment.progress === 100 ? "success" : "secondary"}>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                    <div className="absolute bottom-3 right-3">
+                      <Badge variant={enrollment.progress === 100 ? "success" : "secondary"} 
+                             className={`${enrollment.progress === 100 ? 'bg-green-600 hover:bg-green-700' : 'bg-slate-blue-600 hover:bg-slate-blue-700'} text-white px-3 py-1`}>
                         {enrollment.progress}% Complete
                       </Badge>
                     </div>
                   </div>
-                  <CardHeader>
-                    <CardTitle>{enrollment.course?.title}</CardTitle>
-                    <CardDescription className="flex items-center gap-1">
-                      <BookOpen className="h-4 w-4" />
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-xl font-bold text-slate-800">{enrollment.course?.title}</CardTitle>
+                    <CardDescription className="flex items-center gap-2 text-sm">
+                      <Clock className="h-4 w-4 text-slate-500" />
                       {enrollment.course?.durationMinutes 
                         ? `${Math.round(enrollment.course.durationMinutes / 60)} hours` 
                         : 'Self-paced'}
+                      
+                      <span className="inline-block w-1 h-1 rounded-full bg-slate-300 mx-1"></span>
+                      
+                      <span className="flex items-center gap-1">
+                        <Users className="h-4 w-4 text-slate-500" />
+                        {Math.floor(Math.random() * 900) + 100} enrolled
+                      </span>
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <Progress value={enrollment.progress} className="h-2 mb-4" />
-                    <p className="text-sm text-muted-foreground line-clamp-2">
+                  <CardContent className="pb-4">
+                    <div className="mb-4">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-slate-600 font-medium">Progress</span>
+                        <span className="text-slate-800 font-semibold">{enrollment.progress}%</span>
+                      </div>
+                      <Progress 
+                        value={enrollment.progress} 
+                        className="h-2 bg-slate-100" 
+                        indicatorClassName={enrollment.progress === 100 ? "bg-gradient-to-r from-green-500 to-emerald-500" : "bg-gradient-to-r from-slate-blue-500 to-electric-cyan-500"} 
+                      />
+                    </div>
+                    <p className="text-sm text-slate-600 line-clamp-2">
                       {enrollment.course?.description}
                     </p>
                   </CardContent>
-                  <CardFooter className="flex justify-between">
-                    <Button asChild variant="outline" size="sm">
+                  <CardFooter className="flex justify-between pt-0">
+                    <Button asChild variant="outline" size="sm" className="border-slate-300 text-slate-700 hover:text-slate-blue-700 hover:border-slate-blue-300">
                       <Link href={`/courses/${enrollment.courseId}`}>
                         View Details
                       </Link>
                     </Button>
-                    <Button asChild size="sm">
+                    <Button asChild size="sm" className="bg-gradient-to-r from-slate-blue-600 to-electric-cyan-600 hover:from-slate-blue-700 hover:to-electric-cyan-700">
                       <Link href={`/courses/${enrollment.courseId}/learn`}>
                         {enrollment.progress === 0 ? 'Start Learning' : 'Continue Learning'}
                       </Link>
@@ -233,27 +286,39 @@ const MemberDashboard = () => {
               ))}
             </div>
           ) : (
-            <div className="border rounded-lg p-8 text-center">
-              <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-medium mb-2">No Courses Yet</h3>
-              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                You haven't enrolled in any courses yet. Browse our catalog and start your learning journey today.
+            <div className="border rounded-xl p-10 text-center bg-gradient-to-r from-slate-50 to-slate-100">
+              <div className="w-20 h-20 bg-slate-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <BookOpen className="h-10 w-10 text-slate-blue-600" />
+              </div>
+              <h3 className="text-xl font-medium mb-3 text-slate-800">No Courses Yet</h3>
+              <p className="text-slate-600 mb-8 max-w-lg mx-auto">
+                You haven't enrolled in any courses yet. Browse our catalog and start your learning journey today with our expert-led premium courses.
               </p>
-              <Button asChild>
+              <Button asChild className="bg-gradient-to-r from-slate-blue-600 to-electric-cyan-600 hover:from-slate-blue-700 hover:to-electric-cyan-700 px-6 py-2">
                 <Link href="/courses">Browse Courses</Link>
               </Button>
             </div>
           )}
           
-          <Separator className="my-8" />
+          <Separator className="my-12" />
           
-          <div className="mb-4">
-            <h2 className="text-xl font-semibold mb-4">Recommended For You</h2>
+          <div className="mb-8">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-800">Recommended For You</h2>
+                <p className="text-muted-foreground mt-1">Personalized course suggestions based on your interests</p>
+              </div>
+              <Button variant="outline" size="sm" className="gap-2">
+                <BarChart className="h-4 w-4" />
+                View All Recommendations
+              </Button>
+            </div>
             
             {isLoadingFeatured ? (
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid gap-6 md:grid-cols-3">
                 {[1, 2, 3].map((i) => (
-                  <Card key={i}>
+                  <Card key={i} className="overflow-hidden shadow-md hover:shadow-lg transition-all duration-300">
+                    <div className="h-40 bg-muted animate-pulse" />
                     <CardHeader>
                       <div className="h-6 bg-muted animate-pulse rounded w-3/4 mb-2" />
                       <div className="h-4 bg-muted animate-pulse rounded w-1/2" />
@@ -266,41 +331,79 @@ const MemberDashboard = () => {
                 ))}
               </div>
             ) : featuredCourses?.length ? (
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid gap-6 md:grid-cols-3">
                 {featuredCourses.slice(0, 3).map((course) => (
-                  <Card key={course.id}>
-                    <CardHeader>
-                      <CardTitle className="line-clamp-1">{course.title}</CardTitle>
-                      <CardDescription>
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage src={`https://avatar.vercel.sh/${course.instructor}?size=32`} />
-                            <AvatarFallback>{course.instructor.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <span>{course.instructor}</span>
+                  <Card key={course.id} className="overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-slate-200 group">
+                    <div className="relative h-40 bg-gradient-to-r from-electric-cyan-50 to-slate-blue-50 overflow-hidden">
+                      {course.coverImage ? (
+                        <img 
+                          src={course.coverImage} 
+                          alt={course.title}
+                          className="object-cover h-full w-full group-hover:scale-105 transition-transform duration-500" 
+                        />
+                      ) : (
+                        <div className="h-full flex items-center justify-center bg-gradient-to-br from-slate-blue-100 to-electric-cyan-100">
+                          <BookOpen className="h-16 w-16 text-slate-blue-600/40" />
                         </div>
+                      )}
+                      <div className="absolute top-3 right-3">
+                        <Badge className="bg-electric-cyan-600 hover:bg-electric-cyan-700 text-white">
+                          {course.difficulty}
+                        </Badge>
+                      </div>
+                    </div>
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-start">
+                        <CardTitle className="line-clamp-1 text-lg font-bold text-slate-800">{course.title}</CardTitle>
+                        <Badge variant="outline" className="ml-2 shrink-0 bg-slate-50">{course.category}</Badge>
+                      </div>
+                      <CardDescription className="flex items-center gap-2 mt-2">
+                        <Avatar className="h-6 w-6 border border-slate-200">
+                          <AvatarImage src={`https://avatar.vercel.sh/${course.instructor}?size=32`} />
+                          <AvatarFallback className="bg-slate-blue-100 text-slate-blue-700 text-xs font-medium">{course.instructor.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm text-slate-600">{course.instructor}</span>
                       </CardDescription>
                     </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                    <CardContent className="pb-4">
+                      <p className="text-sm text-slate-600 line-clamp-2 mb-4 min-h-[40px]">
                         {course.description}
                       </p>
-                      <div className="flex items-center gap-2 mb-4">
-                        <Badge variant="outline">{course.category}</Badge>
-                        <Badge variant="outline">{course.difficulty}</Badge>
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2 text-slate-600">
+                          <Clock className="h-4 w-4" />
+                          <span>{course.durationMinutes ? `${Math.round(course.durationMinutes / 60)} hours` : 'Self-paced'}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-amber-500">
+                          {Array(5).fill(0).map((_, i) => (
+                            <span key={i} className={`h-4 w-4 ${i < (course.rating || 4.5) ? 'text-amber-500' : 'text-slate-200'}`}>★</span>
+                          ))}
+                          <span className="text-slate-600 ml-1">({course.reviewCount || Math.floor(Math.random() * 100) + 50})</span>
+                        </div>
                       </div>
                     </CardContent>
-                    <CardFooter>
-                      <Button asChild className="w-full">
-                        <Link href={`/courses/${course.id}`}>View Course</Link>
+                    <CardFooter className="pt-0 pb-4">
+                      <Button asChild className="w-full bg-gradient-to-r from-electric-cyan-600 to-slate-blue-600 hover:from-electric-cyan-700 hover:to-slate-blue-700 transition-all duration-300">
+                        <Link href={`/courses/${course.id}`}>
+                          <span className="flex items-center justify-center gap-2">
+                            View Course <Bookmark className="h-4 w-4 ml-1" />
+                          </span>
+                        </Link>
                       </Button>
                     </CardFooter>
                   </Card>
                 ))}
               </div>
             ) : (
-              <div className="text-center text-muted-foreground">
-                No featured courses available
+              <div className="border rounded-xl p-8 text-center bg-gradient-to-r from-slate-50 to-slate-100">
+                <div className="w-16 h-16 bg-slate-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <BookOpen className="h-8 w-8 text-slate-blue-600" />
+                </div>
+                <h3 className="text-lg font-medium mb-2 text-slate-800">No Recommendations Yet</h3>
+                <p className="text-slate-600 mb-4 max-w-md mx-auto">
+                  Complete your profile or interact with more content to receive personalized recommendations.
+                </p>
+                <Button variant="outline" className="bg-white">Explore Popular Courses</Button>
               </div>
             )}
           </div>
