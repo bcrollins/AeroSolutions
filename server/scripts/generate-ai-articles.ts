@@ -287,8 +287,12 @@ function generateFallbackArticle(topic: string, index: number): {
  */
 async function saveArticle(articleData: any): Promise<any> {
   try {
-    // Super simple approach with manually prepared SQL
-    const query = `
+    // Direct SQL with minimal fields
+    // Using dynamic SQL with proper escaping for text values
+    const safeTitle = articleData.title ? articleData.title.replace(/'/g, "''") : 'AI Article';
+    const safeContent = articleData.content ? articleData.content.replace(/'/g, "''") : 'This is a sample article about AI technology.';
+    
+    const sql = `
       INSERT INTO posts (
         title, 
         content, 
@@ -298,21 +302,31 @@ async function saveArticle(articleData: any): Promise<any> {
         created_at, 
         updated_at
       ) VALUES (
-        '${articleData.title.replace(/'/g, "''")}', 
-        '${articleData.content.replace(/'/g, "''")}', 
-        ${ADMIN_USER_ID},
+        '${safeTitle}', 
+        '${safeContent}', 
+        1,
         'AI & Technology',
         'published',
         NOW(),
         NOW()
-      ) RETURNING *
+      ) RETURNING id
     `;
     
-    logger.info('Executing article save SQL for:', articleData.title);
-    const result = await db.execute(query);
+    logger.info(`Saving article: ${safeTitle.substring(0, 30)}...`);
     
-    if (result.rows && result.rows.length > 0) {
-      return result.rows[0];
+    // Execute direct SQL
+    const res = await db.execute(sql);
+    
+    // Handle response
+    if (res && res.rows && res.rows.length > 0) {
+      return { 
+        id: res.rows[0].id,
+        title: safeTitle,
+        content: safeContent,
+        author_id: 1,
+        category: 'AI & Technology',
+        status: 'published'
+      };
     } else {
       throw new Error('No article was created');
     }
