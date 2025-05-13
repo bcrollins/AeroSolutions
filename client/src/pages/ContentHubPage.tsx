@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { useQuery } from '@tanstack/react-query';
 import ContentGenerator from '@/components/ContentGenerator';
+import BulkContentGenerator from '@/components/BulkContentGenerator';
 import {
   Card,
   CardContent,
@@ -40,6 +41,7 @@ import {
   Trash2,
   Eye,
 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 // Content item type
 interface ContentItem {
@@ -55,6 +57,12 @@ interface ContentItem {
 const ContentHubPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('generator');
+  const { user } = useAuth();
+
+  // Check if user is admin
+  const isAdmin = (): boolean => {
+    return user?.role === 'admin';
+  };
 
   // Fetch content list
   const { data: contentList, isLoading } = useQuery<ContentItem[]>({
@@ -111,6 +119,7 @@ const ContentHubPage: React.FC = () => {
         </TabsList>
 
         <TabsContent value="generator" className="mt-6">
+          {isAdmin() && <BulkContentGenerator />}
           <ContentGenerator />
         </TabsContent>
 

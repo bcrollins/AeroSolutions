@@ -5,6 +5,8 @@ import postsRoutes from "./routes/posts";
 import coursesRoutes from "./routes/courses";
 import forumRoutes from "./routes/forum";
 import mediaRoutes from "./routes/media";
+import contentGenerationRoutes from "./routes/content-generation";
+import aiContentRoutes from "./routes/ai-content";
 import { storage } from "./storage";
 import { logger } from "./utils/logger";
 
@@ -14,6 +16,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register Posts routes
   app.use("/api/posts", postsRoutes);
+  
+  // Register AI Content Generation routes
+  app.use("/api/content-generation", contentGenerationRoutes);
+  app.use("/api/ai-content", aiContentRoutes);
   
   // Register Learning System routes
   app.use("/api/courses", coursesRoutes);
