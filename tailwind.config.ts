@@ -55,6 +55,10 @@ export default {
         'dark-blue-shade': '#172554',
         'light-gray-tint': '#E5E7EB',
         'pale-blue-tint': '#DBEAFE',
+        'electric-cyan': '#3B82F6', /* Updated from teal (#00D1D1) to standard blue */
+        'slate-blue': '#1E293B',
+        'sunset-orange': '#2563EB', /* Updated to darker blue for hover states */
+        'light-gray': '#F8FAFC',
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
