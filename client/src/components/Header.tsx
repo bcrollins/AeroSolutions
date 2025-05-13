@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';  
 import { Link, useLocation } from 'wouter';  
-import { Menu, X, ChevronDown, UserCircle } from 'lucide-react';  
+import { Menu, X, ChevronDown, UserCircle, ShieldCheck, LayoutDashboard } from 'lucide-react';  
 import ClientPreviewModal from "./ClientPreviewModal";
 import Logo from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAuth } from '@/hooks/useAuth';
+import { cn } from '@/lib/utils';
 
 export default function Header() {  
+  const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);  
   const [isSolutionsDropdownOpen, setIsSolutionsDropdownOpen] = useState(false);  
   const [isSupportDropdownOpen, setIsSupportDropdownOpen] = useState(false);  
@@ -38,6 +40,11 @@ export default function Header() {
       document.removeEventListener('click', handleClickOutside);
     };
   }, [isSolutionsDropdownOpen, isSupportDropdownOpen]);
+
+  // Close mobile menu when location changes
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location]);
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);  
   
@@ -84,92 +91,116 @@ export default function Header() {
 
   return (  
     <>
-      <header className="header bg-black text-white py-4 px-6 sticky top-0 z-50 shadow-md">  
+      <header className="header bg-gradient-to-r from-gray-900 to-black text-white py-4 px-4 sm:px-6 sticky top-0 z-50 shadow-lg">  
         <div className="max-w-7xl mx-auto flex justify-between items-center">  
           {/* Logo */}  
           <Link href="/">  
-            <div className="flex items-center">
-              <Logo height={24} width={24} className="mr-2" />
-              <span className="font-bold tracking-wider text-xl text-white">ROLLINSX</span>
+            <div className="flex items-center group">
+              <div className="transition-transform duration-300 group-hover:scale-110">
+                <Logo height={28} width={28} className="mr-2" />
+              </div>
+              <span className="font-bold tracking-wider text-xl text-white group-hover:text-electric-cyan-400 transition-colors duration-300">ROLLINSX</span>
             </div>
           </Link>  
 
           {/* Desktop Menu */}  
-          <nav className="hidden md:flex space-x-8 items-center">  
+          <nav className="hidden md:flex space-x-6 lg:space-x-8 items-center">  
             {menuItems.map((item) => (  
               <div key={item.label} className="relative">  
                 {item.dropdown ? (  
                   <button  
                     onClick={item.label === 'Solutions' ? toggleSolutionsDropdown : toggleSupportDropdown}  
-                    className="font-inter text-sm uppercase tracking-wide text-white hover:text-[#0070F3] flex items-center transition-colors duration-200"  
+                    className={cn(
+                      "font-medium text-sm tracking-wide text-white hover:text-electric-cyan-400 flex items-center transition-colors duration-200",
+                      (item.label === 'Solutions' && isSolutionsDropdownOpen) || (item.label === 'Support' && isSupportDropdownOpen) 
+                        ? "text-electric-cyan-400" 
+                        : ""
+                    )}
                   >  
                     {item.label}  
-                    <ChevronDown className="ml-1 w-4 h-4" />  
+                    <ChevronDown className={cn(
+                      "ml-1 w-4 h-4 transition-transform duration-200",
+                      (item.label === 'Solutions' && isSolutionsDropdownOpen) || (item.label === 'Support' && isSupportDropdownOpen)
+                        ? "rotate-180" 
+                        : ""
+                    )} />  
                   </button>  
                 ) : (  
                   <Link  
                     href={item.path}  
-                    className="font-inter text-sm uppercase tracking-wide text-white hover:text-[#0070F3] transition-colors duration-200"  
+                    className={cn(
+                      "font-medium text-sm tracking-wide text-white hover:text-electric-cyan-400 transition-colors duration-200",
+                      location === item.path ? "text-electric-cyan-400" : ""
+                    )}
                   >  
                     {item.label}  
                   </Link>  
                 )}  
                 {item.dropdown && (item.label === 'Solutions' ? isSolutionsDropdownOpen : isSupportDropdownOpen) && (  
-                  <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-10">  
-                    {item.dropdown.map((subItem) => (  
-                      <Link  
-                        key={subItem.label}  
-                        href={subItem.path}  
-                        onClick={() => {
-                          setIsSolutionsDropdownOpen(false);
-                          setIsSupportDropdownOpen(false);
-                        }}
-                        className="block px-4 py-2 text-black hover:bg-[#0070F3] hover:text-white transition-colors duration-200"  
-                      >  
-                        {subItem.label}  
-                      </Link>  
-                    ))}  
+                  <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-lg shadow-xl z-10 overflow-hidden border border-gray-100">  
+                    <div className="py-1">
+                      {item.dropdown.map((subItem) => (  
+                        <Link  
+                          key={subItem.label}  
+                          href={subItem.path}  
+                          onClick={() => {
+                            setIsSolutionsDropdownOpen(false);
+                            setIsSupportDropdownOpen(false);
+                          }}
+                          className={cn(
+                            "block px-4 py-2 text-gray-800 hover:bg-slate-blue-50 hover:text-slate-blue-700 transition-colors duration-200",
+                            location === subItem.path ? "bg-slate-blue-50 text-slate-blue-700" : ""
+                          )}
+                        >  
+                          {subItem.label}  
+                        </Link>  
+                      ))}
+                    </div>  
                   </div>  
                 )}  
               </div>  
             ))}  
             <button
               onClick={toggleClientPreview}
-              className="font-inter text-sm uppercase tracking-wide text-white hover:text-[#0070F3] transition-colors duration-200 border border-white px-3 py-1 rounded-md hover:border-[#0070F3]"
+              className="font-medium text-sm tracking-wide text-white hover:text-electric-cyan-400 transition-colors duration-200 border border-gray-700 hover:border-electric-cyan-400 px-3 py-1.5 rounded-md"
             >
               Client Preview
             </button>
             <ThemeToggle />
-            <Link  
-              href="/subscriptions"  
-              className="font-inter text-sm px-4 py-2 rounded-md bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 transition-colors duration-200 mr-3"  
-            >  
-              Try Free  
-            </Link>
-            {isAuthenticated ? (
-              <div className="flex items-center gap-3">
+            
+            <div className="flex items-center space-x-3">
+              <Link  
+                href="/subscriptions"  
+                className="font-medium text-sm px-4 py-2 rounded-md bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 hover:shadow-lg"  
+              >  
+                Try Free  
+              </Link>
+              
+              {isAuthenticated ? (
                 <Link  
                   href="/member-dashboard"  
-                  className="font-inter text-sm px-4 py-2 rounded-md bg-[#0070F3] text-white hover:bg-[#0050A0] flex items-center gap-2 transition-colors duration-200"  
+                  className="font-medium text-sm px-4 py-2 rounded-md bg-electric-cyan-600 text-white hover:bg-electric-cyan-700 transition-all duration-300 hover:shadow-lg flex items-center gap-2"  
                 >  
-                  <UserCircle className="w-4 h-4" />
+                  <LayoutDashboard className="w-4 h-4" />
                   Dashboard  
                 </Link>
-              </div>
-            ) : (
-              <Link  
-                href="/login"  
-                className="font-inter text-sm px-4 py-2 rounded-md bg-[#0070F3] text-white hover:bg-[#0050A0] transition-colors duration-200"  
-              >  
-                Login  
-              </Link>
-            )}  
+              ) : (
+                <Link  
+                  href="/login"  
+                  className="font-medium text-sm px-4 py-2 rounded-md bg-electric-cyan-600 text-white hover:bg-electric-cyan-700 transition-all duration-300 hover:shadow-lg flex items-center gap-2"  
+                >  
+                  <ShieldCheck className="w-4 h-4" />
+                  Login  
+                </Link>
+              )}
+            </div>  
           </nav>  
 
           {/* Mobile Menu Toggle */}  
           <button  
             className="md:hidden text-white focus:outline-none"  
             onClick={toggleMobileMenu}  
+            aria-label="Toggle mobile menu"
           >  
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}  
           </button>  
@@ -177,21 +208,31 @@ export default function Header() {
 
         {/* Mobile Menu */}  
         {isMobileMenuOpen && (  
-          <nav className="md:hidden bg-black border-t border-gray-800 py-4">  
+          <nav className="md:hidden bg-gradient-to-b from-gray-900 to-black border-t border-gray-800 py-4 mt-4 rounded-b-lg shadow-2xl">  
             <div className="flex flex-col space-y-4 px-6">  
               {menuItems.map((item) => (  
-                <div key={item.label}>  
+                <div key={item.label} className="py-2 border-b border-gray-800 last:border-b-0">  
                   {item.dropdown ? (  
                     <div>  
                       <button  
                         onClick={item.label === 'Solutions' ? toggleSolutionsDropdown : toggleSupportDropdown}  
-                        className="font-inter text-sm uppercase tracking-wide text-white hover:text-[#0070F3] flex items-center"  
+                        className={cn(
+                          "font-medium text-sm tracking-wide text-white hover:text-electric-cyan-400 flex items-center justify-between w-full",
+                          (item.label === 'Solutions' && isSolutionsDropdownOpen) || (item.label === 'Support' && isSupportDropdownOpen) 
+                            ? "text-electric-cyan-400" 
+                            : ""
+                        )}
                       >  
-                        {item.label}  
-                        <ChevronDown className="ml-1 w-4 h-4" />  
+                        <span>{item.label}</span>  
+                        <ChevronDown className={cn(
+                          "ml-1 w-5 h-5 transition-transform duration-200",
+                          (item.label === 'Solutions' && isSolutionsDropdownOpen) || (item.label === 'Support' && isSupportDropdownOpen)
+                            ? "rotate-180" 
+                            : ""
+                        )} />  
                       </button>  
                       {(item.label === 'Solutions' ? isSolutionsDropdownOpen : isSupportDropdownOpen) && (  
-                        <div className="pl-4 mt-2 space-y-2">  
+                        <div className="pl-4 mt-3 mb-1 space-y-3 border-l-2 border-gray-700">  
                           {item.dropdown.map((subItem) => (  
                             <Link  
                               key={subItem.label}  
@@ -201,7 +242,10 @@ export default function Header() {
                                 setIsSolutionsDropdownOpen(false);
                                 setIsSupportDropdownOpen(false);
                               }}  
-                              className="block text-white hover:text-[#0070F3]"  
+                              className={cn(
+                                "block text-gray-300 hover:text-electric-cyan-400 transition-colors duration-200 text-sm py-1",
+                                location === subItem.path ? "text-electric-cyan-400" : ""
+                              )}
                             >  
                               {subItem.label}  
                             </Link>  
@@ -213,51 +257,61 @@ export default function Header() {
                     <Link  
                       href={item.path}  
                       onClick={toggleMobileMenu}  
-                      className="font-inter text-sm uppercase tracking-wide text-white hover:text-[#0070F3]"  
+                      className={cn(
+                        "font-medium text-sm tracking-wide text-white hover:text-electric-cyan-400 block",
+                        location === item.path ? "text-electric-cyan-400" : ""
+                      )}
                     >  
                       {item.label}  
                     </Link>  
                   )}  
                 </div>  
               ))}
-              <button
-                onClick={() => {
-                  toggleMobileMenu();
-                  toggleClientPreview();
-                }}
-                className="font-inter text-sm uppercase tracking-wide text-white hover:text-[#0070F3] border border-white px-3 py-1 rounded-md hover:border-[#0070F3] w-fit"
-              >
-                Client Preview
-              </button>
-              <div className="flex items-center py-2">
-                <ThemeToggle />
-                <span className="ml-2 text-white">Theme</span>
-              </div>
-              <Link  
-                href="/subscriptions"  
-                onClick={toggleMobileMenu}  
-                className="font-inter text-sm bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-2 px-4 rounded-md hover:from-purple-700 hover:to-indigo-700 w-fit transition-colors duration-200 mb-3"  
-              >  
-                Try Free
-              </Link>
-              {isAuthenticated ? (
+              
+              <div className="flex flex-col space-y-4 pt-2">
+                <button
+                  onClick={() => {
+                    toggleMobileMenu();
+                    toggleClientPreview();
+                  }}
+                  className="font-medium text-sm tracking-wide text-white hover:text-electric-cyan-400 border border-gray-700 hover:border-electric-cyan-400 px-3 py-2 rounded-md text-center transition-colors duration-200"
+                >
+                  Client Preview
+                </button>
+                
+                <div className="flex items-center py-2 justify-between bg-gray-800 px-3 rounded-md">
+                  <span className="text-white text-sm">Toggle Theme</span>
+                  <ThemeToggle />
+                </div>
+                
                 <Link  
-                  href="/member-dashboard"  
+                  href="/subscriptions"  
                   onClick={toggleMobileMenu}  
-                  className="font-inter text-sm bg-[#0070F3] text-white py-2 px-4 rounded-md hover:bg-[#0050A0] w-fit transition-colors duration-200 flex items-center gap-2"  
+                  className="font-medium text-sm bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 px-4 rounded-md hover:from-purple-700 hover:to-indigo-700 transition-colors duration-200 text-center"  
                 >  
-                  <UserCircle className="w-4 h-4" />
-                  Member Dashboard
+                  Try Free
                 </Link>
-              ) : (
-                <Link  
-                  href="/login"  
-                  onClick={toggleMobileMenu}  
-                  className="font-inter text-sm bg-[#0070F3] text-white py-2 px-4 rounded-md hover:bg-[#0050A0] w-fit transition-colors duration-200"  
-                >  
-                  Login  
-                </Link>
-              )}  
+                
+                {isAuthenticated ? (
+                  <Link  
+                    href="/member-dashboard"  
+                    onClick={toggleMobileMenu}  
+                    className="font-medium text-sm bg-electric-cyan-600 text-white py-3 px-4 rounded-md hover:bg-electric-cyan-700 transition-colors duration-200 flex items-center justify-center gap-2"  
+                  >  
+                    <LayoutDashboard className="w-5 h-5" />
+                    Member Dashboard
+                  </Link>
+                ) : (
+                  <Link  
+                    href="/login"  
+                    onClick={toggleMobileMenu}  
+                    className="font-medium text-sm bg-electric-cyan-600 text-white py-3 px-4 rounded-md hover:bg-electric-cyan-700 transition-colors duration-200 flex items-center justify-center gap-2"  
+                  >  
+                    <ShieldCheck className="w-5 h-5" />
+                    Login  
+                  </Link>
+                )}
+              </div>  
             </div>  
           </nav>  
         )}  
