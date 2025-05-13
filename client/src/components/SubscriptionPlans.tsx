@@ -165,7 +165,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
     });
 
   return (
-    <div className={`space-y-12 ${className} px-4 py-8`}>
+    <div className={`space-y-12 ${className} container mx-auto px-6 md:px-8 py-16`}>
       {/* Hero section */}
       <div className="text-center max-w-3xl mx-auto mb-12">
         <motion.h1 
@@ -220,7 +220,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
       </div>
 
       {/* Subscription plans grid */}
-      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 max-w-7xl mx-auto">
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 max-w-6xl mx-auto px-4">
         {activePlans.map((plan, index) => {
           const price = plan.price || '$0.00';
           const isCurrentPlan = currentPlan?.id === plan.id;
@@ -306,7 +306,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
       </div>
       
       {/* Testimonials section */}
-      <div className="mt-16 max-w-5xl mx-auto">
+      <div className="mt-16 max-w-5xl mx-auto px-6">
         <h2 className="text-2xl font-bold text-center mb-10">What Our Customers Say</h2>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <motion.div 
@@ -363,7 +363,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
       </div>
       
       {/* FAQ Section */}
-      <div className="mt-16 max-w-4xl mx-auto">
+      <div className="mt-16 max-w-4xl mx-auto px-6">
         <h2 className="text-2xl font-bold text-center mb-10">Frequently Asked Questions</h2>
         <div className="space-y-6">
           <motion.div 
