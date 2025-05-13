@@ -25,7 +25,7 @@ interface ThemeProviderProps {
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   children,
-  defaultTheme = 'system',
+  defaultTheme = 'light',
 }) => {
   // Get stored theme from localStorage or use default
   const [theme, setTheme] = useState<Theme>(() => {
