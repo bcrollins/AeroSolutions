@@ -77,7 +77,7 @@ export default function Hero() {
       <div 
         className="absolute inset-0 opacity-5" 
         style={{
-          backgroundImage: "url('data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h10v10H0zm10 20h10v10H10zM0 40h10v10H0zm30-20h10v10H30zm20-20h10v10H50z' fill='%2300D1D1' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E')", 
+          backgroundImage: "url('data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h10v10H0zm10 20h10v10H10zM0 40h10v10H0zm30-20h10v10H30zm20-20h10v10H50z' fill='%233B82F6' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E')", 
           backgroundSize: "60px 60px", 
           backgroundPosition: "center"
         }}
@@ -94,13 +94,13 @@ export default function Hero() {
         <div className="grid md:grid-cols-2 gap-16 items-center">
           <div className="text-white">
             <motion.div 
-              className="inline-block mb-4 px-3 py-1 bg-[#00D1D1]/10 border border-[#00D1D1]/20 rounded-full"
+              className="inline-block mb-4 px-3 py-1 bg-[#3B82F6]/10 border border-[#3B82F6]/20 rounded-full"
               variants={fadeInUp}
               initial="hidden"
               animate="visible"
               custom={0}
             >
-              <span className="text-[#00D1D1] text-sm font-medium tracking-wider uppercase font-inter">Premium Web Solutions</span>
+              <span className="text-[#3B82F6] text-sm font-medium tracking-wider uppercase font-inter">Premium Web Solutions</span>
             </motion.div>
             
             <motion.h1 
@@ -110,7 +110,7 @@ export default function Hero() {
               animate="visible"
               custom={1}
             >
-              Web <span className="text-[#00D1D1]">Development</span> for Small Businesses
+              Web <span className="text-[#3B82F6]">Development</span> for Small Businesses
             </motion.h1>
             
             <motion.p 
@@ -142,14 +142,14 @@ export default function Hero() {
             >
               <a 
                 href="#contact" 
-                className="bg-[#00D1D1] hover:bg-[#00D1D1]/90 text-[#1E3A8A] font-bold py-4 px-8 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_5px_15px_rgba(0,209,209,0.35)] font-inter"
+                className="bg-[#3B82F6] hover:bg-[#3B82F6]/90 text-[#1E3A8A] font-bold py-4 px-8 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_5px_15px_rgba(59,130,246,0.35)] font-inter"
                 aria-label="Get started with a custom web development solution"
               >
                 Get Started
               </a>
               <a 
                 href="#platforms" 
-                className="bg-transparent hover:bg-white/10 text-white font-semibold py-4 px-8 rounded-lg border border-[#00D1D1]/30 transition-all duration-300 hover:scale-105 hover:border-[#00D1D1]/60 font-inter"
+                className="bg-transparent hover:bg-white/10 text-white font-semibold py-4 px-8 rounded-lg border border-[#3B82F6]/30 transition-all duration-300 hover:scale-105 hover:border-[#3B82F6]/60 font-inter"
                 aria-label="Explore our web development platforms"
               >
                 Explore Platforms
