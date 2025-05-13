@@ -5,7 +5,7 @@ import { StripeCheckout } from '@/components/checkout/StripeCheckout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { createSubscription, getSubscriptionPlans } from '@/utils/stripe';
+import { createSubscriptionCheckout as createSubscription, getSubscriptionPlans } from '@/utils/stripe';
 import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 

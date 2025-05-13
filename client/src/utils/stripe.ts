@@ -1,7 +1,9 @@
-import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { apiRequest } from '@/lib/queryClient';
+import { loadStripe, Stripe } from '@stripe/stripe-js';
 
-// Subscription plan interface
+/**
+ * Subscription plan interface defining the structure of a plan
+ */
 export interface SubscriptionPlan {
   id: number;
   name: string;
@@ -9,157 +11,183 @@ export interface SubscriptionPlan {
   monthlyPrice: string;
   annualPrice: string;
   features: string[];
-  stripePriceId?: string;
-  stripeMonthlyPriceId?: string;
-  stripeAnnualPriceId?: string;
   isPopular?: boolean;
   isEnterprise?: boolean;
   isActive?: boolean;
+  stripePriceId?: string;
+  stripeAnnualPriceId?: string;
 }
 
-// Load Stripe outside of component render to avoid recreating Stripe object
-let stripePromise: Promise<Stripe | null>;
+/**
+ * Interface for subscription data returned from the API
+ */
+export interface SubscriptionData {
+  subscription: {
+    id: string;
+    status: 'active' | 'canceled' | 'incomplete' | 'incomplete_expired' | 'past_due' | 'trialing' | 'unpaid';
+    current_period_start: string;
+    current_period_end: string;
+    cancel_at_period_end: boolean;
+    cancel_at?: string;
+    canceled_at?: string;
+    plan?: {
+      id: string;
+      interval: 'month' | 'year';
+      amount: number;
+    };
+  };
+  plan: SubscriptionPlan;
+}
 
 /**
- * Get Stripe instance
- * @returns Stripe promise
+ * Get all available subscription plans
+ * @returns Array of subscription plans
  */
-export const getStripe = () => {
-  if (!stripePromise) {
-    const key = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
-    if (!key) {
-      console.error('Stripe public key not found');
-      throw new Error('Stripe public key is missing');
-    }
-    stripePromise = loadStripe(key);
+export const getSubscriptionPlans = async (): Promise<SubscriptionPlan[]> => {
+  const response = await apiRequest('GET', '/api/stripe/subscription-plans');
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw {
+      status: response.status,
+      statusText: response.statusText,
+      data: errorData
+    };
   }
-  return stripePromise;
+  
+  return response.json();
 };
 
 /**
- * Fetch available subscription plans
- * @returns List of subscription plans
+ * Get current user's subscription
+ * @returns Current subscription data
  */
-export async function getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
-  try {
-    const response = await apiRequest('GET', '/api/stripe/subscription-plans');
-    if (!response.ok) {
-      throw new Error('Failed to fetch subscription plans');
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching subscription plans:', error);
-    throw error;
+export const getCurrentSubscription = async (): Promise<SubscriptionData> => {
+  const response = await apiRequest('GET', '/api/stripe/current-subscription');
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw {
+      status: response.status,
+      statusText: response.statusText,
+      data: errorData
+    };
   }
-}
+  
+  return response.json();
+};
 
 /**
- * Create a subscription
- * @param priceId Stripe price ID
- * @param planId Plan ID
- * @returns Object containing client secret and subscription ID
+ * Create a subscription checkout session
+ * @param planId - ID of the subscription plan
+ * @param interval - Billing interval (monthly or annual)
+ * @returns Checkout session data with URL
  */
-export async function createSubscription(
-  priceId: string,
-  planId: number
-): Promise<{
-  clientSecret: string;
-  subscriptionId: string;
-  status?: string;
-}> {
-  try {
-    const response = await apiRequest('POST', '/api/stripe/create-subscription', {
-      priceId,
-      planId,
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to create subscription');
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Error creating subscription:', error);
-    throw error;
+export const createSubscriptionCheckout = async (
+  planId: number,
+  interval: 'monthly' | 'annual'
+): Promise<{ sessionId: string; url: string }> => {
+  const response = await apiRequest('POST', '/api/stripe/create-subscription-checkout', {
+    planId,
+    interval
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw {
+      status: response.status,
+      statusText: response.statusText,
+      data: errorData
+    };
   }
-}
+  
+  return response.json();
+};
 
 /**
  * Cancel a subscription
- * @param subscriptionId Stripe subscription ID
- * @returns Success status
+ * @param subscriptionId - ID of the subscription to cancel
+ * @returns Cancellation result
  */
-export async function cancelSubscription(
+export const cancelSubscription = async (
   subscriptionId: string
-): Promise<{ success: boolean; message: string }> {
-  try {
-    const response = await apiRequest('POST', '/api/stripe/cancel-subscription', {
-      subscriptionId,
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to cancel subscription');
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Error canceling subscription:', error);
-    throw error;
+): Promise<{ success: boolean }> => {
+  const response = await apiRequest('POST', '/api/stripe/cancel-subscription', {
+    subscriptionId
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw {
+      status: response.status,
+      statusText: response.statusText,
+      data: errorData
+    };
   }
-}
+  
+  return response.json();
+};
 
 /**
- * Get current subscription details
- * @returns Subscription details
+ * Create a one-time payment intent
+ * @param amount - Amount to charge in dollars
+ * @param metadata - Additional metadata for the payment
+ * @returns Payment intent client secret
  */
-export async function getCurrentSubscription(): Promise<{
-  subscription: any;
-  plan: SubscriptionPlan | null;
-}> {
-  try {
-    const response = await apiRequest('GET', '/api/stripe/current-subscription');
-    
-    if (!response.ok) {
-      if (response.status === 404) {
-        // No subscription found, not an error
-        return { subscription: null, plan: null };
-      }
-      throw new Error('Failed to fetch current subscription');
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching current subscription:', error);
-    throw error;
-  }
-}
-
-/**
- * Create a payment intent for one-time payments
- * @param amount Amount in dollars (will be converted to cents)
- * @param productId Optional product ID for tracking
- * @returns Client secret for payment intent
- */
-export async function createPaymentIntent(
+export const createPaymentIntent = async (
   amount: number,
-  productId?: number
-): Promise<{ clientSecret: string }> {
-  try {
-    const response = await apiRequest('POST', '/api/stripe/create-payment-intent', {
-      amount,
-      productId,
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to create payment intent');
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Error creating payment intent:', error);
-    throw error;
+  metadata?: Record<string, string>
+): Promise<{ clientSecret: string }> => {
+  const response = await apiRequest('POST', '/api/stripe/create-payment-intent', {
+    amount,
+    metadata
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw {
+      status: response.status,
+      statusText: response.statusText,
+      data: errorData
+    };
   }
-}
+  
+  return response.json();
+};
+
+/**
+ * Format a price for display
+ * @param amount - Amount in cents
+ * @param currency - Currency code (default: USD)
+ * @returns Formatted price string
+ */
+export const formatPrice = (amount: number, currency: string = 'USD'): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 0
+  }).format(amount / 100);
+};
+
+// Stripe instance to be used with React components
+let stripePromise: Promise<Stripe | null>;
+
+/**
+ * Get a Stripe instance for use with React components
+ * @returns Promise that resolves to a Stripe instance
+ */
+export const getStripe = (): Promise<Stripe | null> => {
+  if (!stripePromise) {
+    // Get the Stripe publishable key from environment variables
+    const publishableKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+    
+    if (!publishableKey) {
+      console.error('Stripe publishable key is missing. Please check your environment variables.');
+      return Promise.resolve(null);
+    }
+    
+    stripePromise = loadStripe(publishableKey);
+  }
+  
+  return stripePromise;
+};
