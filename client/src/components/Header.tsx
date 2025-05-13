@@ -86,7 +86,7 @@ export default function Header() {
           {/* Logo */}  
           <Link href="/">  
             <div className="flex items-center">
-              <ROLLINSXLogo size="sm" variant="light" />
+              <span className="font-bold tracking-wider text-xl text-white">ROLLINSX</span>
             </div>
           </Link>  
 
