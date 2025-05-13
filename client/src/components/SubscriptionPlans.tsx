@@ -1,86 +1,70 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Check, CheckCircle, ArrowRight, Calendar, CalendarClock } from "lucide-react";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
+import { getSubscriptionPlans, SubscriptionPlan } from '@/utils/stripe';
+import { useSubscription } from '@/hooks/useSubscription';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Check, X, Zap } from 'lucide-react';
 
-// Define types for subscription plans
-interface SubscriptionPlan {
-  id: number;
-  name: string;
-  description: string;
-  price: string;
-  interval: 'month' | 'year';
-  features: string[];
-  isActive: boolean;
-  stripePriceId: string;
+interface SubscriptionPlansProps {
+  className?: string;
+  onPlanSelect?: (planId: number, interval: 'monthly' | 'annual') => void;
+  hideCurrentPlan?: boolean;
 }
 
-interface PlansResponse {
-  success: boolean;
-  data: SubscriptionPlan[];
-}
-
-const SubscriptionPlans: React.FC = () => {
-  const { t } = useTranslation();
+const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
+  className = '',
+  onPlanSelect,
+  hideCurrentPlan = false,
+}) => {
   const [, setLocation] = useLocation();
-  const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
+  const [billingInterval, setBillingInterval] = useState<'monthly' | 'annual'>('annual');
   
-  // Fetch subscription plans data
-  const { data: plansData, isLoading, error } = useQuery<PlansResponse>({
-    queryKey: ['/api/subscriptions/plans'],
-    refetchOnWindowFocus: false,
+  // Get current subscription
+  const { hasActiveSubscription, plan: currentPlan, isLoading: isSubscriptionLoading } = useSubscription();
+  
+  // Fetch subscription plans
+  const { data: plans, isLoading: isPlansLoading } = useQuery({
+    queryKey: ['/api/stripe/subscription-plans'],
+    queryFn: getSubscriptionPlans
   });
 
-  // Handle subscription
-  const handleSubscribe = (planId: number) => {
-    // Check if user is logged in
-    const token = localStorage.getItem('token');
-    if (!token) {
-      // Redirect to login with return URL
-      setLocation(`/login?redirect=/subscriptions/checkout?planId=${planId}`);
-      return;
+  // Handle plan selection
+  const handleSelectPlan = (planId: number) => {
+    if (onPlanSelect) {
+      onPlanSelect(planId, billingInterval);
+    } else {
+      setLocation(`/subscription-checkout/${planId}/${billingInterval}`);
     }
-    
-    // If user is logged in, go to checkout
-    setLocation(`/subscriptions/checkout?planId=${planId}`);
   };
 
-  if (isLoading) {
+  // Loading state
+  if (isPlansLoading || isSubscriptionLoading) {
     return (
-      <div className="space-y-8">
-        <div className="flex justify-center mb-8">
-          <Skeleton className="h-8 w-48" />
+      <div className={`grid gap-6 ${className}`}>
+        <div className="flex items-center justify-center space-x-4">
+          <Skeleton className="h-8 w-24" />
+          <Skeleton className="h-8 w-12" />
+          <Skeleton className="h-8 w-24" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <Card key={i} className="flex flex-col h-full">
+            <Card key={i} className="flex flex-col">
               <CardHeader>
-                <Skeleton className="h-6 w-3/4 mb-2" />
-                <Skeleton className="h-7 w-1/2" />
+                <Skeleton className="h-8 w-1/2 mb-2" />
+                <Skeleton className="h-6 w-3/4" />
               </CardHeader>
-              <CardContent className="flex-grow space-y-4">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-                <div className="mt-6 space-y-2">
+              <CardContent className="flex-grow">
+                <Skeleton className="h-10 w-full mb-6" />
+                <div className="space-y-4">
                   <Skeleton className="h-4 w-full" />
                   <Skeleton className="h-4 w-full" />
                   <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-3/4" />
                 </div>
               </CardContent>
               <CardFooter>
@@ -93,140 +77,176 @@ const SubscriptionPlans: React.FC = () => {
     );
   }
 
-  if (error) {
+  // No plans found
+  if (!plans || plans.length === 0) {
     return (
-      <div className="text-center py-8">
-        <h3 className="text-xl font-bold text-red-500">Error Loading Plans</h3>
-        <p className="mt-2">Failed to fetch subscription plans. Please try again later.</p>
-      </div>
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle>Subscription Plans</CardTitle>
+          <CardDescription>No subscription plans are currently available.</CardDescription>
+        </CardHeader>
+      </Card>
     );
   }
 
-  const allPlans = plansData?.data || [];
-
-  if (allPlans.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <h3 className="text-xl font-medium">No Plans Available</h3>
-        <p className="mt-2 text-muted-foreground">Subscription plans are currently unavailable. Please check back later.</p>
-      </div>
-    );
-  }
-
-  // Get monthly and yearly plans
-  const plans = allPlans.filter((plan: SubscriptionPlan) => 
-    plan.interval === billingInterval
-  );
-
-  // Define popular plan based on tier
-  const popularPlanName = billingInterval === 'month' ? 'Professional' : 'Professional Annual';
-  
-  // Sort plans by price
-  const sortedPlans = [...plans].sort((a, b) => 
-    parseFloat(a.price) - parseFloat(b.price)
-  );
-
-  const calculateSavings = (monthlyPrice: number, yearlyPrice: number) => {
-    const monthlyCostForYear = monthlyPrice * 12;
-    const savings = monthlyCostForYear - yearlyPrice;
-    const savingsPercentage = Math.round((savings / monthlyCostForYear) * 100);
-    return savingsPercentage;
-  };
-
-  // Find equivalent monthly plans to show savings for annual plans
-  const getSavingsText = (plan: SubscriptionPlan) => {
-    if (billingInterval === 'year') {
-      const monthlyEquivalent = allPlans.find((p: SubscriptionPlan) => 
-        p.interval === 'month' && p.name.replace(' Annual', '') === plan.name.replace(' Annual', '')
-      );
+  // Filter active plans and sort by price (lowest to highest)
+  const activePlans = plans
+    .filter(p => p.isActive !== false)
+    .filter(p => !hideCurrentPlan || p.id !== currentPlan?.id)
+    .sort((a, b) => {
+      const priceA = billingInterval === 'annual' 
+        ? parsePriceString(a.annualPrice) / 12 
+        : parsePriceString(a.monthlyPrice);
       
-      if (monthlyEquivalent) {
-        const savings = calculateSavings(
-          parseFloat(monthlyEquivalent.price), 
-          parseFloat(plan.price)
-        );
-        return `Save ${savings}% with annual billing`;
-      }
-    }
-    return null;
-  };
+      const priceB = billingInterval === 'annual' 
+        ? parsePriceString(b.annualPrice) / 12 
+        : parsePriceString(b.monthlyPrice);
+      
+      return priceA - priceB;
+    });
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-center items-center space-x-2 mb-8">
-        <Label htmlFor="billing-toggle" className="cursor-pointer">Monthly</Label>
-        <Switch
-          id="billing-toggle"
-          checked={billingInterval === 'year'}
-          onCheckedChange={(checked) => setBillingInterval(checked ? 'year' : 'month')}
-        />
-        <div className="flex items-center space-x-1">
-          <Label htmlFor="billing-toggle" className="cursor-pointer">Annual</Label>
-          <Badge variant="outline" className="font-normal text-xs bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400">
-            Save up to 16%
-          </Badge>
+    <div className={`space-y-8 ${className}`}>
+      {/* Billing interval toggle */}
+      <div className="flex flex-col items-center justify-center space-y-4">
+        <div className="text-xl font-semibold">Choose Your Plan</div>
+        <div className="flex items-center space-x-4">
+          <span className={billingInterval === 'monthly' ? 'font-medium' : 'text-muted-foreground'}>
+            Monthly
+          </span>
+          <div className="relative flex items-center">
+            <Switch
+              checked={billingInterval === 'annual'}
+              onCheckedChange={(checked) => setBillingInterval(checked ? 'annual' : 'monthly')}
+              id="billing-toggle"
+            />
+            <Label htmlFor="billing-toggle" className="sr-only">
+              Toggle billing interval
+            </Label>
+            {billingInterval === 'annual' && (
+              <Badge variant="secondary" className="absolute -right-16 ml-2 flex items-center gap-1">
+                <Zap className="h-3 w-3" /> Save 20%
+              </Badge>
+            )}
+          </div>
+          <span className={billingInterval === 'annual' ? 'font-medium' : 'text-muted-foreground'}>
+            Annual
+          </span>
         </div>
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {sortedPlans.map((plan: SubscriptionPlan) => {
-          const isPopular = plan.name === popularPlanName || plan.name.includes(popularPlanName);
-          const savingsText = getSavingsText(plan);
+
+      {/* Subscription plans grid */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
+        {activePlans.map((plan) => {
+          const price = billingInterval === 'annual' ? plan.annualPrice : plan.monthlyPrice;
+          const isCurrentPlan = currentPlan?.id === plan.id;
           
           return (
             <Card 
               key={plan.id} 
-              className={`flex flex-col h-full transition-all duration-300 hover:shadow-lg
-                ${isPopular ? 'border-primary border-2 relative' : 'border-opacity-50'}
-              `}
+              className={`flex flex-col ${plan.isPopular ? 'border-primary' : ''} ${isCurrentPlan ? 'bg-muted' : ''}`}
             >
-              {isPopular && (
-                <div className="absolute top-0 right-0 transform translate-x-2 -translate-y-3">
-                  <Badge className="bg-primary text-white shadow-md">Most Popular</Badge>
-                </div>
-              )}
               <CardHeader>
-                <CardTitle className="text-xl">{plan.name.replace(' Annual', '')}</CardTitle>
-                <CardDescription className="flex items-baseline mt-2">
-                  <span className="text-3xl font-bold text-primary">${parseFloat(plan.price).toFixed(2)}</span>
-                  <span className="ml-1 text-sm text-muted-foreground">
-                    /{billingInterval === 'month' ? 'mo' : 'yr'}
-                  </span>
-                </CardDescription>
-                {savingsText && (
-                  <span className="mt-1 text-xs font-medium text-green-600 dark:text-green-400 flex items-center">
-                    <CalendarClock className="mr-1 h-3 w-3" />
-                    {savingsText}
-                  </span>
-                )}
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle>{plan.name}</CardTitle>
+                    <CardDescription className="mt-1">{plan.description}</CardDescription>
+                  </div>
+                  {plan.isPopular && (
+                    <Badge>Popular</Badge>
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="flex-grow">
-                <p className="text-sm text-muted-foreground mb-6">{plan.description}</p>
-                <div className="space-y-3">
-                  {plan.features?.map((feature: string, i: number) => (
-                    <div key={i} className="flex items-start">
-                      <CheckCircle className="h-5 w-5 text-primary shrink-0 mr-2" />
-                      <span className="text-sm">{feature}</span>
-                    </div>
-                  ))}
+                <div className="mb-6">
+                  <span className="text-3xl font-bold">{price}</span>
+                  {billingInterval === 'monthly' && (
+                    <span className="text-muted-foreground ml-1">/ month</span>
+                  )}
+                  {billingInterval === 'annual' && (
+                    <span className="text-muted-foreground ml-1">/ year</span>
+                  )}
                 </div>
+                <ul className="space-y-2 text-sm">
+                  {plan.features.map((feature, index) => (
+                    <li key={index} className="flex items-start">
+                      <Check className="h-4 w-4 text-green-500 mr-2 mt-1 flex-shrink-0" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
               </CardContent>
               <CardFooter>
-                <Button 
-                  onClick={() => handleSubscribe(plan.id)} 
-                  className="w-full group"
-                  variant={isPopular ? "default" : "outline"}
-                >
-                  Subscribe
-                  <ArrowRight className="ml-2 h-4 w-0 group-hover:w-4 transition-all" />
-                </Button>
+                {isCurrentPlan ? (
+                  <Button disabled className="w-full">
+                    Current Plan
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={() => handleSelectPlan(plan.id)} 
+                    className="w-full"
+                    variant={plan.isPopular ? 'default' : 'outline'}
+                  >
+                    {hasActiveSubscription ? 'Change Plan' : 'Subscribe'}
+                  </Button>
+                )}
               </CardFooter>
             </Card>
           );
         })}
+        
+        {/* Enterprise plan */}
+        {plans.some(p => p.isEnterprise) && (
+          <Card className="flex flex-col">
+            <CardHeader>
+              <CardTitle>Enterprise</CardTitle>
+              <CardDescription>Custom solutions for larger organizations</CardDescription>
+            </CardHeader>
+            <CardContent className="flex-grow">
+              <div className="mb-6">
+                <span className="text-3xl font-bold">Custom</span>
+                <span className="text-muted-foreground ml-1">pricing</span>
+              </div>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-start">
+                  <Check className="h-4 w-4 text-green-500 mr-2 mt-1 flex-shrink-0" />
+                  <span>All features from Premium plan</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-4 w-4 text-green-500 mr-2 mt-1 flex-shrink-0" />
+                  <span>Custom integrations</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-4 w-4 text-green-500 mr-2 mt-1 flex-shrink-0" />
+                  <span>Dedicated support team</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-4 w-4 text-green-500 mr-2 mt-1 flex-shrink-0" />
+                  <span>Custom SLA and uptime guarantees</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-4 w-4 text-green-500 mr-2 mt-1 flex-shrink-0" />
+                  <span>On-premises deployment options</span>
+                </li>
+              </ul>
+            </CardContent>
+            <CardFooter>
+              <Button variant="outline" className="w-full" onClick={() => setLocation('/contact')}>
+                Contact Sales
+              </Button>
+            </CardFooter>
+          </Card>
+        )}
       </div>
     </div>
   );
 };
+
+// Helper function to parse price string to number
+function parsePriceString(price: string): number {
+  // Remove currency symbol and commas, then parse as float
+  const numericString = price.replace(/[^0-9.]/g, '');
+  return parseFloat(numericString) || 0;
+}
 
 export default SubscriptionPlans;
