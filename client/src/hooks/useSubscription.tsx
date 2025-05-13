@@ -1,62 +1,100 @@
-import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { canAccessProduct } from '@/utils/productData';
-
-interface UseSubscriptionResult {
-  userSubscription: {
-    plan: string;
-    status: 'active' | 'inactive' | 'trial' | 'expired';
-    expiresAt?: string;
-  };
-  isLoading: boolean;
-  error: unknown;
-  canAccessProduct: (requiredPlan?: string) => boolean;
-}
+import { useEffect, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { getCurrentSubscription, SubscriptionPlan } from '@/utils/stripe';
+import { useToast } from '@/hooks/use-toast';
 
 /**
- * Hook to manage user subscription and product access
+ * Hook for managing user subscription state
+ * @returns Subscription-related state and utility functions
  */
-export function useSubscription(): UseSubscriptionResult {
-  // Default to starter plan if not authenticated or subscription data not loaded
-  const [userSubscription, setUserSubscription] = useState({
-    plan: 'starter',
-    status: 'active' as const
+export function useSubscription() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Get current subscription status
+  const {
+    data: subscriptionData,
+    error,
+    isLoading: isSubscriptionLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ['/api/stripe/current-subscription'],
+    queryFn: getCurrentSubscription,
+    retry: 1,
+    enabled: true, // This will run the query immediately
+    onError: (err: any) => {
+      // Only show error toast if it's not a 404 (no subscription found)
+      if (err.status !== 404) {
+        toast({
+          title: 'Subscription error',
+          description: 'Unable to fetch subscription status. Please try again.',
+          variant: 'destructive',
+        });
+      }
+    },
   });
-
-  // Fetch the user's subscription from the API
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['/api/user/subscription'],
-    enabled: true // Always fetch subscription data
-  });
-
+  
+  // Set loading state
   useEffect(() => {
-    if (data && data.subscription) {
-      setUserSubscription({
-        plan: data.subscription.plan || 'starter',
-        status: data.subscription.status || 'active',
-        expiresAt: data.subscription.expiresAt
-      });
-    }
-  }, [data]);
-
+    setIsLoading(isSubscriptionLoading);
+  }, [isSubscriptionLoading]);
+  
+  // Get subscription status
+  const hasActiveSubscription = 
+    subscriptionData?.subscription && 
+    ['active', 'trialing'].includes(subscriptionData.subscription.status);
+  
+  // Destructuring subscription data for convenience
+  const subscription = subscriptionData?.subscription || null;
+  const plan = subscriptionData?.plan || null;
+  
   /**
-   * Check if user can access a product based on their subscription
+   * Invalidate subscription data to refresh it
    */
-  const checkProductAccess = (requiredPlan?: string): boolean => {
-    if (!requiredPlan) return true; // If no plan is required, everyone can access
-    
-    // If subscription is not active, deny access regardless of plan
-    if (userSubscription.status !== 'active' && userSubscription.status !== 'trial') {
-      return false;
-    }
-    
-    return canAccessProduct(requiredPlan, userSubscription.plan);
+  const refreshSubscription = () => {
+    queryClient.invalidateQueries({ queryKey: ['/api/stripe/current-subscription'] });
   };
-
+  
+  /**
+   * Check if the user has access to a feature based on plan level
+   * @param requiredPlanId - The minimum plan ID required for access
+   * @returns Whether the user has access to the feature
+   */
+  const hasFeatureAccess = (requiredPlanId: number): boolean => {
+    // If no plan is required, everyone has access
+    if (!requiredPlanId) return true;
+    
+    // If no active subscription, no access
+    if (!hasActiveSubscription || !plan) return false;
+    
+    // Check if current plan ID is greater than or equal to required plan ID
+    return plan.id >= requiredPlanId;
+  };
+  
+  /**
+   * Get a list of features the user has access to based on their current plan
+   * @param allPlans - All available subscription plans
+   * @returns Array of feature strings the user has access to
+   */
+  const getAccessibleFeatures = (allPlans: SubscriptionPlan[]): string[] => {
+    if (!hasActiveSubscription || !plan) return [];
+    
+    // Find current plan in the list
+    const currentPlan = allPlans.find(p => p.id === plan.id);
+    if (!currentPlan) return [];
+    
+    return currentPlan.features;
+  };
+  
   return {
-    userSubscription,
     isLoading,
     error,
-    canAccessProduct: checkProductAccess
+    subscription,
+    plan,
+    hasActiveSubscription,
+    refreshSubscription,
+    hasFeatureAccess,
+    getAccessibleFeatures,
   };
 }

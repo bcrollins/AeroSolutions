@@ -1,245 +1,259 @@
-import React, { useState, useEffect } from 'react';
-import { Helmet } from 'react-helmet';
-import { useLocation } from 'wouter';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe, Stripe } from '@stripe/stripe-js';
-import MainLayout from '@/layouts/MainLayout';
-import { apiRequest } from '@/lib/queryClient';
-import { toast } from '@/hooks/use-toast';
+import { useLocation, useRoute } from 'wouter';
+import { StripeCheckout } from '@/components/checkout/StripeCheckout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { CheckCircle } from 'lucide-react';
-import PaymentForm from '@/components/PaymentForm';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { createSubscription, getSubscriptionPlans } from '@/utils/stripe';
+import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
-// Create a mutable reference for Stripe promise
-let stripePromise: Promise<Stripe | null> | null = null;
-
-// Function to load Stripe with publishable key from the server
-const getStripePromise = async () => {
-  if (!stripePromise) {
-    // Fetch the publishable key from the server
-    const response = await fetch('/api/stripe/config');
-    const { publishableKey } = await response.json();
-    
-    // Initialize Stripe with the fetched key
-    stripePromise = loadStripe(publishableKey, {
-      locale: 'en',
-    });
-  }
-  return stripePromise;
-};
-
-const SubscriptionCheckoutPage: React.FC = () => {
-  const [location, setLocation] = useLocation();
-  const searchParams = new URLSearchParams(window.location.search);
-  const planId = searchParams.get('planId');
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [stripeInstance, setStripeInstance] = useState<Stripe | null>(null);
-
-  // Fetch plan details
-  const { data: planData, isLoading, error } = useQuery({
-    queryKey: [`/api/subscriptions/plans/${planId}`],
-    enabled: !!planId,
-    refetchOnWindowFocus: false,
-  });
+const SubscriptionCheckoutPage = () => {
+  const [_, setLocation] = useLocation();
+  const [, params] = useRoute('/subscription-checkout/:planId/:interval');
+  const { toast } = useToast();
   
-  const plan = planData?.data;
+  const planId = params?.planId ? parseInt(params.planId) : null;
+  const interval = params?.interval === 'annual' ? 'annual' : 'monthly';
 
-  // Check if user is authenticated
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      toast({
-        title: "Authentication Required",
-        description: "Please log in to subscribe to a plan",
-        variant: "destructive",
-      });
-      setLocation('/login?redirect=/subscriptions');
-    }
-  }, [setLocation]);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
+  const [isCreatingSubscription, setIsCreatingSubscription] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSuccess, setIsSuccess] = useState(false);
 
-  // Initialize Stripe when component mounts
-  useEffect(() => {
-    const initializeStripe = async () => {
-      try {
-        const stripe = await getStripePromise();
-        setStripeInstance(stripe);
-      } catch (error) {
-        console.error('Error initializing Stripe:', error);
-        setErrorMessage('Failed to initialize payment system. Please try again later.');
-      }
-    };
-    
-    initializeStripe();
-  }, []);
+  // Fetch subscription plans
+  const { data: plans, isLoading: isLoadingPlans } = useQuery({
+    queryKey: ['/api/stripe/subscription-plans'],
+    queryFn: getSubscriptionPlans
+  });
 
-  // Create payment intent when plan is loaded
+  // Find the selected plan
+  const selectedPlan = plans?.find(plan => plan.id === planId);
+  
+  // Handle initial load - create subscription
   useEffect(() => {
-    if (plan && !clientSecret && !isSubmitting) {
-      setIsSubmitting(true);
+    const initializeCheckout = async () => {
+      if (!planId || !selectedPlan) return;
       
-      const createSubscription = async () => {
-        try {
-          const response = await apiRequest('/api/subscriptions/subscribe', {
-            method: 'POST',
-            body: JSON.stringify({ planId: parseInt(planId || '0', 10) }),
+      try {
+        setError(null);
+        setIsCreatingSubscription(true);
+        
+        // Get the price ID based on the interval
+        const priceId = interval === 'annual'
+          ? selectedPlan.stripeAnnualPriceId
+          : selectedPlan.stripeMonthlyPriceId;
+        
+        if (!priceId) {
+          throw new Error('Selected subscription interval is not available');
+        }
+        
+        // Create subscription
+        const result = await createSubscription(priceId, planId);
+        
+        // If subscription is already active, redirect to success page
+        if (result.status === 'active') {
+          setIsSuccess(true);
+          setSubscriptionId(result.subscriptionId);
+          
+          toast({
+            title: 'Subscription active',
+            description: `Your ${selectedPlan.name} plan is now active.`,
           });
           
-          if (response.success && response.data?.clientSecret) {
-            setClientSecret(response.data.clientSecret);
-          } else {
-            setErrorMessage('Failed to create subscription. Please try again.');
-          }
-        } catch (error) {
-          console.error('Error creating subscription:', error);
-          setErrorMessage('An error occurred while setting up your subscription.');
-        } finally {
-          setIsSubmitting(false);
+          // Redirect after a short delay
+          setTimeout(() => {
+            setLocation('/account');
+          }, 2000);
+          
+          return;
         }
-      };
-      
-      createSubscription();
-    }
-  }, [plan, clientSecret, planId, isSubmitting]);
+        
+        // Save client secret for payment form
+        if (result.clientSecret) {
+          setClientSecret(result.clientSecret);
+          setSubscriptionId(result.subscriptionId);
+        } else {
+          throw new Error('Unable to create subscription');
+        }
+      } catch (err: any) {
+        console.error('Error creating subscription:', err);
+        setError(err.message || 'Failed to create subscription. Please try again.');
+        
+        toast({
+          title: 'Subscription error',
+          description: err.message || 'There was a problem creating your subscription.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsCreatingSubscription(false);
+      }
+    };
 
-  // Handle payment success
+    if (planId && selectedPlan && !clientSecret && !isCreatingSubscription && !isSuccess) {
+      initializeCheckout();
+    }
+  }, [planId, selectedPlan, interval, clientSecret, isCreatingSubscription, isSuccess, toast, setLocation]);
+
+  // Handle successful payment
   const handlePaymentSuccess = () => {
-    toast({
-      title: "Subscription Successful!",
-      description: "Your subscription has been processed successfully.",
-    });
+    setIsSuccess(true);
     
-    // Redirect to dashboard or subscription confirmation page
+    // Redirect to account page after a short delay
     setTimeout(() => {
       setLocation('/account');
     }, 2000);
   };
 
-  if (isLoading) {
+  // Handle cancellation
+  const handleCancel = () => {
+    setLocation('/subscriptions');
+  };
+
+  // Show loading state
+  if (isLoadingPlans || isCreatingSubscription) {
     return (
-      <MainLayout>
-        <div className="container mx-auto py-12 px-4 max-w-3xl">
-          <Skeleton className="h-10 w-2/3 mb-6" />
-          <Skeleton className="h-6 w-full mb-10" />
-          
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-8 w-1/2 mb-2" />
-              <Skeleton className="h-6 w-1/3" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-4 w-full mb-2" />
-              <Skeleton className="h-4 w-full mb-2" />
-              <Skeleton className="h-4 w-3/4 mb-6" />
-              
-              <div className="space-y-2 mb-6">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-full" />
-              </div>
-              
-              <Skeleton className="h-10 w-full mb-2" />
-              <Skeleton className="h-10 w-full mb-2" />
-              <Skeleton className="h-10 w-full" />
-            </CardContent>
-            <CardFooter>
-              <Skeleton className="h-10 w-full" />
-            </CardFooter>
-          </Card>
-        </div>
-      </MainLayout>
+      <div className="container max-w-4xl py-12">
+        <Card className="w-full max-w-md mx-auto">
+          <CardHeader className="text-center">
+            <CardTitle>Preparing your subscription</CardTitle>
+            <CardDescription>Please wait while we set up your checkout...</CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center py-10">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
-  if (error || !plan) {
+  // Show error state
+  if (error) {
     return (
-      <MainLayout>
-        <div className="container mx-auto py-12 px-4 max-w-3xl text-center">
-          <h1 className="text-2xl font-bold text-red-500 mb-3">Error Loading Subscription Plan</h1>
-          <p className="mb-6">We couldn't find the subscription plan you're looking for.</p>
+      <div className="container max-w-4xl py-12">
+        <Alert variant="destructive" className="w-full max-w-md mx-auto mb-8">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            {error}
+          </AlertDescription>
+        </Alert>
+        
+        <div className="flex justify-center">
           <Button onClick={() => setLocation('/subscriptions')}>
-            Return to Subscriptions
+            Back to Subscription Plans
           </Button>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
-  if (errorMessage) {
+  // Show success state
+  if (isSuccess) {
     return (
-      <MainLayout>
-        <div className="container mx-auto py-12 px-4 max-w-3xl text-center">
-          <h1 className="text-2xl font-bold text-red-500 mb-3">Subscription Error</h1>
-          <p className="mb-6">{errorMessage}</p>
+      <div className="container max-w-4xl py-12">
+        <Card className="w-full max-w-md mx-auto">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <CheckCircle2 className="h-16 w-16 text-green-500" />
+            </div>
+            <CardTitle>Subscription Successful!</CardTitle>
+            <CardDescription>
+              Thank you for subscribing to the {selectedPlan?.name} plan. You now have access to all included features.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center pb-6">
+            <Button onClick={() => setLocation('/account')}>
+              Go to My Account
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // If no plan is selected or not found
+  if (!selectedPlan) {
+    return (
+      <div className="container max-w-4xl py-12">
+        <Alert className="w-full max-w-md mx-auto mb-8">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Invalid Plan</AlertTitle>
+          <AlertDescription>
+            The selected subscription plan was not found. Please choose a plan.
+          </AlertDescription>
+        </Alert>
+        
+        <div className="flex justify-center">
           <Button onClick={() => setLocation('/subscriptions')}>
-            Return to Subscriptions
+            View Subscription Plans
           </Button>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
-  return (
-    <MainLayout>
-      <Helmet>
-        <title>Subscribe to {plan.name} | Aero Solutions</title>
-        <meta 
-          name="description" 
-          content={`Complete your subscription to the ${plan.name} plan and unlock premium aviation features.`} 
-        />
-      </Helmet>
-
-      <div className="container mx-auto py-12 px-4 max-w-3xl">
-        <h1 className="text-3xl font-bold mb-2">Complete Your Subscription</h1>
-        <p className="text-muted-foreground mb-8">You're just one step away from accessing premium features.</p>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Card>
+  // Show checkout form if client secret is available
+  if (clientSecret) {
+    return (
+      <div className="container max-w-4xl py-12">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-center mb-2">Complete Your Subscription</h1>
+          <p className="text-center text-muted-foreground">You're subscribing to the {selectedPlan.name} plan</p>
+        </div>
+        
+        <div className="mb-8">
+          <Card className="w-full max-w-md mx-auto mb-8">
             <CardHeader>
-              <CardTitle className="text-xl text-primary">{plan.name}</CardTitle>
-              <CardDescription className="text-2xl font-bold">
-                ${parseFloat(plan.price).toFixed(2)}
-                <span className="text-sm font-normal text-muted-foreground">/{plan.interval}</span>
+              <CardTitle>{selectedPlan.name} Plan</CardTitle>
+              <CardDescription>
+                {interval === 'annual' 
+                  ? `${selectedPlan.annualPrice} billed annually (save 20%)` 
+                  : `${selectedPlan.monthlyPrice} billed monthly`}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground mb-4">{plan.description}</p>
-              <div className="space-y-2 mt-4">
-                {plan.features?.map((feature: string, i: number) => (
-                  <div key={i} className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-primary mr-2" />
-                    <span className="text-sm">{feature}</span>
-                  </div>
-                ))}
+              <div className="space-y-2">
+                <h3 className="font-medium">Included features:</h3>
+                <ul className="list-disc pl-5 space-y-1">
+                  {selectedPlan.features.map((feature, index) => (
+                    <li key={index}>{feature}</li>
+                  ))}
+                </ul>
               </div>
             </CardContent>
           </Card>
-
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Payment Details</h2>
-            {clientSecret && stripeInstance ? (
-              <Elements stripe={stripeInstance} options={{ clientSecret }}>
-                <PaymentForm 
-                  onSuccess={handlePaymentSuccess}
-                  amount={parseFloat(plan.price)}
-                  interval={plan.interval}
-                  clientSecret={clientSecret}
-                />
-              </Elements>
-            ) : (
-              <div className="flex items-center justify-center h-40">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                <span className="ml-2">Preparing payment form...</span>
-              </div>
-            )}
-          </div>
         </div>
+        
+        <StripeCheckout
+          clientSecret={clientSecret}
+          onSuccess={handlePaymentSuccess}
+          onCancel={handleCancel}
+          title="Payment Details"
+          description={`Complete your ${selectedPlan.name} subscription payment`}
+          submitButtonText="Subscribe Now"
+        />
       </div>
-    </MainLayout>
+    );
+  }
+
+  // Fallback - should not reach here but just in case
+  return (
+    <div className="container max-w-4xl py-12 text-center">
+      <Alert className="w-full max-w-md mx-auto mb-8">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Something went wrong</AlertTitle>
+        <AlertDescription>
+          We couldn't set up your subscription checkout. Please try again.
+        </AlertDescription>
+      </Alert>
+      
+      <Button onClick={() => setLocation('/subscriptions')}>
+        Back to Subscription Plans
+      </Button>
+    </div>
   );
 };
 

@@ -1,118 +1,122 @@
 /**
- * Logger utility for standardized logging throughout the application
+ * Logger Utility
+ * 
+ * This module provides a centralized logging system for the application.
+ * It uses Winston for structured logging with different severity levels.
  */
-type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
-interface LogOptions {
-  timestamp?: boolean;
-  level?: boolean;
-  color?: boolean;
+import winston from 'winston';
+
+// Define log format
+const logFormat = winston.format.combine(
+  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  winston.format.errors({ stack: true }),
+  winston.format.splat(),
+  winston.format.json()
+);
+
+// Create Winston logger instance
+export const logger = winston.createLogger({
+  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+  format: logFormat,
+  defaultMeta: { service: 'api-service' },
+  transports: [
+    // Console transport for all environments
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.printf(({ level, message, timestamp, ...meta }) => {
+          return `${timestamp} ${level}: ${message} ${
+            Object.keys(meta).length ? JSON.stringify(meta, null, 2) : ''
+          }`;
+        })
+      ),
+    }),
+    
+    // File transport for error logs
+    new winston.transports.File({ 
+      filename: 'logs/error.log', 
+      level: 'error' 
+    }),
+    
+    // Combined logs
+    new winston.transports.File({ 
+      filename: 'logs/combined.log' 
+    }),
+  ],
+});
+
+// If we're not in production, also log to the console with simpler format
+if (process.env.NODE_ENV !== 'production') {
+  logger.add(new winston.transports.Console({
+    format: winston.format.combine(
+      winston.format.colorize(),
+      winston.format.simple()
+    ),
+  }));
 }
 
-class Logger {
-  private defaultOptions: LogOptions = {
-    timestamp: true,
-    level: true,
-    color: true
+/**
+ * Function to mask sensitive data in logs (e.g., emails, tokens)
+ * @param data - Object containing data to mask
+ * @returns Masked data object
+ */
+export function maskSensitiveData(data: Record<string, any>): Record<string, any> {
+  if (!data) return data;
+  
+  const maskedData = { ...data };
+  
+  // Mask email addresses
+  if (maskedData.email) {
+    const [name, domain] = maskedData.email.split('@');
+    maskedData.email = `${name.charAt(0)}${'*'.repeat(name.length - 2)}${name.charAt(name.length - 1)}@${domain}`;
+  }
+  
+  // Mask tokens and passwords
+  const sensitiveFields = ['password', 'token', 'secret', 'apiKey', 'api_key', 'accessToken'];
+  sensitiveFields.forEach(field => {
+    if (maskedData[field]) {
+      maskedData[field] = '**********';
+    }
+  });
+  
+  // Recursively mask nested objects
+  Object.keys(maskedData).forEach(key => {
+    if (typeof maskedData[key] === 'object' && maskedData[key] !== null) {
+      maskedData[key] = maskSensitiveData(maskedData[key]);
+    }
+  });
+  
+  return maskedData;
+}
+
+/**
+ * Log HTTP request details
+ * @param req - Express request object
+ * @param statusCode - HTTP response status code
+ * @param duration - Request duration in milliseconds
+ */
+export function logHttpRequest(req: any, statusCode: number, duration: number): void {
+  const logLevel = statusCode >= 500 ? 'error' : statusCode >= 400 ? 'warn' : 'info';
+  
+  const logData = {
+    method: req.method,
+    url: req.originalUrl,
+    status: statusCode,
+    duration: `${duration}ms`,
+    ip: req.ip || req.headers['x-forwarded-for'] || 'unknown',
+    userAgent: req.headers['user-agent'],
+    userId: req.user?.id || 'anonymous'
   };
-
-  /**
-   * Log a debug message
-   * @param message The message to log
-   * @param data Additional data to log
-   */
-  debug(message: string, data?: any): void {
-    this.log('debug', message, data);
+  
+  // Filter out sensitive data from request body for logging
+  let sanitizedBody = null;
+  if (req.body && Object.keys(req.body).length > 0) {
+    sanitizedBody = maskSensitiveData(req.body);
   }
-
-  /**
-   * Log an info message
-   * @param message The message to log
-   * @param data Additional data to log
-   */
-  info(message: string, data?: any): void {
-    this.log('info', message, data);
-  }
-
-  /**
-   * Log a warning message
-   * @param message The message to log
-   * @param data Additional data to log
-   */
-  warn(message: string, data?: any): void {
-    this.log('warn', message, data);
-  }
-
-  /**
-   * Log an error message
-   * @param message The message to log
-   * @param error The error object or additional data
-   */
-  error(message: string, error?: any): void {
-    this.log('error', message, error);
-  }
-
-  /**
-   * Log a message with the specified level
-   * @param level The log level
-   * @param message The message to log
-   * @param data Additional data to log
-   * @param options Logging options
-   */
-  private log(level: LogLevel, message: string, data?: any, options: LogOptions = this.defaultOptions): void {
-    const timestamp = options.timestamp ? this.getTimestamp() : '';
-    const levelPrefix = options.level ? `[${level.toUpperCase()}]` : '';
-    const color = options.color ? this.getColorForLevel(level) : '';
-    const resetColor = options.color ? '\x1b[0m' : '';
-
-    // Format the message
-    const formattedMessage = `${color}${timestamp}${levelPrefix} ${message}${resetColor}`;
-
-    switch (level) {
-      case 'debug':
-        console.debug(formattedMessage, data !== undefined ? data : '');
-        break;
-      case 'info':
-        console.info(formattedMessage, data !== undefined ? data : '');
-        break;
-      case 'warn':
-        console.warn(formattedMessage, data !== undefined ? data : '');
-        break;
-      case 'error':
-        console.error(formattedMessage, data !== undefined ? data : '');
-        break;
-    }
-  }
-
-  /**
-   * Get the current timestamp in a readable format
-   * @returns Formatted timestamp string
-   */
-  private getTimestamp(): string {
-    const now = new Date();
-    return `[${now.toLocaleTimeString()}] `;
-  }
-
-  /**
-   * Get the ANSI color code for the specified log level
-   * @param level The log level
-   * @returns ANSI color code
-   */
-  private getColorForLevel(level: LogLevel): string {
-    switch (level) {
-      case 'debug':
-        return '\x1b[36m'; // Cyan
-      case 'info':
-        return '\x1b[32m'; // Green
-      case 'warn':
-        return '\x1b[33m'; // Yellow
-      case 'error':
-        return '\x1b[31m'; // Red
-      default:
-        return '\x1b[0m'; // Reset
-    }
-  }
+  
+  logger[logLevel](`HTTP ${req.method} ${req.originalUrl}`, {
+    ...logData,
+    body: sanitizedBody
+  });
 }
-
-// Export a singleton instance
-export const logger = new Logger();
