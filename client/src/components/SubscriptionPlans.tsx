@@ -93,14 +93,11 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
   const activePlans = plans
     .filter(p => p.isActive !== false)
     .filter(p => !hideCurrentPlan || p.id !== currentPlan?.id)
+    // Filter by interval
+    .filter(p => p.interval === (billingInterval === 'annual' ? 'year' : 'month'))
     .sort((a, b) => {
-      const priceA = billingInterval === 'annual' 
-        ? parsePriceString(a.annualPrice) / 12 
-        : parsePriceString(a.monthlyPrice);
-      
-      const priceB = billingInterval === 'annual' 
-        ? parsePriceString(b.annualPrice) / 12 
-        : parsePriceString(b.monthlyPrice);
+      const priceA = parsePriceString(a.price || '0');
+      const priceB = parsePriceString(b.price || '0');
       
       return priceA - priceB;
     });
@@ -138,7 +135,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
       {/* Subscription plans grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
         {activePlans.map((plan) => {
-          const price = billingInterval === 'annual' ? plan.annualPrice : plan.monthlyPrice;
+          const price = plan.price || '$0.00';
           const isCurrentPlan = currentPlan?.id === plan.id;
           
           return (

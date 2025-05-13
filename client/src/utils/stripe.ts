@@ -8,14 +8,13 @@ export interface SubscriptionPlan {
   id: number;
   name: string;
   description: string;
-  monthlyPrice: string;
-  annualPrice: string;
+  price: string;
+  interval: string; // 'month' or 'year'
   features: string[];
   isPopular?: boolean;
   isEnterprise?: boolean;
   isActive?: boolean;
   stripePriceId?: string;
-  stripeAnnualPriceId?: string;
 }
 
 /**
