@@ -2,6 +2,9 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import stripeRoutes from "./routes/stripe";
 import postsRoutes from "./routes/posts";
+import coursesRoutes from "./routes/courses";
+import forumRoutes from "./routes/forum";
+import mediaRoutes from "./routes/media";
 import { storage } from "./storage";
 import { logger } from "./utils/logger";
 
@@ -11,6 +14,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register Posts routes
   app.use("/api/posts", postsRoutes);
+  
+  // Register Learning System routes
+  app.use("/api/courses", coursesRoutes);
+  app.use("/api/forum", forumRoutes);
+  app.use("/api/media", mediaRoutes);
 
   // API route to fetch active subscription plans
   app.get("/api/subscription-plans", async (req, res) => {
