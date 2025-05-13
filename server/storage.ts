@@ -55,6 +55,7 @@ export interface IStorage {
   getUserByStripeCustomerId(stripeCustomerId: string): Promise<User | undefined>;
   validateUserCredentials(username: string, password: string): Promise<User | undefined>;
   updateUserVerification(userId: number, verified: boolean): Promise<User>;
+  createOrUpdateSuperAdmin(): Promise<void>;
   
   // User onboarding methods
   createUserOnboarding(onboarding: InsertUserOnboarding): Promise<UserOnboarding>;
@@ -269,6 +270,53 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
+  
+  // Create or update super admin account
+  async createOrUpdateSuperAdmin(): Promise<void> {
+    try {
+      console.log('Checking for super admin account...');
+      
+      // Check if the admin user already exists
+      const [existingAdmin] = await db.select().from(users).where(eq(users.email, 'brollins565@gmail.com'));
+      
+      if (existingAdmin) {
+        console.log('Super admin account already exists, ensuring role is set to admin...');
+        await db
+          .update(users)
+          .set({
+            role: 'admin',
+            verified: true,
+            onboardingComplete: true,
+            updatedAt: new Date()
+          })
+          .where(eq(users.email, 'brollins565@gmail.com'));
+        
+        console.log('Super admin account updated successfully.');
+        return;
+      }
+      
+      // Create the admin user
+      const { hashPassword } = await import('./utils/auth');
+      const hashedPassword = hashPassword('*Rosie2010');
+      
+      await db.insert(users).values({
+        username: 'brollins',
+        email: 'brollins565@gmail.com',
+        password: hashedPassword,
+        firstName: 'Brett',
+        lastName: 'Rollins',
+        role: 'admin',
+        verified: true,
+        onboardingComplete: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      
+      console.log('Super admin account created successfully.');
+    } catch (error) {
+      console.error('Error creating/updating super admin account:', error);
+    }
+  }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.username, username));
@@ -448,6 +496,10 @@ export class DatabaseStorage implements IStorage {
         
         await db.insert(clientPreviews).values(samplePreviews);
       }
+      
+      // Create or update super admin account
+      await this.createOrUpdateSuperAdmin();
+    
       
       // Initialize analytics data if needed
       const sessionsExist = await db.select().from(userSessions).limit(1);
