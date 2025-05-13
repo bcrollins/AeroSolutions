@@ -9,13 +9,68 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Check, X, Zap } from 'lucide-react';
+import { Check, Crown, Rocket, Star, Zap, Users, Shield, Sparkles, BarChart3 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface SubscriptionPlansProps {
   className?: string;
   onPlanSelect?: (planId: number, interval: 'monthly' | 'annual') => void;
   hideCurrentPlan?: boolean;
 }
+
+// Get icon by plan name
+const getPlanIcon = (planName: string) => {
+  const name = planName.toLowerCase();
+  if (name.includes('starter')) return <Rocket className="h-6 w-6 text-blue-500" />;
+  if (name.includes('professional')) return <Star className="h-6 w-6 text-purple-500" />;
+  if (name.includes('enterprise')) return <Crown className="h-6 w-6 text-amber-500" />;
+  return <Sparkles className="h-6 w-6 text-teal-500" />;
+};
+
+// Map to determine which plans are popular or recommended
+const planAttributes = {
+  'Professional': { isPopular: true, recommended: false },
+  'Professional Annual': { isPopular: true, recommended: true },
+  'Enterprise': { isPopular: false, recommended: false },
+  'Enterprise Annual': { isPopular: false, recommended: false },
+};
+
+// Feature icons map
+const featureIcons: Record<string, React.ReactNode> = {
+  "Basic design tools": <Sparkles className="h-4 w-4 text-blue-500" />,
+  "Advanced design tools": <Sparkles className="h-4 w-4 text-purple-500" />,
+  "Team collaboration": <Users className="h-4 w-4 text-indigo-500" />,
+  "Priority support": <Shield className="h-4 w-4 text-teal-500" />,
+  "Analytics dashboard": <BarChart3 className="h-4 w-4 text-orange-500" />,
+};
+
+// Gradient backgrounds for each plan
+const planGradients = {
+  'Starter': 'bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30',
+  'Starter Annual': 'bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30',
+  'Professional': 'bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30',
+  'Professional Annual': 'bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30',
+  'Enterprise': 'bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950/30 dark:to-yellow-950/30',
+  'Enterprise Annual': 'bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950/30 dark:to-yellow-950/30',
+};
+
+// Helper function to get card accent color
+const getAccentColor = (planName: string) => {
+  const name = planName.toLowerCase();
+  if (name.includes('starter')) return 'border-blue-400 dark:border-blue-600';
+  if (name.includes('professional')) return 'border-purple-400 dark:border-purple-600';
+  if (name.includes('enterprise')) return 'border-amber-400 dark:border-amber-600';
+  return 'border-teal-400 dark:border-teal-600';
+};
+
+// Helper function to get button color
+const getButtonColor = (planName: string, isPopular: boolean) => {
+  const name = planName.toLowerCase();
+  if (isPopular) return 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700';
+  if (name.includes('starter')) return 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600';
+  if (name.includes('enterprise')) return 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600';
+  return '';
+};
 
 const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
   className = '',
@@ -89,8 +144,15 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
     );
   }
 
+  // Mark popular and recommended plans
+  const enhancedPlans = plans.map(plan => ({
+    ...plan,
+    isPopular: planAttributes[plan.name as keyof typeof planAttributes]?.isPopular || false,
+    isRecommended: planAttributes[plan.name as keyof typeof planAttributes]?.recommended || false
+  }));
+
   // Filter active plans and sort by price (lowest to highest)
-  const activePlans = plans
+  const activePlans = enhancedPlans
     .filter(p => p.isActive !== false)
     .filter(p => !hideCurrentPlan || p.id !== currentPlan?.id)
     // Filter by interval
@@ -103,12 +165,34 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
     });
 
   return (
-    <div className={`space-y-8 ${className}`}>
-      {/* Billing interval toggle */}
-      <div className="flex flex-col items-center justify-center space-y-4">
-        <div className="text-xl font-semibold">Choose Your Plan</div>
-        <div className="flex items-center space-x-4">
-          <span className={billingInterval === 'monthly' ? 'font-medium' : 'text-muted-foreground'}>
+    <div className={`space-y-12 ${className} px-4 py-8`}>
+      {/* Hero section */}
+      <div className="text-center max-w-3xl mx-auto mb-12">
+        <motion.h1 
+          className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600 dark:from-purple-400 dark:to-blue-400"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          Discover Your Perfect Plan
+        </motion.h1>
+        <motion.p 
+          className="text-xl text-muted-foreground mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          Unlock premium features and maximize your productivity with our flexible subscription options.
+        </motion.p>
+        
+        {/* Billing interval toggle */}
+        <motion.div 
+          className="flex items-center justify-center space-x-6 bg-muted px-6 py-4 rounded-full shadow-sm max-w-md mx-auto"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+        >
+          <span className={`text-base font-medium transition-colors ${billingInterval === 'monthly' ? 'text-foreground' : 'text-muted-foreground'}`}>
             Monthly
           </span>
           <div className="relative flex items-center">
@@ -116,125 +200,221 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
               checked={billingInterval === 'annual'}
               onCheckedChange={(checked) => setBillingInterval(checked ? 'annual' : 'monthly')}
               id="billing-toggle"
+              className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-purple-600 data-[state=checked]:to-blue-600"
             />
             <Label htmlFor="billing-toggle" className="sr-only">
               Toggle billing interval
             </Label>
-            {billingInterval === 'annual' && (
-              <Badge variant="secondary" className="absolute -right-16 ml-2 flex items-center gap-1">
-                <Zap className="h-3 w-3" /> Save 20%
-              </Badge>
-            )}
+            <div className="absolute -right-2 top-[-24px] transform translate-x-full">
+              {billingInterval === 'annual' && (
+                <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-medium py-1 animate-pulse">
+                  <Zap className="h-3 w-3 mr-1" /> Save 20%
+                </Badge>
+              )}
+            </div>
           </div>
-          <span className={billingInterval === 'annual' ? 'font-medium' : 'text-muted-foreground'}>
+          <span className={`text-base font-medium transition-colors ${billingInterval === 'annual' ? 'text-foreground' : 'text-muted-foreground'}`}>
             Annual
           </span>
-        </div>
+        </motion.div>
       </div>
 
       {/* Subscription plans grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
-        {activePlans.map((plan) => {
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 max-w-7xl mx-auto">
+        {activePlans.map((plan, index) => {
           const price = plan.price || '$0.00';
           const isCurrentPlan = currentPlan?.id === plan.id;
+          const accent = getAccentColor(plan.name);
+          const gradient = planGradients[plan.name as keyof typeof planGradients] || '';
+          const buttonGradient = getButtonColor(plan.name, plan.isPopular);
+          
+          // Set up animations with staggered delay based on index
+          const animationDelay = 0.2 + (index * 0.1);
           
           return (
-            <Card 
-              key={plan.id} 
-              className={`flex flex-col ${plan.isPopular ? 'border-primary' : ''} ${isCurrentPlan ? 'bg-muted' : ''}`}
+            <motion.div
+              key={plan.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: animationDelay }}
+              className={plan.isRecommended ? 'lg:col-span-1 lg:row-span-1 lg:transform lg:scale-105 z-10' : ''}
             >
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle>{plan.name}</CardTitle>
-                    <CardDescription className="mt-1">{plan.description}</CardDescription>
+              <Card 
+                className={`flex flex-col h-full overflow-hidden ${gradient} border-2 transition-all duration-300 hover:shadow-lg ${plan.isPopular || plan.isRecommended ? accent : ''}`}
+              >
+                {(plan.isPopular || plan.isRecommended) && (
+                  <div className="absolute top-0 right-0">
+                    <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-bold px-4 py-1 transform rotate-45 translate-x-[30%] translate-y-[100%] shadow-md">
+                      {plan.isRecommended ? 'BEST VALUE' : 'POPULAR'}
+                    </div>
                   </div>
-                  {plan.isPopular && (
-                    <Badge>Popular</Badge>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="flex-grow">
-                <div className="mb-6">
-                  <span className="text-3xl font-bold">{price}</span>
-                  {billingInterval === 'monthly' && (
-                    <span className="text-muted-foreground ml-1">/ month</span>
-                  )}
-                  {billingInterval === 'annual' && (
-                    <span className="text-muted-foreground ml-1">/ year</span>
-                  )}
-                </div>
-                <ul className="space-y-2 text-sm">
-                  {plan.features.map((feature, index) => (
-                    <li key={index} className="flex items-start">
-                      <Check className="h-4 w-4 text-green-500 mr-2 mt-1 flex-shrink-0" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-              <CardFooter>
-                {isCurrentPlan ? (
-                  <Button disabled className="w-full">
-                    Current Plan
-                  </Button>
-                ) : (
-                  <Button 
-                    onClick={() => handleSelectPlan(plan.id)} 
-                    className="w-full"
-                    variant={plan.isPopular ? 'default' : 'outline'}
-                  >
-                    {hasActiveSubscription ? 'Change Plan' : 'Subscribe'}
-                  </Button>
                 )}
-              </CardFooter>
-            </Card>
+                
+                <CardHeader className="pb-4">
+                  <div className="flex items-center mb-2">
+                    {getPlanIcon(plan.name)}
+                    <CardTitle className="ml-2 text-2xl">{plan.name.replace(' Annual', '')}</CardTitle>
+                  </div>
+                  <CardDescription className="text-base">{plan.description}</CardDescription>
+                </CardHeader>
+                
+                <CardContent className="flex-grow pb-6">
+                  <div className="mb-6 flex items-baseline">
+                    <span className="text-4xl font-bold">{price}</span>
+                    <span className="text-muted-foreground ml-1 text-base">
+                      / {billingInterval === 'monthly' ? 'month' : 'year'}
+                    </span>
+                  </div>
+                  
+                  <ul className="space-y-3">
+                    {plan.features.map((feature, idx) => {
+                      const icon = featureIcons[feature] || <Check className="h-4 w-4 text-green-500" />;
+                      return (
+                        <motion.li 
+                          key={idx} 
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.3, delay: animationDelay + (idx * 0.05) }}
+                          className="flex items-start"
+                        >
+                          <div className="mr-3 mt-1 flex-shrink-0">{icon}</div>
+                          <span className="text-sm">{feature}</span>
+                        </motion.li>
+                      );
+                    })}
+                  </ul>
+                </CardContent>
+                
+                <CardFooter className="pt-2 pb-6">
+                  {isCurrentPlan ? (
+                    <Button disabled className="w-full py-6 text-base font-medium">
+                      Current Plan
+                    </Button>
+                  ) : (
+                    <Button 
+                      onClick={() => handleSelectPlan(plan.id)} 
+                      className={`w-full py-6 text-base font-medium transition-all duration-300 hover:shadow-md ${buttonGradient}`}
+                    >
+                      {hasActiveSubscription ? 'Change Plan' : 'Get Started'}
+                    </Button>
+                  )}
+                </CardFooter>
+              </Card>
+            </motion.div>
           );
         })}
-        
-        {/* Enterprise plan */}
-        {plans.some(p => p.isEnterprise) && (
-          <Card className="flex flex-col">
-            <CardHeader>
-              <CardTitle>Enterprise</CardTitle>
-              <CardDescription>Custom solutions for larger organizations</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-grow">
-              <div className="mb-6">
-                <span className="text-3xl font-bold">Custom</span>
-                <span className="text-muted-foreground ml-1">pricing</span>
-              </div>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-start">
-                  <Check className="h-4 w-4 text-green-500 mr-2 mt-1 flex-shrink-0" />
-                  <span>All features from Premium plan</span>
-                </li>
-                <li className="flex items-start">
-                  <Check className="h-4 w-4 text-green-500 mr-2 mt-1 flex-shrink-0" />
-                  <span>Custom integrations</span>
-                </li>
-                <li className="flex items-start">
-                  <Check className="h-4 w-4 text-green-500 mr-2 mt-1 flex-shrink-0" />
-                  <span>Dedicated support team</span>
-                </li>
-                <li className="flex items-start">
-                  <Check className="h-4 w-4 text-green-500 mr-2 mt-1 flex-shrink-0" />
-                  <span>Custom SLA and uptime guarantees</span>
-                </li>
-                <li className="flex items-start">
-                  <Check className="h-4 w-4 text-green-500 mr-2 mt-1 flex-shrink-0" />
-                  <span>On-premises deployment options</span>
-                </li>
-              </ul>
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full" onClick={() => setLocation('/contact')}>
-                Contact Sales
-              </Button>
-            </CardFooter>
-          </Card>
-        )}
       </div>
+      
+      {/* Testimonials section */}
+      <div className="mt-16 max-w-5xl mx-auto">
+        <h2 className="text-2xl font-bold text-center mb-10">What Our Customers Say</h2>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <motion.div 
+            className="bg-muted p-6 rounded-lg"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <div className="flex items-center mb-4">
+              <div className="flex text-amber-400">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="h-4 w-4 fill-current" />
+                ))}
+              </div>
+            </div>
+            <p className="text-sm mb-4">"The Professional plan has completely transformed our design workflow. The team collaboration features are worth every penny."</p>
+            <p className="text-sm font-semibold">- Sarah Johnson, Design Director</p>
+          </motion.div>
+          
+          <motion.div 
+            className="bg-muted p-6 rounded-lg"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            <div className="flex items-center mb-4">
+              <div className="flex text-amber-400">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="h-4 w-4 fill-current" />
+                ))}
+              </div>
+            </div>
+            <p className="text-sm mb-4">"The AI features in this platform save us countless hours every week. Upgrading to the Enterprise plan was the best decision our agency made this year."</p>
+            <p className="text-sm font-semibold">- Michael Chen, Creative Director</p>
+          </motion.div>
+          
+          <motion.div 
+            className="bg-muted p-6 rounded-lg"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+          >
+            <div className="flex items-center mb-4">
+              <div className="flex text-amber-400">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="h-4 w-4 fill-current" />
+                ))}
+              </div>
+            </div>
+            <p className="text-sm mb-4">"Even the Starter plan offers incredible value. As a freelancer, it's given me tools that help me compete with much larger design studios."</p>
+            <p className="text-sm font-semibold">- Alex Rivera, Independent Designer</p>
+          </motion.div>
+        </div>
+      </div>
+      
+      {/* FAQ Section */}
+      <div className="mt-16 max-w-4xl mx-auto">
+        <h2 className="text-2xl font-bold text-center mb-10">Frequently Asked Questions</h2>
+        <div className="space-y-6">
+          <motion.div 
+            className="bg-muted p-6 rounded-lg"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <h3 className="text-lg font-semibold mb-2">Can I change plans later?</h3>
+            <p className="text-sm text-muted-foreground">Yes, you can upgrade, downgrade, or cancel your subscription at any time. When you upgrade, you'll get immediate access to the new features. If you downgrade, you'll keep your current plan until the end of your billing period.</p>
+          </motion.div>
+          
+          <motion.div 
+            className="bg-muted p-6 rounded-lg"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            <h3 className="text-lg font-semibold mb-2">How do I cancel my subscription?</h3>
+            <p className="text-sm text-muted-foreground">You can cancel your subscription at any time from your account settings. After cancellation, you'll still have access to your plan until the end of your current billing period.</p>
+          </motion.div>
+          
+          <motion.div 
+            className="bg-muted p-6 rounded-lg"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+          >
+            <h3 className="text-lg font-semibold mb-2">Do you offer a free trial?</h3>
+            <p className="text-sm text-muted-foreground">Yes, we offer a 14-day free trial with full access to the Professional plan. You won't be charged until the trial period ends, and you can cancel anytime before then.</p>
+          </motion.div>
+        </div>
+      </div>
+      
+      {/* CTA Section */}
+      <motion.div 
+        className="mt-16 max-w-3xl mx-auto text-center"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.6 }}
+      >
+        <h2 className="text-2xl font-bold mb-6">Ready to transform your design workflow?</h2>
+        <p className="text-muted-foreground mb-8">Join thousands of designers and teams who have already upgraded their creative process.</p>
+        <Button 
+          onClick={() => handleSelectPlan(2)} // Professional plan (assumed to be id 2)
+          className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-8 py-6 text-lg font-medium"
+        >
+          Start Your Free Trial
+        </Button>
+        <p className="text-xs text-muted-foreground mt-4">No credit card required to start your trial.</p>
+      </motion.div>
     </div>
   );
 };
