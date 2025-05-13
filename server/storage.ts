@@ -61,11 +61,18 @@ export interface IStorage {
   getAllSubscriptionPlans(): Promise<SubscriptionPlan[]>;
   getActiveSubscriptionPlans(): Promise<SubscriptionPlan[]>;
   getSubscriptionPlan(id: number): Promise<SubscriptionPlan | undefined>;
+  getSubscriptionPlans(): Promise<SubscriptionPlan[]>;
+  getSubscriptionPlanById(id: number): Promise<SubscriptionPlan | undefined>;
   createUserSubscription(subscription: InsertUserSubscription): Promise<UserSubscription>;
   getUserSubscriptions(userId: number): Promise<UserSubscription[]>;
   getUserActiveSubscription(userId: number): Promise<UserSubscription | undefined>;
+  getUserSubscription(userId: number): Promise<UserSubscription | undefined>;
+  getUserSubscriptionByStripeId(stripeSubscriptionId: string): Promise<UserSubscription | undefined>;
   updateUserSubscription(id: number, data: Partial<InsertUserSubscription>): Promise<UserSubscription>;
   updateSubscriptionPlan(id: number, data: Partial<InsertSubscriptionPlan>): Promise<SubscriptionPlan>;
+  updateStripeCustomerId(userId: number, stripeCustomerId: string): Promise<User>;
+  updateUserStripeInfo(userId: number, data: { stripeCustomerId: string, stripeSubscriptionId: string }): Promise<User>;
+  canAccessProduct(userId: number, productId: number): Promise<boolean>;
   
   // Price optimization methods
   createPriceRecommendation(recommendation: InsertPriceRecommendation): Promise<PriceRecommendation>;
@@ -556,6 +563,64 @@ export class DatabaseStorage implements IStorage {
       .where(eq(subscriptionPlans.id, id))
       .returning();
     return plan;
+  }
+  
+  async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+    return await db.select().from(subscriptionPlans).orderBy(asc(subscriptionPlans.price));
+  }
+  
+  async getSubscriptionPlanById(id: number): Promise<SubscriptionPlan | undefined> {
+    const [plan] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, id));
+    return plan;
+  }
+  
+  async getUserSubscription(userId: number): Promise<UserSubscription | undefined> {
+    return await this.getUserActiveSubscription(userId);
+  }
+  
+  async getUserSubscriptionByStripeId(stripeSubscriptionId: string): Promise<UserSubscription | undefined> {
+    const [subscription] = await db.select().from(userSubscriptions)
+      .where(eq(userSubscriptions.stripeSubscriptionId, stripeSubscriptionId));
+    return subscription;
+  }
+  
+  async updateStripeCustomerId(userId: number, stripeCustomerId: string): Promise<User> {
+    const [user] = await db.update(users)
+      .set({ stripeCustomerId, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+  
+  async updateUserStripeInfo(userId: number, data: { stripeCustomerId: string, stripeSubscriptionId: string }): Promise<User> {
+    const [user] = await db.update(users)
+      .set({ 
+        stripeCustomerId: data.stripeCustomerId, 
+        stripeSubscriptionId: data.stripeSubscriptionId,
+        updatedAt: new Date() 
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+  
+  async canAccessProduct(userId: number, productId: number): Promise<boolean> {
+    // First check if user has an active subscription
+    const subscription = await this.getUserActiveSubscription(userId);
+    if (!subscription) {
+      return false;
+    }
+    
+    // Then check if the product is included in the subscription plan
+    const plan = await this.getSubscriptionPlan(subscription.planId);
+    if (!plan) {
+      return false;
+    }
+    
+    // Check if product is included in the subscription plan
+    // For simplicity, we'll assume all products are accessible to all plans
+    // In a real application, you would have a more complex relationship model
+    return true;
   }
   
   // Price optimization methods

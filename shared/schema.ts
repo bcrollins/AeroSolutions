@@ -4,6 +4,35 @@ import { z } from "zod";
 // Define the Json type locally instead of importing from drizzle-orm
 type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
 
+// Stripe schema for validation
+export const stripe = {
+  paymentIntent: z.object({
+    amount: z.number().positive(),
+    metadata: z.record(z.string()).optional(),
+  }),
+  
+  subscription: z.object({
+    planId: z.number(),
+    interval: z.enum(['monthly', 'annual']),
+  }),
+  
+  cancelSubscription: z.object({
+    subscriptionId: z.string(),
+    immediate: z.boolean().optional(),
+  }),
+  
+  webhook: z.object({
+    id: z.string(),
+    object: z.literal('event'),
+    api_version: z.string().optional(),
+    created: z.number(),
+    data: z.object({
+      object: z.any(),
+    }),
+    type: z.string(),
+  }),
+};
+
 // Goal Type enum for A/B testing
 export type ABTestGoalType = 'click' | 'form_submit' | 'page_view' | 'custom';
 
