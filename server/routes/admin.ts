@@ -39,12 +39,12 @@ router.post('/update-article-titles', isAuthenticated, isAdmin, async (req, res)
       message: 'Article title update process completed',
       result
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error updating article titles:', error);
     res.status(500).json({ 
       success: false,
       message: 'Failed to update article titles',
-      error: error.message 
+      error: error?.message || 'Unknown error' 
     });
   }
 });

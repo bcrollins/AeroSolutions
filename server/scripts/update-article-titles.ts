@@ -76,6 +76,8 @@ export async function updateArticleTitles(): Promise<{
   total: number;
   topics: string[];
 }> {
+  let successCount = 0;
+  
   try {
     logger.info('Starting article title update...');
     
@@ -87,15 +89,13 @@ export async function updateArticleTitles(): Promise<{
     
     if (articles.length === 0) {
       logger.info('No generic articles found to update');
-      return;
+      return { success: 0, total: 0, topics: [] };
     }
     
     logger.info(`Found ${articles.length} articles to update`);
     
     // Process max 50 topics (or as many as we have)
     const topicsToUse = AI_TOPICS.slice(0, Math.min(articles.length, AI_TOPICS.length));
-    
-    let successCount = 0;
     
     // Update each article with a topic from our list
     for (let i = 0; i < articles.length && i < topicsToUse.length; i++) {
@@ -117,7 +117,15 @@ export async function updateArticleTitles(): Promise<{
         .filter((word, index, self) => self.indexOf(word) === index)  // Remove duplicates
         .slice(0, 5);  // Take up to 5 keywords
       
-      const tags = JSON.stringify([...new Set(['ai', 'technology', 'business', ...keywords])]);
+      // Combine default tags with keywords without using Set for better compatibility
+      const allTags = ['ai', 'technology', 'business'];
+      keywords.forEach(keyword => {
+        if (!allTags.includes(keyword)) {
+          allTags.push(keyword);
+        }
+      });
+      
+      const tags = JSON.stringify(allTags);
       
       await pool.query(
         'UPDATE posts SET tags = $1 WHERE id = $2',
@@ -130,14 +138,32 @@ export async function updateArticleTitles(): Promise<{
     
     logger.info(`Article title update complete. Updated ${successCount} of ${articles.length} articles`);
     
+    return {
+      success: successCount,
+      total: articles.length,
+      topics: topicsToUse.slice(0, successCount)
+    };
   } catch (error) {
     logger.error('Error updating article titles:', error);
+    throw error;
   } finally {
-    pool.end();
+    await pool.end();
   }
 }
 
-// Run the update function
-updateArticleTitles()
-  .then(() => logger.info('Title update process finished'))
-  .catch(err => logger.error('Title update process failed:', err));
+// For direct execution when run with Node.js CLI
+// This is a workaround for ES modules since they don't have a 'require.main === module' equivalent
+import { fileURLToPath } from 'url';
+const isRunningDirectly = process.argv[1] === fileURLToPath(import.meta.url);
+
+if (isRunningDirectly) {
+  updateArticleTitles()
+    .then((result) => {
+      logger.info('Title update process finished:', result);
+      process.exit(0);
+    })
+    .catch(err => {
+      logger.error('Title update process failed:', err);
+      process.exit(1);
+    });
+}

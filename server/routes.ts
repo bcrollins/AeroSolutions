@@ -7,6 +7,7 @@ import forumRoutes from "./routes/forum";
 import mediaRoutes from "./routes/media";
 import contentGenerationRoutes from "./routes/content-generation";
 import aiContentRoutes from "./routes/ai-content";
+import adminRoutes from "./routes/admin";
 import { storage } from "./storage";
 import { logger } from "./utils/logger";
 
@@ -25,6 +26,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/courses", coursesRoutes);
   app.use("/api/forum", forumRoutes);
   app.use("/api/media", mediaRoutes);
+  
+  // Register Admin routes
+  app.use("/api/admin", adminRoutes);
 
   // API route to fetch active subscription plans
   app.get("/api/subscription-plans", async (req, res) => {
