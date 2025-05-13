@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { canAccessProduct } from '@/utils/aiProductsData';
+import { canAccessProduct } from '@/utils/productData';
 
 interface UseSubscriptionResult {
   userSubscription: {

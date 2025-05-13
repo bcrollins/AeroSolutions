@@ -458,4 +458,27 @@ export function getAiProductsByPlan(plan: string): AiProduct[] {
   return aiProductsData.filter(product => product.requiredPlan === plan);
 }
 
+/**
+ * Check if a user can access a product based on their subscription level
+ * @param requiredPlan The plan level required by the product
+ * @param userPlan The user's current subscription plan
+ * @returns Boolean indicating if the user has access
+ */
+export function canAccessProduct(requiredPlan: string, userPlan: string): boolean {
+  // Plan hierarchy: starter < professional < enterprise
+  if (requiredPlan === 'starter') {
+    // Starter products are accessible to all plan levels
+    return ['starter', 'professional', 'enterprise'].includes(userPlan);
+  } else if (requiredPlan === 'professional') {
+    // Professional products are accessible to professional and enterprise plans
+    return ['professional', 'enterprise'].includes(userPlan);
+  } else if (requiredPlan === 'enterprise') {
+    // Enterprise products are only accessible to enterprise plans
+    return userPlan === 'enterprise';
+  }
+  
+  // Default to false for unknown plan types
+  return false;
+}
+
 export default aiProductsData;
