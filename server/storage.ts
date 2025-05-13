@@ -73,6 +73,28 @@ export interface IStorage {
   getClientPreviewByCode(code: string): Promise<ClientPreview | undefined>;
   validateClientPreviewCode(code: string): Promise<boolean>;
   
+  // Post methods
+  createPost(post: InsertPost): Promise<Post>;
+  getAllPosts(options?: { 
+    category?: string; 
+    postType?: string; 
+    tag?: string; 
+    featured?: boolean;
+    premium?: boolean;
+    limit?: number;
+    offset?: number;
+    sort?: string;
+  }): Promise<Post[]>;
+  getPostsByType(postType: string, limit?: number): Promise<Post[]>;
+  getPostById(id: number): Promise<Post | undefined>;
+  getPostBySlug(slug: string): Promise<Post | undefined>;
+  updatePost(id: number, data: Partial<InsertPost>): Promise<Post>;
+  deletePost(id: number): Promise<void>;
+  getPostsByAuthor(authorId: number): Promise<Post[]>;
+  getFeaturedPosts(limit?: number): Promise<Post[]>;
+  incrementPostViews(id: number): Promise<void>;
+  incrementPostLikes(id: number): Promise<void>;
+  
   // Subscription methods
   createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan>;
   getAllSubscriptionPlans(): Promise<SubscriptionPlan[]>;
