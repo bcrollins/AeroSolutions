@@ -161,7 +161,7 @@ export default function QuoteGenerator() {
           <Card>
             <CardHeader>
               <CardTitle className="text-2xl font-poppins text-[#3B5B9D] flex items-center gap-2">
-                <FaRocket className="text-[#00D1D1]" /> Instant Quote Generator
+                <FaRocket className="text-[#3B82F6]" /> Instant Quote Generator
               </CardTitle>
               <CardDescription>
                 Tell us about your business and what features you need, and we'll generate a competitive quote instantly.
@@ -264,7 +264,7 @@ export default function QuoteGenerator() {
         <div>
           {quote ? (
             <Card>
-              <CardHeader className="bg-gradient-to-r from-[#3B5B9D] to-[#00D1D1] text-white">
+              <CardHeader className="bg-gradient-to-r from-[#1E293B] to-[#3B82F6] text-white">
                 <CardTitle className="text-2xl font-poppins flex items-center gap-2">
                   <FaPercentage /> Your Custom Quote
                 </CardTitle>
@@ -279,8 +279,8 @@ export default function QuoteGenerator() {
                     <p className="text-2xl font-semibold line-through text-slate-400">${quote.marketPrice}</p>
                   </div>
                   <div className="space-y-1 text-right">
-                    <p className="text-sm text-[#00D1D1] font-medium">ROLLINSX Price (40% Off)</p>
-                    <p className="text-3xl font-bold text-[#3B5B9D]">${quote.discountedPrice}</p>
+                    <p className="text-sm text-[#3B82F6] font-medium">ROLLINSX Price (40% Off)</p>
+                    <p className="text-3xl font-bold text-[#1E293B]">${quote.discountedPrice}</p>
                   </div>
                 </div>
 
@@ -290,7 +290,7 @@ export default function QuoteGenerator() {
                     {quote.breakdown.map((item, index) => (
                       <li key={index} className="flex justify-between items-center text-sm">
                         <span className="flex items-center">
-                          <FaCheck className="text-[#00D1D1] mr-2" />
+                          <FaCheck className="text-[#3B82F6] mr-2" />
                           {item.feature}
                         </span>
                         <span className="font-medium">${item.ourPrice}</span>
@@ -312,7 +312,7 @@ export default function QuoteGenerator() {
                 </div>
               </CardContent>
               <CardFooter className="flex flex-col space-y-4">
-                <Button className="w-full bg-[#00D1D1] hover:bg-[#00AEAE] text-white">
+                <Button className="w-full bg-[#3B82F6] hover:bg-[#2563EB] text-white">
                   <FaCogs className="mr-2" /> Request Detailed Proposal
                 </Button>
                 <p className="text-xs text-center text-slate-500">
@@ -323,9 +323,9 @@ export default function QuoteGenerator() {
           ) : (
             <Card className="h-full flex flex-col justify-center items-center p-6 text-center">
               <div className="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-                <FaRocket className="text-4xl text-[#00D1D1]" />
+                <FaRocket className="text-4xl text-[#3B82F6]" />
               </div>
-              <CardTitle className="text-xl font-poppins text-[#3B5B9D] mb-2">
+              <CardTitle className="text-xl font-poppins text-[#1E293B] mb-2">
                 Your Quote Will Appear Here
               </CardTitle>
               <CardDescription className="max-w-sm">

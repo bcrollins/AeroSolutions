@@ -136,7 +136,7 @@ export default function Services() {
         
         {/* SEO-optimized additional content section */}
         <motion.div
-          className="bg-gray-50 rounded-xl p-8 shadow-lg mb-12"
+          className="bg-gray-900 rounded-xl p-8 shadow-lg mb-12 text-white"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.2 }}
@@ -145,48 +145,48 @@ export default function Services() {
         >
           <div className="grid md:grid-cols-2 gap-8">
             <div>
-              <h3 className="text-xl font-bold font-montserrat text-primary mb-4">Why Choose Our Web Development Services?</h3>
+              <h3 className="text-xl font-bold font-montserrat text-white mb-4">Why Choose Our Web Development Services?</h3>
               <ul className="space-y-3">
                 <li className="flex items-start">
-                  <FaLaptopCode className="text-primary mr-3 mt-1 flex-shrink-0" />
+                  <FaLaptopCode className="text-[#3B82F6] mr-3 mt-1 flex-shrink-0" />
                   <div>
-                    <strong className="block text-gray-800">Built By Experts For Small Businesses</strong>
-                    <p className="text-gray-700">Our development team includes experienced professionals who understand small business needs firsthand.</p>
+                    <strong className="block text-white">Built By Experts For Small Businesses</strong>
+                    <p className="text-gray-300">Our development team includes experienced professionals who understand small business needs firsthand.</p>
                   </div>
                 </li>
                 <li className="flex items-start">
-                  <FaShieldAlt className="text-primary mr-3 mt-1 flex-shrink-0" />
+                  <FaShieldAlt className="text-[#3B82F6] mr-3 mt-1 flex-shrink-0" />
                   <div>
-                    <strong className="block text-gray-800">Zero Financial Risk</strong>
-                    <p className="text-gray-700">Our no-payment-until-satisfied model ensures you only pay for results that meet your needs.</p>
+                    <strong className="block text-white">Zero Financial Risk</strong>
+                    <p className="text-gray-300">Our no-payment-until-satisfied model ensures you only pay for results that meet your needs.</p>
                   </div>
                 </li>
                 <li className="flex items-start">
-                  <FaDatabase className="text-primary mr-3 mt-1 flex-shrink-0" />
+                  <FaDatabase className="text-[#3B82F6] mr-3 mt-1 flex-shrink-0" />
                   <div>
-                    <strong className="block text-gray-800">Small Business Focus</strong>
-                    <p className="text-gray-700">We specialize in web solutions for small businesses, ensuring relevant expertise for your growth.</p>
+                    <strong className="block text-white">Small Business Focus</strong>
+                    <p className="text-gray-300">We specialize in web solutions for small businesses, ensuring relevant expertise for your growth.</p>
                   </div>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="text-xl font-bold font-montserrat text-primary mb-4">Our Web Development Process</h3>
+              <h3 className="text-xl font-bold font-montserrat text-white mb-4">Our Web Development Process</h3>
               <ol className="space-y-3 list-decimal pl-5">
-                <li className="text-gray-700">
-                  <strong className="text-gray-800">Comprehensive Requirements Analysis</strong> - We work closely with your business team to understand your website goals and audience needs.
+                <li className="text-gray-300">
+                  <strong className="text-white">Comprehensive Requirements Analysis</strong> - We work closely with your business team to understand your website goals and audience needs.
                 </li>
-                <li className="text-gray-700">
-                  <strong className="text-gray-800">Custom Solution Design</strong> - Tailored architecture and design development specific to your brand and business requirements.
+                <li className="text-gray-300">
+                  <strong className="text-white">Custom Solution Design</strong> - Tailored architecture and design development specific to your brand and business requirements.
                 </li>
-                <li className="text-gray-700">
-                  <strong className="text-gray-800">Agile Development & Testing</strong> - Iterative implementation with continuous QA across all devices and browsers.
+                <li className="text-gray-300">
+                  <strong className="text-white">Agile Development & Testing</strong> - Iterative implementation with continuous QA across all devices and browsers.
                 </li>
-                <li className="text-gray-700">
-                  <strong className="text-gray-800">Deployment & Integration</strong> - Seamless implementation with existing systems and thorough training for your team.
+                <li className="text-gray-300">
+                  <strong className="text-white">Deployment & Integration</strong> - Seamless implementation with existing systems and thorough training for your team.
                 </li>
-                <li className="text-gray-700">
-                  <strong className="text-gray-800">Ongoing Support & Evolution</strong> - Continuous improvements based on user feedback and business growth.
+                <li className="text-gray-300">
+                  <strong className="text-white">Ongoing Support & Evolution</strong> - Continuous improvements based on user feedback and business growth.
                 </li>
               </ol>
             </div>
