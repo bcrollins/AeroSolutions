@@ -1569,3 +1569,53 @@ export type ABTestImpression = typeof abTestImpressions.$inferSelect;
 export type ABTestConversion = typeof abTestConversions.$inferSelect;
 export type InsertABTest = z.infer<typeof insertABTestSchema>;
 export type InsertABTestVariant = z.infer<typeof insertABTestVariantSchema>;
+
+// AI Products schema
+export const aiProducts = pgTable("ai_products", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  slug: text("slug").notNull().unique(),
+  description: text("description").notNull(),
+  shortDescription: text("short_description").notNull(),
+  icon: text("icon").notNull(), // Lucide icon name
+  category: text("category").notNull(), // business, content, technical, etc.
+  features: json("features").$type<string[]>().notNull(),
+  demoUrl: text("demo_url"),
+  imageUrl: text("image_url"),
+  requiredPlan: text("required_plan").notNull(), // starter, professional, enterprise
+  isActive: boolean("is_active").default(true).notNull(),
+  isFeatured: boolean("is_featured").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertAiProductSchema = createInsertSchema(aiProducts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export type InsertAiProduct = z.infer<typeof insertAiProductSchema>;
+export type AiProduct = typeof aiProducts.$inferSelect;
+
+// AI Product Usage schema
+export const aiProductUsage = pgTable("ai_product_usage", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  productId: integer("product_id").notNull().references(() => aiProducts.id),
+  usageCount: integer("usage_count").default(0).notNull(),
+  lastUsedAt: timestamp("last_used_at"),
+  userRating: integer("user_rating"), // 1-5 rating
+  userFeedback: text("user_feedback"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertAiProductUsageSchema = createInsertSchema(aiProductUsage).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export type InsertAiProductUsage = z.infer<typeof insertAiProductUsageSchema>;
+export type AiProductUsage = typeof aiProductUsage.$inferSelect;

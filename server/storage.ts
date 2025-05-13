@@ -20,7 +20,10 @@ import {
   logs, bug_reports, platform_compatibility_issues,
   type Log, type InsertLog, 
   type BugReport, type InsertBugReport,
-  type PlatformCompatibilityIssue, type InsertPlatformCompatibilityIssue
+  type PlatformCompatibilityIssue, type InsertPlatformCompatibilityIssue,
+  aiProducts, aiProductUsage,
+  type AiProduct, type InsertAiProduct,
+  type AiProductUsage, type InsertAiProductUsage
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gt, lt, sql, desc, asc, ilike, or } from "drizzle-orm";
