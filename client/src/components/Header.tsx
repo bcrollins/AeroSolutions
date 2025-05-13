@@ -89,7 +89,7 @@ export default function Header() {
               <img 
                 src="/images/rollinsx-logo.png" 
                 alt="ROLLINSX Logo" 
-                className="h-10 w-auto mr-2" 
+                className="h-8 w-auto mr-2" 
               />
               <span className="font-bold tracking-wider text-xl text-white">ROLLINSX</span>
             </div>
