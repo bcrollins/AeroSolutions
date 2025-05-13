@@ -101,7 +101,7 @@ export default function OriginalHero() {
               animate="visible"
               custom={0}
             >
-              <span className="text-[#3B82F6] text-sm font-medium tracking-wider uppercase font-inter">Premium Web Solutions</span>
+              <span className="text-[#3B82F6] text-sm font-medium tracking-wider uppercase font-inter">Professional Web Development</span>
             </motion.div>
             
             <motion.h1 
@@ -111,7 +111,7 @@ export default function OriginalHero() {
               animate="visible"
               custom={1}
             >
-              Web <span className="text-[#3B82F6]">Development</span> for Small Businesses
+              Enterprise-Grade <span className="text-[#3B82F6]">Web Solutions</span> for Business Growth
             </motion.h1>
             
             <motion.p 
@@ -121,7 +121,7 @@ export default function OriginalHero() {
               animate="visible"
               custom={2}
             >
-              Custom web solutions that transform your online presence—WebCraft, EcomPro, ContentHub, and more.
+              Transformative web development services designed for today's digital marketplace, delivering measurable business results.
             </motion.p>
             
             <motion.p 
