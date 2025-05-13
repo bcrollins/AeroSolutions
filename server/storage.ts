@@ -1814,6 +1814,232 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
+
+  // Post methods implementation
+  async createPost(post: InsertPost): Promise<Post> {
+    try {
+      const [newPost] = await db
+        .insert(posts)
+        .values(post)
+        .returning();
+      return newPost;
+    } catch (error) {
+      console.error('Error creating post:', error);
+      throw error;
+    }
+  }
+  
+  async getAllPosts(options?: { 
+    category?: string; 
+    postType?: string; 
+    tag?: string; 
+    featured?: boolean;
+    premium?: boolean;
+    limit?: number;
+    offset?: number;
+    sort?: string;
+  }): Promise<Post[]> {
+    try {
+      let query = db.select().from(posts);
+      
+      // Apply filters
+      if (options) {
+        const filters = [];
+        
+        if (options.category) {
+          filters.push(eq(posts.category, options.category));
+        }
+        
+        if (options.postType) {
+          filters.push(eq(posts.postType, options.postType));
+        }
+        
+        if (options.tag) {
+          // For tag filtering, we need to check if the tag exists in the tags array
+          filters.push(sql`${posts.tags} ? ${options.tag}`);
+        }
+        
+        if (options.featured) {
+          filters.push(eq(posts.featuredPost, options.featured));
+        }
+        
+        if (options.premium) {
+          filters.push(eq(posts.premium, options.premium));
+        }
+        
+        if (filters.length > 0) {
+          query = query.where(and(...filters));
+        }
+        
+        // Apply sorting
+        if (options.sort) {
+          if (options.sort === 'newest') {
+            query = query.orderBy(desc(posts.publishedAt || posts.createdAt));
+          } else if (options.sort === 'oldest') {
+            query = query.orderBy(asc(posts.publishedAt || posts.createdAt));
+          } else if (options.sort === 'popular') {
+            query = query.orderBy(desc(posts.viewCount));
+          }
+        } else {
+          // Default sorting by newest
+          query = query.orderBy(desc(posts.publishedAt || posts.createdAt));
+        }
+        
+        // Apply pagination
+        if (options.limit) {
+          query = query.limit(options.limit);
+        }
+        
+        if (options.offset) {
+          query = query.offset(options.offset);
+        }
+      } else {
+        // Default sorting by newest if no options
+        query = query.orderBy(desc(posts.publishedAt || posts.createdAt));
+      }
+      
+      return await query;
+    } catch (error) {
+      console.error('Error getting all posts:', error);
+      return [];
+    }
+  }
+  
+  async getPostsByType(postType: string, limit?: number): Promise<Post[]> {
+    try {
+      let query = db
+        .select()
+        .from(posts)
+        .where(eq(posts.postType, postType))
+        .orderBy(desc(posts.publishedAt || posts.createdAt));
+      
+      if (limit) {
+        query = query.limit(limit);
+      }
+      
+      return await query;
+    } catch (error) {
+      console.error(`Error getting posts by type '${postType}':`, error);
+      return [];
+    }
+  }
+  
+  async getPostById(id: number): Promise<Post | undefined> {
+    try {
+      const [post] = await db
+        .select()
+        .from(posts)
+        .where(eq(posts.id, id));
+      
+      return post;
+    } catch (error) {
+      console.error(`Error getting post by ID ${id}:`, error);
+      return undefined;
+    }
+  }
+  
+  async getPostBySlug(slug: string): Promise<Post | undefined> {
+    try {
+      const [post] = await db
+        .select()
+        .from(posts)
+        .where(eq(posts.slug, slug));
+      
+      return post;
+    } catch (error) {
+      console.error(`Error getting post by slug '${slug}':`, error);
+      return undefined;
+    }
+  }
+  
+  async updatePost(id: number, data: Partial<InsertPost>): Promise<Post> {
+    try {
+      const [updatedPost] = await db
+        .update(posts)
+        .set({
+          ...data,
+          updatedAt: new Date()
+        })
+        .where(eq(posts.id, id))
+        .returning();
+      
+      return updatedPost;
+    } catch (error) {
+      console.error(`Error updating post with ID ${id}:`, error);
+      throw error;
+    }
+  }
+  
+  async deletePost(id: number): Promise<void> {
+    try {
+      await db
+        .delete(posts)
+        .where(eq(posts.id, id));
+    } catch (error) {
+      console.error(`Error deleting post with ID ${id}:`, error);
+      throw error;
+    }
+  }
+  
+  async getPostsByAuthor(authorId: number): Promise<Post[]> {
+    try {
+      return await db
+        .select()
+        .from(posts)
+        .where(eq(posts.authorId, authorId))
+        .orderBy(desc(posts.publishedAt || posts.createdAt));
+    } catch (error) {
+      console.error(`Error getting posts by author ID ${authorId}:`, error);
+      return [];
+    }
+  }
+  
+  async getFeaturedPosts(limit?: number): Promise<Post[]> {
+    try {
+      let query = db
+        .select()
+        .from(posts)
+        .where(eq(posts.featuredPost, true))
+        .orderBy(desc(posts.publishedAt || posts.createdAt));
+      
+      if (limit) {
+        query = query.limit(limit);
+      }
+      
+      return await query;
+    } catch (error) {
+      console.error('Error getting featured posts:', error);
+      return [];
+    }
+  }
+  
+  async incrementPostViews(id: number): Promise<void> {
+    try {
+      await db
+        .update(posts)
+        .set({
+          viewCount: sql`${posts.viewCount} + 1`
+        })
+        .where(eq(posts.id, id));
+    } catch (error) {
+      console.error(`Error incrementing views for post with ID ${id}:`, error);
+      throw error;
+    }
+  }
+  
+  async incrementPostLikes(id: number): Promise<void> {
+    try {
+      await db
+        .update(posts)
+        .set({
+          likeCount: sql`${posts.likeCount} + 1`
+        })
+        .where(eq(posts.id, id));
+    } catch (error) {
+      console.error(`Error incrementing likes for post with ID ${id}:`, error);
+      throw error;
+    }
+  }
 }
 
 // Create a new instance of DatabaseStorage
