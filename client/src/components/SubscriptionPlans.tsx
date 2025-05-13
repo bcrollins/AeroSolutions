@@ -173,28 +173,20 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
 
   return (
     <div className={`space-y-12 ${className} container mx-auto px-6 md:px-8 py-16`}>
-      {/* Hero section */}
-      <div className="text-center max-w-3xl mx-auto mb-12">
+      {/* Hero section with formatting box */}
+      <div className="text-center max-w-3xl mx-auto mb-12 bg-gray-100 dark:bg-slate-800/50 backdrop-blur-sm rounded-xl p-8 shadow-md border border-gray-200 dark:border-gray-700">
         <motion.h1 
-          className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600 dark:from-purple-400 dark:to-blue-400"
+          className="text-4xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600 dark:from-purple-400 dark:to-blue-400"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
           Subscription Plans
         </motion.h1>
-        <motion.p 
-          className="text-xl text-muted-foreground mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          Unlock premium features and maximize your productivity with our flexible subscription options.
-        </motion.p>
         
         {/* Billing interval toggle */}
         <motion.div 
-          className="flex items-center justify-center space-x-6 bg-muted px-6 py-4 rounded-full shadow-sm max-w-md mx-auto"
+          className="flex items-center justify-center space-x-6 bg-white dark:bg-slate-700/50 px-6 py-4 rounded-full shadow-sm max-w-md mx-auto"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3, delay: 0.2 }}

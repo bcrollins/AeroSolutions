@@ -66,13 +66,8 @@ const SubscriptionsPage: React.FC = () => {
   return (
     <div className="container py-10 max-w-6xl">
       <div className="flex flex-col gap-8">
-        {/* Page header */}
-        <div>
-          <h1 className="text-3xl font-bold tracking-tighter">Subscription Plans</h1>
-          <p className="text-muted-foreground">
-            Choose the perfect plan for your needs. Upgrade anytime to unlock more features.
-          </p>
-        </div>
+        {/* Empty div to preserve spacing */}
+        <div></div>
 
         {/* Current subscription section (if user has an active subscription) */}
         {hasActiveSubscription && plan && (
@@ -185,17 +180,8 @@ const SubscriptionsPage: React.FC = () => {
           </Card>
         )}
 
-        {/* Available plans section */}
+        {/* Subscription plans */}
         <div>
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold">{hasActiveSubscription ? 'Available Plans' : 'Choose a Plan'}</h2>
-            <p className="text-muted-foreground">
-              {hasActiveSubscription 
-                ? 'Upgrade your subscription to access more advanced features.' 
-                : 'Select a plan that works best for your needs.'}
-            </p>
-          </div>
-          
           <SubscriptionPlans 
             hideCurrentPlan={hasActiveSubscription} 
           />
