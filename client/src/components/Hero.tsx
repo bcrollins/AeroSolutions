@@ -286,25 +286,20 @@ export default function Hero() {
                              transform: "rotateY(-90deg) translateZ(24px)",
                              transformOrigin: "left"
                            }}>
-                        {/* Left side E Logo */}
-                        <div className="relative w-28 h-28 -rotate-12">
-                          {/* Outer circle */}
-                          <div className="absolute inset-0 rounded-full border-3 border-white opacity-70 shadow-lg"></div>
+                        {/* Left side ROLLINSX Logo */}
+                        <div className="relative w-28 h-28 -rotate-12 flex items-center justify-center">
+                          {/* Background glow */}
+                          <div className="absolute inset-0 rounded-full bg-white/10 border border-white/40 shadow-[0_0_10px_rgba(255,255,255,0.4)]"></div>
                           
-                          {/* Inner circle with glow */}
-                          <div className="absolute inset-2 rounded-full bg-white/10 border border-white/40 shadow-[0_0_10px_rgba(255,255,255,0.4)]"></div>
-                          
-                          {/* E letter */}
-                          <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <div className="w-14 h-1 bg-white rounded-full shadow-md mb-1"></div>
-                            <div className="w-10 h-1 bg-white rounded-full shadow-md mb-1"></div>
-                            <div className="w-12 h-1 bg-white rounded-full shadow-md mb-1"></div>
-                            <div className="w-10 h-1 bg-white rounded-full shadow-md mb-1"></div>
-                            <div className="w-14 h-1 bg-white rounded-full shadow-md"></div>
-                          </div>
+                          {/* Logo image */}
+                          <img 
+                            src="/images/rollinsx-logo.png" 
+                            alt="ROLLINSX Logo" 
+                            className="w-20 h-20 object-contain z-10" 
+                          />
                           
                           {/* Accent dot */}
-                          <div className="absolute bottom-2 left-2 w-1.5 h-1.5 rounded-full bg-electric-cyan/90 animate-pulse"></div>
+                          <div className="absolute bottom-2 left-2 w-1.5 h-1.5 rounded-full bg-[#3B82F6]/90 animate-pulse"></div>
                         </div>
                       </div>
                       
@@ -314,47 +309,37 @@ export default function Hero() {
                              transform: "rotateX(90deg) translateZ(24px)",
                              transformOrigin: "top"
                            }}>
-                        {/* Top side E Logo */}
-                        <div className="relative w-28 h-28 rotate-45">
-                          {/* Outer circle */}
-                          <div className="absolute inset-0 rounded-full border-2 border-white opacity-60 shadow-lg"></div>
+                        {/* Top side ROLLINSX Logo */}
+                        <div className="relative w-28 h-28 rotate-45 flex items-center justify-center">
+                          {/* Background glow */}
+                          <div className="absolute inset-0 rounded-full bg-white/10 border border-white/30 shadow-[0_0_8px_rgba(255,255,255,0.3)]"></div>
                           
-                          {/* Inner circle with glow */}
-                          <div className="absolute inset-2 rounded-full bg-white/10 border border-white/30 shadow-[0_0_8px_rgba(255,255,255,0.3)]"></div>
-                          
-                          {/* E letter */}
-                          <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <div className="w-12 h-0.5 bg-white/90 rounded-full shadow-md mb-1"></div>
-                            <div className="w-8 h-0.5 bg-white/90 rounded-full shadow-md mb-1"></div>
-                            <div className="w-10 h-0.5 bg-white/90 rounded-full shadow-md mb-1"></div>
-                            <div className="w-8 h-0.5 bg-white/90 rounded-full shadow-md mb-1"></div>
-                            <div className="w-12 h-0.5 bg-white/90 rounded-full shadow-md"></div>
-                          </div>
+                          {/* Logo image */}
+                          <img 
+                            src="/images/rollinsx-logo.png" 
+                            alt="ROLLINSX Logo" 
+                            className="w-18 h-18 object-contain z-10" 
+                          />
                         </div>
                       </div>
                       
                       {/* Bottom side */}
-                      <div className="absolute inset-0 w-full h-full bg-electric-cyan/60 rounded-xl flex items-center justify-center"
+                      <div className="absolute inset-0 w-full h-full bg-[#3B82F6]/60 rounded-xl flex items-center justify-center"
                            style={{ 
                              transform: "rotateX(-90deg) translateZ(24px)",
                              transformOrigin: "bottom"
                            }}>
-                        {/* Bottom side E Logo */}
-                        <div className="relative w-28 h-28 -rotate-45">
-                          {/* Outer circle */}
-                          <div className="absolute inset-0 rounded-full border-2 border-white opacity-60 shadow-lg"></div>
+                        {/* Bottom side ROLLINSX Logo */}
+                        <div className="relative w-28 h-28 -rotate-45 flex items-center justify-center">
+                          {/* Background glow */}
+                          <div className="absolute inset-0 rounded-full bg-white/10 border border-white/30 shadow-[0_0_8px_rgba(255,255,255,0.3)]"></div>
                           
-                          {/* Inner circle with glow */}
-                          <div className="absolute inset-2 rounded-full bg-white/10 border border-white/30 shadow-[0_0_8px_rgba(255,255,255,0.3)]"></div>
-                          
-                          {/* E letter */}
-                          <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <div className="w-12 h-0.5 bg-white/90 rounded-full shadow-md mb-1"></div>
-                            <div className="w-8 h-0.5 bg-white/90 rounded-full shadow-md mb-1"></div>
-                            <div className="w-10 h-0.5 bg-white/90 rounded-full shadow-md mb-1"></div>
-                            <div className="w-8 h-0.5 bg-white/90 rounded-full shadow-md mb-1"></div>
-                            <div className="w-12 h-0.5 bg-white/90 rounded-full shadow-md"></div>
-                          </div>
+                          {/* Logo image */}
+                          <img 
+                            src="/images/rollinsx-logo.png" 
+                            alt="ROLLINSX Logo" 
+                            className="w-18 h-18 object-contain z-10" 
+                          />
                         </div>
                       </div>
                       
@@ -364,26 +349,21 @@ export default function Hero() {
                              transform: "rotateY(180deg) translateZ(24px)",
                              transformOrigin: "center"
                            }}>
-                        {/* Back side E Logo */}
-                        <div className="relative w-32 h-32">
-                          {/* Outer circle */}
-                          <div className="absolute inset-0 rounded-full border-4 border-white opacity-80 shadow-lg"></div>
+                        {/* Back side ROLLINSX Logo */}
+                        <div className="relative w-32 h-32 flex items-center justify-center">
+                          {/* Background glow */}
+                          <div className="absolute inset-0 rounded-full bg-[#3B82F6]/20 border border-white/50 shadow-[0_0_15px_rgba(59,130,246,0.6)]"></div>
                           
-                          {/* Inner circle with glow */}
-                          <div className="absolute inset-2 rounded-full bg-electric-cyan/20 border border-white/50 shadow-[0_0_15px_rgba(0,209,209,0.6)]"></div>
-                          
-                          {/* E letter */}
-                          <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <div className="w-16 h-1.5 bg-white rounded-full shadow-md mb-1"></div>
-                            <div className="w-12 h-1.5 bg-white rounded-full shadow-md mb-1"></div>
-                            <div className="w-14 h-1.5 bg-white rounded-full shadow-md mb-1"></div>
-                            <div className="w-12 h-1.5 bg-white rounded-full shadow-md mb-1"></div>
-                            <div className="w-16 h-1.5 bg-white rounded-full shadow-md"></div>
-                          </div>
+                          {/* Logo image */}
+                          <img 
+                            src="/images/rollinsx-logo.png" 
+                            alt="ROLLINSX Logo" 
+                            className="w-24 h-24 object-contain z-10 transform scale-x-[-1]" 
+                          />
                           
                           {/* Accent dots */}
                           <div className="absolute bottom-3 right-3 w-2 h-2 rounded-full bg-sunset-orange/90 animate-pulse"></div>
-                          <div className="absolute top-3 left-3 w-2 h-2 rounded-full bg-electric-cyan animate-pulse" style={{ animationDelay: "1s" }}></div>
+                          <div className="absolute top-3 left-3 w-2 h-2 rounded-full bg-[#3B82F6] animate-pulse" style={{ animationDelay: "1s" }}></div>
                         </div>
                       </div>
                       
