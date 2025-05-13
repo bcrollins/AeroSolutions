@@ -53,12 +53,12 @@ const featureIcons: Record<string, React.ReactNode> = {
 
 // Gradient backgrounds for each plan
 const planGradients = {
-  'Starter': 'bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30',
-  'Starter Annual': 'bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30',
-  'Professional': 'bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30',
-  'Professional Annual': 'bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30',
-  'Enterprise': 'bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950/30 dark:to-yellow-950/30',
-  'Enterprise Annual': 'bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950/30 dark:to-yellow-950/30',
+  'Starter': 'bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-950/30 dark:to-indigo-950/30',
+  'Starter Annual': 'bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-950/30 dark:to-indigo-950/30',
+  'Professional': 'bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-950/30 dark:to-pink-950/30',
+  'Professional Annual': 'bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-950/30 dark:to-pink-950/30',
+  'Enterprise': 'bg-gradient-to-br from-amber-100 to-yellow-100 dark:from-amber-950/30 dark:to-yellow-950/30',
+  'Enterprise Annual': 'bg-gradient-to-br from-amber-100 to-yellow-100 dark:from-amber-950/30 dark:to-yellow-950/30',
 };
 
 // Helper function to get card accent color
@@ -227,7 +227,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
       </div>
 
       {/* Subscription plans grid */}
-      <div className="bg-muted/50 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-muted-foreground/10 max-w-6xl mx-auto">
+      <div className="bg-gray-100 dark:bg-slate-800/50 backdrop-blur-sm rounded-xl p-8 shadow-lg border border-gray-200 dark:border-gray-700 max-w-6xl mx-auto">
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
           {activePlans.map((plan, index) => {
             const price = plan.price || '$0.00';
@@ -248,7 +248,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
                 className={plan.isRecommended ? 'lg:col-span-1 lg:row-span-1 lg:transform lg:scale-105 z-10' : ''}
               >
                 <Card 
-                  className={`flex flex-col h-full overflow-hidden ${gradient} border-2 transition-all duration-300 hover:shadow-lg ${plan.isPopular || plan.isRecommended ? accent : ''}`}
+                  className={`flex flex-col h-full overflow-hidden ${gradient} border-2 shadow-md transition-all duration-300 hover:shadow-xl ${plan.isPopular || plan.isRecommended ? accent : 'border-gray-300'}`}
                 >
                   {(plan.isPopular || plan.isRecommended) && (
                     <div className="absolute top-0 right-0">

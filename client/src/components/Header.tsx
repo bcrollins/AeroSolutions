@@ -139,6 +139,12 @@ export default function Header() {
             </button>
             <ThemeToggle />
             <Link  
+              href="/subscriptions"  
+              className="font-inter text-sm px-4 py-2 rounded-md bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 transition-colors duration-200 mr-3"  
+            >  
+              Try Free  
+            </Link>
+            <Link  
               href="/login"  
               className="font-inter text-sm px-4 py-2 rounded-md bg-[#0070F3] text-white hover:bg-[#0050A0] transition-colors duration-200"  
             >  
@@ -213,6 +219,13 @@ export default function Header() {
                 <ThemeToggle />
                 <span className="ml-2 text-white">Theme</span>
               </div>
+              <Link  
+                href="/subscriptions"  
+                onClick={toggleMobileMenu}  
+                className="font-inter text-sm bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-2 px-4 rounded-md hover:from-purple-700 hover:to-indigo-700 w-fit transition-colors duration-200 mb-3"  
+              >  
+                Try Free
+              </Link>
               <Link  
                 href="/login"  
                 onClick={toggleMobileMenu}  
