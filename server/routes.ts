@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import stripeRoutes from "./routes/stripe";
+import postsRoutes from "./routes/posts";
 import { storage } from "./storage";
 import { logger } from "./utils/logger";
 
