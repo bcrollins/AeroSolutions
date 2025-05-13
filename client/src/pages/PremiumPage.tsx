@@ -9,7 +9,21 @@ import {
   Gauge, 
   Wrench, 
   Clock, 
-  Headphones 
+  Headphones,
+  Bot,
+  FileText,
+  UploadCloud,
+  Layers,
+  Code,
+  Trophy,
+  BookOpen,
+  CreditCard,
+  Cpu,
+  LayoutGrid,
+  FileUp,
+  FileImage,
+  Network,
+  BookOpen as BookOpenIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,6 +47,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { Link } from 'wouter';
 
 const PremiumPage: React.FC = () => {
@@ -239,6 +254,179 @@ const PremiumPage: React.FC = () => {
                 </CardFooter>
               </Card>
             ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Expert AI Services Section - NEW */}
+      <div className="py-24 bg-gradient-to-b from-background to-muted/30">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="flex flex-col items-center text-center mb-16">
+            <div className="inline-flex items-center rounded-full border px-4 py-1.5 text-sm font-semibold mb-4 bg-primary/20 text-primary">
+              <Bot className="mr-2 h-4 w-4" /> Exclusive AI Services
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-4">
+              Expert AI Services <span className="text-primary">at Premium Level</span>
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-3xl">
+              Our most prestigious AI-powered offerings designed to elevate your business above the competition. 
+              These services represent the pinnacle of our expertise and technology.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Premium Asset Library */}
+            <Card className="bg-card/50 backdrop-blur border-primary/10 hover:border-primary/30 transition-all duration-300 overflow-hidden flex flex-col">
+              <div className="absolute top-0 right-0 p-4">
+                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                  Exclusive
+                </Badge>
+              </div>
+              <CardHeader className="pb-4">
+                <div className="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                  <LayoutGrid className="h-7 w-7 text-primary" />
+                </div>
+                <CardTitle className="text-2xl">Premium Asset Library</CardTitle>
+                <CardDescription className="text-base mt-2">
+                  Access our curated collection of high-quality design assets created by world-class designers.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex-grow">
+                <ul className="space-y-3">
+                  <li className="flex items-start">
+                    <FileImage className="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" />
+                    <span>Thousands of exclusive UI components and templates</span>
+                  </li>
+                  <li className="flex items-start">
+                    <FileUp className="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" />
+                    <span>Regular uploads of new premium assets</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Layers className="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" />
+                    <span>Fully customizable Figma and Sketch files</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Shield className="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" />
+                    <span>Commercial license for all downloaded assets</span>
+                  </li>
+                </ul>
+                <div className="mt-8 pt-4 border-t">
+                  <p className="text-3xl font-bold text-foreground">$3,499<span className="text-muted-foreground text-sm font-normal">/year</span></p>
+                  <p className="text-muted-foreground text-sm mt-1">Unlimited access to all assets</p>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Link href="/marketplace/category/asset_library">
+                  <Button className="w-full">Explore the Asset Library</Button>
+                </Link>
+              </CardFooter>
+            </Card>
+            
+            {/* AI Training Program */}
+            <Card className="bg-card/50 backdrop-blur border-primary/10 hover:border-primary/30 transition-all duration-300 overflow-hidden flex flex-col">
+              <div className="absolute top-0 right-0 p-4">
+                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                  Most Popular
+                </Badge>
+              </div>
+              <CardHeader className="pb-4">
+                <div className="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                  <BookOpenIcon className="h-7 w-7 text-primary" />
+                </div>
+                <CardTitle className="text-2xl">AI Training Program</CardTitle>
+                <CardDescription className="text-base mt-2">
+                  Master AI-driven design with our comprehensive certification program led by industry experts.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex-grow">
+                <ul className="space-y-3">
+                  <li className="flex items-start">
+                    <BookOpen className="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" />
+                    <span>Structured learning paths from beginner to expert</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Network className="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" />
+                    <span>Live workshops and Q&A sessions with AI experts</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Trophy className="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" />
+                    <span>Recognized certification upon completion</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Headphones className="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" />
+                    <span>1-on-1 mentoring from industry professionals</span>
+                  </li>
+                </ul>
+                <div className="mt-8 pt-4 border-t">
+                  <p className="text-3xl font-bold text-foreground">$5,999<span className="text-muted-foreground text-sm font-normal">/course</span></p>
+                  <p className="text-muted-foreground text-sm mt-1">Enterprise discounts available</p>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Link href="/marketplace/category/ai_training">
+                  <Button className="w-full">Enroll in Training</Button>
+                </Link>
+              </CardFooter>
+            </Card>
+            
+            {/* Custom AI Development */}
+            <Card className="bg-card/50 backdrop-blur border-primary/10 hover:border-primary/30 transition-all duration-300 overflow-hidden flex flex-col">
+              <div className="absolute top-0 right-0 p-4">
+                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                  Enterprise
+                </Badge>
+              </div>
+              <CardHeader className="pb-4">
+                <div className="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                  <Cpu className="h-7 w-7 text-primary" />
+                </div>
+                <CardTitle className="text-2xl">Custom AI Development</CardTitle>
+                <CardDescription className="text-base mt-2">
+                  Tailored AI solutions built, trained, and deployed specifically for your unique business needs.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex-grow">
+                <ul className="space-y-3">
+                  <li className="flex items-start">
+                    <Bot className="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" />
+                    <span>Custom chatbot and AI assistant development</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Code className="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" />
+                    <span>Proprietary model training on your data</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Shield className="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" />
+                    <span>Full data ownership and privacy compliance</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CreditCard className="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" />
+                    <span>Ongoing maintenance and performance tuning</span>
+                  </li>
+                </ul>
+                <div className="mt-8 pt-4 border-t">
+                  <p className="text-3xl font-bold text-foreground">Custom<span className="text-muted-foreground text-sm font-normal"> pricing</span></p>
+                  <p className="text-muted-foreground text-sm mt-1">Tailored to your specific requirements</p>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Link href="/contact?subject=Custom%20AI%20Development">
+                  <Button className="w-full">Request Consultation</Button>
+                </Link>
+              </CardFooter>
+            </Card>
+          </div>
+          
+          <div className="mt-16 text-center">
+            <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
+              All our premium AI services come with expert-level support, dedicated account management, 
+              and the assurance of working with the industry's leading AI specialists.
+            </p>
+            <Button size="lg" variant="outline" className="border-primary/30 text-primary hover:bg-primary/10" asChild>
+              <Link href="/contact?subject=Premium%20AI%20Services">
+                Schedule a Premium Consultation
+              </Link>
+            </Button>
           </div>
         </div>
       </div>

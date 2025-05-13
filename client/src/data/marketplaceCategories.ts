@@ -32,6 +32,22 @@ export interface MarketplaceCategory {
 
 export const marketplaceCategories: MarketplaceCategory[] = [
   {
+    id: 'asset_library',
+    name: 'Premium Asset Library',
+    description: 'High-quality design assets, templates, and UI components created by industry experts',
+    icon: LayoutGrid,
+    subcategories: ['UI Kits', 'Templates', 'Icons', '3D Models', 'Design Systems', 'Illustrations'],
+    popular: true
+  },
+  {
+    id: 'ai_training',
+    name: 'AI Training Program',
+    description: 'Comprehensive courses and certification programs for mastering AI-driven design and development',
+    icon: BotIcon,
+    subcategories: ['AI Design Basics', 'Advanced AI Integration', 'Custom Model Training', 'Certification Tracks', 'Enterprise AI Solutions'],
+    popular: true
+  },
+  {
     id: 'web_development',
     name: 'Web Development',
     description: 'Custom websites, web applications, and web-based solutions for businesses of all sizes',
