@@ -192,20 +192,47 @@ function generateFallbackArticle(topic: string, index: number): {
   seoKeywords: string;
   tags: string[];
   readTimeMinutes: number;
+  isAiGenerated: boolean;
 } {
   const cleanTopic = topic.replace(/"/g, '');
-  const title = `${cleanTopic}: Transforming Business in the AI Era`;
+  
+  // Generate a variety of title formats to make articles more diverse
+  const titleTemplates = [
+    `${cleanTopic}: Transforming Business in the AI Era`,
+    `How ${cleanTopic} is Revolutionizing Modern Enterprise`,
+    `The Future of ${cleanTopic} in Business and Technology`,
+    `${cleanTopic}: Insights and Strategies for 2025 and Beyond`,
+    `Leveraging ${cleanTopic} for Competitive Advantage`,
+    `${cleanTopic}: Innovation Pathways for Forward-Thinking Organizations`
+  ];
+  
+  // Select a random title template
+  const title = titleTemplates[Math.floor(Math.random() * titleTemplates.length)];
+  
+  // Create a URL-friendly slug
   const slug = cleanTopic.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-') + `-${index}`;
   
   // Generate tags based on the topic
   const topicWords = cleanTopic.split(' ');
   const baseTagSet = ['artificial intelligence', 'ai technology', 'business innovation', 'digital transformation'];
-  const additionalTags = topicWords
+  const additionalTagOptions = [
+    'machine learning', 'neural networks', 'deep learning', 'predictive analytics',
+    'computer vision', 'natural language processing', 'robotic process automation',
+    'data science', 'big data', 'generative ai', 'enterprise ai', 'ai ethics'
+  ];
+  
+  // Select 2-4 random additional tags
+  const randomAdditionalTags = [...additionalTagOptions]
+    .sort(() => 0.5 - Math.random())
+    .slice(0, Math.floor(Math.random() * 3) + 2);
+  
+  // Add topic-specific tags
+  const topicSpecificTags = topicWords
     .filter(word => word.length > 3)
     .map(word => word.toLowerCase())
     .slice(0, 3);
   
-  const tags = [...baseTagSet, ...additionalTags];
+  const tags = [...new Set([...baseTagSet, ...randomAdditionalTags, ...topicSpecificTags])].slice(0, 8);
   
   return {
     title,
