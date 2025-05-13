@@ -287,22 +287,35 @@ function generateFallbackArticle(topic: string, index: number): {
  */
 async function saveArticle(articleData: any): Promise<any> {
   try {
-    // Using the direct Drizzle ORM approach with only known fields from the DB schema
-    const [newArticle] = await db.insert(posts).values({
-      title: articleData.title,
-      content: articleData.content,
-      authorId: ADMIN_USER_ID,
-      category: 'AI & Technology',
-      tags: articleData.tags,
-      status: 'published',
-      seoTitle: articleData.seoTitle,
-      seoDescription: articleData.seoDescription,
-      seoKeywords: articleData.seoKeywords,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }).returning();
+    // Super simple approach with manually prepared SQL
+    const query = `
+      INSERT INTO posts (
+        title, 
+        content, 
+        author_id,
+        category,
+        status,
+        created_at, 
+        updated_at
+      ) VALUES (
+        '${articleData.title.replace(/'/g, "''")}', 
+        '${articleData.content.replace(/'/g, "''")}', 
+        ${ADMIN_USER_ID},
+        'AI & Technology',
+        'published',
+        NOW(),
+        NOW()
+      ) RETURNING *
+    `;
     
-    return newArticle;
+    logger.info('Executing article save SQL for:', articleData.title);
+    const result = await db.execute(query);
+    
+    if (result.rows && result.rows.length > 0) {
+      return result.rows[0];
+    } else {
+      throw new Error('No article was created');
+    }
   } catch (error) {
     logger.error('Error saving article:', error);
     throw new Error('Failed to save article to database');
