@@ -1,94 +1,54 @@
 /**
  * Request Validation Middleware
  * 
- * This module provides middleware for validating request data using express-validator and Zod.
+ * This middleware validates request data using zod.
+ * It checks for validation errors and returns a standardized error response.
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { validationResult } from 'express-validator';
 import { z } from 'zod';
 import { logger } from '../utils/logger';
+import { fromZodError } from 'zod-validation-error';
 
 /**
- * Middleware to validate request based on express-validator rules
- * @param req - Express request object
- * @param res - Express response object
- * @param next - Express next middleware function
+ * Middleware to validate request using zod schemas
+ * @param schemas Array of zod schemas to validate against
  */
-export function validateRequest(req: Request, res: Response, next: NextFunction) {
-  const errors = validationResult(req);
-  
-  if (errors.isEmpty()) {
-    return next();
-  }
-  
-  // Extract and format validation errors
-  const extractedErrors: { [key: string]: string } = {};
-  errors.array().forEach(err => {
-    // Handle both validation error types
-    if ('path' in err) {
-      extractedErrors[err.path] = err.msg;
-    } else if ('param' in err) {
-      extractedErrors[err.param] = err.msg;
-    }
-  });
-  
-  // Log validation errors
-  logger.warn(`Validation failed for ${req.method} ${req.originalUrl}`, {
-    errors: extractedErrors,
-    body: req.body,
-    ip: req.ip
-  });
-  
-  return res.status(400).json({
-    status: 'error',
-    message: 'Validation failed',
-    errors: extractedErrors
-  });
-}
-
-/**
- * Creates a middleware to validate request body against a Zod schema
- * @param schema - Zod schema to validate against
- * @returns Express middleware function
- */
-export function validate(schema: z.ZodType<any, any>) {
-  return (req: Request, res: Response, next: NextFunction) => {
+export const validateRequest = (schemas: z.ZodTypeAny[]) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = schema.parse(req.body);
-      req.body = result; // Replace with validated data
-      next();
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const extractedErrors: { [key: string]: string } = {};
-        error.errors.forEach((err) => {
-          const path = err.path.join('.');
-          extractedErrors[path] = err.message;
-        });
+      // Apply each schema
+      for (const schema of schemas) {
+        const validationResult = await schema.safeParseAsync(req.body);
         
-        // Log validation errors
-        logger.warn(`Zod validation failed for ${req.method} ${req.originalUrl}`, {
-          errors: extractedErrors,
-          body: req.body,
-          ip: req.ip
-        });
-        
-        return res.status(400).json({
-          status: 'error',
-          message: 'Validation failed',
-          errors: extractedErrors
-        });
+        if (!validationResult.success) {
+          const zodError = validationResult.error;
+          const formattedError = fromZodError(zodError);
+          
+          logger.warn(`Validation error: ${formattedError.message}`, {
+            path: req.path,
+            errors: zodError.errors,
+          });
+          
+          return res.status(400).json({
+            error: 'Validation Error',
+            message: formattedError.message,
+            details: zodError.errors,
+          });
+        }
       }
       
-      logger.error(`Unexpected validation error: ${error}`, {
-        url: req.originalUrl,
-        method: req.method
+      next();
+    } catch (error: any) {
+      logger.error(`Validation middleware error: ${error.message}`, {
+        error,
+        path: req.path,
       });
       
       return res.status(500).json({
-        status: 'error',
-        message: 'Internal server error during validation'
+        error: 'Server Error',
+        message: 'An error occurred during request validation',
       });
     }
   };
-}
+};

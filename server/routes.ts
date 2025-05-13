@@ -8,6 +8,9 @@ import { logger } from "./utils/logger";
 export async function registerRoutes(app: Express): Promise<Server> {
   // Register Stripe routes
   app.use("/api/stripe", stripeRoutes);
+  
+  // Register Posts routes
+  app.use("/api/posts", postsRoutes);
 
   // API route to fetch active subscription plans
   app.get("/api/subscription-plans", async (req, res) => {

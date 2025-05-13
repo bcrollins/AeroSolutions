@@ -2,7 +2,7 @@ import express from 'express';
 import { z } from 'zod';
 import * as stripeService from '../utils/stripeService';
 import { isAuthenticated } from '../middlewares/auth';
-import { validate } from '../middlewares/validate';
+import { validateRequest } from '../middlewares/validate';
 import { logger } from '../utils/logger';
 import Stripe from 'stripe';
 
@@ -42,7 +42,7 @@ const createCheckoutSchema = z.object({
 router.post(
   '/create-checkout',
   isAuthenticated,
-  validate(createCheckoutSchema),
+  validateRequest([createCheckoutSchema]),
   async (req, res) => {
     try {
       const { planId, interval } = req.body;
@@ -96,7 +96,7 @@ const createSubscriptionSchema = z.object({
 router.post(
   '/create-subscription',
   isAuthenticated,
-  validate(createSubscriptionSchema),
+  validateRequest([createSubscriptionSchema]),
   async (req, res) => {
     try {
       const { planId, interval } = req.body;
@@ -150,7 +150,7 @@ const cancelSubscriptionSchema = z.object({
 router.post(
   '/cancel-subscription',
   isAuthenticated,
-  validate(cancelSubscriptionSchema),
+  validateRequest([cancelSubscriptionSchema]),
   async (req, res) => {
     try {
       const { subscriptionId, immediate = false } = req.body;
@@ -174,7 +174,7 @@ const createPaymentIntentSchema = z.object({
 router.post(
   '/create-payment-intent',
   isAuthenticated,
-  validate(createPaymentIntentSchema),
+  validateRequest([createPaymentIntentSchema]),
   async (req, res) => {
     try {
       const { amount, metadata } = req.body;
