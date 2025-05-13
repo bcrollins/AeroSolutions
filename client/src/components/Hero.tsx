@@ -1,54 +1,9 @@
-import { motion, useMotionValue, useTransform, useAnimation } from "framer-motion";
+import { motion } from "framer-motion";
 import { FaCode, FaLaptop, FaHandshake, FaClock, FaDesktop, FaUsers, FaLaptopCode, FaShieldAlt, FaMobileAlt, FaStore } from "react-icons/fa";
 import { Link } from "wouter";
-import { useState, useEffect } from "react";
-import Logo from "./Logo";
+import SimpleCube from "./SimpleCube";
 
 export default function Hero() {
-  // Auto-rotation state
-  const [isAutoRotating, setIsAutoRotating] = useState(true);
-  
-  // Motion values for user controlled rotation
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  
-  // Transform mouse position to rotation values with dampening
-  const rotateY = useTransform(mouseX, [-200, 200], [60, -60]);
-  const rotateX = useTransform(mouseY, [-200, 200], [-30, 30]);
-  
-  // Animation controls for auto-rotation
-  const controls = useAnimation();
-  
-  // Handle click to toggle auto-rotation
-  const handleCubeClick = () => {
-    setIsAutoRotating(!isAutoRotating);
-  };
-  
-  // Update auto-rotation based on state
-  useEffect(() => {
-    if (isAutoRotating) {
-      controls.start({
-        rotateY: 360,
-        rotateX: [5, -5, 5],
-        rotateZ: [2, -2, 2],
-        transition: { 
-          rotateY: { duration: 20, repeat: Infinity, ease: "linear" },
-          rotateX: { duration: 8, repeat: Infinity, ease: "easeInOut" },
-          rotateZ: { duration: 10, repeat: Infinity, ease: "easeInOut" }
-        }
-      });
-    } else {
-      controls.stop();
-    }
-  }, [isAutoRotating, controls]);
-  
-  // Mouse drag handler
-  const handleDrag = (event: any, info: any) => {
-    if (!isAutoRotating) {
-      mouseX.set(info.offset.x);
-      mouseY.set(info.offset.y);
-    }
-  };
   
   const fadeInUp = {
     hidden: { opacity: 0, y: 60 },

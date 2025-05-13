@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import Header from '@/components/Header';
-import Hero from '@/components/Hero';
+import NewHero from '@/components/NewHero';
 import Services from '@/components/Services';
 import Ownership from '@/components/Ownership';
 import Platforms from '@/components/Platforms';
@@ -200,7 +200,7 @@ export default function HomePage() {
       
       <Header />
       <main>
-        <Hero />
+        <NewHero />
         <Services />
         <FreeMockupForm />
         <div id="instant-quote" className="bg-gray-900 py-16 border-t border-b border-gray-800">
