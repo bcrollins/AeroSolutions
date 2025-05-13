@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getCurrentSubscription, SubscriptionPlan } from '@/utils/stripe';
 import { useToast } from '@/hooks/use-toast';
+import { canAccessProduct as checkProductAccess } from '@/utils/productData';
 
 /**
  * Hook for managing user subscription state
@@ -49,6 +50,17 @@ export function useSubscription() {
   const subscription = subscriptionData?.subscription || null;
   const plan = subscriptionData?.plan || null;
   
+  // Determine user's current plan level
+  const userSubscription = {
+    plan: plan ? plan.name.toLowerCase().includes('professional') 
+                ? 'professional' 
+                : plan.name.toLowerCase().includes('enterprise') 
+                ? 'enterprise' 
+                : 'starter'
+          : 'starter',
+    status: subscription ? subscription.status as any : 'inactive'
+  };
+  
   /**
    * Invalidate subscription data to refresh it
    */
@@ -73,6 +85,16 @@ export function useSubscription() {
   };
   
   /**
+   * Check if the user has access to a specific product
+   * @param requiredPlan - The plan level required for the product
+   * @returns Whether the user has access to the product
+   */
+  const canAccessProduct = (requiredPlan?: string): boolean => {
+    if (!requiredPlan) return true;
+    return checkProductAccess(requiredPlan, userSubscription.plan);
+  };
+  
+  /**
    * Get a list of features the user has access to based on their current plan
    * @param allPlans - All available subscription plans
    * @returns Array of feature strings the user has access to
@@ -92,9 +114,11 @@ export function useSubscription() {
     error,
     subscription,
     plan,
+    userSubscription,
     hasActiveSubscription,
     refreshSubscription,
     hasFeatureAccess,
+    canAccessProduct,
     getAccessibleFeatures,
   };
 }
