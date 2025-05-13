@@ -1693,3 +1693,293 @@ export const insertAiProductUsageSchema = createInsertSchema(aiProductUsage).omi
 
 export type InsertAiProductUsage = z.infer<typeof insertAiProductUsageSchema>;
 export type AiProductUsage = typeof aiProductUsage.$inferSelect;
+
+// Course schema
+export const courses = pgTable("courses", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  coverImage: text("cover_image"),
+  instructor: text("instructor").notNull(),
+  instructorBio: text("instructor_bio"),
+  durationMinutes: integer("duration_minutes").notNull(),
+  difficulty: text("difficulty").default("intermediate").notNull(), // beginner, intermediate, advanced, expert
+  category: text("category").notNull(),
+  tags: json("tags").$type<string[]>().default([]),
+  prerequisites: json("prerequisites").$type<string[]>().default([]),
+  objectives: json("objectives").$type<string[]>().notNull(),
+  status: text("status").default("draft").notNull(), // draft, published, archived
+  requiredSubscriptionLevel: text("required_subscription_level").default("professional").notNull(), // starter, professional, enterprise
+  featured: boolean("featured").default(false).notNull(),
+  popularity: integer("popularity").default(0).notNull(),
+  rating: decimal("rating", { precision: 3, scale: 2 }).default("0").notNull(),
+  ratingCount: integer("rating_count").default(0).notNull(),
+  enrollmentCount: integer("enrollment_count").default(0).notNull(),
+  completionCount: integer("completion_count").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertCourseSchema = createInsertSchema(courses).omit({
+  id: true,
+  rating: true,
+  ratingCount: true,
+  enrollmentCount: true, 
+  completionCount: true,
+  popularity: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type Course = typeof courses.$inferSelect;
+export type InsertCourse = z.infer<typeof insertCourseSchema>;
+
+// Course modules schema
+export const courseModules = pgTable("course_modules", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id").notNull().references(() => courses.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  orderIndex: integer("order_index").notNull(), // For ordering within course
+  durationMinutes: integer("duration_minutes").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertCourseModuleSchema = createInsertSchema(courseModules).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type CourseModule = typeof courseModules.$inferSelect;
+export type InsertCourseModule = z.infer<typeof insertCourseModuleSchema>;
+
+// Lessons schema
+export const lessons = pgTable("lessons", {
+  id: serial("id").primaryKey(),
+  moduleId: integer("module_id").notNull().references(() => courseModules.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  content: text("content").notNull(), // Rich text content
+  videoUrl: text("video_url"), // Embedded video URL
+  orderIndex: integer("order_index").notNull(), // For ordering within module
+  durationMinutes: integer("duration_minutes").notNull(),
+  hasExercise: boolean("has_exercise").default(false).notNull(),
+  exerciseContent: text("exercise_content"),
+  hasQuiz: boolean("has_quiz").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertLessonSchema = createInsertSchema(lessons).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type Lesson = typeof lessons.$inferSelect;
+export type InsertLesson = z.infer<typeof insertLessonSchema>;
+
+// Quiz questions schema
+export const quizQuestions = pgTable("quiz_questions", {
+  id: serial("id").primaryKey(),
+  lessonId: integer("lesson_id").notNull().references(() => lessons.id, { onDelete: "cascade" }),
+  question: text("question").notNull(),
+  options: json("options").$type<string[]>().notNull(),
+  correctOption: integer("correct_option").notNull(), // Index of correct option
+  explanation: text("explanation"), // Explanation of correct answer
+  orderIndex: integer("order_index").notNull(), // For ordering within quiz
+  difficultyLevel: text("difficulty_level").default("medium").notNull(), // easy, medium, hard
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertQuizQuestionSchema = createInsertSchema(quizQuestions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type QuizQuestion = typeof quizQuestions.$inferSelect;
+export type InsertQuizQuestion = z.infer<typeof insertQuizQuestionSchema>;
+
+// Course resources schema
+export const courseResources = pgTable("course_resources", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id").notNull().references(() => courses.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  resourceType: text("resource_type").notNull(), // pdf, video, link, code, etc.
+  resourceUrl: text("resource_url").notNull(),
+  orderIndex: integer("order_index").notNull(), // For ordering
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertCourseResourceSchema = createInsertSchema(courseResources).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type CourseResource = typeof courseResources.$inferSelect;
+export type InsertCourseResource = z.infer<typeof insertCourseResourceSchema>;
+
+// User course enrollments schema
+export const userCourseEnrollments = pgTable("user_course_enrollments", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  courseId: integer("course_id").notNull().references(() => courses.id, { onDelete: "cascade" }),
+  enrolledAt: timestamp("enrolled_at").defaultNow().notNull(),
+  lastAccessedAt: timestamp("last_accessed_at"),
+  completedAt: timestamp("completed_at"),
+  progress: integer("progress").default(0).notNull(), // Progress percentage 0-100
+  currentLessonId: integer("current_lesson_id").references(() => lessons.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertUserCourseEnrollmentSchema = createInsertSchema(userCourseEnrollments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type UserCourseEnrollment = typeof userCourseEnrollments.$inferSelect;
+export type InsertUserCourseEnrollment = z.infer<typeof insertUserCourseEnrollmentSchema>;
+
+// User lesson completions schema
+export const userLessonCompletions = pgTable("user_lesson_completions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  lessonId: integer("lesson_id").notNull().references(() => lessons.id, { onDelete: "cascade" }),
+  completedAt: timestamp("completed_at").defaultNow().notNull(),
+  timeSpentMinutes: integer("time_spent_minutes").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertUserLessonCompletionSchema = createInsertSchema(userLessonCompletions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type UserLessonCompletion = typeof userLessonCompletions.$inferSelect;
+export type InsertUserLessonCompletion = z.infer<typeof insertUserLessonCompletionSchema>;
+
+// User quiz attempts schema
+export const userQuizAttempts = pgTable("user_quiz_attempts", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  lessonId: integer("lesson_id").notNull().references(() => lessons.id, { onDelete: "cascade" }),
+  score: integer("score").notNull(), // Score percentage 0-100
+  correctAnswers: integer("correct_answers").notNull(),
+  totalQuestions: integer("total_questions").notNull(),
+  completedAt: timestamp("completed_at").defaultNow().notNull(),
+  timeSpentMinutes: integer("time_spent_minutes").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertUserQuizAttemptSchema = createInsertSchema(userQuizAttempts).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type UserQuizAttempt = typeof userQuizAttempts.$inferSelect;
+export type InsertUserQuizAttempt = z.infer<typeof insertUserQuizAttemptSchema>;
+
+// Course ratings schema
+export const courseRatings = pgTable("course_ratings", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  courseId: integer("course_id").notNull().references(() => courses.id, { onDelete: "cascade" }),
+  rating: integer("rating").notNull(), // 1-5 stars
+  review: text("review"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertCourseRatingSchema = createInsertSchema(courseRatings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type CourseRating = typeof courseRatings.$inferSelect;
+export type InsertCourseRating = z.infer<typeof insertCourseRatingSchema>;
+
+// Forum threads schema
+export const forumThreads = pgTable("forum_threads", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  tags: json("tags").$type<string[]>().default([]),
+  category: text("category").notNull(),
+  views: integer("views").default(0).notNull(),
+  isPinned: boolean("is_pinned").default(false).notNull(),
+  isLocked: boolean("is_locked").default(false).notNull(),
+  lastReplyAt: timestamp("last_reply_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertForumThreadSchema = createInsertSchema(forumThreads).omit({
+  id: true,
+  views: true,
+  lastReplyAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type ForumThread = typeof forumThreads.$inferSelect;
+export type InsertForumThread = z.infer<typeof insertForumThreadSchema>;
+
+// Forum replies schema
+export const forumReplies = pgTable("forum_replies", {
+  id: serial("id").primaryKey(),
+  threadId: integer("thread_id").notNull().references(() => forumThreads.id, { onDelete: "cascade" }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  isAcceptedAnswer: boolean("is_accepted_answer").default(false).notNull(),
+  parentReplyId: integer("parent_reply_id").references(() => forumReplies.id), // For threaded replies
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertForumReplySchema = createInsertSchema(forumReplies).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type ForumReply = typeof forumReplies.$inferSelect;
+export type InsertForumReply = z.infer<typeof insertForumReplySchema>;
+
+// Media resources schema
+export const mediaResources = pgTable("media_resources", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  resourceType: text("resource_type").notNull(), // video, podcast, presentation, etc.
+  resourceUrl: text("resource_url").notNull(),
+  thumbnailUrl: text("thumbnail_url"),
+  duration: integer("duration"), // In seconds
+  category: text("category").notNull(),
+  tags: json("tags").$type<string[]>().default([]),
+  requiredSubscriptionLevel: text("required_subscription_level").default("professional").notNull(),
+  views: integer("views").default(0).notNull(),
+  featured: boolean("featured").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertMediaResourceSchema = createInsertSchema(mediaResources).omit({
+  id: true,
+  views: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type MediaResource = typeof mediaResources.$inferSelect;
+export type InsertMediaResource = z.infer<typeof insertMediaResourceSchema>;
