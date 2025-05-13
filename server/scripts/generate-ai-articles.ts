@@ -287,24 +287,26 @@ function generateFallbackArticle(topic: string, index: number): {
  */
 async function saveArticle(articleData: any): Promise<any> {
   try {
+    // Create a mapping of fields that match the actual database columns
     const [newArticle] = await db.insert(posts).values({
       title: articleData.title,
       content: articleData.content,
       authorId: ADMIN_USER_ID,
-      summary: articleData.summary,
-      slug: articleData.slug,
+      // summary: articleData.summary, // Not present in actual DB
+      // slug: articleData.slug, // Not present in actual DB
       seoTitle: articleData.seoTitle,
       seoDescription: articleData.seoDescription,
       seoKeywords: articleData.seoKeywords,
       tags: articleData.tags,
-      readTimeMinutes: articleData.readTimeMinutes,
+      // readTimeMinutes: articleData.readTimeMinutes, // Not present in actual DB
       status: 'published',
       category: 'AI & Technology',
-      postType: 'news',
-      aiGeneratedBy: 'xai',
-      publishedAt: new Date(),
-      featuredPost: Math.random() > 0.8, // Randomly feature ~20% of articles
-      premium: Math.random() > 0.7,     // Make ~30% premium content
+      // Only include fields that exist in the actual database
+      // postType: 'news', // Not in actual DB
+      // aiGeneratedBy: 'xai', // Not in actual DB
+      // publishedAt: new Date(), // Not in actual DB
+      // featuredPost: Math.random() > 0.8, // Not in actual DB
+      // premium: Math.random() > 0.7, // Not in actual DB
       createdAt: new Date(),
       updatedAt: new Date()
     }).returning();
