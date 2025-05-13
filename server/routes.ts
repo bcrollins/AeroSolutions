@@ -46,10 +46,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // API route to fetch products
+  // API route to fetch products (AI products)
   app.get("/api/products", async (req, res) => {
     try {
-      const products = await storage.getProducts();
+      const products = await storage.getActiveAiProducts();
       res.json(products);
     } catch (error: any) {
       logger.error("Error fetching products", { error: error.message });
@@ -77,7 +77,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If no user, return public access info
       if (!userId) {
-        const product = await storage.getProductById(productId);
+        const product = await storage.getAiProduct(productId);
         return res.json({
           hasAccess: product?.isPublic || false,
           requiresSubscription: !product?.isPublic,
@@ -86,7 +86,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Get user subscription and check access
-      const user = await storage.getUserById(userId);
+      const user = await storage.getUser(userId);
       const canAccess = await storage.canAccessProduct(userId, productId);
       
       return res.json({
