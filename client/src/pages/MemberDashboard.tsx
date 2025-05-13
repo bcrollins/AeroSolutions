@@ -844,59 +844,114 @@ const MemberDashboard = () => {
         </TabsContent>
         
         {/* Resources Tab */}
-        <TabsContent value="resources" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Downloadable Resources</h2>
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/resources">View All Resources</Link>
-            </Button>
+        <TabsContent value="resources" className="space-y-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-bold text-slate-800">Downloadable Resources</h2>
+              <p className="text-muted-foreground mt-1">Premium guides, templates, and tools to accelerate your projects</p>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="border-slate-300 text-slate-700" asChild>
+                <Link href="/resources" className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Browse All Resources
+                </Link>
+              </Button>
+              <Button size="sm" className="bg-gradient-to-r from-slate-blue-600 to-electric-cyan-600 hover:from-slate-blue-700 hover:to-electric-cyan-700">
+                <Link href="/resources/popular" className="flex items-center gap-2">
+                  Most Popular
+                </Link>
+              </Button>
+            </div>
           </div>
           
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[
               {
                 id: 1,
                 title: "Ultimate AI Prompt Engineering Guide",
-                description: "Learn the principles of effective prompt engineering for better AI results.",
+                description: "Learn the principles of effective prompt engineering for better AI results. This comprehensive guide covers all aspects from basic to advanced techniques.",
                 type: "PDF",
+                icon: "FileText",
                 size: "2.4 MB",
-                downloads: 2589
+                downloads: 2589,
+                category: "AI Development",
+                color: "slate-blue"
               },
               {
                 id: 2,
                 title: "Data Visualization Cheat Sheet",
-                description: "Quick reference for creating impactful data visualizations.",
+                description: "Quick reference for creating impactful data visualizations. Includes best practices, tool recommendations, and design principles.",
                 type: "PDF",
+                icon: "BarChart",
                 size: "1.1 MB",
-                downloads: 1832
+                downloads: 1832,
+                category: "Data Science",
+                color: "electric-cyan"
               },
               {
                 id: 3,
                 title: "Advanced ML Algorithm Templates",
-                description: "Ready-to-use templates for common machine learning algorithms.",
+                description: "Ready-to-use templates for common machine learning algorithms. Implement complex models quickly with these expert-designed frameworks.",
                 type: "ZIP",
+                icon: "FileCode",
                 size: "5.7 MB",
-                downloads: 967
+                downloads: 967,
+                category: "Machine Learning",
+                color: "sunset-orange"
               }
             ].map((resource) => (
-              <Card key={resource.id}>
-                <CardHeader>
-                  <CardTitle className="line-clamp-1">{resource.title}</CardTitle>
-                  <CardDescription>
-                    {resource.type} • {resource.size}
+              <Card key={resource.id} className="overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-slate-200 group">
+                <div className={`bg-gradient-to-r from-${resource.color}-50 to-${resource.color}-100 px-4 py-3 border-b border-slate-200`}>
+                  <div className="flex justify-between items-center">
+                    <Badge className={`bg-${resource.color}-600 text-white mb-0`}>
+                      {resource.type}
+                    </Badge>
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                      <FileText className="h-4 w-4" />
+                      {resource.size}
+                    </div>
+                  </div>
+                </div>
+                <CardHeader className="pb-2">
+                  <CardTitle className="line-clamp-1 text-lg font-bold text-slate-800 group-hover:text-slate-blue-700 transition-colors">
+                    <Link href={`/resources/${resource.id}`} className="hover:underline">{resource.title}</Link>
+                  </CardTitle>
+                  <CardDescription className="flex items-center gap-2 mt-1">
+                    <Badge variant="outline" className="bg-slate-50 text-slate-700">{resource.category}</Badge>
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                <CardContent className="pb-3">
+                  <p className="text-sm text-slate-600 line-clamp-2 min-h-[40px] mb-4">
                     {resource.description}
                   </p>
-                  <div className="text-sm text-muted-foreground">
-                    {resource.downloads.toLocaleString()} downloads
+                  <div className="flex items-center text-sm text-slate-600">
+                    <div className={`p-1 rounded-full mr-2 bg-${resource.color}-100`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-${resource.color}-600`}>
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                      </svg>
+                    </div>
+                    <span className="font-medium">{resource.downloads.toLocaleString()}</span>
+                    <span className="ml-1">downloads</span>
                   </div>
                 </CardContent>
-                <CardFooter>
-                  <Button className="w-full" asChild>
-                    <Link href={`/resources/${resource.id}`}>Download</Link>
+                <CardFooter className="flex justify-between pt-0 border-t border-slate-100 mt-2 pt-3">
+                  <Button asChild variant="outline" size="sm" className="border-slate-300 text-slate-700 hover:text-slate-blue-700 hover:border-slate-blue-300 flex-1 mr-2">
+                    <Link href={`/resources/${resource.id}/preview`}>
+                      Preview
+                    </Link>
+                  </Button>
+                  <Button asChild size="sm" className={`bg-gradient-to-r from-${resource.color}-600 to-${resource.color}-700 hover:from-${resource.color}-700 hover:to-${resource.color}-800 flex-1 flex items-center justify-center gap-2`}>
+                    <Link href={`/resources/${resource.id}`}>
+                      Download
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                      </svg>
+                    </Link>
                   </Button>
                 </CardFooter>
               </Card>
