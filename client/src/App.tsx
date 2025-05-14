@@ -77,6 +77,10 @@ import VerifyCertificate from "@/pages/VerifyCertificate";
 import ContentCalendar from "@/pages/ContentCalendar";
 import DigitalToolsPage from "@/pages/DigitalToolsPage";
 import ContentGeneratorPage from "@/pages/tools/ContentGeneratorPage";
+import CodeAssistantPage from "@/pages/tools/CodeAssistantPage";
+import AnalyticsDashboardPage from "@/pages/tools/AnalyticsDashboardPage";
+import DesignPrototypingPage from "@/pages/tools/DesignPrototypingPage";
+import ChatbotBuilderPage from "@/pages/tools/ChatbotBuilderPage";
 
 export default function App() {
   const { t, i18n } = useTranslation();
@@ -401,6 +405,62 @@ export default function App() {
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
               <ContentGeneratorPage />
+            </>
+          )}
+        </Route>
+        
+        <Route path="/ai-tools/code-assistant">
+          {() => (
+            <>
+              <Helmet>
+                <title>Code Assistant | RXAI Digital Tools</title>
+                <meta name="description" content="Generate, debug, and optimize code snippets in Python, JavaScript, and other popular languages." />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <CodeAssistantPage />
+            </>
+          )}
+        </Route>
+        
+        <Route path="/ai-tools/analytics-dashboard">
+          {() => (
+            <>
+              <Helmet>
+                <title>Analytics Dashboard | RXAI Digital Tools</title>
+                <meta name="description" content="Track website and app performance metrics with Google Analytics integration and customizable reports." />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <AnalyticsDashboardPage />
+            </>
+          )}
+        </Route>
+        
+        <Route path="/ai-tools/design-prototyping">
+          {() => (
+            <>
+              <Helmet>
+                <title>Design Prototyping Tool | RXAI Digital Tools</title>
+                <meta name="description" content="Create wireframes and mockups with drag-and-drop functionality and reusable components." />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <DesignPrototypingPage />
+            </>
+          )}
+        </Route>
+        
+        <Route path="/ai-tools/chatbot-builder">
+          {() => (
+            <>
+              <Helmet>
+                <title>Chatbot Builder | RXAI Digital Tools</title>
+                <meta name="description" content="Build custom chatbots with no-code interface, conversation flows, and integration options." />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <ChatbotBuilderPage />
             </>
           )}
         </Route>
