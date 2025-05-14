@@ -47,6 +47,9 @@ import {
   type ForumThread, type InsertForumThread,
   type ForumReply, type InsertForumReply,
   type MediaResource, type InsertMediaResource,
+  // Certificate imports
+  courseCertificates,
+  type CourseCertificate, type InsertCourseCertificate,
   // Analytics imports
   pageViews, analyticsEvents, subscriptionAnalytics, subscriptionEvents,
   type PageView, type InsertPageView,
@@ -76,6 +79,16 @@ export interface IStorage {
   updateUserVerification(userId: string, verified: boolean): Promise<User>;
   updateStripeCustomerId(userId: string, stripeCustomerId: string): Promise<User>;
   updateUserStripeInfo(userId: string, data: { stripeCustomerId: string, stripeSubscriptionId: string }): Promise<User>;
+  
+  // Certificate methods
+  createCourseCertificate(data: InsertCourseCertificate): Promise<CourseCertificate>;
+  getCertificateById(id: number): Promise<CourseCertificate | undefined>;
+  getCertificateByCertificateNumber(certificateNumber: string): Promise<CourseCertificate | undefined>;
+  getUserCertificates(userId: string, limit?: number, offset?: number): Promise<{ certificates: CourseCertificate[], total: number }>;
+  getCourseCertificates(courseId: number, limit?: number, offset?: number): Promise<{ certificates: CourseCertificate[], total: number }>;
+  updateCertificate(id: number, data: Partial<CourseCertificate>): Promise<CourseCertificate | undefined>;
+  markCertificateAsShared(id: number, platform: 'linkedin' | 'twitter'): Promise<CourseCertificate | undefined>;
+  verifyCertificate(certificateNumber: string): Promise<{ isValid: boolean; certificate?: CourseCertificate; user?: User; course?: AiProduct; }>;
   
   // Subscription event methods
   createSubscriptionEvent(data: InsertSubscriptionEvent): Promise<SubscriptionEvent>;
@@ -412,6 +425,136 @@ export class DatabaseStorage implements IStorage {
   
   // Add other methods from the original implementation
   // that you need to carry over...
+  
+  // Certificate methods implementation
+  async createCourseCertificate(data: InsertCourseCertificate): Promise<CourseCertificate> {
+    // Generate a unique certificate number (UUID format with RLX prefix)
+    const certificateNumber = `RLX-${Date.now().toString(36)}-${Math.random().toString(36).substr(2, 9)}`.toUpperCase();
+    
+    const [certificate] = await db
+      .insert(courseCertificates)
+      .values({
+        ...data,
+        certificateNumber,
+        verificationStatus: "valid"
+      })
+      .returning();
+      
+    return certificate;
+  }
+  
+  async getCertificateById(id: number): Promise<CourseCertificate | undefined> {
+    const [certificate] = await db
+      .select()
+      .from(courseCertificates)
+      .where(eq(courseCertificates.id, id));
+      
+    return certificate;
+  }
+  
+  async getCertificateByCertificateNumber(certificateNumber: string): Promise<CourseCertificate | undefined> {
+    const [certificate] = await db
+      .select()
+      .from(courseCertificates)
+      .where(eq(courseCertificates.certificateNumber, certificateNumber));
+      
+    return certificate;
+  }
+  
+  async getUserCertificates(userId: string, limit = 20, offset = 0): Promise<{ certificates: CourseCertificate[], total: number }> {
+    const certificates = await db
+      .select()
+      .from(courseCertificates)
+      .where(eq(courseCertificates.userId, userId))
+      .orderBy(desc(courseCertificates.issueDate))
+      .limit(limit)
+      .offset(offset);
+      
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(courseCertificates)
+      .where(eq(courseCertificates.userId, userId));
+      
+    return { 
+      certificates, 
+      total: Number(count) 
+    };
+  }
+  
+  async getCourseCertificates(courseId: number, limit = 20, offset = 0): Promise<{ certificates: CourseCertificate[], total: number }> {
+    const certificates = await db
+      .select()
+      .from(courseCertificates)
+      .where(eq(courseCertificates.courseId, courseId))
+      .orderBy(desc(courseCertificates.issueDate))
+      .limit(limit)
+      .offset(offset);
+      
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(courseCertificates)
+      .where(eq(courseCertificates.courseId, courseId));
+      
+    return { 
+      certificates, 
+      total: Number(count) 
+    };
+  }
+  
+  async updateCertificate(id: number, data: Partial<CourseCertificate>): Promise<CourseCertificate | undefined> {
+    const [updatedCertificate] = await db
+      .update(courseCertificates)
+      .set({
+        ...data,
+        updatedAt: new Date()
+      })
+      .where(eq(courseCertificates.id, id))
+      .returning();
+      
+    return updatedCertificate;
+  }
+  
+  async markCertificateAsShared(id: number, platform: 'linkedin' | 'twitter'): Promise<CourseCertificate | undefined> {
+    const updateData = platform === 'linkedin' 
+      ? { sharedToLinkedIn: true } 
+      : { sharedToTwitter: true };
+      
+    return this.updateCertificate(id, updateData);
+  }
+  
+  async verifyCertificate(certificateNumber: string): Promise<{ 
+    isValid: boolean; 
+    certificate?: CourseCertificate;
+    user?: User;
+    course?: AiProduct; 
+  }> {
+    const certificate = await this.getCertificateByCertificateNumber(certificateNumber);
+    
+    if (!certificate) {
+      return { isValid: false };
+    }
+    
+    // Check if certificate is valid
+    if (certificate.verificationStatus !== 'valid') {
+      return { isValid: false, certificate };
+    }
+    
+    // Check if certificate is expired
+    if (certificate.expiryDate && new Date(certificate.expiryDate) < new Date()) {
+      return { isValid: false, certificate };
+    }
+    
+    // Get additional info for display
+    const user = await this.getUser(certificate.userId);
+    const course = await this.getAiProduct(certificate.courseId);
+    
+    return {
+      isValid: true,
+      certificate,
+      user,
+      course
+    };
+  }
   
   async getSubscriptionChurnRate(startDate: Date, endDate: Date): Promise<number> {
     try {
