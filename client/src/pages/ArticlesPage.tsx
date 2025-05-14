@@ -160,15 +160,18 @@ const ArticlesPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   // Fetch all posts from API
-  const { data: posts = [], isLoading, error } = useQuery<Post[]>({
+  const { data: postsData, isLoading, error } = useQuery<Post[]>({
     queryKey: ['/api/posts'],
     retry: 3,
     retryDelay: 1000,
     select: (data) => {
-      // If we want to organize posts into categories and sections
-      return data;
+      // Ensure we always have an array
+      return Array.isArray(data) ? data : [];
     },
   });
+  
+  // Safely handle the posts data
+  const posts = Array.isArray(postsData) ? postsData : [];
 
   // Filter posts based on search query, tab, and category
   const filteredPosts = posts.filter((post) => {
@@ -212,30 +215,48 @@ const ArticlesPage: React.FC = () => {
         />
       </Helmet>
 
-      {/* Header */}
-      <div className="mb-12 text-center">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
-          RXAI Knowledge Hub
-        </h1>
-        <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-          Explore in-depth articles about artificial intelligence, automation, and web development to find answers to your most pressing questions.
-        </p>
+      {/* Header - Newspaper Style Masthead */}
+      <div className="border-b border-gray-800 mb-8 pb-8">
+        <div className="text-center mb-6">
+          <h1 className="text-4xl md:text-6xl font-bold mb-2 tracking-tight uppercase">
+            RXAI <span className="font-light">News</span>
+          </h1>
+          <div className="text-sm text-muted-foreground flex justify-center items-center gap-6 mt-2">
+            <span>May 14, 2025</span>
+            <span>•</span>
+            <span>Volume 1, Issue 7</span>
+            <span>•</span>
+            <span>Your Source for AI Innovation</span>
+          </div>
+        </div>
+        
+        {/* Newspaper-style Tagline */}
+        <div className="border-y border-gray-800 py-3 text-center">
+          <p className="text-lg font-medium italic">
+            "Exploring in-depth articles about artificial intelligence, automation, and cutting-edge web development"
+          </p>
+        </div>
       </div>
 
-      {/* Search & Filters */}
-      <div className="mb-10 flex flex-col md:flex-row gap-4 items-center justify-between">
+      {/* Search & Navigation Bar - Newspaper Style */}
+      <div className="mb-10 flex flex-col md:flex-row gap-4 items-center justify-between border-b border-gray-800 pb-6">
         <div className="relative w-full md:w-96">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input 
             placeholder="Search articles..." 
-            className="pl-10"
+            className="pl-10 border-gray-700 focus:border-blue-600"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <div className="flex gap-4 w-full md:w-auto">
+        
+        <div className="flex flex-wrap gap-4 w-full md:w-auto">
+          <div className="flex items-center gap-1 text-sm text-muted-foreground mr-2">
+            <span>Filter by:</span>
+          </div>
+          
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px] border-gray-700 bg-gray-900">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
@@ -247,11 +268,12 @@ const ArticlesPage: React.FC = () => {
               ))}
             </SelectContent>
           </Select>
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button variant="outline" className="flex items-center gap-2 border-gray-700 bg-gray-900">
                 <Filter className="h-4 w-4" />
-                Filters
+                Topics
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
