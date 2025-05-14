@@ -77,6 +77,7 @@ const Navbar: React.FC = () => {
     { path: '/services', label: 'Services' },
     { path: '/platforms', label: 'Platforms' },
     { path: '/marketplace', label: 'Marketplace' },
+    { path: '/articles', label: 'Articles' },
     { path: '/subscriptions', label: 'Subscriptions' },
     { path: '/premium', label: 'Premium' },
     { path: '/history', label: 'Our History' },
@@ -258,6 +259,18 @@ const Navbar: React.FC = () => {
                       }`}
                     >
                       Marketplace
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+
+                <NavigationMenuItem>
+                  <Link href="/articles">
+                    <NavigationMenuLink 
+                      className={`group inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none ${
+                        location === '/articles' || location.startsWith('/articles/') ? 'bg-accent text-accent-foreground' : ''
+                      }`}
+                    >
+                      Articles
                     </NavigationMenuLink>
                   </Link>
                 </NavigationMenuItem>

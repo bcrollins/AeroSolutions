@@ -83,6 +83,8 @@ import DesignPrototypingPage from "@/pages/tools/DesignPrototypingPage";
 import ChatbotBuilderPage from "@/pages/tools/ChatbotBuilderPage";
 import ServicePackages from "@/pages/ServicePackages";
 import CaseStudies from "@/pages/CaseStudies";
+import ArticlesPage from "@/pages/ArticlesPage";
+import ArticleDetailPage from "@/pages/ArticleDetailPage";
 
 export default function App() {
   const { t, i18n } = useTranslation();
@@ -248,6 +250,36 @@ export default function App() {
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
               <CaseStudies />
+            </>
+          )}
+        </Route>
+
+        {/* Articles Routes */}
+        <Route path="/articles">
+          {() => (
+            <>
+              <Helmet>
+                <title>Articles | RXAI - AI, Automation, and Web Development Resources</title>
+                <meta name="description" content="Explore our collection of SEO-optimized articles about artificial intelligence, automation, and web development. Find answers to your questions and learn with RXAI." />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href="https://rollinsx.dev/articles" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <ArticlesPage />
+            </>
+          )}
+        </Route>
+
+        <Route path="/articles/:slug">
+          {() => (
+            <>
+              <Helmet>
+                <meta name="robots" content="index, follow" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <ArticleDetailPage />
             </>
           )}
         </Route>
