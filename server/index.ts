@@ -163,8 +163,8 @@ app.use((req, res, next) => {
   
   const server = await registerRoutes(app);
 
-  // Add a health check endpoint
-  app.get('/health', (req, res) => {
+  // Add health check endpoints - both at '/health' and root path '/' for deployment
+  const healthCheckHandler = (req: Request, res: Response) => {
     const backgroundTasks = (global as any).backgroundTaskMetrics || {
       status: 'unknown',
       lastRun: 'never'
@@ -177,6 +177,26 @@ app.use((req, res, next) => {
       memory: process.memoryUsage(),
       backgroundTasks
     });
+  };
+  
+  // Add health check at '/health' path
+  app.get('/health', healthCheckHandler);
+  
+  // Add health check at root path '/' for deployment
+  app.get('/', (req, res, next) => {
+    // Check if request accepts HTML (browser request)
+    if (req.accepts('html')) {
+      // Forward to client app (handled by Vite or static server)
+      return next();
+    } 
+    // If request is JSON (API health check), respond with health status
+    else if (req.accepts('json')) {
+      return healthCheckHandler(req, res);
+    }
+    // Default to next middleware
+    else {
+      return next();
+    }
   });
 
   // Global error handling middleware
