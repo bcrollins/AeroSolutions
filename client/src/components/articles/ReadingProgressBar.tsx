@@ -4,12 +4,14 @@ interface ReadingProgressBarProps {
   target?: React.RefObject<HTMLElement>;
   color?: string;
   height?: number;
+  onProgressChange?: (progress: number) => void;
 }
 
 const ReadingProgressBar: React.FC<ReadingProgressBarProps> = ({ 
   target,
   color = '#007bff',
-  height = 4
+  height = 4,
+  onProgressChange
 }) => {
   const [readingProgress, setReadingProgress] = useState(0);
   
@@ -21,6 +23,11 @@ const ReadingProgressBar: React.FC<ReadingProgressBarProps> = ({
       if (totalHeight > 0) {
         const progress = Math.min(100, Math.max(0, (window.scrollY / totalHeight) * 100));
         setReadingProgress(progress);
+        
+        // Trigger the callback if provided
+        if (onProgressChange) {
+          onProgressChange(progress);
+        }
       }
     };
 
@@ -34,7 +41,7 @@ const ReadingProgressBar: React.FC<ReadingProgressBarProps> = ({
     return () => {
       window.removeEventListener('scroll', calculateScrollProgress);
     };
-  }, [target]);
+  }, [target, onProgressChange]);
   
   return (
     <div 

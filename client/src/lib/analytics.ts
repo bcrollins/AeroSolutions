@@ -17,11 +17,13 @@ interface PageViewEvent {
 
 interface ArticleEvent {
   type: 'article';
-  action: 'view' | 'share' | 'like' | 'comment' | 'complete';
+  action: 'view' | 'share' | 'like' | 'comment' | 'complete' | 'progress';
   articleId: number | string;
   articleTitle?: string;
   articleCategory?: string;
   readTime?: number;
+  timeSpent?: number;
+  progressPercentage?: number;
   timestamp: number;
 }
 
@@ -85,11 +87,13 @@ export const trackPageView = (path: string) => {
  * Track article-specific events
  */
 export const trackArticleEvent = (
-  action: 'view' | 'share' | 'like' | 'comment' | 'complete',
+  action: 'view' | 'share' | 'like' | 'comment' | 'complete' | 'progress',
   articleId: number | string,
   articleTitle?: string,
   articleCategory?: string,
-  readTime?: number
+  readTime?: number,
+  timeSpent?: number,
+  progressPercentage?: number
 ) => {
   if (!isInitialized) initAnalytics();
   
@@ -100,6 +104,8 @@ export const trackArticleEvent = (
     articleTitle,
     articleCategory,
     readTime,
+    timeSpent,
+    progressPercentage,
     timestamp: Date.now()
   };
   

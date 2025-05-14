@@ -22,7 +22,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { trackEvent } from '@/lib/analytics';
+import { initAnalytics, trackPageView, trackArticleEvent, trackEvent } from '@/lib/analytics';
 import { useToast } from '@/hooks/use-toast';
 import ReadingProgressBar from '@/components/articles/ReadingProgressBar';
 import EnhancedTableOfContents from '@/components/articles/EnhancedTableOfContents';
@@ -119,7 +119,7 @@ const ArticleDetailPage: React.FC = () => {
   const articleRef = useRef<HTMLDivElement>(null);
   const [isImmersiveModeActive, setIsImmersiveModeActive] = useState(false);
   
-  // Share function
+  // Share function with enhanced analytics
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
@@ -128,7 +128,8 @@ const ArticleDetailPage: React.FC = () => {
         url: window.location.href,
       })
       .then(() => {
-        trackEvent('article_shared', 'engagement', post?.title);
+        // Track article share event with enhanced analytics
+        trackArticleEvent('share', post?.id, post?.title, post?.category, post?.readTimeMinutes);
       })
       .catch((error) => console.log('Error sharing', error));
     } else {
@@ -138,6 +139,8 @@ const ArticleDetailPage: React.FC = () => {
         title: "Link copied!",
         description: "The article link has been copied to your clipboard.",
       });
+      // Track article link copied event with enhanced analytics 
+      trackArticleEvent('share', post?.id, post?.title, post?.category, post?.readTimeMinutes);
       trackEvent('article_link_copied', 'engagement', post?.title);
     }
   };
@@ -179,15 +182,40 @@ const ArticleDetailPage: React.FC = () => {
     enabled: !!post
   });
 
-  // Track article view
+  // Initialize analytics and track page/article view
   useEffect(() => {
+    // Initialize analytics system
+    initAnalytics();
+    
+    // Track page view
+    trackPageView(window.location.pathname);
+    
     if (post) {
-      // Record view with analytics
-      trackEvent('article_viewed', 'engagement', post.title);
+      // Record detailed article view with enhanced analytics
+      trackArticleEvent('view', post.id, post.title, post.category, post.readTimeMinutes);
       
       // Attempt to increment view count in the database
       fetch(`/api/posts/${post.id}/view`, { method: 'POST' })
         .catch(error => console.error('Failed to record view', error));
+    }
+  }, [post]);
+  
+  // Track read progress and time spent
+  const [readStartTime, setReadStartTime] = useState<number | null>(null);
+  const [readProgress, setReadProgress] = useState(0);
+  
+  useEffect(() => {
+    if (post) {
+      // Start the reading timer
+      setReadStartTime(Date.now());
+      
+      // Set up a cleanup function to track time spent when user leaves
+      return () => {
+        if (readStartTime) {
+          const timeSpent = Math.round((Date.now() - readStartTime) / 1000); // time in seconds
+          trackArticleEvent('complete', post.id, post.title, post.category, post.readTimeMinutes, timeSpent);
+        }
+      };
     }
   }, [post]);
 
@@ -349,8 +377,26 @@ const ArticleDetailPage: React.FC = () => {
         </script>
       </Helmet>
 
-      {/* Reading Progress Bar */}
-      <ReadingProgressBar color="#007bff" />
+      {/* Reading Progress Bar with progress tracking */}
+      <ReadingProgressBar 
+        color="#007bff" 
+        onProgressChange={(progress) => {
+          setReadProgress(progress);
+          
+          // Track when user reaches important milestones (25%, 50%, 75%, 100%)
+          if (post && [25, 50, 75, 100].includes(Math.floor(progress))) {
+            trackArticleEvent(
+              'progress', 
+              post.id, 
+              post.title, 
+              post.category, 
+              post.readTimeMinutes,
+              undefined,
+              Math.floor(progress)
+            );
+          }
+        }} 
+      />
       
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8" ref={articleRef}>
         {/* Main Content */}
