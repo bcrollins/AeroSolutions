@@ -16,6 +16,7 @@ import StructuredData from '@/components/StructuredData';
 import FreeMockupForm from '@/components/FreeMockupForm';
 import QuoteGenerator from '@/components/QuoteGenerator';
 import RXAIBot from '@/components/RXAIBot';
+import PortfolioGallery from '@/components/PortfolioGallery';
 import { Button } from '@/components/ui/button';
 
 export default function HomePage() {
@@ -202,6 +203,7 @@ export default function HomePage() {
       <main>
         <OriginalHero />
         <Services />
+        <PortfolioGallery />
         <FreeMockupForm />
         <div id="instant-quote" className="bg-gray-900 py-16 border-t border-b border-gray-800">
           <div className="container mx-auto px-4">

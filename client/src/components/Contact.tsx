@@ -201,76 +201,28 @@ export default function Contact() {
             variants={fadeIn}
             custom={1.5}
           >
-            <form 
-              onSubmit={handleSubmit} 
-              className="bg-white rounded-2xl shadow-[0_15px_35px_rgba(0,0,0,0.05)] p-8 md:p-10 border border-gray-100 relative overflow-hidden"
-            >
-              {/* Decorative accent */}
-              <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-highlight via-primary to-luxury"></div>
-              
-              <h3 className="text-2xl font-bold font-serif text-primary mb-6">Send Us a Message</h3>
-              
-              <div className="grid md:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-darkGray mb-2">Full Name</label>
-                  <input 
-                    type="text" 
-                    id="name" 
-                    value={formData.name}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-highlight focus:border-highlight outline-none transition-all bg-gray-50/50" 
-                    placeholder="Your name" 
-                  />
-                </div>
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-darkGray mb-2">Email Address</label>
-                  <input 
-                    type="email" 
-                    id="email" 
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-highlight focus:border-highlight outline-none transition-all bg-gray-50/50" 
-                    placeholder="your.email@example.com" 
-                  />
-                </div>
+            {/* Tabs for contact types */}
+            <div className="bg-white rounded-2xl shadow-[0_15px_35px_rgba(0,0,0,0.05)] overflow-hidden border border-gray-100">
+              <div className="flex border-b border-gray-200">
+                <button 
+                  className="flex-1 py-4 px-6 font-medium text-primary border-b-2 border-primary"
+                  aria-selected="true"
+                >
+                  Request a Quote
+                </button>
+                <button 
+                  className="flex-1 py-4 px-6 font-medium text-gray-500 hover:text-primary transition-colors"
+                  aria-selected="false"
+                >
+                  General Inquiry
+                </button>
               </div>
               
-              <div className="mb-6">
-                <label htmlFor="company" className="block text-sm font-medium text-darkGray mb-2">Company Name</label>
-                <input 
-                  type="text" 
-                  id="company" 
-                  value={formData.company}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-highlight focus:border-highlight outline-none transition-all bg-gray-50/50" 
-                  placeholder="Your company name" 
-                />
+              <div className="p-8 md:p-10">
+                {/* Enhanced Quote Form */}
+                <EnhancedQuoteForm />
               </div>
-              
-              <div className="mb-8">
-                <label htmlFor="message" className="block text-sm font-medium text-darkGray mb-2">Project Details</label>
-                <textarea 
-                  id="message" 
-                  rows={5} 
-                  value={formData.message}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-highlight focus:border-highlight outline-none transition-all bg-gray-50/50" 
-                  placeholder="Tell us about your aviation software needs..."
-                ></textarea>
-              </div>
-              
-              <button 
-                type="submit" 
-                disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-luxury to-primary hover:from-primary hover:to-luxury text-white font-bold py-4 px-8 rounded-lg transition-all duration-300 hover:shadow-[0_10px_20px_rgba(15,35,101,0.2)] disabled:opacity-70 disabled:hover:shadow-none"
-              >
-                {isSubmitting ? "Sending..." : "Send Message"}
-              </button>
-              
-              <p className="text-xs text-center text-gray-500 mt-4">
-                By submitting this form, you agree to our privacy policy and terms of service.
-              </p>
-            </form>
+            </div>
           </motion.div>
         </div>
       </div>
