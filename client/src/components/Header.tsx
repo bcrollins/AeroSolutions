@@ -15,16 +15,20 @@ export default function Header() {
   const [clientPreviewOpen, setClientPreviewOpen] = useState(false);
   const { user, isAuthenticated } = useAuth();
 
+  // Handle different dropdown menus
+  const [isResourcesDropdownOpen, setIsResourcesDropdownOpen] = useState(false);
+
   // Close all dropdowns
   const closeAllDropdowns = () => {
     setIsSolutionsDropdownOpen(false);
+    setIsResourcesDropdownOpen(false);
   };
   
   // Handle click outside for dropdown menus
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       // This only runs if a dropdown is open
-      if (isSolutionsDropdownOpen) {
+      if (isSolutionsDropdownOpen || isResourcesDropdownOpen) {
         // Don't close if it's a button click (handled by toggle functions)
         if ((e.target as Element).closest('button')) return;
         
@@ -38,7 +42,7 @@ export default function Header() {
     return () => {
       document.removeEventListener('click', handleClickOutside);
     };
-  }, [isSolutionsDropdownOpen]);
+  }, [isSolutionsDropdownOpen, isResourcesDropdownOpen]);
 
   // Close mobile menu when location changes
   useEffect(() => {
@@ -50,6 +54,13 @@ export default function Header() {
   const toggleSolutionsDropdown = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsSolutionsDropdownOpen(!isSolutionsDropdownOpen);
+    setIsResourcesDropdownOpen(false);
+  };
+  
+  const toggleResourcesDropdown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsResourcesDropdownOpen(!isResourcesDropdownOpen);
+    setIsSolutionsDropdownOpen(false);
   };
   const toggleClientPreview = () => setClientPreviewOpen(!clientPreviewOpen);
 
@@ -65,10 +76,14 @@ export default function Header() {
         { label: 'Digital Tools', path: '/digital-tools' },
       ],  
     },  
-    { label: 'Articles', path: '/articles' },
-    { label: 'Pricing', path: '/subscriptions' },  
-    { label: 'News Hub', path: '/news' },
-    { label: 'Contact', path: '/contact' },  
+    {
+      label: 'Resources',
+      dropdown: [
+        { label: 'Articles', path: '/articles' },
+        { label: 'News Hub', path: '/news' },
+        { label: 'Contact', path: '/contact' },
+      ],
+    }
   ];  
 
   return (  
@@ -94,16 +109,20 @@ export default function Header() {
               <div key={item.label} className="relative">  
                 {item.dropdown ? (  
                   <button  
-                    onClick={toggleSolutionsDropdown}  
+                    onClick={item.label === 'AI Products' ? toggleSolutionsDropdown : toggleResourcesDropdown}  
                     className={cn(
                       "font-medium text-sm tracking-wide text-white hover:text-electric-cyan-400 flex items-center transition-colors duration-200",
-                      isSolutionsDropdownOpen ? "text-electric-cyan-400" : ""
+                      (item.label === 'AI Products' && isSolutionsDropdownOpen) || 
+                      (item.label === 'Resources' && isResourcesDropdownOpen) 
+                        ? "text-electric-cyan-400" : ""
                     )}
                   >  
                     {item.label}  
                     <ChevronDown className={cn(
                       "ml-1 w-4 h-4 transition-transform duration-200",
-                      isSolutionsDropdownOpen ? "rotate-180" : ""
+                      (item.label === 'AI Products' && isSolutionsDropdownOpen) || 
+                      (item.label === 'Resources' && isResourcesDropdownOpen)
+                        ? "rotate-180" : ""
                     )} />  
                   </button>  
                 ) : (  
@@ -117,7 +136,9 @@ export default function Header() {
                     {item.label}  
                   </Link>  
                 )}  
-                {item.dropdown && isSolutionsDropdownOpen && (  
+                {item.dropdown && 
+                  ((item.label === 'AI Products' && isSolutionsDropdownOpen) || 
+                   (item.label === 'Resources' && isResourcesDropdownOpen)) && (  
                   <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-lg shadow-xl z-10 overflow-hidden border border-gray-100">  
                     <div className="py-1">
                       {item.dropdown.map((subItem) => (  
@@ -126,6 +147,7 @@ export default function Header() {
                           href={subItem.path}  
                           onClick={() => {
                             setIsSolutionsDropdownOpen(false);
+                            setIsResourcesDropdownOpen(false);
                             setIsSupportDropdownOpen(false);
                           }}
                           className={cn(
