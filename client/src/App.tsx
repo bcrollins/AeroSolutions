@@ -85,6 +85,7 @@ import ServicePackages from "@/pages/ServicePackages";
 import CaseStudies from "@/pages/CaseStudies";
 import ArticlesPage from "@/pages/ArticlesPage";
 import ArticleDetailPage from "@/pages/ArticleDetailPage";
+import NewsHubPage from "@/pages/NewsHubPage";
 
 export default function App() {
   const { t, i18n } = useTranslation();
@@ -296,6 +297,36 @@ export default function App() {
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
               <PrivacyPolicy />
+            </>
+          )}
+        </Route>
+        
+        {/* News Hub Routes */}
+        <Route path="/news">
+          {() => (
+            <>
+              <Helmet>
+                <title>News Hub | RXAI - Latest AI Innovations and Updates</title>
+                <meta name="description" content="Stay up-to-date with the latest AI news, innovations, and industry updates from RXAI. Discover automotive events, AI trends, and expert insights." />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href="https://rollinsx.dev/news" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <NewsHubPage />
+            </>
+          )}
+        </Route>
+        
+        <Route path="/news/:slug">
+          {() => (
+            <>
+              <Helmet>
+                <meta name="robots" content="index, follow" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <ArticleDetailPage />
             </>
           )}
         </Route>
