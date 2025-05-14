@@ -226,6 +226,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
 }) => {
   const [, setLocation] = useLocation();
   const [billingInterval, setBillingInterval] = useState<'monthly' | 'annual'>('annual');
+  const [selectedCategory, setSelectedCategory] = useState<PlanCategory>('all');
   
   // Get current subscription
   const { hasActiveSubscription, plan: currentPlan, isLoading: isSubscriptionLoading } = useSubscription();
@@ -291,9 +292,10 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
     );
   }
 
-  // Mark popular and recommended plans
+  // Mark popular and recommended plans and add category
   const enhancedPlans = plans.map(plan => ({
     ...plan,
+    category: getPlanCategory(plan.name),
     isPopular: planAttributes[plan.name as keyof typeof planAttributes]?.isPopular || false,
     isRecommended: planAttributes[plan.name as keyof typeof planAttributes]?.recommended || false
   }));
@@ -304,6 +306,8 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
     .filter(p => !hideCurrentPlan || p.id !== currentPlan?.id)
     // Filter by interval
     .filter(p => p.interval === (billingInterval === 'annual' ? 'year' : 'month'))
+    // Filter by selected category if not 'all'
+    .filter(p => selectedCategory === 'all' || p.category === selectedCategory)
     .sort((a, b) => {
       const priceA = parsePriceString(a.price || '0');
       const priceB = parsePriceString(b.price || '0');
