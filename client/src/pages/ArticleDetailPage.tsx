@@ -947,13 +947,13 @@ const ArticleDetailPage: React.FC = () => {
   // Process article content to add IDs for the table of contents
 
   // Process article content to add ids to headings for TOC navigation
-  const processedContent = article?.content.replace(
+  const processedContent = article?.content?.replace(
     /<h(2|3)>(.*?)<\/h\1>/g, 
     (match: string, level: string, title: string) => {
       const id = title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
       return `<h${level} id="${id}">${title}</h${level}>`;
     }
-  );
+  ) || '';
   
   // Show loading state
   if (loading) {
@@ -1033,7 +1033,7 @@ const ArticleDetailPage: React.FC = () => {
   };
   
   // Process content with tooltips and heading IDs
-  const enhancedContent = article?.content ? enhanceContentWithTooltips(processedContent) : '';
+  const enhancedContent = processedContent ? enhanceContentWithTooltips(processedContent) : '';
   
   return (
     <div className="container max-w-7xl py-12">
@@ -1041,14 +1041,14 @@ const ArticleDetailPage: React.FC = () => {
       <ReadingProgressBar />
       
       <Helmet>
-        <title>{article.title} | RXAI - Rollins X Technologies</title>
-        <meta name="description" content={article.description} />
-        <meta property="og:title" content={article.title} />
-        <meta property="og:description" content={article.description} />
+        <title>{article?.title || 'Article'} | RXAI - Rollins X Technologies</title>
+        <meta name="description" content={article?.description || 'Learn about the latest in AI technology'} />
+        <meta property="og:title" content={article?.title || 'AI Article'} />
+        <meta property="og:description" content={article?.description || 'Learn about the latest in AI technology'} />
         <meta property="og:type" content="article" />
         <meta property="og:url" content={currentUrl} />
-        <meta name="keywords" content={`AI, artificial intelligence, ${article.category.toLowerCase()}, machine learning, RXAI, Rollins X, tech, technology`} />
-        {article.image && <meta property="og:image" content={article.image} />}
+        <meta name="keywords" content={`AI, artificial intelligence, ${article?.category?.toLowerCase() || 'technology'}, machine learning, RXAI, Rollins X, tech, technology`} />
+        {article?.image && <meta property="og:image" content={article.image} />}
         <script type="application/ld+json">
           {JSON.stringify(faqSchema)}
         </script>
