@@ -1499,6 +1499,131 @@ export class DatabaseStorage implements IStorage {
       return undefined;
     }
   }
+
+  /**
+   * Initialize sample data for the application
+   * This method is called during server startup to ensure minimum required data exists
+   */
+  async initSampleData(): Promise<void> {
+    try {
+      console.log('Starting sample data initialization...');
+      
+      // Initialize subscription plans
+      try {
+        // Check if the table exists first
+        await db.query('SELECT 1 FROM subscription_plans LIMIT 1');
+        
+        // Table exists, now check if we need to populate it
+        const existingPlans = await db.select().from(subscriptionPlans);
+        if (existingPlans.length === 0) {
+          console.log('Adding default subscription plans...');
+          await db.insert(subscriptionPlans).values([
+            {
+              name: 'Free',
+              description: 'Limited access to basic features',
+              price: 0,
+              interval: 'month',
+              isActive: true,
+              features: ['Access to public articles', 'Limited course previews'],
+              createdAt: new Date(),
+              updatedAt: new Date()
+            },
+            {
+              name: 'Basic',
+              description: 'Access to all courses and basic tools',
+              price: 19.99,
+              interval: 'month',
+              isActive: true,
+              features: ['Full access to all courses', 'Basic AI tools', 'Community forum access'],
+              createdAt: new Date(),
+              updatedAt: new Date()
+            },
+            {
+              name: 'Pro',
+              description: 'Full access to all features and premium support',
+              price: 49.99,
+              interval: 'month',
+              isActive: true,
+              features: ['Everything in Basic', 'Advanced AI tools', 'Priority support', 'Downloadable resources'],
+              createdAt: new Date(),
+              updatedAt: new Date()
+            },
+            {
+              name: 'Enterprise',
+              description: 'Custom solutions for teams and organizations',
+              price: 199.99,
+              interval: 'month',
+              isActive: true,
+              features: ['Everything in Pro', 'Team management', 'Custom training', 'API access', 'Dedicated account manager'],
+              createdAt: new Date(),
+              updatedAt: new Date()
+            }
+          ]);
+          console.log('Subscription plans added successfully');
+        }
+      } catch (error) {
+        console.log('Skipping subscription plans initialization - table may not exist yet');
+      }
+
+      // Initialize AI products/courses
+      try {
+        // Check if the table exists first
+        await db.query('SELECT 1 FROM ai_products LIMIT 1');
+        
+        // Table exists, now check if we need to populate it
+        const existingProducts = await db.select().from(aiProducts);
+        if (existingProducts.length === 0) {
+          console.log('Adding default AI products and courses...');
+          await db.insert(aiProducts).values([
+            {
+              name: 'AI Foundations',
+              description: 'Learn the fundamentals of artificial intelligence',
+              type: 'course',
+              price: 0,
+              isActive: true,
+              category: 'beginner',
+              tags: ['ai', 'machine learning', 'intro'],
+              imageUrl: '/images/courses/ai-foundations.jpg',
+              createdAt: new Date(),
+              updatedAt: new Date()
+            },
+            {
+              name: 'Advanced Machine Learning',
+              description: 'Deep dive into machine learning algorithms and techniques',
+              type: 'course',
+              price: 49.99,
+              isActive: true,
+              category: 'advanced',
+              tags: ['machine learning', 'algorithms', 'data science'],
+              imageUrl: '/images/courses/advanced-ml.jpg',
+              createdAt: new Date(),
+              updatedAt: new Date()
+            },
+            {
+              name: 'AI Content Generator',
+              description: 'Generate high-quality content with AI',
+              type: 'tool',
+              price: 29.99,
+              isActive: true,
+              category: 'content',
+              tags: ['content', 'generation', 'tool'],
+              imageUrl: '/images/tools/ai-content-generator.jpg',
+              createdAt: new Date(),
+              updatedAt: new Date()
+            }
+          ]);
+          console.log('AI products added successfully');
+        }
+      } catch (error) {
+        console.log('Skipping AI products initialization - table may not exist yet');
+      }
+
+      console.log('Sample data initialization completed successfully');
+    } catch (error) {
+      console.error('Error initializing sample data:', error);
+      // Log error but don't throw - allow application to continue
+    }
+  }
 }
 
 // Create a new instance of DatabaseStorage

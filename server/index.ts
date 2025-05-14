@@ -36,8 +36,25 @@ declare global {
 const app = express();
 
 // Register health check middleware first, before any other middleware
-// This ensures health checks are processed immediately
+// This ensures health checks are processed immediately and without authentication
 app.use(healthCheckMiddleware);
+
+// Add explicit root path handler for health checks
+app.get('/', (req, res, next) => {
+  // Only handle health checks directly here, pass normal requests through
+  if (req.method === 'HEAD' || 
+      req.get('Accept') === 'application/json' || 
+      (req.accepts('json') && !req.accepts('html'))) {
+    return res.status(200).json({
+      status: 'OK',
+      timestamp: new Date().toISOString(),
+      service: 'RXAI Knowledge Hub',
+      version: '1.0.0'
+    });
+  }
+  // For normal browser requests, let it pass through to the frontend
+  next();
+});
 
 // Performance and security middleware
 // Compress responses
