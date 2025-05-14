@@ -658,6 +658,41 @@ router.post("/quizzes/:id/check", isAuthenticated, async (req, res) => {
       });
     }
     
+    // Get the lesson this quiz belongs to
+    const lesson = await storage.getAiCourseLessonByQuizId(quizId);
+    
+    if (!lesson) {
+      return res.status(404).json({
+        error: "Not Found", 
+        message: "Lesson for this quiz not found",
+      });
+    }
+    
+    // Get the module this lesson belongs to
+    const module = await storage.getAiCourseModule(lesson.moduleId);
+    
+    if (!module) {
+      return res.status(404).json({
+        error: "Not Found",
+        message: "Module not found",
+      });
+    }
+    
+    // Check if the user has subscription access to this lesson's quiz
+    const hasAccess = await hasAccessToLesson(userId, module.courseId, module.id, lesson.id);
+    
+    if (!hasAccess) {
+      return res.status(403).json({
+        error: "Forbidden",
+        message: "You don't have access to this quiz. Please upgrade your subscription to access this content.",
+        requiresSubscription: true,
+        courseId: module.courseId,
+        subscriptionInfo: {
+          url: "/pricing",
+        },
+      });
+    }
+    
     // Check answer
     const userAnswer = data.answers[quizId];
     const isCorrect = userAnswer === quiz.correctOption;
@@ -742,13 +777,34 @@ router.post("/lessons/:id/code-feedback", isAuthenticated, async (req, res) => {
     
     const courseId = module.courseId;
     
+    // Check if user has subscription access to this lesson
+    const hasAccess = await hasAccessToLesson(userId, courseId, module.id, lessonId);
+    
+    if (!hasAccess) {
+      return res.status(403).json({
+        error: "Forbidden",
+        message: "You don't have access to this lesson's code feedback feature. Please upgrade your subscription to access this content.",
+        requiresSubscription: true,
+        courseId: courseId,
+        subscriptionInfo: {
+          url: "/pricing",
+        },
+      });
+    }
+    
     // Check if user is enrolled
     const enrollment = await storage.getUserCourseEnrollment(userId, courseId);
     
     if (!enrollment) {
-      return res.status(403).json({
-        error: "Forbidden",
-        message: "User is not enrolled in this course",
+      // Auto-enroll the user since they have subscription access
+      await storage.createAiCourseEnrollment({
+        userId,
+        courseId,
+        enrollmentDate: new Date(),
+        status: "active",
+        completionStatus: null,
+        completionDate: null,
+        lastAccessDate: new Date(),
       });
     }
     
