@@ -1,0 +1,81 @@
+Prompt 2: Add Remaining 25 Articles and UI/UX Enhancements
+Character Count: ~5,600
+
+Description: This prompt adds the remaining 25 articles and implements UI/UX enhancements for article pages and the landing page.
+
+Add 25 more SEO-optimized articles to the Rollins X RXAI “Articles” section, maintaining the same design and functionality as Prompt 1. Ensure the section remains accessible via the navigation bar, with a 3-column grid, search bar, category filters (AI, Development, Tools), and infinite scroll, all styled with the homepage’s dark theme, blue accents, and typography. Keep page loads under 2 seconds and submit updated XML sitemaps to Google Search Console.
+
+Create articles answering these questions:
+
+26. How to Automate Web Development with AI in 2025
+
+27. Best AI Tools for Small Businesses in 2025
+
+28. How to Use AI for Personalized Marketing in 2025
+
+29. What Is AI Model Training? How It Works in 2025
+
+30. How to Secure AI-Powered Websites in 2025
+
+31. Benefits of AI in Web Development: 2025 Insights
+
+32. How to Use AI for Voice Search Optimization in 2025
+
+33. What Is Transfer Learning? AI Techniques for 2025
+
+34. How to Test AI Models for Accuracy: 2025 Guide
+
+35. Top AI Frameworks for Developers in 2025
+
+36. How to Use AI for Website Personalization in 2025
+
+37. What Is AI Bias? How to Avoid It in 2025
+
+38. How to Integrate AI with WordPress Websites in 2025
+
+39. Best AI Tools for SEO Audits in 2025: Top Picks
+
+40. How to Use AI for Predictive Analytics in 2025
+
+41. What Is Federated Learning? AI Trends for 2025
+
+42. How to Optimize Website Speed with AI in 2025
+
+43. Top AI Use Cases in Business for 2025
+
+44. How to Use AI for Competitor Analysis in 2025
+
+45. What Is Explainable AI? Why It Matters in 2025
+
+46. How to Use AI for A/B Testing Websites in 2025
+
+47. Best AI Tools for Content Optimization in 2025
+
+48. How to Scale AI Solutions for Businesses in 2025
+
+49. What Is Edge AI? Benefits and Uses in 2025
+
+50. How to Use AI for Local SEO Optimization in 2025
+
+Each article must follow Prompt 1’s guidelines: 1,500–2,500 words, with the target question as the primary keyword in the title, meta description, and first paragraph. Include related keywords, FAQ schema, a sticky table of contents, 3 images, 2–3 internal links to Rollins X offerings, and a “Try Free” CTA. Use a professional tone, summary box, comment section, social sharing buttons, and voice narration.
+
+Enhance article pages with these UI/UX features:
+
+Immersive Reading Mode: Full-screen mode with adjustable font sizes and dark/light theme toggles, styled with blue buttons.
+Related Articles Carousel: 4–6 related articles at the bottom, styled as a card grid with blue borders.
+Personalized Sidebar: 3–5 article recommendations based on user history, styled as blue cards.
+Highlight-to-Share: Highlight text to share quotes to X/LinkedIn, with a blue popup menu.
+Interactive Code Snippets: Executable code blocks for technical articles, styled in a dark editor with blue syntax.
+Save for Later: Blue bookmark icon to save articles, with a confirmation popup.
+Multi-Language Toggle: Blue dropdown for translations (Spanish, Mandarin).
+Dynamic Pull Quotes: 1–2 auto-generated quotes in blue italics with hover animations.
+Article Rating System: Blue star icons (1–5) with a feedback form.
+Offline Reading: Blue download button for PDF versions.
+Enhance the news landing page with:
+
+Trending Tags Cloud: Blue clickable badges (e.g., “AI Tools”).
+Author Filters: Blue clickable avatars below the search bar.
+Voice Search: Blue microphone icon in the search bar.
+Content Freshness: Blue “New” badges for articles <7 days old.
+Exit-Intent Popup: Blue trial signup popup on exit.
+Ensure all features are mobile-responsive, WCAG-compliant, and styled consistently with the homepage.
