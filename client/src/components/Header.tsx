@@ -73,7 +73,7 @@ export default function Header() {
 
   return (  
     <>
-      <header className="header bg-gradient-to-r from-gray-900 to-black text-white py-4 px-4 sm:px-6 sticky top-0 z-50 shadow-lg">  
+      <header className="header bg-gradient-to-r from-gray-900 to-black text-white py-4 px-4 sm:px-6 sticky top-0 z-50 shadow-lg" data-branding="rxai">  
         <div className="max-w-7xl mx-auto flex justify-between items-center">  
           {/* Logo */}  
           <Link href="/">  
@@ -81,7 +81,10 @@ export default function Header() {
               <div className="transition-transform duration-300 group-hover:scale-110">
                 <Logo height={28} width={28} className="mr-2" />
               </div>
-              <span className="font-bold tracking-wider text-xl text-white group-hover:text-electric-cyan-400 transition-colors duration-300">ROLLINSX</span>
+              <div className="flex flex-col">
+                <span className="font-bold tracking-wider text-xl text-white group-hover:text-electric-cyan-400 transition-colors duration-300">RXAI</span>
+                <span className="text-xs text-gray-400">a ROLLINSX technologies company</span>
+              </div>
             </div>
           </Link>  
 
