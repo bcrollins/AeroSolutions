@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useRoute, Link } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Calendar, Clock, User, Share2, MessageSquare, ThumbsUp, Tag, FileText, BrainCircuit } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, User, Share2, MessageSquare, ThumbsUp, Tag, FileText, BrainCircuit, Book, Fullscreen } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +24,15 @@ import {
 } from '@/components/ui/accordion';
 import { trackEvent } from '@/lib/analytics';
 import { useToast } from '@/hooks/use-toast';
+import ReadingProgressBar from '@/components/articles/ReadingProgressBar';
+import EnhancedTableOfContents from '@/components/articles/EnhancedTableOfContents';
+import SocialSharingButtons from '@/components/articles/SocialSharingButtons';
+import CommentsSection from '@/components/articles/CommentsSection';
+import RelatedArticlesCarousel from '@/components/articles/RelatedArticlesCarousel';
+import PersonalizedRecommendations from '@/components/articles/PersonalizedRecommendations';
+import VoiceNarration from '@/components/articles/VoiceNarration';
+import EmbeddedCTAs from '@/components/articles/EmbeddedCTAs';
+import ImmersiveReadingMode from '@/components/articles/ImmersiveReadingMode';
 
 // Types for articles and related components
 type Post = {
@@ -159,6 +168,8 @@ const ArticleDetailPage: React.FC = () => {
   const [, params] = useRoute('/articles/:slug');
   const { toast } = useToast();
   const slug = params?.slug;
+  const articleRef = useRef<HTMLDivElement>(null);
+  const [isImmersiveModeActive, setIsImmersiveModeActive] = useState(false);
   
   // Share function
   const handleShare = () => {
@@ -181,6 +192,16 @@ const ArticleDetailPage: React.FC = () => {
       });
       trackEvent('article_link_copied', 'engagement', post?.title);
     }
+  };
+  
+  // Toggle immersive reading mode
+  const toggleImmersiveMode = () => {
+    setIsImmersiveModeActive(!isImmersiveModeActive);
+    trackEvent(
+      isImmersiveModeActive ? 'exit_immersive_mode' : 'enter_immersive_mode',
+      'engagement',
+      post?.title
+    );
   };
 
   // Fetch article data
