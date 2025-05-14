@@ -1,6 +1,7 @@
 import express from 'express';
 import { requireAuth, requireAdmin } from '../middlewares/auth';
 import { generateAIArticles } from '../scripts/generate-ai-articles';
+import { generateCustomerQnAArticles } from '../scripts/generate-customer-qna-articles';
 import { logger } from '../utils/logger';
 
 const router = express.Router();
@@ -61,6 +62,44 @@ router.get('/status', requireAuth, requireAdmin, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to check generation status',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/content-generation/customer-qa-articles
+ * Generate articles based on customer Q&A
+ * Temporarily public for testing
+ */
+router.post('/customer-qa-articles', async (req, res) => {
+  try {
+    // Extract request parameters
+    const { startIndex = 0, count = 50 } = req.body;
+    
+    logger.info(`Admin user initiated Customer Q&A article generation, startIndex: ${startIndex}, count: ${count}`);
+    
+    // Queue the generation process to run asynchronously
+    // This prevents timeouts since generating articles will take time
+    const generationPromise = generateCustomerQnAArticles(startIndex, count)
+      .then(results => {
+        logger.info('Customer Q&A article generation completed successfully', { results });
+      })
+      .catch(error => {
+        logger.error('Customer Q&A article generation failed', { error: error.message });
+      });
+    
+    // Respond immediately that the process has started
+    res.status(202).json({
+      success: true,
+      message: 'Customer Q&A article generation has been initiated. This process may take several minutes to complete. The articles will appear in the Content Hub as they are generated.',
+      estimatedTime: '10-15 minutes for the requested articles'
+    });
+  } catch (error: any) {
+    logger.error('Error initiating Customer Q&A article generation:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to initiate Customer Q&A article generation',
       error: error.message
     });
   }
