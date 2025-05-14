@@ -845,6 +845,29 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
   
+  // AI course module methods
+  async getAiCourseModuleByLessonId(lessonId: number): Promise<any | undefined> {
+    try {
+      // First find which module the lesson belongs to
+      const query = `
+        SELECT cm.* 
+        FROM ai_course_modules cm
+        JOIN ai_course_lessons cl ON cm.id = cl.module_id
+        WHERE cl.id = $1
+      `;
+      const result = await db.execute(query, [lessonId]);
+      
+      if (result.rowCount === 0) {
+        return undefined;
+      }
+      
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error getting AI course module by lesson ID:', error);
+      return undefined;
+    }
+  }
+  
   async updateUserStripeInfo(userId: number, data: { stripeCustomerId: string, stripeSubscriptionId: string }): Promise<User> {
     const [user] = await db.update(users)
       .set({ 

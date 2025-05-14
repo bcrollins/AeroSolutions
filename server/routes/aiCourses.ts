@@ -203,14 +203,40 @@ router.get("/lessons/:id", isAuthenticated, async (req, res) => {
 });
 
 // Get lesson quizzes
-router.get("/lessons/:id/quizzes", async (req, res) => {
+router.get("/lessons/:id/quizzes", isAuthenticated, async (req, res) => {
   try {
     const lessonId = parseInt(req.params.id);
+    const userId = req.user?.id;
     
     if (isNaN(lessonId)) {
       return res.status(400).json({
         error: "Bad Request",
         message: "Invalid lesson ID",
+      });
+    }
+    
+    // Get the module this lesson belongs to
+    const module = await storage.getAiCourseModuleByLessonId(lessonId);
+    
+    if (!module) {
+      return res.status(404).json({
+        error: "Not Found",
+        message: "Lesson module not found",
+      });
+    }
+    
+    // Check if the user has access to this lesson
+    const hasAccess = await hasAccessToLesson(userId, module.courseId, module.id, lessonId);
+    
+    if (!hasAccess) {
+      return res.status(403).json({
+        error: "Forbidden",
+        message: "You don't have access to this lesson's quizzes. Please upgrade your subscription to access this content.",
+        requiresSubscription: true,
+        courseId: module.courseId,
+        subscriptionInfo: {
+          url: "/pricing",
+        },
       });
     }
     
