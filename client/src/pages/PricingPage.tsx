@@ -631,6 +631,15 @@ const PricingPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-center">
+                      {feature.tiers.free === true ? (
+                        <Check className="h-5 w-5 text-green-500 mx-auto" />
+                      ) : feature.tiers.free === false ? (
+                        <X className="h-5 w-5 text-red-500 mx-auto" />
+                      ) : (
+                        <span>{feature.tiers.free}</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-center">
                       {feature.tiers.basic === true ? (
                         <Check className="h-5 w-5 text-green-500 mx-auto" />
                       ) : feature.tiers.basic === false ? (
