@@ -41,10 +41,11 @@ import {
   type ForumReply, type InsertForumReply,
   type MediaResource, type InsertMediaResource,
   // Analytics imports
-  pageViews, analyticsEvents, subscriptionAnalytics,
+  pageViews, analyticsEvents, subscriptionAnalytics, subscriptionEvents,
   type PageView, type InsertPageView,
   type AnalyticsEvent, type InsertAnalyticsEvent,
-  type SubscriptionAnalytic, type InsertSubscriptionAnalytic
+  type SubscriptionAnalytic, type InsertSubscriptionAnalytic,
+  type SubscriptionEvent, type InsertSubscriptionEvent
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gt, lt, sql, desc, asc, ilike, or } from "drizzle-orm";
@@ -53,7 +54,7 @@ import { eq, and, gt, lt, sql, desc, asc, ilike, or } from "drizzle-orm";
 export interface IStorage {
   // User methods for Replit Auth
   getUser(id: string): Promise<User | undefined>;
-  upsertUser(user: UpsertUser): Promise<User>;
+  upsertUser(user: InsertUser): Promise<User>;
   
   // Additional user methods
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -63,6 +64,12 @@ export interface IStorage {
   updateUserVerification(userId: string, verified: boolean): Promise<User>;
   updateStripeCustomerId(userId: string, stripeCustomerId: string): Promise<User>;
   updateUserStripeInfo(userId: string, data: { stripeCustomerId: string, stripeSubscriptionId: string }): Promise<User>;
+  
+  // Subscription event methods
+  createSubscriptionEvent(data: InsertSubscriptionEvent): Promise<SubscriptionEvent>;
+  getSubscriptionEventsByUser(userId: string, limit?: number): Promise<SubscriptionEvent[]>;
+  getSubscriptionEventsByType(eventType: string, startDate: Date, endDate: Date, limit?: number): Promise<SubscriptionEvent[]>;
+  getSubscriptionConversionRate(startDate: Date, endDate: Date): Promise<number>;
   
   // User onboarding methods
   createUserOnboarding(onboarding: InsertUserOnboarding): Promise<UserOnboarding>;
