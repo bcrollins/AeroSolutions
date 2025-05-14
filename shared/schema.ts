@@ -2103,3 +2103,192 @@ export const insertMediaResourceSchema = createInsertSchema(mediaResources).omit
 
 export type MediaResource = typeof mediaResources.$inferSelect;
 export type InsertMediaResource = z.infer<typeof insertMediaResourceSchema>;
+
+// AI Course Platform Schema
+
+// Courses table
+export const aiCourses = pgTable("ai_courses", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  thumbnail: varchar("thumbnail", { length: 255 }),
+  duration: varchar("duration", { length: 50 }),
+  difficulty: varchar("difficulty", { length: 20 }).notNull(), // Beginner, Intermediate, Advanced
+  instructorName: varchar("instructor_name", { length: 100 }),
+  instructorBio: text("instructor_bio"),
+  price: decimal("price", { precision: 10, scale: 2 }).default("0"),
+  isPublished: boolean("is_published").default(false),
+  categoryId: integer("category_id").references(() => aiCourseCategories.id),
+  enrollmentCount: integer("enrollment_count").default(0),
+  averageRating: decimal("average_rating", { precision: 3, scale: 2 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Course Categories
+export const aiCourseCategories = pgTable("ai_course_categories", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description"),
+  slug: varchar("slug", { length: 100 }).notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Course Modules
+export const aiCourseModules = pgTable("ai_course_modules", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id").notNull().references(() => aiCourses.id, { onDelete: "cascade" }),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  position: integer("position").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Course Lessons
+export const aiCourseLessons = pgTable("ai_course_lessons", {
+  id: serial("id").primaryKey(),
+  moduleId: integer("module_id").notNull().references(() => aiCourseModules.id, { onDelete: "cascade" }),
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  videoUrl: varchar("video_url", { length: 255 }),
+  duration: integer("duration"), // in seconds
+  position: integer("position").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// User Course Enrollments
+export const aiCourseEnrollments = pgTable("ai_course_enrollments", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  courseId: integer("course_id").notNull().references(() => aiCourses.id, { onDelete: "cascade" }),
+  enrolledAt: timestamp("enrolled_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+  status: varchar("status", { length: 20 }).notNull().default("active"), // active, completed, cancelled, expired
+  progressPercentage: integer("progress_percentage").default(0),
+  lastAccessedAt: timestamp("last_accessed_at").defaultNow(),
+});
+
+// User Lesson Progress
+export const aiLessonProgress = pgTable("ai_lesson_progress", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  lessonId: integer("lesson_id").notNull().references(() => aiCourseLessons.id, { onDelete: "cascade" }),
+  completed: boolean("completed").default(false),
+  completedAt: timestamp("completed_at"),
+  lastAccessedAt: timestamp("last_accessed_at").defaultNow(),
+  progressPercentage: integer("progress_percentage").default(0),
+  timeSpent: integer("time_spent").default(0), // in seconds
+});
+
+// Course Certifications
+export const aiCourseCertifications = pgTable("ai_course_certifications", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  courseId: integer("course_id").notNull().references(() => aiCourses.id, { onDelete: "cascade" }),
+  certificationNumber: varchar("certification_number", { length: 50 }).notNull().unique(),
+  issueDate: timestamp("issue_date").defaultNow().notNull(),
+  expiryDate: timestamp("expiry_date"),
+  pdfUrl: varchar("pdf_url", { length: 255 }),
+  verified: boolean("verified").default(true),
+});
+
+// Course Forums/Discussions
+export const aiCourseForums = pgTable("ai_course_forums", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id").notNull().references(() => aiCourses.id, { onDelete: "cascade" }),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Forum Posts
+export const aiForumPosts = pgTable("ai_forum_posts", {
+  id: serial("id").primaryKey(),
+  forumId: integer("forum_id").notNull().references(() => aiCourseForums.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  isPinned: boolean("is_pinned").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Create insert schemas
+export const insertAiCourseSchema = createInsertSchema(aiCourses).omit({
+  id: true,
+  enrollmentCount: true,
+  averageRating: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertAiCourseCategorySchema = createInsertSchema(aiCourseCategories).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertAiCourseModuleSchema = createInsertSchema(aiCourseModules).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertAiCourseLessonSchema = createInsertSchema(aiCourseLessons).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertAiCourseEnrollmentSchema = createInsertSchema(aiCourseEnrollments).omit({
+  id: true,
+  enrolledAt: true,
+  completedAt: true,
+  lastAccessedAt: true,
+});
+
+export const insertAiLessonProgressSchema = createInsertSchema(aiLessonProgress).omit({
+  id: true,
+  completedAt: true,
+  lastAccessedAt: true,
+});
+
+export const insertAiCourseForumSchema = createInsertSchema(aiCourseForums).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertAiForumPostSchema = createInsertSchema(aiForumPosts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Export types
+export type AiCourse = typeof aiCourses.$inferSelect;
+export type InsertAiCourse = z.infer<typeof insertAiCourseSchema>;
+
+export type AiCourseCategory = typeof aiCourseCategories.$inferSelect;
+export type InsertAiCourseCategory = z.infer<typeof insertAiCourseCategorySchema>;
+
+export type AiCourseModule = typeof aiCourseModules.$inferSelect;
+export type InsertAiCourseModule = z.infer<typeof insertAiCourseModuleSchema>;
+
+export type AiCourseLesson = typeof aiCourseLessons.$inferSelect;
+export type InsertAiCourseLesson = z.infer<typeof insertAiCourseLessonSchema>;
+
+export type AiCourseEnrollment = typeof aiCourseEnrollments.$inferSelect;
+export type InsertAiCourseEnrollment = z.infer<typeof insertAiCourseEnrollmentSchema>;
+
+export type AiLessonProgress = typeof aiLessonProgress.$inferSelect;
+export type InsertAiLessonProgress = z.infer<typeof insertAiLessonProgressSchema>;
+
+export type AiCourseForum = typeof aiCourseForums.$inferSelect;
+export type InsertAiCourseForum = z.infer<typeof insertAiCourseForumSchema>;
+
+export type AiForumPost = typeof aiForumPosts.$inferSelect;
+export type InsertAiForumPost = z.infer<typeof insertAiForumPostSchema>;
