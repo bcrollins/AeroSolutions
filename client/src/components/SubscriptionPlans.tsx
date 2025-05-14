@@ -360,6 +360,34 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
             Annual
           </span>
         </motion.div>
+        
+        {/* Category tabs */}
+        <motion.div
+          className="mt-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+        >
+          <Tabs value={selectedCategory} onValueChange={(value) => setSelectedCategory(value as PlanCategory)} className="w-full">
+            <TabsList className="grid grid-cols-5 w-full max-w-xl mx-auto bg-white dark:bg-slate-700/60 p-1 rounded-full">
+              <TabsTrigger value="all" className="rounded-full text-sm font-medium">
+                All Plans
+              </TabsTrigger>
+              <TabsTrigger value="design" className="rounded-full text-sm font-medium">
+                <Sparkles className="h-4 w-4 mr-1 inline" /> Design
+              </TabsTrigger>
+              <TabsTrigger value="courses" className="rounded-full text-sm font-medium">
+                <BookOpen className="h-4 w-4 mr-1 inline" /> Courses
+              </TabsTrigger>
+              <TabsTrigger value="tools" className="rounded-full text-sm font-medium">
+                <Palette className="h-4 w-4 mr-1 inline" /> Tools
+              </TabsTrigger>
+              <TabsTrigger value="webdev" className="rounded-full text-sm font-medium">
+                <Code className="h-4 w-4 mr-1 inline" /> Web Dev
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </motion.div>
       </div>
 
       {/* Subscription plans grid */}
