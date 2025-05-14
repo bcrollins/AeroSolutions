@@ -223,7 +223,7 @@ export default function HomePage() {
         
 
         <div className="fixed bottom-0 left-0 right-0 z-20">
-          <ROLLINSXBot hideFloatingButton={true} isOpen={isChatOpen} />
+          <RXAIBot hideFloatingButton={true} isOpen={isChatOpen} />
         </div>
       </main>
       <Footer />
