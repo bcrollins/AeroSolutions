@@ -2138,6 +2138,44 @@ export const insertForumNotificationSchema = createInsertSchema(forumNotificatio
 export type ForumNotification = typeof forumNotifications.$inferSelect;
 export type InsertForumNotification = z.infer<typeof insertForumNotificationSchema>;
 
+// Course Certificates
+export const courseCertificates = pgTable("course_certificates", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  courseId: integer("course_id").notNull().references(() => aiCourses.id, { onDelete: "cascade" }),
+  certificateNumber: text("certificate_number").notNull().unique(), // Unique identifier for verification
+  recipientName: text("recipient_name").notNull(), // Full name of certificate recipient
+  courseName: text("course_name").notNull(),
+  issueDate: timestamp("issue_date").defaultNow().notNull(),
+  expiryDate: timestamp("expiry_date"), // Optional expiry date
+  completionDate: timestamp("completion_date").notNull(),
+  certificateUrl: text("certificate_url"), // URL to download the certificate
+  certificateImagePath: text("certificate_image_path"), // Path to the certificate image
+  pdfPath: text("pdf_path"), // Path to the PDF certificate
+  sharedToLinkedIn: boolean("shared_to_linkedin").default(false),
+  sharedToTwitter: boolean("shared_to_twitter").default(false),
+  verificationStatus: text("verification_status").default("valid").notNull(), // valid, revoked, expired
+  metadata: json("metadata").$type<Record<string, any>>().default({}),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertCourseCertificateSchema = createInsertSchema(courseCertificates).omit({
+  id: true,
+  certificateNumber: true, // Generated server-side
+  certificateUrl: true, // Generated server-side
+  certificateImagePath: true, // Generated server-side
+  pdfPath: true, // Generated server-side
+  sharedToLinkedIn: true,
+  sharedToTwitter: true,
+  verificationStatus: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export type CourseCertificate = typeof courseCertificates.$inferSelect;
+export type InsertCourseCertificate = z.infer<typeof insertCourseCertificateSchema>;
+
 // User forum activity for tracking contributions and calculating leaderboard
 export const userForumActivity = pgTable("user_forum_activity", {
   id: serial("id").primaryKey(),
