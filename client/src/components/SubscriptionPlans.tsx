@@ -9,7 +9,8 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Check, Crown, Rocket, Star, Zap, Users, Shield, Sparkles, BarChart3 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Check, Crown, Rocket, Star, Zap, Users, Shield, Sparkles, BarChart3, Code, BookOpen, Palette, Layers } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface SubscriptionPlansProps {
@@ -18,6 +19,9 @@ interface SubscriptionPlansProps {
   hideCurrentPlan?: boolean;
 }
 
+// Plan category type for tabs
+type PlanCategory = 'design' | 'courses' | 'tools' | 'webdev' | 'all';
+
 // Helper function to parse price string to number
 function parsePriceString(price: string): number {
   // Remove currency symbol and commas, then parse as float
@@ -25,58 +29,194 @@ function parsePriceString(price: string): number {
   return parseFloat(numericString) || 0;
 }
 
+// Get category by plan name
+const getPlanCategory = (planName: string): PlanCategory => {
+  const name = planName.toLowerCase();
+  if (name.includes('courses')) return 'courses';
+  if (name.includes('tools')) return 'tools';
+  if (name.includes('web dev')) return 'webdev';
+  return 'design'; // Default category for original plans
+};
+
 // Get icon by plan name
 const getPlanIcon = (planName: string) => {
   const name = planName.toLowerCase();
-  if (name.includes('starter')) return <Rocket className="h-6 w-6 text-blue-500" />;
-  if (name.includes('professional')) return <Star className="h-6 w-6 text-purple-500" />;
-  if (name.includes('enterprise')) return <Crown className="h-6 w-6 text-amber-500" />;
+  
+  // Design plans
+  if (name.includes('starter') && !name.includes('courses') && !name.includes('tools') && !name.includes('web dev')) 
+    return <Rocket className="h-6 w-6 text-blue-500" />;
+  if (name.includes('professional') && !name.includes('courses') && !name.includes('tools') && !name.includes('web dev')) 
+    return <Star className="h-6 w-6 text-purple-500" />;
+  if (name.includes('enterprise') && !name.includes('courses') && !name.includes('tools') && !name.includes('web dev')) 
+    return <Crown className="h-6 w-6 text-amber-500" />;
+  
+  // AI Courses plans
+  if (name.includes('courses starter')) return <BookOpen className="h-6 w-6 text-emerald-500" />;
+  if (name.includes('courses pro')) return <BookOpen className="h-6 w-6 text-indigo-500" />;
+  if (name.includes('courses enterprise')) return <BookOpen className="h-6 w-6 text-amber-500" />;
+  
+  // Digital Tools plans
+  if (name.includes('tools basic')) return <Palette className="h-6 w-6 text-cyan-500" />;
+  if (name.includes('tools premium')) return <Palette className="h-6 w-6 text-violet-500" />;
+  if (name.includes('tools agency')) return <Palette className="h-6 w-6 text-amber-500" />;
+  
+  // Web Dev plans
+  if (name.includes('web dev standard')) return <Code className="h-6 w-6 text-teal-500" />;
+  if (name.includes('web dev business')) return <Code className="h-6 w-6 text-fuchsia-500" />;
+  if (name.includes('web dev enterprise')) return <Code className="h-6 w-6 text-amber-500" />;
+  
   return <Sparkles className="h-6 w-6 text-teal-500" />;
 };
 
 // Map to determine which plans are popular or recommended
 const planAttributes = {
+  // Original plans
   'Professional': { isPopular: true, recommended: false },
   'Professional Annual': { isPopular: true, recommended: true },
   'Enterprise': { isPopular: false, recommended: false },
   'Enterprise Annual': { isPopular: false, recommended: false },
+  
+  // AI Courses plans
+  'AI Courses Pro': { isPopular: true, recommended: false },
+  'AI Courses Pro Annual': { isPopular: true, recommended: true },
+  
+  // Digital Tools plans
+  'Digital Tools Premium': { isPopular: true, recommended: false },
+  'Digital Tools Premium Annual': { isPopular: true, recommended: true },
+  
+  // Web Dev plans
+  'Web Dev Business': { isPopular: true, recommended: false },
+  'Web Dev Business Annual': { isPopular: true, recommended: true },
 };
 
 // Feature icons map
 const featureIcons: Record<string, React.ReactNode> = {
+  // Design features
   "Basic design tools": <Sparkles className="h-4 w-4 text-blue-500" />,
   "Advanced design tools": <Sparkles className="h-4 w-4 text-purple-500" />,
   "Team collaboration": <Users className="h-4 w-4 text-indigo-500" />,
   "Priority support": <Shield className="h-4 w-4 text-teal-500" />,
   "Analytics dashboard": <BarChart3 className="h-4 w-4 text-orange-500" />,
+  
+  // AI Courses features
+  "5 AI course credits per month": <BookOpen className="h-4 w-4 text-emerald-500" />,
+  "15 AI course credits per month": <BookOpen className="h-4 w-4 text-indigo-500" />,
+  "Unlimited AI course credits": <BookOpen className="h-4 w-4 text-amber-500" />,
+  
+  // Digital Tools features
+  "5 AI content generations daily": <Palette className="h-4 w-4 text-cyan-500" />,
+  "Unlimited AI content generations": <Palette className="h-4 w-4 text-violet-500" />,
+  
+  // Web Dev features
+  "Single website management": <Layers className="h-4 w-4 text-teal-500" />,
+  "3 website management": <Layers className="h-4 w-4 text-fuchsia-500" />,
+  "Unlimited website management": <Layers className="h-4 w-4 text-amber-500" />,
 };
 
-// Gradient backgrounds for each plan
-const planGradients = {
-  'Starter': 'bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-950/30 dark:to-indigo-950/30',
-  'Starter Annual': 'bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-950/30 dark:to-indigo-950/30',
-  'Professional': 'bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-950/30 dark:to-pink-950/30',
-  'Professional Annual': 'bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-950/30 dark:to-pink-950/30',
-  'Enterprise': 'bg-gradient-to-br from-amber-100 to-yellow-100 dark:from-amber-950/30 dark:to-yellow-950/30',
-  'Enterprise Annual': 'bg-gradient-to-br from-amber-100 to-yellow-100 dark:from-amber-950/30 dark:to-yellow-950/30',
+// Gradient backgrounds for each plan category
+const getPlanGradient = (planName: string) => {
+  const name = planName.toLowerCase();
+  
+  // Design plans
+  if ((name.includes('starter') || name.includes('professional') || name.includes('enterprise')) && 
+      !name.includes('courses') && !name.includes('tools') && !name.includes('web dev')) {
+    if (name.includes('starter')) return 'bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-950/30 dark:to-indigo-950/30';
+    if (name.includes('professional')) return 'bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-950/30 dark:to-pink-950/30';
+    if (name.includes('enterprise')) return 'bg-gradient-to-br from-amber-100 to-yellow-100 dark:from-amber-950/30 dark:to-yellow-950/30';
+  }
+  
+  // AI Courses plans
+  if (name.includes('courses')) {
+    if (name.includes('starter')) return 'bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-950/30 dark:to-teal-950/30';
+    if (name.includes('pro')) return 'bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-950/30 dark:to-blue-950/30';
+    if (name.includes('enterprise')) return 'bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-950/30 dark:to-orange-950/30';
+  }
+  
+  // Digital Tools plans
+  if (name.includes('tools')) {
+    if (name.includes('basic')) return 'bg-gradient-to-br from-cyan-100 to-sky-100 dark:from-cyan-950/30 dark:to-sky-950/30';
+    if (name.includes('premium')) return 'bg-gradient-to-br from-violet-100 to-purple-100 dark:from-violet-950/30 dark:to-purple-950/30';
+    if (name.includes('agency')) return 'bg-gradient-to-br from-amber-100 to-red-100 dark:from-amber-950/30 dark:to-red-950/30';
+  }
+  
+  // Web Dev plans
+  if (name.includes('web dev')) {
+    if (name.includes('standard')) return 'bg-gradient-to-br from-teal-100 to-green-100 dark:from-teal-950/30 dark:to-green-950/30';
+    if (name.includes('business')) return 'bg-gradient-to-br from-fuchsia-100 to-pink-100 dark:from-fuchsia-950/30 dark:to-pink-950/30';
+    if (name.includes('enterprise')) return 'bg-gradient-to-br from-amber-100 to-yellow-100 dark:from-amber-950/30 dark:to-yellow-950/30';
+  }
+  
+  return 'bg-gradient-to-br from-gray-100 to-slate-100 dark:from-gray-950/30 dark:to-slate-950/30';
 };
 
 // Helper function to get card accent color
 const getAccentColor = (planName: string) => {
   const name = planName.toLowerCase();
-  if (name.includes('starter')) return 'border-blue-400 dark:border-blue-600';
-  if (name.includes('professional')) return 'border-purple-400 dark:border-purple-600';
-  if (name.includes('enterprise')) return 'border-amber-400 dark:border-amber-600';
+  
+  // Design plans
+  if ((name.includes('starter') || name.includes('professional') || name.includes('enterprise')) && 
+      !name.includes('courses') && !name.includes('tools') && !name.includes('web dev')) {
+    if (name.includes('starter')) return 'border-blue-400 dark:border-blue-600';
+    if (name.includes('professional')) return 'border-purple-400 dark:border-purple-600';
+    if (name.includes('enterprise')) return 'border-amber-400 dark:border-amber-600';
+  }
+  
+  // AI Courses plans
+  if (name.includes('courses')) {
+    if (name.includes('starter')) return 'border-emerald-400 dark:border-emerald-600';
+    if (name.includes('pro')) return 'border-indigo-400 dark:border-indigo-600';
+    if (name.includes('enterprise')) return 'border-amber-400 dark:border-amber-600';
+  }
+  
+  // Digital Tools plans
+  if (name.includes('tools')) {
+    if (name.includes('basic')) return 'border-cyan-400 dark:border-cyan-600';
+    if (name.includes('premium')) return 'border-violet-400 dark:border-violet-600';
+    if (name.includes('agency')) return 'border-amber-400 dark:border-amber-600';
+  }
+  
+  // Web Dev plans
+  if (name.includes('web dev')) {
+    if (name.includes('standard')) return 'border-teal-400 dark:border-teal-600';
+    if (name.includes('business')) return 'border-fuchsia-400 dark:border-fuchsia-600';
+    if (name.includes('enterprise')) return 'border-amber-400 dark:border-amber-600';
+  }
+  
   return 'border-teal-400 dark:border-teal-600';
 };
 
 // Helper function to get button color
 const getButtonColor = (planName: string, isPopular: boolean) => {
   const name = planName.toLowerCase();
+  
   if (isPopular) return 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700';
-  if (name.includes('starter')) return 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600';
-  if (name.includes('enterprise')) return 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600';
-  return '';
+  
+  // Design plans
+  if ((name.includes('starter') || name.includes('professional') || name.includes('enterprise')) && 
+      !name.includes('courses') && !name.includes('tools') && !name.includes('web dev')) {
+    if (name.includes('starter')) return 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600';
+    if (name.includes('enterprise')) return 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600';
+  }
+  
+  // AI Courses plans
+  if (name.includes('courses')) {
+    if (name.includes('starter')) return 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600';
+    if (name.includes('enterprise')) return 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600';
+  }
+  
+  // Digital Tools plans
+  if (name.includes('tools')) {
+    if (name.includes('basic')) return 'bg-gradient-to-r from-cyan-500 to-sky-500 hover:from-cyan-600 hover:to-sky-600';
+    if (name.includes('agency')) return 'bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-600 hover:to-red-600';
+  }
+  
+  // Web Dev plans
+  if (name.includes('web dev')) {
+    if (name.includes('standard')) return 'bg-gradient-to-r from-teal-500 to-green-500 hover:from-teal-600 hover:to-green-600';
+    if (name.includes('enterprise')) return 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600';
+  }
+  
+  return 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600';
 };
 
 const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
