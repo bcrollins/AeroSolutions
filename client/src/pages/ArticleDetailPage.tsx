@@ -337,8 +337,60 @@ const ArticleDetailPage: React.FC = () => {
     return JSON.stringify(articleSchema);
   };
 
+  // If immersive mode is active, render the immersive reading view
+  if (isImmersiveModeActive && post) {
+    return (
+      <ImmersiveReadingMode
+        content={post.content}
+        title={post.title}
+        onExit={toggleImmersiveMode}
+      />
+    );
+  }
+
+  // Determine content type for targeted CTAs
+  const determineContentType = () => {
+    if (!post) return 'general';
+    
+    if (post.tags.includes('ai') || post.category?.toLowerCase() === 'ai') {
+      return 'ai';
+    }
+    if (post.tags.includes('development') || post.tags.includes('web development')) {
+      return 'development';
+    }
+    if (post.tags.includes('marketing') || post.category?.toLowerCase() === 'marketing') {
+      return 'marketing';
+    }
+    
+    return 'general';
+  };
+  
+  // Get mock comments data (in a real app, this would come from the API)
+  const getMockComments = () => {
+    return [
+      {
+        id: 1,
+        content: "Great article! I found the insights about AI decision-making particularly useful for my business.",
+        authorName: "Alex Johnson",
+        authorImage: "https://ui-avatars.com/api/?name=AJ&background=0D8ABC&color=fff",
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
+        likes: 5,
+        replies: [
+          {
+            id: 2,
+            content: "I agree! The practical applications section was exactly what I needed.",
+            authorName: "Taylor Smith",
+            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
+            likes: 2,
+            replies: []
+          }
+        ]
+      }
+    ];
+  };
+  
   return (
-    <div className="container py-12">
+    <div className="container py-6 md:py-12">
       <Helmet>
         <title>{post.title} | RXAI</title>
         <meta name="description" content={post.summary || post.content.substring(0, 160)} />
@@ -349,17 +401,31 @@ const ArticleDetailPage: React.FC = () => {
         </script>
       </Helmet>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      {/* Reading Progress Bar */}
+      <ReadingProgressBar color="#007bff" />
+      
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8" ref={articleRef}>
         {/* Main Content */}
         <div className="lg:col-span-3">
           {/* Navigation */}
-          <div className="mb-8">
+          <div className="mb-8 flex items-center justify-between">
             <Link href="/articles">
               <Button variant="ghost" className="pl-0">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Articles
               </Button>
             </Link>
+            
+            {/* Immersive Mode Toggle */}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={toggleImmersiveMode}
+              className="flex items-center gap-2"
+            >
+              <Book className="h-4 w-4" />
+              <span className="hidden sm:inline">Immersive Mode</span>
+            </Button>
           </div>
 
           {/* Article Header */}
@@ -383,23 +449,32 @@ const ArticleDetailPage: React.FC = () => {
               </p>
             )}
 
-            <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                <span>{formattedDate}</span>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <span>{formattedDate}</span>
+                </div>
+                {post.readTimeMinutes && (
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    <span>{post.readTimeMinutes} min read</span>
+                  </div>
+                )}
+                {post.authorName && (
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    <span>{post.authorName}</span>
+                  </div>
+                )}
               </div>
-              {post.readTimeMinutes && (
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  <span>{post.readTimeMinutes} min read</span>
-                </div>
-              )}
-              {post.authorName && (
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  <span>{post.authorName}</span>
-                </div>
-              )}
+              
+              {/* Social Sharing Buttons */}
+              <SocialSharingButtons 
+                title={post.title}
+                url={window.location.href}
+                summary={post.summary}
+              />
             </div>
           </header>
 
@@ -432,9 +507,26 @@ const ArticleDetailPage: React.FC = () => {
             </div>
           )}
 
-          {/* Article Content */}
+          {/* Voice Narration */}
+          <VoiceNarration 
+            content={post.content}
+            title={post.title}
+          />
+
+          {/* Article Content - First Part */}
+          <article className="prose prose-lg dark:prose-invert max-w-none mb-6">
+            <ReactMarkdown>{processContent(post.content.substring(0, post.content.length / 3))}</ReactMarkdown>
+          </article>
+          
+          {/* First CTA - Embedded within content */}
+          <EmbeddedCTAs 
+            contentType={determineContentType()} 
+            variant="minimal"
+          />
+          
+          {/* Article Content - Second Part */}
           <article className="prose prose-lg dark:prose-invert max-w-none mb-10">
-            <ReactMarkdown>{processContent(post.content)}</ReactMarkdown>
+            <ReactMarkdown>{processContent(post.content.substring(post.content.length / 3))}</ReactMarkdown>
           </article>
 
           {/* Tags */}
