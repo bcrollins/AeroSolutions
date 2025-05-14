@@ -83,7 +83,8 @@ export default function Header() {
         { label: 'News Hub', path: '/news' },
         { label: 'Contact', path: '/contact' },
       ],
-    }
+    },
+    { label: 'Client Preview', path: '/client-preview' }
   ];  
 
   return (  
@@ -225,19 +226,24 @@ export default function Header() {
                   {item.dropdown ? (  
                     <div>  
                       <button  
-                        onClick={toggleSolutionsDropdown}  
+                        onClick={item.label === 'AI Products' ? toggleSolutionsDropdown : toggleResourcesDropdown}  
                         className={cn(
                           "font-medium text-sm tracking-wide text-white hover:text-electric-cyan-400 flex items-center justify-between w-full",
-                          isSolutionsDropdownOpen ? "text-electric-cyan-400" : ""
+                          (item.label === 'AI Products' && isSolutionsDropdownOpen) || 
+                          (item.label === 'Resources' && isResourcesDropdownOpen) 
+                            ? "text-electric-cyan-400" : ""
                         )}
                       >  
                         <span>{item.label}</span>  
                         <ChevronDown className={cn(
                           "ml-1 w-5 h-5 transition-transform duration-200",
-                          isSolutionsDropdownOpen ? "rotate-180" : ""
+                          (item.label === 'AI Products' && isSolutionsDropdownOpen) ||
+                          (item.label === 'Resources' && isResourcesDropdownOpen)
+                            ? "rotate-180" : ""
                         )} />  
                       </button>  
-                      {isSolutionsDropdownOpen && (  
+                      {((item.label === 'AI Products' && isSolutionsDropdownOpen) || 
+                       (item.label === 'Resources' && isResourcesDropdownOpen)) && (  
                         <div className="pl-4 mt-3 mb-1 space-y-3 border-l-2 border-gray-700">  
                           {item.dropdown.map((subItem) => (  
                             <Link  
@@ -246,6 +252,7 @@ export default function Header() {
                               onClick={() => {
                                 toggleMobileMenu();
                                 setIsSolutionsDropdownOpen(false);
+                                setIsResourcesDropdownOpen(false);
                               }}  
                               className={cn(
                                 "block text-gray-300 hover:text-electric-cyan-400 transition-colors duration-200 text-sm py-1",
