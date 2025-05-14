@@ -1561,6 +1561,104 @@ export const insertPerformanceRecommendationSchema = createInsertSchema(performa
 export type PerformanceRecommendation = typeof performance_recommendations.$inferSelect;
 export type InsertPerformanceRecommendation = z.infer<typeof insertPerformanceRecommendationSchema>;
 
+// Content Calendar Creator schemas
+export const contentCalendars = pgTable("content_calendars", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  brandName: text("brand_name").notNull(),
+  industry: text("industry").notNull(),
+  companyGoals: text("company_goals").notNull(),
+  targetAudience: text("target_audience").notNull(),
+  toneOfVoice: text("tone_of_voice").notNull(),
+  includeImages: boolean("include_images").default(true).notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  frequency: text("frequency").notNull(), // daily, weekly, bi-weekly, monthly
+  platforms: json("platforms").$type<string[]>().notNull(), // X, Facebook, Instagram, Threads
+  keyHashtags: json("key_hashtags").$type<string[]>(),
+  brandColors: json("brand_colors").$type<string[]>(),
+  competitorUrls: json("competitor_urls").$type<string[]>(),
+  campaignThemes: json("campaign_themes").$type<string[]>(),
+  productHighlights: json("product_highlights").$type<string[]>(),
+  keyMessages: json("key_messages").$type<string[]>(),
+  callToAction: text("call_to_action"),
+  urlsToInclude: json("urls_to_include").$type<string[]>(),
+  preferredContentTypes: json("preferred_content_types").$type<string[]>(), // tips, quotes, videos, stories, etc.
+  exclusions: text("exclusions"), // content to avoid
+  specialDates: json("special_dates").$type<{date: string, description: string}[]>(),
+  status: text("status").default("generating").notNull(), // generating, ready, archived
+  lastGeneratedAt: timestamp("last_generated_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertContentCalendarSchema = createInsertSchema(contentCalendars).omit({
+  id: true,
+  lastGeneratedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type ContentCalendar = typeof contentCalendars.$inferSelect;
+export type InsertContentCalendar = z.infer<typeof insertContentCalendarSchema>;
+
+// Calendar Content Items Schema
+export const calendarContentItems = pgTable("calendar_content_items", {
+  id: serial("id").primaryKey(),
+  calendarId: integer("calendar_id").notNull().references(() => contentCalendars.id, { onDelete: "cascade" }),
+  platform: text("platform").notNull(), // X, Facebook, Instagram, Threads
+  postDate: date("post_date").notNull(),
+  postTime: text("post_time"), // optional recommended time in HH:MM format
+  contentType: text("content_type").notNull(), // text, image, video, carousel, poll, etc.
+  caption: text("caption").notNull(),
+  hashtags: json("hashtags").$type<string[]>(),
+  imagePrompt: text("image_prompt"),
+  generatedImageUrl: text("generated_image_url"),
+  engagementTip: text("engagement_tip"),
+  performancePrediction: text("performance_prediction"),
+  status: text("status").default("draft").notNull(), // draft, scheduled, posted
+  aiGeneratedScore: decimal("ai_generated_score", { precision: 4, scale: 2 }), // 0-100% unique score
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertCalendarContentItemSchema = createInsertSchema(calendarContentItems).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type CalendarContentItem = typeof calendarContentItems.$inferSelect;
+export type InsertCalendarContentItem = z.infer<typeof insertCalendarContentItemSchema>;
+
+// Content Performance Analytics Schema
+export const contentPerformanceAnalytics = pgTable("content_performance_analytics", {
+  id: serial("id").primaryKey(),
+  contentItemId: integer("content_item_id").notNull().references(() => calendarContentItems.id, { onDelete: "cascade" }),
+  impressions: integer("impressions").default(0).notNull(),
+  engagements: integer("engagements").default(0).notNull(),
+  clicks: integer("clicks").default(0).notNull(),
+  shares: integer("shares").default(0).notNull(),
+  saves: integer("saves").default(0).notNull(),
+  comments: integer("comments").default(0).notNull(),
+  conversionRate: decimal("conversion_rate", { precision: 5, scale: 2 }),
+  performanceScore: decimal("performance_score", { precision: 5, scale: 2 }), // calculated overall score
+  bestPerformingAudience: json("best_performing_audience").$type<Record<string, any>>(),
+  insights: text("insights"), // AI-generated insights about the content performance
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertContentPerformanceAnalyticsSchema = createInsertSchema(contentPerformanceAnalytics).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type ContentPerformanceAnalytics = typeof contentPerformanceAnalytics.$inferSelect;
+export type InsertContentPerformanceAnalytics = z.infer<typeof insertContentPerformanceAnalyticsSchema>;
+
 // Support tickets table
 export const support_tickets = pgTable("support_tickets", {
   id: serial("id").primaryKey(),
