@@ -28,6 +28,11 @@ import {
   courses, courseModules, lessons, quizQuestions, courseResources,
   userCourseEnrollments, userLessonCompletions, userQuizAttempts, courseRatings,
   forumThreads, forumReplies, mediaResources,
+  // AI Content Calendar Creator imports
+  contentCalendars, calendarContentItems, contentPerformanceAnalytics,
+  type ContentCalendar, type InsertContentCalendar,
+  type CalendarContentItem, type InsertCalendarContentItem,
+  type ContentPerformanceAnalytics, type InsertContentPerformanceAnalytics,
   // Community forum imports
   forumLikes, forumNotifications, userForumActivity,
   type ForumLike, type InsertForumLike, 

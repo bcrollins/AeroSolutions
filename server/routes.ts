@@ -16,6 +16,7 @@ import authRoutes from "./routes/auth";
 import analyticsRoutes from "./routes/analytics";
 import aiCoursesRoutes from "./routes/aiCourses";
 import certificatesRoutes from "./routes/certificates";
+import contentCalendarRoutes from "./routes/contentCalendar";
 import { storage } from "./storage";
 import { logger } from "./utils/logger";
 import { setupAuth } from "./replitAuth";
@@ -57,6 +58,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register Certificate routes
   app.use("/api/certificates", certificatesRoutes);
+  
+  // Register Content Calendar routes
+  app.use("/api/content-calendar", contentCalendarRoutes);
   
   // Register Analytics routes (for subscription analytics)
   app.use("/api/analytics", analyticsRoutes);
