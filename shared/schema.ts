@@ -1104,28 +1104,32 @@ export type PageView = typeof pageViews.$inferSelect;
 export type InsertPageView = z.infer<typeof insertPageViewSchema>;
 
 // Analytics events schema for tracking user actions
-export const analyticsEvents = pgTable("analytics_events", {
+export const analytics = pgTable("analytics", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").references(() => users.id, { onDelete: "set null" }),
   sessionId: text("session_id"), // For anonymous tracking
-  category: text("category").notNull(), // subscription, content, feature, etc.
-  action: text("action").notNull(), // view, click, purchase, etc.
-  label: text("label"), // More specific information about the action
-  value: integer("value"), // Numeric value associated with the event
-  path: text("path").notNull(), // Page path where the event occurred
-  metadata: json("metadata").$type<Record<string, any>>().default({}),
-  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  eventType: text("event_type").notNull(), // pageview, article, custom
+  eventAction: text("event_action"), // view, share, like, comment, etc.
+  path: text("path"), // Page path for pageview events
+  referrer: text("referrer"), // Referrer URL
+  articleId: text("article_id"), // For article-specific events
+  articleTitle: text("article_title"), // Article title for easier querying
+  category: text("category"), // Event category or article category
+  label: text("label"), // Additional event label
+  value: integer("value"), // Numeric value (read time, etc.)
+  clientTimestamp: timestamp("client_timestamp"), // Timestamp from client
+  timestamp: timestamp("timestamp").defaultNow().notNull(), // Server timestamp
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).omit({
+export const insertAnalyticsSchema = createInsertSchema(analytics).omit({
   id: true,
   createdAt: true,
   timestamp: true,
 });
 
-export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
-export type InsertAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;
+export type AnalyticsEvent = typeof analytics.$inferSelect;
+export type InsertAnalytics = z.infer<typeof insertAnalyticsSchema>;
 
 // Subscription analytics schema for tracking subscription metrics
 export const subscriptionAnalytics = pgTable("subscription_analytics", {

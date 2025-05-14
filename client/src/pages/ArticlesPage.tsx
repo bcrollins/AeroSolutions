@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { useTranslation } from 'react-i18next';
+import { initAnalytics, trackPageView, trackArticleEvent } from "@/lib/analytics";
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import { Search, Filter, FileText, ArrowRight, Clock, Tag } from 'lucide-react';
@@ -54,103 +55,82 @@ type Post = {
   viewCount: number;
 };
 
-// Article Card Component
+// Article Card Component - Newspaper Style
 const ArticleCard: React.FC<{ post: Post }> = ({ post }) => {
   return (
-    <Card className="h-full flex flex-col hover:shadow-md transition-shadow duration-300">
-      <CardHeader className="p-4 pb-2">
-        <div className="flex gap-2 mb-2">
-          {post.category && (
-            <Badge variant="outline" className="text-xs font-medium text-blue-600">
-              {post.category}
-            </Badge>
-          )}
+    <div className="flex flex-col group">
+      {/* Image Section */}
+      <div className="relative mb-4 overflow-hidden">
+        {post.imageUrl ? (
+          <div 
+            className="h-48 w-full bg-cover bg-center transform transition-transform duration-500 group-hover:scale-105" 
+            style={{ backgroundImage: `url(${post.imageUrl})` }}
+          />
+        ) : (
+          <div className="h-48 w-full bg-gradient-to-r from-blue-900 to-indigo-800 flex items-center justify-center">
+            <FileText className="h-12 w-12 text-white/70" />
+          </div>
+        )}
+        
+        {/* Category Badge - Positioned on image */}
+        {post.category && (
+          <div className="absolute top-0 right-0 bg-blue-600 text-white text-xs font-semibold uppercase tracking-wider px-3 py-1">
+            {post.category}
+          </div>
+        )}
+      </div>
+      
+      {/* Content Section */}
+      <div className="flex flex-col flex-grow">
+        {/* Date and Read Time */}
+        <div className="flex items-center text-xs text-muted-foreground mb-2">
+          <span className="font-medium">{new Date(post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
           {post.readTimeMinutes && (
-            <Badge variant="secondary" className="text-xs font-normal flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              {post.readTimeMinutes} min read
-            </Badge>
+            <>
+              <span className="mx-2">•</span>
+              <Clock className="h-3 w-3 mr-1" />
+              <span>{post.readTimeMinutes} min read</span>
+            </>
           )}
         </div>
+        
+        {/* Title */}
         <Link href={`/articles/${post.slug}`}>
-          <CardTitle className="text-lg font-bold hover:text-blue-600 cursor-pointer transition-colors">
-            {post.title}
-          </CardTitle>
-        </Link>
-      </CardHeader>
-      <CardContent className="p-4 pt-0 flex-grow">
-        <p className="text-muted-foreground text-sm line-clamp-3">
-          {post.summary || post.content.substring(0, 150)}...
-        </p>
-      </CardContent>
-      <CardFooter className="p-4 pt-0 flex items-center justify-between">
-        <div className="flex gap-2 flex-wrap">
-          {post.tags.slice(0, 2).map((tag, index) => (
-            <Badge key={index} variant="secondary" className="text-xs">
-              {tag}
-            </Badge>
-          ))}
-          {post.tags.length > 2 && (
-            <Badge variant="secondary" className="text-xs">
-              +{post.tags.length - 2}
-            </Badge>
-          )}
-        </div>
-        <Link href={`/articles/${post.slug}`}>
-          <Button variant="link" className="p-0 h-auto font-semibold flex items-center">
-            Read more <ArrowRight className="h-4 w-4 ml-1" />
-          </Button>
-        </Link>
-      </CardFooter>
-    </Card>
-  );
-};
-
-// Featured Article Card Component
-const FeaturedArticleCard: React.FC<{ post: Post }> = ({ post }) => {
-  return (
-    <Card className="overflow-hidden border-0 shadow-lg">
-      {post.imageUrl ? (
-        <div 
-          className="h-48 w-full bg-cover bg-center" 
-          style={{ backgroundImage: `url(${post.imageUrl})` }}
-        />
-      ) : (
-        <div className="h-48 w-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
-          <FileText className="h-16 w-16 text-white" />
-        </div>
-      )}
-      <CardContent className="p-6">
-        <div className="flex gap-2 mb-3">
-          {post.category && (
-            <Badge className="bg-blue-600 text-white hover:bg-blue-700">
-              {post.category}
-            </Badge>
-          )}
-          {post.readTimeMinutes && (
-            <Badge variant="outline" className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              {post.readTimeMinutes} min read
-            </Badge>
-          )}
-        </div>
-        <Link href={`/articles/${post.slug}`}>
-          <h3 className="text-xl font-bold mb-3 hover:text-blue-600 cursor-pointer transition-colors">
+          <h3 className="text-lg font-bold leading-tight mb-2 transition-colors group-hover:text-blue-600">
             {post.title}
           </h3>
         </Link>
-        <p className="text-muted-foreground mb-4 line-clamp-3">
-          {post.summary || post.content.substring(0, 180)}...
+        
+        {/* Summary */}
+        <p className="text-sm text-muted-foreground mb-3 line-clamp-3">
+          {post.summary || post.content.substring(0, 150)}...
         </p>
-        <Link href={`/articles/${post.slug}`}>
-          <Button>
-            Read Article <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
-        </Link>
-      </CardContent>
-    </Card>
+        
+        {/* Tags and Read More */}
+        <div className="mt-auto flex items-center justify-between">
+          <div className="flex flex-wrap gap-2">
+            {post.tags && post.tags.slice(0, 2).map((tag, index) => (
+              <span key={index} className="text-xs text-blue-500 hover:text-blue-700">
+                #{tag}
+              </span>
+            ))}
+            {post.tags && post.tags.length > 2 && (
+              <span className="text-xs text-muted-foreground">
+                +{post.tags.length - 2}
+              </span>
+            )}
+          </div>
+          
+          <Link href={`/articles/${post.slug}`} className="font-medium text-xs text-blue-600 hover:text-blue-700 hover:underline flex items-center">
+            Read Article <ArrowRight className="h-3 w-3 ml-1" />
+          </Link>
+        </div>
+      </div>
+    </div>
   );
 };
+
+// No longer used - Featured articles are now handled in the newspaper-style layout
 
 // Main Articles Page Component
 const ArticlesPage: React.FC = () => {
@@ -294,39 +274,149 @@ const ArticlesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Content */}
+      {/* Content - Newspaper Layout */}
       <div className="space-y-16">
-        {/* Featured Articles */}
+        {/* Featured Articles - Lead Story + Headlines */}
         <section>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold">Featured Articles</h2>
+          <div className="flex items-center justify-between mb-6 border-b-2 border-blue-600">
+            <h2 className="text-2xl font-bold uppercase tracking-wider">Featured Stories</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {featuredPosts.map((post) => (
-              <FeaturedArticleCard key={post.id} post={post} />
-            ))}
-          </div>
+          
+          {/* Newspaper Grid Layout */}
+          {featuredPosts.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Lead Story (First column, spans 8 cols) */}
+              {featuredPosts.length > 0 && (
+                <div className="lg:col-span-8 border-r border-gray-800 lg:pr-6">
+                  <div className="relative">
+                    {featuredPosts[0].imageUrl ? (
+                      <div 
+                        className="h-[300px] md:h-[400px] w-full bg-cover bg-center" 
+                        style={{ backgroundImage: `url(${featuredPosts[0].imageUrl})` }}
+                      />
+                    ) : (
+                      <div className="h-[300px] md:h-[400px] w-full bg-gradient-to-r from-blue-900 to-blue-700 flex items-center justify-center">
+                        <FileText className="h-20 w-20 text-white/80" />
+                      </div>
+                    )}
+                    
+                    <div className="mt-4">
+                      {featuredPosts[0].category && (
+                        <span className="inline-block bg-blue-600 text-white text-xs font-semibold uppercase tracking-wider px-2 py-1 mb-3">
+                          {featuredPosts[0].category}
+                        </span>
+                      )}
+                      
+                      <Link href={`/articles/${featuredPosts[0].slug}`}>
+                        <h3 className="text-2xl md:text-3xl font-bold mb-3 leading-tight hover:text-blue-600 transition-colors">
+                          {featuredPosts[0].title}
+                        </h3>
+                      </Link>
+                      
+                      <p className="text-lg text-muted-foreground mb-4 line-clamp-3">
+                        {featuredPosts[0].summary || featuredPosts[0].content.substring(0, 280)}...
+                      </p>
+                      
+                      <div className="flex justify-between items-center text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4" />
+                          <span>{featuredPosts[0].readTimeMinutes || '5'} min read</span>
+                        </div>
+                        
+                        <Link href={`/articles/${featuredPosts[0].slug}`}>
+                          <span className="font-medium text-blue-600 hover:text-blue-700 hover:underline flex items-center">
+                            Continue Reading <ArrowRight className="h-3 w-3 ml-1" />
+                          </span>
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Sidebar Stories (Second column, spans 4 cols) */}
+              <div className="lg:col-span-4 space-y-6">
+                <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground border-b border-gray-800 pb-2 mb-4">
+                  Top Headlines
+                </h4>
+                
+                {featuredPosts.slice(1, 4).map((post, index) => (
+                  <div key={post.id} className={`${index < featuredPosts.slice(1, 4).length - 1 ? 'pb-6 border-b border-gray-800 mb-6' : ''}`}>
+                    <div className="flex gap-4">
+                      <div className="flex-shrink-0">
+                        {post.imageUrl ? (
+                          <div 
+                            className="h-20 w-20 bg-cover bg-center rounded-sm" 
+                            style={{ backgroundImage: `url(${post.imageUrl})` }}
+                          />
+                        ) : (
+                          <div className="h-20 w-20 bg-gradient-to-r from-blue-800 to-indigo-800 flex items-center justify-center rounded-sm">
+                            <FileText className="h-8 w-8 text-white/80" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex-1">
+                        {post.category && (
+                          <span className="inline-block text-blue-600 text-xs font-semibold uppercase mb-1">
+                            {post.category}
+                          </span>
+                        )}
+                        
+                        <Link href={`/articles/${post.slug}`}>
+                          <h4 className="text-base font-bold leading-tight hover:text-blue-600 transition-colors mb-2">
+                            {post.title}
+                          </h4>
+                        </Link>
+                        
+                        <div className="flex items-center text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3 mr-1" />
+                          <span>{post.readTimeMinutes || '5'} min read</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-12 border border-gray-800 rounded-md">
+              <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-xl font-medium mb-2">No featured articles available</h3>
+              <p className="text-muted-foreground">
+                Featured articles will appear here when published.
+              </p>
+            </div>
+          )}
         </section>
 
-        {/* Topic Tabs */}
-        <section>
+        {/* Topic Tabs - News Sections */}
+        <section className="border-t border-gray-800 pt-8">
           <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="mb-8">
-              <TabsTrigger value="all">All Topics</TabsTrigger>
-              <TabsTrigger value="ai">Artificial Intelligence</TabsTrigger>
-              <TabsTrigger value="automation">Automation</TabsTrigger>
-              <TabsTrigger value="webdev">Web Development</TabsTrigger>
+            <TabsList className="mb-8 border-b border-gray-800 pb-0">
+              <TabsTrigger value="all" className="data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:rounded-none data-[state=active]:text-white rounded-none">
+                All Articles
+              </TabsTrigger>
+              <TabsTrigger value="ai" className="data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:rounded-none data-[state=active]:text-white rounded-none">
+                AI Research
+              </TabsTrigger>
+              <TabsTrigger value="automation" className="data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:rounded-none data-[state=active]:text-white rounded-none">
+                Automation
+              </TabsTrigger>
+              <TabsTrigger value="webdev" className="data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:rounded-none data-[state=active]:text-white rounded-none">
+                Technology
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="all" className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
                 {filteredPosts.map((post) => (
                   <ArticleCard key={post.id} post={post} />
                 ))}
               </div>
               
               {filteredPosts.length === 0 && (
-                <div className="text-center py-12">
+                <div className="text-center py-12 border border-gray-800 rounded-md">
                   <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <h3 className="text-xl font-medium mb-2">No articles found</h3>
                   <p className="text-muted-foreground">
@@ -334,7 +424,7 @@ const ArticlesPage: React.FC = () => {
                   </p>
                   <Button 
                     variant="outline" 
-                    className="mt-4"
+                    className="mt-4 border-gray-700 hover:bg-gray-800"
                     onClick={() => {
                       setSearchQuery('');
                       setActiveTab('all');

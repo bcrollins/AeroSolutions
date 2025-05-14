@@ -1,109 +1,164 @@
-// Define the gtag function globally
-declare global {
-  interface Window {
-    dataLayer: any[];
-    gtag: (...args: any[]) => void;
-  }
+/**
+ * RXAI Custom Analytics
+ * 
+ * This module provides custom analytics tracking functionality without relying on Google Analytics.
+ * It includes tracking for page views, article interactions, and custom events.
+ */
+
+interface PageViewEvent {
+  type: 'pageview';
+  path: string;
+  referrer?: string;
+  timestamp: number;
 }
 
-// Initialize Google Analytics
-export const initGA = () => {
-  const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
+interface ArticleEvent {
+  type: 'article';
+  action: 'view' | 'share' | 'like' | 'comment' | 'complete';
+  articleId: number | string;
+  articleTitle?: string;
+  articleCategory?: string;
+  readTime?: number;
+  timestamp: number;
+}
 
-  if (!measurementId) {
-    console.warn('Missing required Google Analytics key: VITE_GA_MEASUREMENT_ID');
-    return;
-  }
+interface CustomEvent {
+  type: 'custom';
+  action: string;
+  category?: string;
+  label?: string;
+  value?: number;
+  timestamp: number;
+}
 
-  // Add Google Analytics script to the head
-  const script1 = document.createElement('script');
-  script1.async = true;
-  script1.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
-  document.head.appendChild(script1);
+export type AnalyticsEvent = PageViewEvent | ArticleEvent | CustomEvent;
 
-  // Initialize gtag
-  const script2 = document.createElement('script');
-  script2.innerHTML = `
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', '${measurementId}');
-  `;
-  document.head.appendChild(script2);
-};
+// In-memory storage for analytics events (will be sent in batches)
+let eventQueue: AnalyticsEvent[] = [];
+const MAX_QUEUE_SIZE = 20; // Send events when queue reaches this length
 
-// Track page views - useful for single-page applications
-export const trackPageView = (url: string) => {
-  if (typeof window === 'undefined' || !window.gtag) return;
+// Initialize analytics
+export const initAnalytics = () => {
+  console.log('RXAI Custom Analytics initialized');
   
-  const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
-  if (!measurementId) return;
-  
-  window.gtag('config', measurementId, {
-    page_path: url
+  // Send any queued events before user leaves the page
+  window.addEventListener('beforeunload', () => {
+    if (eventQueue.length > 0) {
+      sendEvents();
+    }
   });
+  
+  // Set up periodic sending of events (every 30 seconds)
+  setInterval(() => {
+    if (eventQueue.length > 0) {
+      sendEvents();
+    }
+  }, 30000);
 };
 
-// Track events
+// Track page views
+export const trackPageView = (path: string) => {
+  if (typeof window === 'undefined') return;
+  
+  const event: PageViewEvent = {
+    type: 'pageview',
+    path,
+    referrer: document.referrer,
+    timestamp: Date.now()
+  };
+  
+  queueEvent(event);
+  
+  // Debug
+  console.log(`📊 Page View: ${path}`);
+};
+
+// Track article interactions
+export const trackArticleEvent = (
+  action: 'view' | 'share' | 'like' | 'comment' | 'complete',
+  articleId: number | string,
+  metadata?: {
+    title?: string;
+    category?: string;
+    readTime?: number;
+  }
+) => {
+  if (typeof window === 'undefined') return;
+  
+  const event: ArticleEvent = {
+    type: 'article',
+    action,
+    articleId,
+    articleTitle: metadata?.title,
+    articleCategory: metadata?.category,
+    readTime: metadata?.readTime,
+    timestamp: Date.now()
+  };
+  
+  queueEvent(event);
+  
+  // Debug
+  console.log(`📊 Article ${action}: ${metadata?.title || articleId}`);
+};
+
+// Track custom events
 export const trackEvent = (
   action: string, 
   category?: string, 
   label?: string, 
   value?: number
 ) => {
-  if (typeof window === 'undefined' || !window.gtag) return;
+  if (typeof window === 'undefined') return;
   
-  window.gtag('event', action, {
-    event_category: category,
-    event_label: label,
-    value: value,
-  });
+  const event: CustomEvent = {
+    type: 'custom',
+    action,
+    category,
+    label,
+    value,
+    timestamp: Date.now()
+  };
+  
+  queueEvent(event);
+  
+  // Debug
+  console.log(`📊 Custom Event: ${action} (${category || 'uncategorized'})`);
 };
 
-// Subscription-specific tracking events
-export const trackSubscriptionEvents = {
-  viewPricingPage: () => {
-    trackEvent('view_pricing_page', 'subscription');
-  },
-  toggleBillingCycle: (cycle: 'monthly' | 'annual') => {
-    trackEvent('toggle_billing_cycle', 'subscription', cycle);
-  },
-  selectPlan: (planName: string, planPrice: number, billingCycle: 'monthly' | 'annual') => {
-    trackEvent('select_plan', 'subscription', planName, planPrice);
+// Add event to queue and send if queue is full
+const queueEvent = (event: AnalyticsEvent) => {
+  eventQueue.push(event);
+  
+  // Send events if queue is full
+  if (eventQueue.length >= MAX_QUEUE_SIZE) {
+    sendEvents();
+  }
+};
+
+// Send queued events to the server
+const sendEvents = async () => {
+  if (eventQueue.length === 0) return;
+  
+  try {
+    const eventsToSend = [...eventQueue];
+    eventQueue = []; // Clear queue
     
-    // Also send as ecommerce event for more detailed analytics
-    if (window.gtag) {
-      window.gtag('event', 'select_item', {
-        items: [{
-          item_id: planName,
-          item_name: planName,
-          price: planPrice,
-          item_category: 'subscription',
-          item_variant: billingCycle
-        }]
-      });
-    }
-  },
-  startSubscription: (planName: string, planPrice: number, billingCycle: 'monthly' | 'annual') => {
-    trackEvent('start_subscription', 'subscription', planName, planPrice);
+    const response = await fetch('/api/analytics/events', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ events: eventsToSend }),
+    });
     
-    // Send purchase event
-    if (window.gtag) {
-      window.gtag('event', 'purchase', {
-        transaction_id: 'subscription_' + Date.now(),
-        value: planPrice,
-        currency: 'USD',
-        items: [{
-          item_id: planName,
-          item_name: planName,
-          price: planPrice,
-          item_category: 'subscription',
-          item_variant: billingCycle
-        }]
-      });
+    if (!response.ok) {
+      throw new Error(`Error sending analytics: ${response.statusText}`);
     }
-  },
-  cancelSubscription: (planName: string, reason?: string) => {
-    trackEvent('cancel_subscription', 'subscription', `${planName}${reason ? ': ' + reason : ''}`);
+    
+    console.log(`📊 Sent ${eventsToSend.length} analytics events`);
+  } catch (error) {
+    console.error('Failed to send analytics events:', error);
+    // Put events back in queue to try again later
+    eventQueue = [...eventQueue, ...eventQueue];
   }
 };

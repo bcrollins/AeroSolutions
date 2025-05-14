@@ -1,208 +1,108 @@
-import express from 'express';
-import { storage } from '../storage';
-import { isAuthenticated } from '../replitAuth';
+import { Router } from 'express';
+import { db } from '../db';
+import { analytics, insertAnalyticsSchema } from '@shared/schema';
+import { and, eq } from 'drizzle-orm';
 
-const router = express.Router();
+const router = Router();
 
-// Authentication and admin check middleware
-const isAdmin = (req: any, res: express.Response, next: express.NextFunction) => {
-  const user = req.user?.claims;
-  
-  if (!user) {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
-  
-  // Check if the user is an admin by email (super admin)
-  // You can enhance this with proper role-based checks from your user table
-  if (user.email === 'brollins565@gmail.com') {
-    return next();
-  }
-  
-  return res.status(403).json({ message: 'Access denied. Admin privileges required.' });
-};
-
-// Get page view statistics
-router.get('/pageviews', isAuthenticated, isAdmin, async (req, res) => {
+/**
+ * POST /api/analytics/events
+ * 
+ * Endpoint to receive and store analytics events from the client
+ */
+router.post('/events', async (req, res) => {
   try {
-    const startDate = req.query.startDate 
-      ? new Date(req.query.startDate as string) 
-      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // Default to 30 days
-      
-    const endDate = req.query.endDate 
-      ? new Date(req.query.endDate as string) 
-      : new Date();
-      
-    const pageViews = await storage.getPageViewsByPeriod(startDate, endDate);
-    const mostViewedPages = await storage.getMostViewedPages(10);
+    const { events } = req.body;
     
-    res.json({
+    if (!Array.isArray(events) || events.length === 0) {
+      return res.status(400).json({ message: 'No events provided or invalid format' });
+    }
+    
+    // Map events to database format
+    const dbEvents = events.map(event => {
+      const userId = req.user?.claims?.sub || null;
+      const sessionId = req.sessionID || null;
+
+      return {
+        userId,
+        sessionId,
+        eventType: event.type,
+        eventAction: 'action' in event ? event.action : null,
+        path: 'path' in event ? event.path : null,
+        referrer: 'referrer' in event ? event.referrer : null,
+        articleId: 'articleId' in event ? event.articleId : null,
+        articleTitle: 'articleTitle' in event ? event.articleTitle : null,
+        category: ('category' in event ? event.category : 
+                 ('articleCategory' in event ? event.articleCategory : null)),
+        label: 'label' in event ? event.label : null,
+        value: 'value' in event ? event.value : 
+              ('readTime' in event ? event.readTime : null),
+        clientTimestamp: new Date(event.timestamp)
+      };
+    });
+    
+    // Store events in database
+    await db.insert(analytics).values(dbEvents);
+    
+    res.status(200).json({ message: `Successfully stored ${events.length} events` });
+  } catch (error) {
+    console.error('Error storing analytics events:', error);
+    res.status(500).json({ message: 'Failed to store analytics events' });
+  }
+});
+
+/**
+ * GET /api/analytics/summary
+ * 
+ * Endpoint to get a summary of analytics data (for admin dashboards)
+ */
+router.get('/summary', async (req, res) => {
+  try {
+    // Get page view counts
+    const pageViews = await db
+      .select({
+        path: analytics.path,
+        count: db.fn.count(analytics.id)
+      })
+      .from(analytics)
+      .where(eq(analytics.eventType, 'pageview'))
+      .groupBy(analytics.path)
+      .orderBy(db.desc(db.fn.count(analytics.id)));
+    
+    // Get popular articles
+    const popularArticles = await db
+      .select({
+        articleId: analytics.articleId,
+        articleTitle: analytics.articleTitle,
+        count: db.fn.count(analytics.id)
+      })
+      .from(analytics)
+      .where(and(
+        eq(analytics.eventType, 'article'),
+        eq(analytics.eventAction, 'view')
+      ))
+      .groupBy(analytics.articleId, analytics.articleTitle)
+      .orderBy(db.desc(db.fn.count(analytics.id)))
+      .limit(10);
+    
+    // Get event counts by type
+    const eventCounts = await db
+      .select({
+        eventType: analytics.eventType,
+        count: db.fn.count(analytics.id)
+      })
+      .from(analytics)
+      .groupBy(analytics.eventType)
+      .orderBy(db.desc(db.fn.count(analytics.id)));
+    
+    res.status(200).json({
       pageViews,
-      mostViewedPages,
-      totalViews: pageViews.length
+      popularArticles,
+      eventCounts
     });
   } catch (error) {
-    console.error('Error getting page view analytics:', error);
-    res.status(500).json({ message: 'Failed to fetch page view data' });
-  }
-});
-
-// Get user analytics events
-router.get('/events', isAuthenticated, isAdmin, async (req, res) => {
-  try {
-    const eventType = req.query.type as string;
-    const startDate = req.query.startDate 
-      ? new Date(req.query.startDate as string) 
-      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      
-    const endDate = req.query.endDate 
-      ? new Date(req.query.endDate as string) 
-      : new Date();
-    
-    let events;
-    if (eventType) {
-      events = await storage.getEventsByType(eventType, startDate, endDate);
-    } else {
-      // For all event types, we need to implement a separate method or handle it differently
-      // This is a simplified approach
-      events = await storage.getEventsByType('all', startDate, endDate);
-    }
-    
-    res.json({
-      events,
-      totalEvents: events.length,
-      period: {
-        startDate,
-        endDate
-      }
-    });
-  } catch (error) {
-    console.error('Error getting analytics events:', error);
-    res.status(500).json({ message: 'Failed to fetch analytics events' });
-  }
-});
-
-// Get subscription metrics
-router.get('/subscription-metrics', isAuthenticated, isAdmin, async (req, res) => {
-  try {
-    const startDate = req.query.startDate 
-      ? new Date(req.query.startDate as string) 
-      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      
-    const endDate = req.query.endDate 
-      ? new Date(req.query.endDate as string) 
-      : new Date();
-    
-    const newSubscriptionsCount = await storage.getNewSubscriptionsCount(startDate, endDate);
-    const canceledSubscriptionsCount = await storage.getCanceledSubscriptionCount(startDate, endDate);
-    const totalRevenue = await storage.getTotalRevenue(startDate, endDate);
-    const subscriptionsByPlan = await storage.getSubscriptionsByPlan(startDate, endDate);
-    const activeSubscriberCount = await storage.getActiveSubscriberCount();
-    const churnRate = await storage.getSubscriptionChurnRate(startDate, endDate);
-    
-    res.json({
-      newSubscriptionsCount,
-      canceledSubscriptionsCount,
-      totalRevenue,
-      subscriptionsByPlan,
-      activeSubscriberCount,
-      churnRate,
-      period: {
-        startDate,
-        endDate
-      }
-    });
-  } catch (error) {
-    console.error('Error getting subscription metrics:', error);
-    res.status(500).json({ message: 'Failed to fetch subscription metrics' });
-  }
-});
-
-// Get subscription events (newest endpoint)
-router.get('/subscription-events', isAuthenticated, isAdmin, async (req, res) => {
-  try {
-    const eventType = req.query.eventType as string;
-    const startDate = req.query.startDate 
-      ? new Date(req.query.startDate as string) 
-      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      
-    const endDate = req.query.endDate 
-      ? new Date(req.query.endDate as string) 
-      : new Date();
-    
-    // If eventType is 'all' or not provided, get all event types
-    let events;
-    if (eventType && eventType !== 'all') {
-      events = await storage.getSubscriptionEventsByType(eventType, startDate, endDate, 100);
-    } else {
-      // Get all event types for the period (we need to implement this method)
-      // For simplicity, we're combining multiple calls
-      const createdEvents = await storage.getSubscriptionEventsByType('created', startDate, endDate, 100);
-      const updatedEvents = await storage.getSubscriptionEventsByType('updated', startDate, endDate, 100);
-      const canceledEvents = await storage.getSubscriptionEventsByType('canceled', startDate, endDate, 100);
-      const trialStartedEvents = await storage.getSubscriptionEventsByType('trial_started', startDate, endDate, 100);
-      const trialEndedEvents = await storage.getSubscriptionEventsByType('trial_ended', startDate, endDate, 100);
-      const trialConvertedEvents = await storage.getSubscriptionEventsByType('trial_converted', startDate, endDate, 100);
-      const paymentSucceededEvents = await storage.getSubscriptionEventsByType('payment_succeeded', startDate, endDate, 100);
-      const paymentFailedEvents = await storage.getSubscriptionEventsByType('payment_failed', startDate, endDate, 100);
-      
-      events = [
-        ...createdEvents,
-        ...updatedEvents,
-        ...canceledEvents,
-        ...trialStartedEvents,
-        ...trialEndedEvents,
-        ...trialConvertedEvents,
-        ...paymentSucceededEvents,
-        ...paymentFailedEvents
-      ];
-    }
-    
-    // Get active subscription count
-    const activeSubscriptions = await storage.getActiveSubscriberCount();
-    
-    // Include user info for reference
-    const userIds = [...new Set(events.map(event => event.userId))];
-    const users = await Promise.all(userIds.map(id => storage.getUser(id)))
-      .then(results => results.filter(user => user !== undefined));
-    
-    res.json({
-      events,
-      users,
-      activeSubscriptions,
-      period: {
-        startDate,
-        endDate
-      }
-    });
-  } catch (error) {
-    console.error('Error getting subscription events:', error);
-    res.status(500).json({ message: 'Failed to fetch subscription events' });
-  }
-});
-
-// Get trial conversion rate
-router.get('/subscription-conversion-rate', isAuthenticated, isAdmin, async (req, res) => {
-  try {
-    const startDate = req.query.startDate 
-      ? new Date(req.query.startDate as string) 
-      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      
-    const endDate = req.query.endDate 
-      ? new Date(req.query.endDate as string) 
-      : new Date();
-    
-    const rate = await storage.getSubscriptionConversionRate(startDate, endDate);
-    
-    res.json({
-      rate,
-      period: {
-        startDate,
-        endDate
-      }
-    });
-  } catch (error) {
-    console.error('Error getting subscription conversion rate:', error);
-    res.status(500).json({ message: 'Failed to fetch conversion rate' });
+    console.error('Error fetching analytics summary:', error);
+    res.status(500).json({ message: 'Failed to fetch analytics summary' });
   }
 });
 
