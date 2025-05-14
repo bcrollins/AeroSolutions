@@ -29,13 +29,14 @@ function parsePriceString(price: string): number {
 }
 
 // Plan type definitions
-type PlanTier = 'basic' | 'pro' | 'enterprise';
+type PlanTier = 'free' | 'basic' | 'pro' | 'enterprise';
 
 // Feature comparison definition
 interface FeatureComparison {
   name: string;
   description?: string;
   tiers: {
+    free: boolean | string;
     basic: boolean | string;
     pro: boolean | string;
     enterprise: boolean | string;
@@ -72,6 +73,7 @@ const PricingPage: React.FC = () => {
       name: "AI Courses Access",
       description: "Access to our library of AI training courses",
       tiers: {
+        free: "2 courses only",
         basic: "5 credits/month",
         pro: "Unlimited",
         enterprise: "Unlimited"
@@ -81,6 +83,7 @@ const PricingPage: React.FC = () => {
       name: "Tool Usage",
       description: "Access to AI-powered design and development tools",
       tiers: {
+        free: "3 uses/day",
         basic: "5 API calls/day",
         pro: "Unlimited",
         enterprise: "Unlimited"
@@ -90,6 +93,7 @@ const PricingPage: React.FC = () => {
       name: "Web Development Projects",
       description: "Access to web development project templates and resources",
       tiers: {
+        free: "Preview only",
         basic: "Sample projects only",
         pro: true,
         enterprise: true
@@ -99,6 +103,7 @@ const PricingPage: React.FC = () => {
       name: "Development Services Discount",
       description: "Discount on custom development services",
       tiers: {
+        free: false,
         basic: false,
         pro: "10% discount",
         enterprise: "20% discount"
@@ -108,6 +113,7 @@ const PricingPage: React.FC = () => {
       name: "Support",
       description: "Customer and technical support",
       tiers: {
+        free: "Community support",
         basic: "Email support",
         pro: "Priority email support",
         enterprise: "24/7 priority support"
@@ -117,6 +123,7 @@ const PricingPage: React.FC = () => {
       name: "Personalized Coaching",
       description: "One-on-one coaching sessions with experts",
       tiers: {
+        free: false,
         basic: false,
         pro: false,
         enterprise: true
@@ -126,6 +133,7 @@ const PricingPage: React.FC = () => {
       name: "Dedicated Account Manager",
       description: "Personal account manager for your organization",
       tiers: {
+        free: false,
         basic: false,
         pro: false,
         enterprise: true
@@ -135,6 +143,7 @@ const PricingPage: React.FC = () => {
       name: "Custom Development Projects",
       description: "Custom development services for enterprise needs",
       tiers: {
+        free: false,
         basic: false,
         pro: false,
         enterprise: true
@@ -144,6 +153,7 @@ const PricingPage: React.FC = () => {
       name: "White-Label Solutions",
       description: "Rebrand our tools with your own branding",
       tiers: {
+        free: false,
         basic: false,
         pro: false, 
         enterprise: true
@@ -153,9 +163,30 @@ const PricingPage: React.FC = () => {
       name: "Team Collaboration Tools",
       description: "Tools for team collaboration and management",
       tiers: {
+        free: false,
         basic: false,
         pro: false,
         enterprise: true
+      }
+    },
+    {
+      name: "Community Forum Access",
+      description: "Access to our community forum for discussions and support",
+      tiers: {
+        free: true,
+        basic: true,
+        pro: true,
+        enterprise: true
+      }
+    },
+    {
+      name: "Analytics Dashboard",
+      description: "Track your progress and performance metrics",
+      tiers: {
+        free: "Basic metrics",
+        basic: "Standard metrics",
+        pro: "Advanced analytics",
+        enterprise: "Custom reports"
       }
     }
   ];
@@ -201,6 +232,13 @@ const PricingPage: React.FC = () => {
   }
 
   // Find the plans for the pricing page
+  const freePlan = {
+    id: 0,
+    name: 'Free',
+    price: '0',
+    interval: 'month'
+  };
+  
   const basicPlan = plans?.find(p => 
     p.name === (billingInterval === 'annual' ? 'Basic Annual' : 'Basic')
   );
@@ -249,7 +287,73 @@ const PricingPage: React.FC = () => {
         </div>
         
         {/* Plan cards */}
-        <div className="grid gap-10 md:grid-cols-3">
+        <div className="grid gap-10 md:grid-cols-4">
+          {/* Free plan */}
+          <Card className="border-gray-200 dark:border-gray-800 transition-all duration-200 hover:shadow-md">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Zap className="h-5 w-5 mr-2 text-gray-500" />
+                Free
+              </CardTitle>
+              <div className="mt-4 flex items-baseline text-gray-900 dark:text-gray-50">
+                <span className="text-5xl font-extrabold tracking-tight">
+                  $0
+                </span>
+                <span className="ml-1 text-xl font-semibold">
+                  /forever
+                </span>
+              </div>
+              <CardDescription className="mt-2">
+                No credit card required
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3">
+                <li className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <Check className="h-5 w-5 text-green-500" />
+                  </div>
+                  <span className="ml-2 text-sm">Access to 2 AI courses</span>
+                </li>
+                <li className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <Check className="h-5 w-5 text-green-500" />
+                  </div>
+                  <span className="ml-2 text-sm">Basic tool usage (3 uses/day)</span>
+                </li>
+                <li className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <Check className="h-5 w-5 text-green-500" />
+                  </div>
+                  <span className="ml-2 text-sm">Preview web development projects</span>
+                </li>
+                <li className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <Check className="h-5 w-5 text-green-500" />
+                  </div>
+                  <span className="ml-2 text-sm">Community forum access</span>
+                </li>
+                <li className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <Check className="h-5 w-5 text-green-500" />
+                  </div>
+                  <span className="ml-2 text-sm">Basic analytics</span>
+                </li>
+              </ul>
+            </CardContent>
+            <CardFooter className="flex flex-col">
+              <Button 
+                className="w-full bg-gray-600 hover:bg-gray-700 text-white" 
+                onClick={() => setLocation('/register')}
+              >
+                Get Started
+              </Button>
+              <p className="text-xs text-muted-foreground mt-3 text-center">
+                Try RXAI features with no commitment
+              </p>
+            </CardFooter>
+          </Card>
+          
           {/* Basic plan */}
           <Card className="border-gray-200 dark:border-gray-800 transition-all duration-200 hover:shadow-md">
             <CardHeader>
@@ -479,6 +583,12 @@ const PricingPage: React.FC = () => {
                 <tr className="bg-muted/50">
                   <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
                     Feature
+                  </th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">
+                    <div className="flex items-center justify-center">
+                      <Zap className="h-4 w-4 mr-1 text-gray-500" />
+                      Free
+                    </div>
                   </th>
                   <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">
                     <div className="flex items-center justify-center">
