@@ -29,11 +29,17 @@ const NewsHubPage: React.FC = () => {
   const { data: posts, isLoading, error } = useQuery({
     queryKey: ['/api/posts'],
     select: (data: Post[]) => {
+      // Make sure we have an array
+      const postsArray = Array.isArray(data) ? data : [];
+      
+      // Log post count for debugging
+      console.log(`Retrieved ${postsArray.length} articles from API`);
+      
       // Filter and sort posts for different sections
       // For featured, use either featuredPost flag or take the first 4 articles if none are featured
-      let featured = data.filter(post => post.featuredPost);
-      if (featured.length === 0 && data.length > 0) {
-        featured = [...data].sort((a, b) => {
+      let featured = postsArray.filter(post => post.featuredPost);
+      if (featured.length === 0 && postsArray.length > 0) {
+        featured = [...postsArray].sort((a, b) => {
           const dateA = a.publishedAt ? new Date(a.publishedAt) : new Date(a.createdAt);
           const dateB = b.publishedAt ? new Date(b.publishedAt) : new Date(b.createdAt);
           return dateB.getTime() - dateA.getTime();
@@ -41,27 +47,26 @@ const NewsHubPage: React.FC = () => {
       }
       
       // For car events, either use car_event type or filter by category containing 'car' or 'automotive'
-      const carEvents = data.filter(post => 
+      const carEvents = postsArray.filter(post => 
         post.postType === 'car_event' || 
         (post.category && post.category.toLowerCase().includes('car')) ||
         (post.category && post.category.toLowerCase().includes('automotive'))
       ).slice(0, 6);
       
       // For AI Q&A, either use ai_qa type or filter by tags or category containing 'ai' or 'intelligence'
-      const aiQa = data.filter(post => 
+      const aiQa = postsArray.filter(post => 
         post.postType === 'ai_qa' || 
         (post.category && (
           post.category.toLowerCase().includes('ai') || 
           post.category.toLowerCase().includes('intelligence')
         )) ||
-        (post.tags && post.tags.some(tag => 
-          tag.toLowerCase() === 'ai' || 
-          tag.toLowerCase().includes('intelligence')
+        (post.tags && post.tags.some && post.tags.some(tag => 
+          tag && (tag.toLowerCase() === 'ai' || tag.toLowerCase().includes('intelligence'))
         ))
       ).slice(0, 6);
       
       // For latest, just sort by date
-      const latest = [...data].sort((a, b) => {
+      const latest = [...postsArray].sort((a, b) => {
         const dateA = a.publishedAt ? new Date(a.publishedAt) : new Date(a.createdAt);
         const dateB = b.publishedAt ? new Date(b.publishedAt) : new Date(b.createdAt);
         return dateB.getTime() - dateA.getTime();
@@ -168,12 +173,22 @@ const NewsHubPage: React.FC = () => {
             </Card>
           ))}
         </div>
-      ) : error || !filteredPosts || (filteredPosts && 
+      ) : error ? (
+        <div className="text-center py-16">
+          <h3 className="text-xl font-medium mb-2 text-primary">
+            Error loading articles
+          </h3>
+          <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
+            There was an error loading the articles. Please try again later.
+          </p>
+          <Button onClick={() => window.location.reload()} className="mt-6">Refresh Page</Button>
+        </div>
+      ) : !filteredPosts || (filteredPosts &&
           filteredPosts.featured.length === 0 && 
           filteredPosts.carEvents.length === 0 && 
           filteredPosts.aiQa.length === 0 && 
-          filteredPosts.latest.length === 0 && 
-          !searchQuery) ? (
+          filteredPosts.latest.length === 0 &&
+          posts?.latest?.length === 0) ? (
         <div className="text-center py-16">
           <h3 className="text-xl font-medium mb-2 text-primary">
             Our articles are being generated

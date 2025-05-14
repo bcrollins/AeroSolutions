@@ -205,9 +205,7 @@ const ArticlesPage: React.FC = () => {
             RXAI <span className="font-light">News</span>
           </h1>
           <div className="text-sm text-muted-foreground flex justify-center items-center gap-6 mt-2">
-            <span>May 14, 2025</span>
-            <span>•</span>
-            <span>Volume 1, Issue 7</span>
+            <span>{new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
             <span>•</span>
             <span>Your Source for AI Innovation</span>
           </div>
