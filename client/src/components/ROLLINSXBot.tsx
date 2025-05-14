@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { apiRequest } from "@/lib/queryClient";
 import { toast } from "@/hooks/use-toast";
 
-interface ROLLINSXBotProps {
+interface RXAIBotProps {
   isOpen?: boolean;
   initialOption?: string | null;
   hideFloatingButton?: boolean;
@@ -21,12 +21,12 @@ interface ChatMessage {
   isProcessing?: boolean;
 }
 
-export default function ROLLINSXBot({ 
+export default function RXAIBot({ 
   isOpen: externalIsOpen, 
   initialOption, 
   hideFloatingButton = false,
   className = ""
-}: ROLLINSXBotProps = {}) {
+}: RXAIBotProps = {}) {
   const [isOpen, setIsOpen] = useState(externalIsOpen || false);
   const [activeOption, setActiveOption] = useState<string | null>(initialOption || null);
   const [isTyping, setIsTyping] = useState(false);
@@ -51,7 +51,7 @@ export default function ROLLINSXBot({
   // Handle external props changes
   // Check if business info is stored in localStorage
   useEffect(() => {
-    const storedBusinessInfo = localStorage.getItem('rollinsx_business_info');
+    const storedBusinessInfo = localStorage.getItem('rxai_business_info');
     if (storedBusinessInfo) {
       try {
         setBusinessInfo(JSON.parse(storedBusinessInfo));
@@ -168,13 +168,13 @@ export default function ROLLINSXBot({
     setMessages(prev => [...prev, botMessage]);
     
     try {
-      // Send request to dedicated ROLLINSX endpoint powered by ROLLINSX AI
-      const response = await apiRequest("POST", "/api/rollinsx/support", { 
+      // Send request to dedicated RXAI endpoint powered by RXAI
+      const response = await apiRequest("POST", "/api/rxai/support", { 
         query: `User selected option: ${option}. ${getOptionText(option)}` 
       });
       
       if (!response.ok) {
-        throw new Error("Failed to get response from ROLLINSXBot");
+        throw new Error("Failed to get response from RXAIBot");
       }
       
       const data = await response.json();
@@ -222,7 +222,7 @@ export default function ROLLINSXBot({
       case "branding-design":
         return "I need help with branding and identity";
       default:
-        return "Tell me more about ROLLINSX's services";
+        return "Tell me more about RXAI's services";
     }
   };
   
@@ -254,17 +254,17 @@ export default function ROLLINSXBot({
     setMessages(prev => [...prev, botMessage]);
     
     try {
-      // Send request to dedicated ROLLINSX endpoint powered by ROLLINSX AI
+      // Send request to dedicated RXAI endpoint powered by RXAI
       // Include business info in the request if available
       const hasBusinessInfo = Object.values(businessInfo).some(value => value.trim() !== '');
       
-      const response = await apiRequest("POST", "/api/rollinsx/support", { 
+      const response = await apiRequest("POST", "/api/rxai/support", { 
         query: userInput,
         userContext: hasBusinessInfo ? businessInfo : undefined
       });
       
       if (!response.ok) {
-        throw new Error("Failed to get response from ROLLINSXBot");
+        throw new Error("Failed to get response from RXAIBot");
       }
       
       const data = await response.json();
@@ -305,7 +305,7 @@ export default function ROLLINSXBot({
     e.preventDefault();
     
     // Save business info to localStorage for persistence
-    localStorage.setItem('rollinsx_business_info', JSON.stringify(businessInfo));
+    localStorage.setItem('rxai_business_info', JSON.stringify(businessInfo));
     
     // Hide the form
     setShowBusinessInfoForm(false);
@@ -327,7 +327,7 @@ export default function ROLLINSXBot({
         <button
           onClick={toggleChatbot}
           className="fixed bottom-6 left-6 bg-[#3B5B9D] hover:bg-[#2A4A8C] text-white p-4 rounded-full shadow-lg z-30 flex items-center justify-center"
-          aria-label="Chat with ROLLINSXBot"
+          aria-label="Chat with RXAIBot"
         >
           {isOpen ? (
             <FaTimes className="text-xl" />

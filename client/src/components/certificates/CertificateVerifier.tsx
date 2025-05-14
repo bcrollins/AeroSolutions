@@ -96,7 +96,7 @@ export default function CertificateVerifier() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <Input
-                  placeholder="Enter certificate number (e.g., RLX-12345-ABCDE)"
+                  placeholder="Enter certificate number (e.g., RXAI-12345-ABCDE)"
                   value={certificateNumber}
                   onChange={(e) => setCertificateNumber(e.target.value)}
                   className="font-mono"
@@ -112,7 +112,7 @@ export default function CertificateVerifier() {
           
           <CardFooter className="flex flex-col">
             <p className="text-sm text-muted-foreground text-center">
-              All certificates issued by Rollins X have a unique verification number that can be used to confirm their authenticity.
+              All certificates issued by RXAI have a unique verification number that can be used to confirm their authenticity.
             </p>
           </CardFooter>
         </Card>
@@ -281,8 +281,8 @@ export default function CertificateVerifier() {
           </Link>
           
           <p className="text-xs text-muted-foreground text-center">
-            This verification page confirms the authenticity of a certificate issued by Rollins X.
-            If you have any questions about this certificate, please contact <a href="mailto:support@rollinsx.com" className="text-blue-500 hover:underline">support@rollinsx.com</a>.
+            This verification page confirms the authenticity of a certificate issued by RXAI, a Rollins X Technologies Company.
+            If you have any questions about this certificate, please contact <a href="mailto:support@rxai.com" className="text-blue-500 hover:underline">support@rxai.com</a>.
           </p>
         </CardFooter>
       </Card>

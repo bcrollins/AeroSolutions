@@ -43,7 +43,7 @@ export default function CertificateSharingModal({
   
   const shareToLinkedIn = () => {
     // Prepare LinkedIn sharing URL
-    const shareText = `I've earned a certificate in ${certificate.courseTitle} from Rollins X! Verify my credential at ${verificationUrl}`;
+    const shareText = `I've earned a certificate in ${certificate.courseTitle} from RXAI! Verify my credential at ${verificationUrl}`;
     const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(verificationUrl)}&summary=${encodeURIComponent(shareText)}`;
     
     // Open LinkedIn sharing in a new window
@@ -55,7 +55,7 @@ export default function CertificateSharingModal({
   
   const shareToTwitter = () => {
     // Prepare Twitter sharing URL
-    const shareText = `I've earned a certificate in ${certificate.courseTitle} from Rollins X! Verify my credential at ${verificationUrl}`;
+    const shareText = `I've earned a certificate in ${certificate.courseTitle} from RXAI! Verify my credential at ${verificationUrl}`;
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
     
     // Open Twitter sharing in a new window
