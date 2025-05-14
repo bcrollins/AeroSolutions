@@ -9,6 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { BadgesDisplay, LeaderboardDisplay } from '@/components/course/GamificationElements';
+import CodeEnvironment from '@/components/course/CodeEnvironment';
+import LearningPathSelector from '@/components/course/LearningPathSelector';
 import { 
   ChevronRight, 
   CheckCircle2, 
@@ -437,6 +440,24 @@ const CoursesDashboard = () => {
                 className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-electric-cyan-400 data-[state=active]:text-white rounded-none"
               >
                 Community & Support
+              </TabsTrigger>
+              <TabsTrigger 
+                value="achievements" 
+                className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-electric-cyan-400 data-[state=active]:text-white rounded-none"
+              >
+                Achievements
+              </TabsTrigger>
+              <TabsTrigger 
+                value="learning-path" 
+                className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-electric-cyan-400 data-[state=active]:text-white rounded-none"
+              >
+                Learning Path
+              </TabsTrigger>
+              <TabsTrigger 
+                value="code-practice" 
+                className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-electric-cyan-400 data-[state=active]:text-white rounded-none"
+              >
+                Code Practice
               </TabsTrigger>
             </TabsList>
             
