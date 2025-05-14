@@ -1,0 +1,27 @@
+Prompt 3: Final Optimizations and Advanced Features
+Character Count: ~5,200
+
+Description: This prompt adds advanced interactivity, analytics, and SEO optimizations to ensure the articles section is the best online publication experience.
+
+Optimize the Rollins X RXAI “Articles” section to be the best online news publication experience, maintaining the dark theme, blue accents, and typography from Prompts 1–2. Ensure the 3-column grid, search bar, category filters, and infinite scroll remain functional, with <2-second page loads and updated XML sitemaps submitted to Google Search Console. Verify all 50 articles are live, following the 1,500–2,500-word format, SEO optimization (primary keyword in title, meta description, first paragraph), FAQ schema, sticky table of contents, 3 images, internal links, “Try Free” CTA, summary box, comments, social sharing, and voice narration.
+
+Add these advanced article page features:
+
+Hover Tooltips: Blue popups for technical terms (e.g., “NLP”).
+Dynamic Meta Tags: Auto-generate meta titles/descriptions with keywords.
+Breadcrumbs: Blue breadcrumb trail above the title, linking to categories.
+Author Bio Box: Blue-bordered card with headshot and Rollins X profile link.
+Time-to-Read Indicator: Blue text (e.g., “8 min read”) below the title.
+Interactive Polls: 1 poll per article (e.g., “Which AI tool do you use?”), styled with blue radio buttons.
+Video Embeds: Optional video explainer with a blue play button, hosted on Rollins X’s server.
+Cross-Device Sync: Blue progress badge for reading progress sync.
+Newsletter Signup: Blue mid-article signup form.
+SEO Audit Tool: Blue widget for users to analyze their sites.
+Enhance the news landing page with:
+
+Featured Hero Rotation: Rotate 3 featured articles every 5 seconds, with blue navigation dots.
+Social Media Feeds: Blue X feed widget in the sidebar.
+SEO Keyword Cloud: Blue badge cloud of trending keywords.
+Article Analytics Dashboard: Blue dashboard for authors to track views/shares.
+Heatmap Tracking: Analyze user clicks on cards to optimize layout.
+Add a blue feedback button linking to a page improvement form, a blue theme toggle syncing with system preferences, and a blue 404 illustration for errors. Implement Google Analytics 4 for tracking and heatmaps for user behavior analysis. Ensure WCAG 2.1 compliance, mobile responsiveness, and consistent styling across all features.

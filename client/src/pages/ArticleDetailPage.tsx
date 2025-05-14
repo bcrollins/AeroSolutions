@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Helmet } from 'react-helmet';
 import { Link, useRoute } from 'wouter';
 import { 
@@ -16,7 +16,17 @@ import {
   Facebook,
   LinkedinIcon,
   Copy,
-  Brain
+  Brain,
+  CheckIcon,
+  AlertCircle,
+  PlayCircle,
+  Mail,
+  Search,
+  Check,
+  X,
+  ThumbsDown,
+  BarChart2,
+  Globe
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -41,7 +51,25 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { trackEvent } from '@/lib/analytics';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  RadioGroup,
+  RadioGroupItem
+} from "@/components/ui/radio-group";
+import {
+  Progress
+} from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { trackEvent, trackPageView } from '@/lib/analytics';
 
 // Hardcoded article data for demo
 // In a real application, this would be fetched from the API
@@ -313,6 +341,428 @@ const SocialShare = ({ url, title }: { url: string, title: string }) => {
   );
 };
 
+// Technical Term Tooltip Component
+const TechTermTooltip = ({ term, definition, children }: { term: string, definition: string, children: React.ReactNode }) => {
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="cursor-help border-b border-dashed border-primary/60 text-primary">
+            {children}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs bg-primary/90 text-primary-foreground">
+          <p><strong>{term}:</strong> {definition}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+};
+
+// Reading Progress Indicator
+const ReadingProgressBar = () => {
+  const [progress, setProgress] = useState(0);
+  
+  useEffect(() => {
+    const handleScroll = () => {
+      const totalHeight = document.body.scrollHeight - window.innerHeight;
+      const scrollPosition = window.scrollY;
+      const currentProgress = (scrollPosition / totalHeight) * 100;
+      setProgress(currentProgress);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+  
+  return (
+    <div className="fixed top-0 left-0 w-full z-50 h-1">
+      <Progress value={progress} className="h-1 bg-transparent" />
+    </div>
+  );
+};
+
+// Interactive Poll Component
+const InteractivePoll = ({ question, options }: { question: string, options: string[] }) => {
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [hasVoted, setHasVoted] = useState(false);
+  const [results, setResults] = useState<Record<string, number>>({});
+  
+  const handleVote = () => {
+    if (!selectedOption) return;
+    
+    // In a real app, this would be an API call
+    // For demo, we'll generate fake results
+    setHasVoted(true);
+    
+    const fakeResults: Record<string, number> = {};
+    let total = 0;
+    
+    options.forEach(option => {
+      // Generate random vote count between 10 and 100
+      const votes = Math.floor(Math.random() * 90) + 10;
+      fakeResults[option] = votes;
+      total += votes;
+    });
+    
+    // Ensure selected option has at least 20% of votes
+    const minVotes = Math.ceil(total * 0.2);
+    if (fakeResults[selectedOption] < minVotes) {
+      const difference = minVotes - fakeResults[selectedOption];
+      fakeResults[selectedOption] = minVotes;
+      total += difference;
+    }
+    
+    // Convert to percentages
+    options.forEach(option => {
+      fakeResults[option] = Math.round((fakeResults[option] / total) * 100);
+    });
+    
+    setResults(fakeResults);
+    trackEvent('poll_vote', 'article', selectedOption);
+  };
+  
+  return (
+    <div className="my-8 p-5 bg-primary/5 rounded-lg border border-primary/20">
+      <h3 className="text-lg font-medium mb-4">{question}</h3>
+      
+      {!hasVoted ? (
+        <>
+          <RadioGroup value={selectedOption || ""} onValueChange={setSelectedOption} className="space-y-3">
+            {options.map((option, index) => (
+              <div key={index} className="flex items-center space-x-2">
+                <RadioGroupItem 
+                  value={option} 
+                  id={`option-${index}`} 
+                  className="border-primary text-primary"
+                />
+                <Label htmlFor={`option-${index}`} className="cursor-pointer">{option}</Label>
+              </div>
+            ))}
+          </RadioGroup>
+          
+          <Button 
+            onClick={handleVote} 
+            className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90"
+            disabled={!selectedOption}
+          >
+            Vote
+          </Button>
+        </>
+      ) : (
+        <div className="space-y-3">
+          {options.map((option, index) => (
+            <div key={index} className="space-y-1">
+              <div className="flex justify-between text-sm">
+                <span className={selectedOption === option ? "font-medium text-primary" : ""}>
+                  {option}
+                </span>
+                <span className="font-medium">{results[option]}%</span>
+              </div>
+              <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className={`h-full ${selectedOption === option ? 'bg-primary' : 'bg-primary/50'}`}
+                  style={{ width: `${results[option]}%` }}
+                />
+              </div>
+            </div>
+          ))}
+          <p className="text-xs text-muted-foreground mt-4">Thank you for your vote!</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Newsletter Signup Component
+const NewsletterSignup = () => {
+  const [email, setEmail] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // In a real app, this would call an API
+    setIsSubmitted(true);
+    trackEvent('newsletter_signup', 'article', email);
+  };
+  
+  return (
+    <div className="my-8 p-6 bg-gradient-to-br from-primary/30 to-primary/5 rounded-lg">
+      <div className="flex flex-col md:flex-row gap-6 items-center">
+        <div className="md:w-2/3">
+          <h3 className="text-xl font-bold mb-2">Stay Updated with RXAI Insights</h3>
+          <p className="text-muted-foreground mb-4">
+            Get the latest AI news, tutorials, and research delivered to your inbox every week.
+          </p>
+          
+          {!isSubmitted ? (
+            <form onSubmit={handleSubmit} className="space-y-2">
+              <div className="flex gap-2">
+                <div className="relative flex-grow">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    type="email" 
+                    placeholder="Your email address" 
+                    className="pl-10"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <Button type="submit" className="bg-primary hover:bg-primary/90">
+                  Subscribe
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                We respect your privacy. Unsubscribe at any time.
+              </p>
+            </form>
+          ) : (
+            <div className="flex items-center gap-2 text-primary">
+              <CheckIcon className="h-5 w-5" />
+              <span>Thank you! Check your email to confirm your subscription.</span>
+            </div>
+          )}
+        </div>
+        <div className="hidden md:block md:w-1/3">
+          <div className="flex justify-center">
+            <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center">
+              <Mail className="h-10 w-10 text-primary" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// SEO Audit Tool Component
+const SeoAuditTool = () => {
+  const [url, setUrl] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [results, setResults] = useState<null | {
+    score: number;
+    issues: { type: string; description: string; severity: 'high' | 'medium' | 'low' }[];
+  }>(null);
+  
+  const handleAnalyze = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsAnalyzing(true);
+    
+    // Simulate API call with timeout
+    setTimeout(() => {
+      // Generate fake audit results
+      const score = Math.floor(Math.random() * 30) + 60; // 60-90 score
+      
+      const possibleIssues = [
+        { type: 'Meta Tags', description: 'Missing meta descriptions on multiple pages', severity: 'high' as const },
+        { type: 'Headers', description: 'Improper use of H1 tags', severity: 'medium' as const },
+        { type: 'Content', description: 'Low word count on key pages', severity: 'medium' as const },
+        { type: 'Speed', description: 'Slow page load times on mobile', severity: 'high' as const },
+        { type: 'Links', description: 'Several broken internal links found', severity: 'medium' as const },
+        { type: 'Keywords', description: 'Keyword stuffing detected', severity: 'high' as const },
+        { type: 'Images', description: 'Missing alt tags on images', severity: 'low' as const },
+        { type: 'Mobile', description: 'Site not fully responsive', severity: 'high' as const },
+      ];
+      
+      // Select 3-5 random issues
+      const issueCount = Math.floor(Math.random() * 3) + 3;
+      const shuffledIssues = [...possibleIssues].sort(() => 0.5 - Math.random());
+      const selectedIssues = shuffledIssues.slice(0, issueCount);
+      
+      setResults({
+        score,
+        issues: selectedIssues,
+      });
+      
+      setIsAnalyzing(false);
+      trackEvent('seo_audit', 'article', url);
+    }, 2500);
+  };
+  
+  return (
+    <div className="my-8 p-6 bg-blue-950/20 rounded-lg border border-blue-800/30">
+      <h3 className="text-xl font-bold text-primary mb-4">Free SEO Audit Tool</h3>
+      
+      {!results ? (
+        <>
+          <p className="text-muted-foreground mb-4">
+            Enter your website URL for a quick SEO analysis with actionable recommendations.
+          </p>
+          
+          <form onSubmit={handleAnalyze} className="space-y-4">
+            <div className="relative">
+              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                type="url" 
+                placeholder="https://yourwebsite.com" 
+                className="pl-10"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                required
+              />
+            </div>
+            
+            <Button 
+              type="submit" 
+              className="w-full bg-primary hover:bg-primary/90"
+              disabled={isAnalyzing}
+            >
+              {isAnalyzing ? (
+                <>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
+                  Analyzing...
+                </>
+              ) : (
+                'Analyze My Site'
+              )}
+            </Button>
+          </form>
+        </>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+            <div>
+              <div className="text-sm text-muted-foreground mb-1">SEO Health Score</div>
+              <div className="text-3xl font-bold text-primary">{results.score}/100</div>
+            </div>
+            
+            <div className="w-full sm:w-auto">
+              <div className="h-2.5 w-full sm:w-44 bg-gray-700 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full ${
+                    results.score >= 80 ? 'bg-green-500' : 
+                    results.score >= 60 ? 'bg-yellow-500' : 
+                    'bg-red-500'
+                  }`}
+                  style={{ width: `${results.score}%` }}
+                />
+              </div>
+              <div className="text-xs text-muted-foreground mt-1 text-center">
+                {results.score >= 80 ? 'Good' : 
+                 results.score >= 60 ? 'Needs Improvement' : 
+                 'Poor'}
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <h4 className="text-sm font-medium mb-2">Top Issues Found:</h4>
+            <ul className="space-y-2">
+              {results.issues.map((issue, index) => (
+                <li key={index} className="flex items-start gap-2 text-sm">
+                  <div className={`mt-0.5 min-w-4 min-h-4 rounded-full ${
+                    issue.severity === 'high' ? 'bg-red-500' :
+                    issue.severity === 'medium' ? 'bg-yellow-500' :
+                    'bg-blue-500'
+                  }`} />
+                  <div>
+                    <div className="font-medium">{issue.type}</div>
+                    <div className="text-muted-foreground">{issue.description}</div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+          
+          <Button 
+            onClick={() => {
+              setResults(null);
+              setUrl('');
+            }}
+            variant="outline"
+            className="w-full"
+          >
+            Run Another Analysis
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Video Player Component
+const VideoComponent = ({ videoId, title }: { videoId: string; title: string }) => {
+  const [showVideo, setShowVideo] = useState(false);
+  
+  return (
+    <div className="my-8 overflow-hidden rounded-lg">
+      {!showVideo ? (
+        <div 
+          className="relative h-64 md:h-96 bg-gradient-to-br from-gray-900 to-black flex items-center justify-center cursor-pointer"
+          onClick={() => {
+            setShowVideo(true);
+            trackEvent('video_play', 'article', title);
+          }}
+        >
+          <div className="absolute inset-0 opacity-40 bg-[url('/images/video-thumbnail.webp')] bg-cover bg-center" />
+          <div className="relative z-10 flex flex-col items-center">
+            <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center mb-4">
+              <PlayCircle className="h-8 w-8 text-white" />
+            </div>
+            <p className="text-white font-medium">Watch the video explainer</p>
+          </div>
+        </div>
+      ) : (
+        <div className="relative pb-[56.25%] h-0 overflow-hidden">
+          <iframe 
+            src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+            title={title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="absolute top-0 left-0 w-full h-full border-0"
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Author Bio Component
+const AuthorBio = ({ author }: { author: any }) => {
+  return (
+    <div className="p-5 border border-primary/20 rounded-lg bg-primary/5 mb-8">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-full overflow-hidden bg-primary/20 flex items-center justify-center text-2xl font-bold">
+          {author.image ? (
+            <img src={author.image} alt={author.name} className="w-full h-full object-cover" />
+          ) : (
+            author.name.charAt(0)
+          )}
+        </div>
+        
+        <div>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-bold">{author.name}</h3>
+            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+              Author
+            </Badge>
+          </div>
+          <p className="text-sm text-muted-foreground">{author.title}</p>
+          <div className="flex items-center gap-2 mt-2">
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full">
+              <Twitter className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full">
+              <LinkedinIcon className="h-4 w-4" />
+            </Button>
+            <Link href="/authors/alex-morgan" className="text-xs text-primary">
+              View full profile →
+            </Link>
+          </div>
+        </div>
+      </div>
+      
+      <Separator className="my-4" />
+      
+      <p className="text-sm text-muted-foreground">
+        Expert in artificial intelligence and machine learning with over 10 years of experience. 
+        Author of numerous research papers and a frequent speaker at technology conferences.
+      </p>
+    </div>
+  );
+};
+
 // Related Articles component
 const RelatedArticles = ({ ids }: { ids: number[] }) => {
   const articles = [
@@ -388,6 +838,26 @@ const ArticleDetailPage: React.FC = () => {
   const [article, setArticle] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [readingProgress, setReadingProgress] = useState(0);
+  const [showNewsletter, setShowNewsletter] = useState(false);
+  const articleRef = useRef<HTMLDivElement>(null);
+  
+  // Poll options for interactive poll
+  const pollOptions = [
+    "GPT-4o",
+    "Claude 3",
+    "Llama 3",
+    "Grok",
+    "I don't use AI tools regularly"
+  ];
+  
+  // Definitions for technical terms
+  const techTerms = {
+    "NLP": "Natural Language Processing - The branch of AI that helps computers understand, interpret, and respond to human language.",
+    "Machine Learning": "A subset of AI that enables computers to learn from data and improve without explicit programming.",
+    "Neural Networks": "Computing systems inspired by the biological neural networks in human brains, capable of learning complex patterns.",
+    "Multimodal AI": "AI systems that can process and understand multiple types of inputs such as text, images, audio, and video."
+  };
   
   useEffect(() => {
     if (params?.slug) {
@@ -395,7 +865,28 @@ const ArticleDetailPage: React.FC = () => {
       
       if (fetchedArticle) {
         setArticle(fetchedArticle);
+        
+        // Track page view with more details for analytics
+        trackPageView(`/articles/${fetchedArticle.slug}`);
         trackEvent('view', 'article', fetchedArticle.title);
+        
+        // Add 'isNew' flag if article is less than 7 days old
+        const now = new Date();
+        const articleDate = new Date(fetchedArticle.date);
+        const daysDifference = Math.ceil((now.getTime() - articleDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (daysDifference <= 7) {
+          fetchedArticle.isNew = true;
+        }
+        
+        // Update meta tags dynamically
+        document.title = `${fetchedArticle.title} | RXAI - Rollins X Technologies`;
+        
+        // Create meta description tag with keywords
+        const metaDescription = document.querySelector('meta[name="description"]');
+        if (metaDescription) {
+          metaDescription.setAttribute('content', fetchedArticle.description);
+        }
       } else {
         setError('Article not found');
       }
@@ -403,6 +894,27 @@ const ArticleDetailPage: React.FC = () => {
       setLoading(false);
     }
   }, [params]);
+  
+  // Show newsletter after user scrolls 60% through the article
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!articleRef.current) return;
+      
+      const { top, height } = articleRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const visibleHeight = Math.max(0, Math.min(height, viewportHeight - top));
+      const progress = (visibleHeight / height) * 100;
+      setReadingProgress(progress);
+      
+      // Show newsletter signup when 60% through article
+      if (progress > 60 && !showNewsletter) {
+        setShowNewsletter(true);
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [showNewsletter]);
   
   // Process article content to add ids to headings for TOC navigation
   const processedContent = article?.content.replace(
