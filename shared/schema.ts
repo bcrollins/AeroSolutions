@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, decimal, json, foreignKey, varchar, primaryKey, date, real } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, decimal, json, foreignKey, varchar, primaryKey, date, real, jsonb, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 // Define the Json type locally instead of importing from drizzle-orm
@@ -39,23 +39,32 @@ export type ABTestGoalType = 'click' | 'form_submit' | 'page_view' | 'custom';
 // Status enum for A/B testing
 export type ABTestStatus = 'draft' | 'running' | 'completed' | 'stopped';
 
-// User schema with Stripe integration and enhanced security
+// Session storage table for Replit Auth
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// User schema with Stripe integration and Replit Auth
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  email: text("email").notNull().unique(),
-  password: text("password").notNull(), // Will be stored as a hashed value
-  firstName: text("first_name"),
-  lastName: text("last_name"),
+  id: varchar("id").primaryKey().notNull(), // Changed from serial to varchar for Replit Auth
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  username: varchar("username").unique(),
+  password: text("password"), // Will be stored as a hashed value, optional for Replit Auth
   role: text("role").default("user").notNull(), // user, admin
   stripeCustomerId: text("stripe_customer_id"),
   businessType: text("business_type"), // Type of business the user is running
   preferences: text("preferences"), // User content preferences for feed personalization
   lastLoginAt: timestamp("last_login_at"),
   verified: boolean("verified").default(false), // Email verification status
-  verificationToken: text("verification_token"), // For email verification process
-  resetPasswordToken: text("reset_password_token"), // For password reset process
-  resetPasswordExpires: timestamp("reset_password_expires"), // Expiry for password reset token
   onboardingComplete: boolean("onboarding_complete").default(false), // Track onboarding completion
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -70,10 +79,12 @@ export const insertUserSchema = createInsertSchema(users).pick({
   role: true,
   businessType: true,
   preferences: true,
+  profileImageUrl: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type UpsertUser = typeof users.$inferInsert;
 
 // Contact submission schema
 export const contactSubmissions = pgTable("contact_submissions", {

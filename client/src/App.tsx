@@ -60,6 +60,7 @@ import ParticleBackgroundDemo from "@/pages/ParticleBackgroundDemo";
 import AiProductsPage from "@/pages/AiProductsPage";
 import AiProductDetailPage from "@/pages/AiProductDetailPage";
 import MemberDashboard from "@/pages/MemberDashboard";
+import PricingPage from "@/pages/PricingPage";
 
 export default function App() {
   const { t, i18n } = useTranslation();
@@ -293,6 +294,22 @@ export default function App() {
             </>
           )}
         </Route>
+        <Route path="/pricing">
+          {() => (
+            <>
+              <Helmet>
+                <title>Pricing Plans | ROLLINSX</title>
+                <meta name="description" content="Choose the perfect subscription plan for your needs. Access AI courses, digital tools, and web development services with our affordable tiered plans." />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href="https://rollinsx.dev/pricing" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <PricingPage />
+            </>
+          )}
+        </Route>
+        
         <Route path="/marketplace">
           {() => (
             <>

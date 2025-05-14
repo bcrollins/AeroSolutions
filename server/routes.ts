@@ -9,6 +9,7 @@ import contentGenerationRoutes from "./routes/content-generation";
 import contentRoutes from "./routes/content";
 import aiContentRoutes from "./routes/ai-content";
 import adminRoutes from "./routes/admin";
+import userOnboardingRoutes from "./routes/userOnboarding";
 import { storage } from "./storage";
 import { logger } from "./utils/logger";
 
@@ -31,6 +32,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register Admin routes
   app.use("/api/admin", adminRoutes);
+  
+  // Register User Onboarding routes
+  app.use("/api/user/onboarding", userOnboardingRoutes);
 
   // API route to fetch active subscription plans
   app.get("/api/subscription-plans", async (req, res) => {
