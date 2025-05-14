@@ -15,7 +15,7 @@ import SEOHead from '@/components/SEOHead';
 import StructuredData from '@/components/StructuredData';
 import FreeMockupForm from '@/components/FreeMockupForm';
 import QuoteGenerator from '@/components/QuoteGenerator';
-import ROLLINSXBot from '@/components/ROLLINSXBot';
+import RXAIBot from '@/components/RXAIBot';
 import { Button } from '@/components/ui/button';
 
 export default function HomePage() {

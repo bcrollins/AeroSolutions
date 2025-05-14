@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Helmet } from 'react-helmet';
 import MainLayout from '@/layouts/MainLayout';
 import ServiceRecommendations from '@/components/ServiceRecommendations';
-import ROLLINSXBot from '@/components/ROLLINSXBot';
+import RXAIBot from '@/components/RXAIBot';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -35,7 +35,7 @@ export default function AIServices() {
         <title>AI-Powered Services | ROLLINSX</title>
         <meta
           name="description"
-          content="Experience ROLLINSX's AI-powered tools including personalized service recommendations, intelligent content analysis, and our ROLLINSXBot assistant."
+          content="Experience ROLLINSX's AI-powered tools including personalized service recommendations, intelligent content analysis, and our RXAIBot assistant."
         />
       </Helmet>
 
@@ -54,7 +54,7 @@ export default function AIServices() {
             </p>
             <div className="flex flex-wrap gap-4">
               <Button onClick={openBot} className="bg-[#3B5B9D] hover:bg-[#2A4A8C]">
-                <MessageSquare className="mr-2 h-4 w-4" /> Try ROLLINSXBot
+                <MessageSquare className="mr-2 h-4 w-4" /> Try RXAIBot
               </Button>
               <Button variant="outline" className="border-[#3B5B9D] text-[#3B5B9D]">
                 Learn More <ArrowRight className="ml-2 h-4 w-4" />
@@ -75,7 +75,7 @@ export default function AIServices() {
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { icon: <MessageSquare className="w-4 h-4" />, text: "ROLLINSXBot" },
+                    { icon: <MessageSquare className="w-4 h-4" />, text: "RXAIBot" },
                     { icon: <ListChecks className="w-4 h-4" />, text: "Recommendations" },
                     { icon: <FileCode className="w-4 h-4" />, text: "Code Analysis" },
                     { icon: <Search className="w-4 h-4" />, text: "Smart Search" }
@@ -100,7 +100,7 @@ export default function AIServices() {
                   <ListChecks className="mr-2 h-4 w-4" /> Recommendations
                 </TabsTrigger>
                 <TabsTrigger value="rollinsxbot" className="text-base px-5">
-                  <MessageSquare className="mr-2 h-4 w-4" /> ROLLINSXBot
+                  <MessageSquare className="mr-2 h-4 w-4" /> RXAIBot
                 </TabsTrigger>
                 <TabsTrigger value="analytics" className="text-base px-5">
                   <BarChart3 className="mr-2 h-4 w-4" /> AI Analytics
@@ -147,10 +147,10 @@ export default function AIServices() {
                 <div className="space-y-4">
                   <h2 className="text-2xl font-semibold font-poppins text-[#3B5B9D]">
                     <MessageSquare className="inline mr-2 text-[#00D1D1]" /> 
-                    ROLLINSXBot AI Assistant
+                    RXAIBot AI Assistant
                   </h2>
                   <p className="text-gray-700 font-lato">
-                    Meet ROLLINSXBot, your intelligent business assistant powered by ROLLINSX AI. Get instant answers to your web development questions, technical support, and business guidance.
+                    Meet RXAIBot, your intelligent business assistant powered by ROLLINSX AI. Get instant answers to your web development questions, technical support, and business guidance.
                   </p>
                   <ul className="space-y-2">
                     {[
@@ -170,7 +170,7 @@ export default function AIServices() {
                     ))}
                   </ul>
                   <Button onClick={openBot} className="bg-[#3B5B9D] hover:bg-[#2A4A8C]">
-                    <MessageSquare className="mr-2 h-4 w-4" /> Open ROLLINSXBot
+                    <MessageSquare className="mr-2 h-4 w-4" /> Open RXAIBot
                   </Button>
                 </div>
                 <div className="bg-[#EDEFF2] rounded-xl p-6 border border-gray-200">
@@ -179,7 +179,7 @@ export default function AIServices() {
                       <div className="w-8 h-8 rounded-full bg-[#3B5B9D] flex items-center justify-center mr-2">
                         <MessageSquare className="h-4 w-4 text-white" />
                       </div>
-                      <h3 className="font-medium font-poppins">ROLLINSXBot</h3>
+                      <h3 className="font-medium font-poppins">RXAIBot</h3>
                     </div>
                     <p className="text-gray-700 font-lato text-sm mb-2">
                       Hi there! I'm your ROLLINSX Tech Assistant, powered by ROLLINSX AI. How can I help you with your web development needs today?
@@ -195,7 +195,7 @@ export default function AIServices() {
                       <div className="w-8 h-8 rounded-full bg-[#3B5B9D] flex items-center justify-center mr-2">
                         <MessageSquare className="h-4 w-4 text-white" />
                       </div>
-                      <h3 className="font-medium font-poppins">ROLLINSXBot</h3>
+                      <h3 className="font-medium font-poppins">RXAIBot</h3>
                     </div>
                     <p className="text-gray-700 font-lato text-sm">
                       AI can significantly enhance your website's user experience through personalization, intelligent search, predictive analytics, and automated support. These features can help visitors find what they need faster, engage more deeply with your content, and receive immediate assistance.
@@ -289,7 +289,7 @@ export default function AIServices() {
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Button onClick={openBot} className="bg-[#00D1D1] hover:bg-[#00AFAF] text-white">
-                <MessageSquare className="mr-2 h-4 w-4" /> Chat with ROLLINSXBot
+                <MessageSquare className="mr-2 h-4 w-4" /> Chat with RXAIBot
               </Button>
               <Button variant="outline" className="border-white text-white hover:bg-white hover:text-[#3B5B9D]">
                 Schedule a Consultation
@@ -299,8 +299,8 @@ export default function AIServices() {
         </div>
       </div>
 
-      {/* ROLLINSXBot Component */}
-      <ROLLINSXBot isOpen={isBotOpen} hideFloatingButton={true} />
+      {/* RXAIBot Component */}
+      <RXAIBot isOpen={isBotOpen} hideFloatingButton={true} />
     </MainLayout>
   );
 }

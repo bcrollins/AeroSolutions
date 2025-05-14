@@ -59,7 +59,7 @@ import CheckoutOptimizationPage from "@/pages/CheckoutOptimizationPage";
 import PriceOptimizationPage from "@/pages/PriceOptimizationPage";
 import BugMonitoringPage from "@/pages/BugMonitoringPage";
 import BrandConsistencyPage from "@/pages/BrandConsistencyPage";
-import TestROLLINSXBot from "@/pages/TestROLLINSXBot";
+import TestRXAIBot from "@/pages/TestRXAIBot";
 import ParticleBackgroundDemo from "@/pages/ParticleBackgroundDemo";
 import AiProductsPage from "@/pages/AiProductsPage";
 import AiProductDetailPage from "@/pages/AiProductDetailPage";
@@ -889,7 +889,7 @@ export default function App() {
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
-              <TestROLLINSXBot />
+              <TestRXAIBot />
             </>
           )}
         </Route>

@@ -3,7 +3,7 @@ import { FaSyncAlt, FaServer, FaUserTie, FaCode, FaArrowLeft, FaTimes, FaLink, F
 import { motion, AnimatePresence } from "framer-motion";
 import PlatformPreview from "./PlatformPreview";
 import WebConnectPlatformView from "./WebConnectPlatformView";
-import ROLLINSXBot from "./ROLLINSXBot";
+import RXAIBot from "./RXAIBot";
 import { useLocation } from "wouter";
 import wolfOfWallStreetImage from "../assets/wolf-of-wall-street.jpg";
 import familyImage1 from "../assets/family/D22397D6-2EF2-45C5-A107-D6BD5E7210F4.jpeg";
@@ -35,7 +35,7 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
   const [showInvestorPopup, setShowInvestorPopup] = useState(false);
   const [showWebConnect, setShowWebConnect] = useState(false);
   const [, setLocation] = useLocation();
-  const [openROLLINSXBot, setOpenROLLINSXBot] = useState(false);
+  const [openRXAIBot, setOpenRXAIBot] = useState(false);
   const [rollinsBotOption, setRollinsBotOption] = useState<string | null>(null);
   
   // Check if the code matches any of our special access codes
@@ -848,7 +848,7 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
                       <button 
                         onClick={() => {
                           setRollinsBotOption("website-design");
-                          setOpenROLLINSXBot(true);
+                          setOpenRXAIBot(true);
                           setShowInvestorPopup(false);
                         }} 
                         className="bg-gray-800 hover:bg-gray-700 text-white text-xs rounded p-2 flex items-center"
@@ -858,7 +858,7 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
                       <button 
                         onClick={() => {
                           setRollinsBotOption("web-development");
-                          setOpenROLLINSXBot(true);
+                          setOpenRXAIBot(true);
                           setShowInvestorPopup(false);
                         }} 
                         className="bg-gray-800 hover:bg-gray-700 text-white text-xs rounded p-2 flex items-center"
@@ -868,7 +868,7 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
                       <button 
                         onClick={() => {
                           setRollinsBotOption("mobile-optimization");
-                          setOpenROLLINSXBot(true);
+                          setOpenRXAIBot(true);
                           setShowInvestorPopup(false);
                         }}  
                         className="bg-gray-800 hover:bg-gray-700 text-white text-xs rounded p-2 flex items-center"
@@ -878,7 +878,7 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
                       <button 
                         onClick={() => {
                           setRollinsBotOption("branding-design");
-                          setOpenROLLINSXBot(true);
+                          setOpenRXAIBot(true);
                           setShowInvestorPopup(false);
                         }} 
                         className="bg-gray-800 hover:bg-gray-700 text-white text-xs rounded p-2 flex items-center"
@@ -891,9 +891,9 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
                   <div className="text-center">
                     <button 
                       onClick={() => {
-                        console.log("Opening ROLLINSXBot", {isSpecialCode});
+                        console.log("Opening RXAIBot", {isSpecialCode});
                         setRollinsBotOption(null); // Reset any previous option
-                        setOpenROLLINSXBot(true);
+                        setOpenRXAIBot(true);
                         setShowInvestorPopup(false);
                       }}
                       className="bg-[#3B5B9D] text-white font-bold py-2 px-4 rounded-lg hover:bg-[#2A4A8C] transition-colors"
@@ -915,8 +915,8 @@ export default function ClientLandingPage({ accessCode }: ClientLandingPageProps
         </div>
       )}
 
-      {/* ROLLINSXBot - Always rendered but only shown when needed */}
-      <ROLLINSXBot isOpen={isSpecialCode && openROLLINSXBot} initialOption={rollinsBotOption} />
+      {/* RXAIBot - Always rendered but only shown when needed */}
+      <RXAIBot isOpen={isSpecialCode && openRXAIBot} initialOption={rollinsBotOption} />
       
       {/* WebConnect Platform View */}
       <WebConnectPlatformView
