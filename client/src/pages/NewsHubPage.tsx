@@ -30,9 +30,37 @@ const NewsHubPage: React.FC = () => {
     queryKey: ['/api/posts'],
     select: (data: Post[]) => {
       // Filter and sort posts for different sections
-      const featured = data.filter(post => post.featuredPost).slice(0, 4);
-      const carEvents = data.filter(post => post.postType === 'car_event').slice(0, 6);
-      const aiQa = data.filter(post => post.postType === 'ai_qa').slice(0, 6);
+      // For featured, use either featuredPost flag or take the first 4 articles if none are featured
+      let featured = data.filter(post => post.featuredPost);
+      if (featured.length === 0 && data.length > 0) {
+        featured = [...data].sort((a, b) => {
+          const dateA = a.publishedAt ? new Date(a.publishedAt) : new Date(a.createdAt);
+          const dateB = b.publishedAt ? new Date(b.publishedAt) : new Date(b.createdAt);
+          return dateB.getTime() - dateA.getTime();
+        }).slice(0, 4);
+      }
+      
+      // For car events, either use car_event type or filter by category containing 'car' or 'automotive'
+      const carEvents = data.filter(post => 
+        post.postType === 'car_event' || 
+        (post.category && post.category.toLowerCase().includes('car')) ||
+        (post.category && post.category.toLowerCase().includes('automotive'))
+      ).slice(0, 6);
+      
+      // For AI Q&A, either use ai_qa type or filter by tags or category containing 'ai' or 'intelligence'
+      const aiQa = data.filter(post => 
+        post.postType === 'ai_qa' || 
+        (post.category && (
+          post.category.toLowerCase().includes('ai') || 
+          post.category.toLowerCase().includes('intelligence')
+        )) ||
+        (post.tags && post.tags.some(tag => 
+          tag.toLowerCase() === 'ai' || 
+          tag.toLowerCase().includes('intelligence')
+        ))
+      ).slice(0, 6);
+      
+      // For latest, just sort by date
       const latest = [...data].sort((a, b) => {
         const dateA = a.publishedAt ? new Date(a.publishedAt) : new Date(a.createdAt);
         const dateB = b.publishedAt ? new Date(b.publishedAt) : new Date(b.createdAt);
@@ -54,20 +82,24 @@ const NewsHubPage: React.FC = () => {
     return {
       featured: posts.featured.filter(post => 
         post.title.toLowerCase().includes(q) || 
-        (post.summary && post.summary.toLowerCase().includes(q))
+        (post.summary && post.summary.toLowerCase().includes(q)) ||
+        (post.content && post.content.toLowerCase().includes(q))
       ),
       carEvents: posts.carEvents.filter(post => 
         post.title.toLowerCase().includes(q) || 
-        (post.summary && post.summary.toLowerCase().includes(q))
+        (post.summary && post.summary.toLowerCase().includes(q)) ||
+        (post.content && post.content.toLowerCase().includes(q))
       ),
       aiQa: posts.aiQa.filter(post => 
         post.title.toLowerCase().includes(q) || 
         (post.summary && post.summary.toLowerCase().includes(q)) ||
+        (post.content && post.content.toLowerCase().includes(q)) ||
         (post.question && post.question.toLowerCase().includes(q))
       ),
       latest: posts.latest.filter(post => 
         post.title.toLowerCase().includes(q) || 
-        (post.summary && post.summary.toLowerCase().includes(q))
+        (post.summary && post.summary.toLowerCase().includes(q)) ||
+        (post.content && post.content.toLowerCase().includes(q))
       )
     };
   }
