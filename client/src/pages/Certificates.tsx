@@ -26,7 +26,7 @@ export default function Certificates() {
     return (
       <div className="container mx-auto py-16 px-4">
         <Helmet>
-          <title>Certificates | Rollins X</title>
+          <title>Certificates | RXAI</title>
         </Helmet>
         
         <div className="max-w-2xl mx-auto text-center">
@@ -48,7 +48,7 @@ export default function Certificates() {
   return (
     <div className="container mx-auto py-10 px-4">
       <Helmet>
-        <title>My Certificates | Rollins X</title>
+        <title>My Certificates | RXAI</title>
       </Helmet>
       
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">

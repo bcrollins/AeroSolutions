@@ -92,8 +92,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <SheetContent side="left" className="p-0 w-64">
           <div className="flex h-16 items-center px-4 border-b">
             <Link href="/" className="flex items-center font-semibold text-lg">
-              <span className="text-primary mr-2">Rollins X</span>
-              <span>Platform</span>
+              <span className="text-primary mr-2">RXAI</span>
+              <span className="text-xs align-bottom">A Rollins X Technologies Company</span>
             </Link>
           </div>
 
@@ -131,12 +131,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex h-16 shrink-0 items-center border-b px-4">
             {!isCollapsed ? (
               <Link href="/" className="flex items-center font-semibold text-lg">
-                <span className="text-primary mr-2">Rollins X</span>
-                <span>Platform</span>
+                <span className="text-primary mr-2">RXAI</span>
+                <span className="text-xs align-bottom">A Rollins X Technologies Company</span>
               </Link>
             ) : (
               <Link href="/" className="flex items-center justify-center font-bold text-lg mx-auto">
-                <span className="text-primary">RX</span>
+                <span className="text-primary">RXAI</span>
               </Link>
             )}
           </div>
