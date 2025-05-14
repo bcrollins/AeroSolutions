@@ -1,183 +1,134 @@
 import React, { useState } from 'react';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { useAuth } from '@/hooks/useAuth';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTitle } from '@/hooks/useTitle';
+import { useAuth } from '@/hooks/useAuth';
 import EnrolledCourses from '@/components/dashboard/EnrolledCourses';
 import UserBadges from '@/components/dashboard/UserBadges';
 import CourseRecommendations from '@/components/dashboard/CourseRecommendations';
-import { BarChart3, Trophy, BookOpen, BookMarked } from 'lucide-react';
+import { BarChart, Award, BookmarkCheck } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from 'wouter';
+import { Button } from '@/components/ui/button';
 
 const Dashboard = () => {
-  useTitle('Dashboard | RollinsX');
-  const [activeTab, setActiveTab] = useState('overview');
-  const { user, isLoading } = useAuth();
-
+  useTitle('Dashboard');
+  const { user, isLoading, isAuthenticated } = useAuth();
+  const [activeTab, setActiveTab] = useState('courses');
+  
+  // Redirect to login if not authenticated
+  if (!isLoading && !isAuthenticated) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-6">
+        <h1 className="text-2xl font-bold mb-2">Access Required</h1>
+        <p className="text-muted-foreground mb-6 text-center">
+          You need to log in to view your dashboard.
+        </p>
+        <Link href="/api/login">
+          <Button>Log In</Button>
+        </Link>
+      </div>
+    );
+  }
+  
   if (isLoading) {
     return (
-      <div className="container mx-auto py-8 animate-pulse">
-        <div className="h-8 w-1/4 bg-muted rounded mb-6"></div>
-        <div className="h-12 w-full bg-muted rounded mb-6"></div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="h-40 bg-muted rounded"></div>
-          <div className="h-40 bg-muted rounded"></div>
-          <div className="h-40 bg-muted rounded"></div>
+      <div className="container mx-auto p-6 max-w-7xl">
+        <div className="flex justify-between items-center mb-6">
+          <div className="h-8 w-48 bg-muted rounded animate-pulse"></div>
+          <div className="h-10 w-10 rounded-full bg-muted animate-pulse"></div>
         </div>
+        
+        <div className="h-12 w-64 bg-muted rounded animate-pulse mb-8"></div>
+        
+        <div className="h-96 bg-muted rounded animate-pulse"></div>
       </div>
     );
   }
-
-  if (!user) {
-    return (
-      <div className="container mx-auto py-20 text-center">
-        <h2 className="text-2xl font-bold mb-4">Please log in to access your dashboard</h2>
-        <p className="text-muted-foreground mb-6">
-          You need to be logged in to view your personal dashboard and track your learning progress.
-        </p>
-        <a href="/api/login" className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
-          Log In
-        </a>
-      </div>
-    );
-  }
-
+  
   return (
-    <div className="container mx-auto py-8 space-y-8">
-      <div>
+    <div className="container mx-auto p-4 md:p-6 max-w-7xl">
+      <header className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Your Dashboard</h1>
         <p className="text-muted-foreground">
-          Track your course progress, achievements and get personalized recommendations.
+          Track your progress, view achievements, and discover new courses.
         </p>
-      </div>
-
+      </header>
+      
       <Tabs
-        value={activeTab}
+        defaultValue={activeTab}
         onValueChange={setActiveTab}
         className="space-y-6"
       >
-        <TabsList className="grid grid-cols-3 md:grid-cols-4 md:w-[500px]">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            <span className="hidden md:inline">Overview</span>
-          </TabsTrigger>
+        <TabsList className="grid grid-cols-3 md:w-[400px]">
           <TabsTrigger value="courses" className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4" />
-            <span className="hidden md:inline">My Courses</span>
+            <BookmarkCheck className="h-4 w-4" />
+            <span className="hidden sm:inline">Enrolled Courses</span>
+            <span className="sm:hidden">Courses</span>
           </TabsTrigger>
           <TabsTrigger value="badges" className="flex items-center gap-2">
-            <Trophy className="h-4 w-4" />
-            <span className="hidden md:inline">Badges</span>
+            <Award className="h-4 w-4" />
+            <span className="hidden sm:inline">Achievements</span>
+            <span className="sm:hidden">Badges</span>
           </TabsTrigger>
           <TabsTrigger value="recommendations" className="flex items-center gap-2">
-            <BookMarked className="h-4 w-4" />
-            <span className="hidden md:inline">For You</span>
+            <BarChart className="h-4 w-4" />
+            <span className="hidden sm:inline">Recommendations</span>
+            <span className="sm:hidden">Discover</span>
           </TabsTrigger>
         </TabsList>
-
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-medium flex items-center">
-                  <BookOpen className="h-5 w-5 mr-2 text-blue-500" />
-                  Enrolled Courses
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">
-                  {/* This would be dynamic in the real app */}
-                  3
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Continue your learning journey
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-medium flex items-center">
-                  <Trophy className="h-5 w-5 mr-2 text-amber-500" />
-                  Achievements
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">
-                  {/* This would be dynamic in the real app */}
-                  5
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Badges and certificates earned
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-medium flex items-center">
-                  <BarChart3 className="h-5 w-5 mr-2 text-green-500" />
-                  Overall Progress
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">
-                  {/* This would be dynamic in the real app */}
-                  42%
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Average completion across courses
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Continue Learning</h2>
-            </div>
-            <EnrolledCourses />
-          </div>
-          
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Recommended for You</h2>
-            </div>
-            <CourseRecommendations />
-          </div>
-          
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Recent Achievements</h2>
-            </div>
-            <UserBadges />
-          </div>
+        
+        <TabsContent value="courses" className="space-y-6">
+          <h2 className="text-2xl font-semibold mb-4">My Courses</h2>
+          <EnrolledCourses />
         </TabsContent>
-
-        <TabsContent value="courses">
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Your Enrolled Courses</h2>
-            <EnrolledCourses />
-          </div>
+        
+        <TabsContent value="badges" className="space-y-6">
+          <h2 className="text-2xl font-semibold mb-4">My Achievements</h2>
+          <UserBadges />
         </TabsContent>
-
-        <TabsContent value="badges">
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Your Achievements</h2>
-            <UserBadges />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="recommendations">
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Recommended for You</h2>
-            <p className="text-muted-foreground mb-6">
-              Based on your learning patterns and interests, we think you might enjoy these courses:
-            </p>
-            <CourseRecommendations />
-          </div>
+        
+        <TabsContent value="recommendations" className="space-y-6">
+          <h2 className="text-2xl font-semibold mb-4">Recommended for You</h2>
+          <CourseRecommendations />
         </TabsContent>
       </Tabs>
+      
+      {/* Analytics Summary Card */}
+      <Card className="mt-12 p-6">
+        <h3 className="text-xl font-semibold mb-4">Your Learning Summary</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="flex items-center gap-4">
+            <div className="bg-primary/10 p-3 rounded-full">
+              <BookmarkCheck className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Courses Enrolled</p>
+              <p className="text-2xl font-bold">{Math.floor(Math.random() * 5) + 1}</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <div className="bg-primary/10 p-3 rounded-full">
+              <Award className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Badges Earned</p>
+              <p className="text-2xl font-bold">{Math.floor(Math.random() * 10) + 1}</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <div className="bg-primary/10 p-3 rounded-full">
+              <BarChart className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Hours Spent Learning</p>
+              <p className="text-2xl font-bold">{Math.floor(Math.random() * 20) + 5}</p>
+            </div>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 };

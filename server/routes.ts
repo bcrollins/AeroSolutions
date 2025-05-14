@@ -51,7 +51,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/user/onboarding", userOnboardingRoutes);
   
   // Register User Dashboard routes
-  app.use("/api/user", userDashboardRoutes);
+  app.use("/api/dashboard", userDashboardRoutes);
   
   // Register Analytics routes (for subscription analytics)
   app.use("/api/analytics", analyticsRoutes);

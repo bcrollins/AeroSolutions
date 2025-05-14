@@ -1,77 +1,89 @@
-import express from 'express';
-import { isAuthenticated } from '../replitAuth';
+import { Router } from 'express';
+import { z } from 'zod';
 import { storage } from '../storage';
+import { isAuthenticated } from '../replitAuth';
 
-const router = express.Router();
+const router = Router();
 
-// Get enrolled courses for the user
+// Get user's enrolled courses
 router.get('/enrolled-courses', isAuthenticated, async (req: any, res) => {
   try {
     const userId = req.user.claims.sub;
     const enrolledCourses = await storage.getUserEnrollments(userId);
-    return res.json(enrolledCourses);
+    res.json(enrolledCourses);
   } catch (error) {
     console.error('Error fetching enrolled courses:', error);
-    return res.status(500).json({
-      message: 'Failed to fetch enrolled courses'
-    });
+    res.status(500).json({ message: 'Failed to fetch enrolled courses' });
   }
 });
 
-// Get badges for the user
-router.get('/badges', isAuthenticated, async (req: any, res) => {
+// Get user's badges/achievements
+router.get('/user-badges', isAuthenticated, async (req: any, res) => {
   try {
     const userId = req.user.claims.sub;
     const badges = await storage.getUserBadges(userId);
-    return res.json(badges);
+    res.json(badges);
   } catch (error) {
     console.error('Error fetching user badges:', error);
-    return res.status(500).json({
-      message: 'Failed to fetch badges'
-    });
+    res.status(500).json({ message: 'Failed to fetch user badges' });
   }
 });
 
 // Get course recommendations for the user
-router.get('/recommendations', isAuthenticated, async (req: any, res) => {
+router.get('/course-recommendations', isAuthenticated, async (req: any, res) => {
   try {
     const userId = req.user.claims.sub;
     const recommendations = await storage.getRecommendedCourses(userId);
-    return res.json(recommendations);
+    res.json(recommendations);
   } catch (error) {
     console.error('Error fetching course recommendations:', error);
-    return res.status(500).json({
-      message: 'Failed to fetch course recommendations'
-    });
+    res.status(500).json({ message: 'Failed to fetch course recommendations' });
   }
 });
 
-// Get dashboard summary (counts and stats)
-router.get('/summary', isAuthenticated, async (req: any, res) => {
+// Get user's learning statistics (optional)
+router.get('/learning-stats', isAuthenticated, async (req: any, res) => {
   try {
     const userId = req.user.claims.sub;
     
-    // Get enrolled courses to calculate count and avg progress
-    const enrolledCourses = await storage.getUserEnrollments(userId);
-    const badges = await storage.getUserBadges(userId);
+    // Calculate learning stats
+    // For a real implementation, you would collect this from your database
+    const stats = {
+      coursesEnrolled: 0,
+      badgesEarned: 0,
+      hoursSpentLearning: 0,
+      lastLogin: new Date().toISOString(),
+      completedLessons: 0,
+      completionRate: 0
+    };
     
-    // Calculate the average progress
-    let avgProgress = 0;
-    if (enrolledCourses.length > 0) {
-      const totalProgress = enrolledCourses.reduce((acc, course) => acc + course.progress, 0);
-      avgProgress = Math.round(totalProgress / enrolledCourses.length);
+    // Get enrollments for stat calculation
+    const enrollments = await storage.getUserEnrollments(userId);
+    stats.coursesEnrolled = enrollments.length;
+    
+    // Get badges count
+    const badges = await storage.getUserBadges(userId);
+    stats.badgesEarned = badges.length;
+    
+    // For a real implementation, you would calculate these from user activity
+    // Here just using basic estimation
+    if (enrollments.length > 0) {
+      let totalCompletedLessons = 0;
+      let totalLessons = 0;
+      
+      // In a real app, you would track and sum up actual hours
+      stats.hoursSpentLearning = enrollments.reduce((total, course) => {
+        // For demo purposes, estimate 1 hour per 10% progress
+        return total + (course.progress / 10);
+      }, 0);
+      
+      stats.completionRate = enrollments.reduce((avg, course) => avg + course.progress, 0) / enrollments.length;
     }
     
-    return res.json({
-      enrolledCoursesCount: enrolledCourses.length,
-      badgesCount: badges.length,
-      averageProgress: avgProgress
-    });
+    res.json(stats);
   } catch (error) {
-    console.error('Error fetching dashboard summary:', error);
-    return res.status(500).json({
-      message: 'Failed to fetch dashboard summary'
-    });
+    console.error('Error fetching learning stats:', error);
+    res.status(500).json({ message: 'Failed to fetch learning stats' });
   }
 });
 

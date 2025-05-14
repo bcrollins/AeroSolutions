@@ -79,7 +79,13 @@ export interface IStorage {
   getSubscriptionConversionRate(startDate: Date, endDate: Date): Promise<number>;
   getSubscriptionChurnRate(startDate: Date, endDate: Date): Promise<number>;
 
-  // Add all the other methods from the existing interface...
+  // Product and subscription methods
+  getActiveAiProducts(): Promise<AiProduct[]>;
+  getAiProduct(id: number): Promise<AiProduct | undefined>;
+  getSubscriptionPlans(): Promise<SubscriptionPlan[]>;
+  getUserSubscription(userId: string): Promise<UserSubscription | undefined>;
+  canAccessProduct(userId: string, productId: number): Promise<boolean>;
+  getSubscriptionPlanById(planId: number): Promise<SubscriptionPlan | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -102,6 +108,145 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return user;
+  }
+  
+  // Additional user methods
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+  
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    if (!email) return undefined;
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+  
+  async updateUser(id: string, data: Partial<User>): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        ...data,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
+  }
+  
+  async getUserByStripeCustomerId(stripeCustomerId: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.stripeCustomerId, stripeCustomerId));
+    return user;
+  }
+  
+  async updateUserVerification(userId: string, verified: boolean): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        verified,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return updatedUser;
+  }
+  
+  async updateStripeCustomerId(userId: string, stripeCustomerId: string): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        stripeCustomerId,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return updatedUser;
+  }
+  
+  async updateUserStripeInfo(userId: string, data: { stripeCustomerId: string, stripeSubscriptionId: string }): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        stripeCustomerId: data.stripeCustomerId,
+        stripeSubscriptionId: data.stripeSubscriptionId,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return updatedUser;
+  }
+  
+  // Subscription event methods
+  async createSubscriptionEvent(data: InsertSubscriptionEvent): Promise<SubscriptionEvent> {
+    const [event] = await db
+      .insert(subscriptionEvents)
+      .values({
+        ...data,
+        createdAt: new Date()
+      })
+      .returning();
+    return event;
+  }
+  
+  async getSubscriptionEventsByUser(userId: string, limit: number = 10): Promise<SubscriptionEvent[]> {
+    return db
+      .select()
+      .from(subscriptionEvents)
+      .where(eq(subscriptionEvents.userId, userId))
+      .orderBy(desc(subscriptionEvents.createdAt))
+      .limit(limit);
+  }
+  
+  async getSubscriptionEventsByType(eventType: string, startDate: Date, endDate: Date, limit: number = 100): Promise<SubscriptionEvent[]> {
+    return db
+      .select()
+      .from(subscriptionEvents)
+      .where(
+        and(
+          eq(subscriptionEvents.eventType, eventType),
+          gt(subscriptionEvents.createdAt, startDate),
+          lt(subscriptionEvents.createdAt, endDate)
+        )
+      )
+      .orderBy(desc(subscriptionEvents.createdAt))
+      .limit(limit || 100);
+  }
+  
+  async getSubscriptionConversionRate(startDate: Date, endDate: Date): Promise<number> {
+    try {
+      // Count distinct users who viewed pricing page
+      const pricingPageViews = await db
+        .select({ count: sql<number>`count(distinct "userId")` })
+        .from(pageViews)
+        .where(
+          and(
+            eq(pageViews.path, '/pricing'),
+            gt(pageViews.timestamp, startDate),
+            lt(pageViews.timestamp, endDate)
+          )
+        );
+        
+      // Count distinct users who subscribed in the date range
+      const newSubscriptions = await db
+        .select({ count: sql<number>`count(distinct "userId")` })
+        .from(userSubscriptions)
+        .where(
+          and(
+            gt(userSubscriptions.createdAt, startDate),
+            lt(userSubscriptions.createdAt, endDate),
+            eq(userSubscriptions.status, 'active')
+          )
+        );
+      
+      if (pricingPageViews[0].count === 0) {
+        return 0;
+      }
+      
+      return (newSubscriptions[0].count / pricingPageViews[0].count);
+    } catch (error) {
+      console.error("Error getting subscription conversion rate:", error);
+      throw error;
+    }
   }
   
   // Dashboard methods implementation
@@ -304,6 +449,106 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error("Error getting subscription conversion rate:", error);
       throw error;
+    }
+  }
+  
+  // AI Product methods implementation
+  async getActiveAiProducts(): Promise<AiProduct[]> {
+    try {
+      return db
+        .select()
+        .from(aiProducts)
+        .where(eq(aiProducts.active, true))
+        .orderBy(asc(aiProducts.name));
+    } catch (error) {
+      console.error("Error getting active AI products:", error);
+      return [];
+    }
+  }
+  
+  async getAiProduct(id: number): Promise<AiProduct | undefined> {
+    try {
+      const [product] = await db
+        .select()
+        .from(aiProducts)
+        .where(eq(aiProducts.id, id));
+      return product;
+    } catch (error) {
+      console.error(`Error getting AI product with id ${id}:`, error);
+      return undefined;
+    }
+  }
+  
+  // Subscription methods implementation
+  async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+    try {
+      return db
+        .select()
+        .from(subscriptionPlans)
+        .where(eq(subscriptionPlans.active, true))
+        .orderBy(asc(subscriptionPlans.price));
+    } catch (error) {
+      console.error("Error getting subscription plans:", error);
+      return [];
+    }
+  }
+  
+  async getUserSubscription(userId: string): Promise<UserSubscription | undefined> {
+    try {
+      const [subscription] = await db
+        .select()
+        .from(userSubscriptions)
+        .where(
+          and(
+            eq(userSubscriptions.userId, userId),
+            eq(userSubscriptions.status, 'active')
+          )
+        )
+        .orderBy(desc(userSubscriptions.createdAt))
+        .limit(1);
+      return subscription;
+    } catch (error) {
+      console.error(`Error getting subscription for user ${userId}:`, error);
+      return undefined;
+    }
+  }
+  
+  async canAccessProduct(userId: string, productId: number): Promise<boolean> {
+    try {
+      // Get the product to check required plan
+      const product = await this.getAiProduct(productId);
+      if (!product) return false;
+      
+      // If product is free, user can access
+      if (product.requiredPlan === 'free' || !product.requiredPlan) return true;
+      
+      // Get user's active subscription
+      const subscription = await this.getUserSubscription(userId);
+      if (!subscription) return false;
+      
+      // Get subscription plan
+      const plan = await this.getSubscriptionPlanById(subscription.planId);
+      if (!plan) return false;
+      
+      // Simple access checking logic
+      // In a real system, this would be more sophisticated with plan tiers
+      return plan.name === product.requiredPlan || plan.price >= 49; // Pro plan or higher
+    } catch (error) {
+      console.error(`Error checking product access for user ${userId} and product ${productId}:`, error);
+      return false;
+    }
+  }
+  
+  async getSubscriptionPlanById(planId: number): Promise<SubscriptionPlan | undefined> {
+    try {
+      const [plan] = await db
+        .select()
+        .from(subscriptionPlans)
+        .where(eq(subscriptionPlans.id, planId));
+      return plan;
+    } catch (error) {
+      console.error(`Error getting subscription plan with id ${planId}:`, error);
+      return undefined;
     }
   }
 }
