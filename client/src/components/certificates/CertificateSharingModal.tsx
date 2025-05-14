@@ -7,7 +7,8 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { SiLinkedin, SiTwitter } from "react-icons/si";
+import { SiLinkedin } from "react-icons/si";
+import { FaTwitter } from "react-icons/fa";
 
 interface Certificate {
   id: number;
@@ -103,7 +104,7 @@ export default function CertificateSharingModal({
               onClick={shareToTwitter}
               disabled={certificate.sharedToTwitter}
             >
-              <SiTwitter className="h-6 w-6 text-[#1DA1F2]" />
+              <FaTwitter className="h-6 w-6 text-[#1DA1F2]" />
               <div className="flex flex-col items-start">
                 <span className="text-sm">Twitter</span>
                 {certificate.sharedToTwitter && (

@@ -342,6 +342,52 @@ export default function App() {
             </>
           )}
         </Route>
+        
+        <Route path="/certificates">
+          {() => (
+            <>
+              <Helmet>
+                <title>My Certificates | ROLLINSX</title>
+                <meta name="description" content="View, download, and share your earned course certificates from ROLLINSX. Showcase your achievements and professional development." />
+                <meta name="robots" content="noindex, follow" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <Certificates />
+            </>
+          )}
+        </Route>
+        
+        <Route path="/certificates/verify">
+          {() => (
+            <>
+              <Helmet>
+                <title>Verify Certificate | ROLLINSX</title>
+                <meta name="description" content="Verify the authenticity of a ROLLINSX course certificate. Ensure credentials are legitimate with our secure verification system." />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href="https://rollinsx.dev/certificates/verify" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <VerifyCertificate />
+            </>
+          )}
+        </Route>
+        
+        <Route path="/certificates/verify/:certificateNumber">
+          {(params) => (
+            <>
+              <Helmet>
+                <title>Certificate Verification | ROLLINSX</title>
+                <meta name="description" content="Verifying the authenticity of a ROLLINSX certificate. Our secure verification system confirms legitimate course completions." />
+                <meta name="robots" content="noindex, follow" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <VerifyCertificate />
+            </>
+          )}
+        </Route>
         <Route path="/pricing">
           {() => (
             <>
