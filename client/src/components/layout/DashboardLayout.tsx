@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Menu, ChevronDown, Settings, LogOut, Home, BookOpen, MessageSquare, Certificate, Calendar, BarChart2, AlertCircle } from 'lucide-react';
+import { Menu, ChevronDown, Settings, LogOut, Home, BookOpen, MessageSquare, Award, Calendar, BarChart2, AlertCircle } from 'lucide-react';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -22,7 +22,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, isAuthenticated } = useAuth();
   
   // Function to get initials from name
-  const getInitials = (name?: string) => {
+  const getInitials = (name?: string | null) => {
     if (!name) return 'U';
     return name
       .split(' ')
@@ -130,7 +130,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </Button>
             <Button variant={location.startsWith('/certificates') ? 'secondary' : 'ghost'} className="w-full justify-start" asChild>
               <Link href="/certificates">
-                <Certificate className="mr-2 h-4 w-4" />
+                <Award className="mr-2 h-4 w-4" />
                 Certificates
               </Link>
             </Button>

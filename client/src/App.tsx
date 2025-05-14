@@ -74,6 +74,7 @@ import Forum from "@/pages/Forum";
 import ForumThreadDetail from "@/pages/ForumThreadDetail";
 import Certificates from "@/pages/Certificates";
 import VerifyCertificate from "@/pages/VerifyCertificate";
+import ContentCalendar from "@/pages/ContentCalendar";
 
 export default function App() {
   const { t, i18n } = useTranslation();
@@ -354,6 +355,21 @@ export default function App() {
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
               <Certificates />
+            </>
+          )}
+        </Route>
+        
+        <Route path="/content-calendar">
+          {() => (
+            <>
+              <Helmet>
+                <title>AI Content Calendar Creator | ROLLINSX</title>
+                <meta name="description" content="Create AI-generated content calendars for your social media platforms. Streamline your content strategy with personalized recommendations and high-quality posts." />
+                <meta name="robots" content="noindex, follow" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <ContentCalendar />
             </>
           )}
         </Route>

@@ -1,21 +1,40 @@
-import { useState } from "react";
-import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, Calendar, Facebook, Twitter, Instagram, RefreshCw, MoreHorizontal, Trash2, Edit, Copy, Clipboard, Clock, BarChart3 } from "lucide-react";
-import { format } from "date-fns";
-import { 
+import { useState } from 'react';
+import { Calendar, Edit, Eye, MoreHorizontal, Plus, RefreshCw, Trash } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,11 +44,13 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+} from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
+// Types
 type ContentCalendar = {
   id: number;
   name: string;
@@ -52,275 +73,242 @@ interface ContentCalendarListProps {
 }
 
 export default function ContentCalendarList({ calendars, isLoading, onRefresh }: ContentCalendarListProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterPlatform, setFilterPlatform] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<string>("newest");
   const { toast } = useToast();
-  
-  const filteredCalendars = calendars
-    .filter(calendar => 
-      calendar.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      calendar.brandName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      calendar.industry.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    .filter(calendar => 
-      filterPlatform === "all" || calendar.platforms.includes(filterPlatform)
-    )
-    .sort((a, b) => {
-      switch (sortBy) {
-        case "newest":
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        case "oldest":
-          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-        case "name-asc":
-          return a.name.localeCompare(b.name);
-        case "name-desc":
-          return b.name.localeCompare(a.name);
-        default:
-          return 0;
-      }
-    });
-  
-  const handleDeleteCalendar = async (id: number) => {
-    try {
-      await apiRequest("DELETE", `/api/content-calendar/${id}`);
-      toast({
-        title: "Calendar deleted",
-        description: "Content calendar has been deleted successfully."
-      });
-      onRefresh();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete the calendar. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-  
-  const getPlatformIcon = (platform: string) => {
-    switch (platform) {
-      case 'X':
-        return <Twitter className="h-4 w-4" />;
-      case 'Facebook':
-        return <Facebook className="h-4 w-4" />;
-      case 'Instagram':
-        return <Instagram className="h-4 w-4" />;
-      case 'Threads':
-        return <Clipboard className="h-4 w-4" />;
-      default:
-        return null;
-    }
-  };
-  
+  const [isGenerating, setIsGenerating] = useState<number | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [calendarToDelete, setCalendarToDelete] = useState<number | null>(null);
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'ready':
-        return <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Ready</Badge>;
+        return <Badge className="bg-green-500">Ready</Badge>;
       case 'generating':
-        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">Generating</Badge>;
+        return <Badge className="bg-amber-500">Generating</Badge>;
       case 'error':
-        return <Badge variant="outline" className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">Error</Badge>;
+        return <Badge className="bg-red-500">Error</Badge>;
       default:
-        return <Badge variant="outline">Unknown</Badge>;
+        return <Badge>{status}</Badge>;
     }
   };
-  
+
+  const handleGenerateContent = async (calendarId: number) => {
+    try {
+      setIsGenerating(calendarId);
+      const response = await apiRequest(
+        'POST',
+        `/api/content-calendar/${calendarId}/generate`,
+        { count: 10 }
+      );
+      
+      const data = await response.json();
+      
+      toast({
+        title: 'Content generated successfully',
+        description: `Generated ${data.count} content items for your calendar`,
+      });
+      
+      onRefresh();
+    } catch (error) {
+      toast({
+        title: 'Error generating content',
+        description: 'Failed to generate content. Please try again later.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGenerating(null);
+    }
+  };
+
+  const handleDeleteCalendar = (id: number) => {
+    setCalendarToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!calendarToDelete) return;
+    
+    try {
+      await apiRequest('DELETE', `/api/content-calendar/${calendarToDelete}`);
+      
+      toast({
+        title: 'Calendar deleted',
+        description: 'Content calendar has been successfully deleted',
+      });
+      
+      onRefresh();
+    } catch (error) {
+      toast({
+        title: 'Error deleting calendar',
+        description: 'Failed to delete the calendar. Please try again later.',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleteDialogOpen(false);
+      setCalendarToDelete(null);
+    }
+  };
+
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
+      <div className="space-y-4">
+        {Array.from({ length: 3 }).map((_, i) => (
           <Card key={i} className="overflow-hidden">
-            <CardHeader>
-              <Skeleton className="h-6 w-3/4 mb-2" />
+            <CardHeader className="pb-2">
+              <Skeleton className="h-5 w-1/3" />
               <Skeleton className="h-4 w-1/2" />
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-full" />
                 <Skeleton className="h-4 w-full" />
                 <Skeleton className="h-4 w-3/4" />
-                <div className="flex space-x-2">
-                  <Skeleton className="h-6 w-16 rounded-full" />
-                  <Skeleton className="h-6 w-16 rounded-full" />
-                </div>
               </div>
             </CardContent>
             <CardFooter>
-              <Skeleton className="h-9 w-full" />
+              <Skeleton className="h-9 w-24 rounded-md" />
             </CardFooter>
           </Card>
         ))}
       </div>
     );
   }
-  
+
+  if (calendars.length === 0) {
+    return (
+      <Card className="border-dashed border-2">
+        <CardContent className="flex flex-col items-center justify-center py-10">
+          <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
+          <CardTitle className="mb-2">No content calendars</CardTitle>
+          <CardDescription className="text-center mb-6">
+            You haven't created any content calendars yet. Create one to get started.
+          </CardDescription>
+          <Button>
+            <Plus className="mr-2 h-4 w-4" /> Create new calendar
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row gap-4 items-end md:items-center">
-        <div className="w-full md:w-1/3">
-          <Input
-            placeholder="Search calendars..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full"
-          />
-        </div>
-        <div className="w-full md:w-1/4">
-          <Select value={filterPlatform} onValueChange={setFilterPlatform}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by platform" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Platforms</SelectItem>
-              <SelectItem value="X">X (Twitter)</SelectItem>
-              <SelectItem value="Facebook">Facebook</SelectItem>
-              <SelectItem value="Instagram">Instagram</SelectItem>
-              <SelectItem value="Threads">Threads</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="w-full md:w-1/4">
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger>
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="newest">Newest first</SelectItem>
-              <SelectItem value="oldest">Oldest first</SelectItem>
-              <SelectItem value="name-asc">Name (A-Z)</SelectItem>
-              <SelectItem value="name-desc">Name (Z-A)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="hidden md:block ml-auto">
-          <Button variant="outline" size="sm" onClick={onRefresh}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-        </div>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Your Content Calendars</h2>
+        <Button onClick={onRefresh} variant="outline" size="sm">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
       </div>
       
-      {filteredCalendars.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground text-center">
-              {calendars.length === 0 
-                ? "You haven't created any content calendars yet"
-                : "No calendars match your search criteria"}
-            </p>
-            {calendars.length === 0 && (
-              <Button className="mt-4" asChild>
-                <Link href="/content-calendar?tab=create">Create your first calendar</Link>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1">
+        {calendars.map((calendar) => (
+          <Card key={calendar.id} className="overflow-hidden">
+            <CardHeader className="pb-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="mb-1">{calendar.name}</CardTitle>
+                  <CardDescription>
+                    Brand: {calendar.brandName} | Industry: {calendar.industry}
+                  </CardDescription>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <span className="sr-only">Open menu</span>
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuItem>
+                      <Eye className="mr-2 h-4 w-4" />
+                      <span>View details</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Edit className="mr-2 h-4 w-4" />
+                      <span>Edit calendar</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      className="text-red-600" 
+                      onClick={() => handleDeleteCalendar(calendar.id)}
+                    >
+                      <Trash className="mr-2 h-4 w-4" />
+                      <span>Delete</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-3">
+                {calendar.platforms.map((platform) => (
+                  <Badge key={platform} variant="outline">{platform}</Badge>
+                ))}
+                {getStatusBadge(calendar.status)}
+              </div>
+            </CardHeader>
+            <CardContent className="pb-3">
+              <div className="flex flex-col space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Frequency:</span>
+                  <span className="font-medium">{calendar.frequency}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Period:</span>
+                  <span className="font-medium">
+                    {format(parseISO(calendar.startDate), 'MMM dd, yyyy')} - 
+                    {format(parseISO(calendar.endDate), 'MMM dd, yyyy')}
+                  </span>
+                </div>
+                {calendar.lastGeneratedAt && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Last Generated:</span>
+                    <span className="font-medium">
+                      {format(parseISO(calendar.lastGeneratedAt), 'MMM dd, yyyy')}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-between pt-0">
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+              >
+                <a href={`/content-calendar/${calendar.id}`}>View Content</a>
               </Button>
-            )}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredCalendars.map((calendar) => (
-            <Card key={calendar.id}>
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-xl">{calendar.name}</CardTitle>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem asChild>
-                        <Link href={`/content-calendar/${calendar.id}`}>
-                          <Eye className="h-4 w-4 mr-2" /> View Calendar
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link href={`/content-calendar/${calendar.id}/edit`}>
-                          <Edit className="h-4 w-4 mr-2" /> Edit Calendar
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link href={`/content-calendar/${calendar.id}/analytics`}>
-                          <BarChart3 className="h-4 w-4 mr-2" /> View Analytics
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                            <Trash2 className="h-4 w-4 mr-2" /> Delete Calendar
-                          </DropdownMenuItem>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This will permanently delete the calendar "{calendar.name}" and all its content.
-                              This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction 
-                              onClick={() => handleDeleteCalendar(calendar.id)}
-                              className="bg-red-600 hover:bg-red-700"
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-                <CardDescription>{calendar.brandName} • {calendar.industry}</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-3">
-                  <div className="flex space-x-2 my-2">
-                    {calendar.platforms.map((platform) => (
-                      <Badge key={platform} variant="secondary" className="px-2 py-1 flex items-center gap-1">
-                        {getPlatformIcon(platform)}
-                        <span>{platform}</span>
-                      </Badge>
-                    ))}
-                  </div>
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4 mr-1" />
-                    <span>
-                      {format(new Date(calendar.startDate), 'MMM d, yyyy')} - {format(new Date(calendar.endDate), 'MMM d, yyyy')}
-                    </span>
-                  </div>
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Clock className="h-4 w-4 mr-1" />
-                    <span>
-                      {calendar.frequency.charAt(0).toUpperCase() + calendar.frequency.slice(1)} posts
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    {getStatusBadge(calendar.status)}
-                    {calendar.lastGeneratedAt && (
-                      <span className="text-xs text-muted-foreground">
-                        Last generated: {format(new Date(calendar.lastGeneratedAt), 'MMM d, yyyy')}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button asChild className="w-full">
-                  <Link href={`/content-calendar/${calendar.id}`}>
-                    View Calendar
-                  </Link>
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
-      )}
+              <Button
+                size="sm"
+                disabled={isGenerating === calendar.id || calendar.status === 'generating'}
+                onClick={() => handleGenerateContent(calendar.id)}
+              >
+                {isGenerating === calendar.id ? 'Generating...' : 'Generate Content'}
+              </Button>
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action will permanently delete this calendar and all its content items. 
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
