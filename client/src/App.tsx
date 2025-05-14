@@ -81,6 +81,8 @@ import CodeAssistantPage from "@/pages/tools/CodeAssistantPage";
 import AnalyticsDashboardPage from "@/pages/tools/AnalyticsDashboardPage";
 import DesignPrototypingPage from "@/pages/tools/DesignPrototypingPage";
 import ChatbotBuilderPage from "@/pages/tools/ChatbotBuilderPage";
+import ServicePackages from "@/pages/ServicePackages";
+import CaseStudies from "@/pages/CaseStudies";
 
 export default function App() {
   const { t, i18n } = useTranslation();

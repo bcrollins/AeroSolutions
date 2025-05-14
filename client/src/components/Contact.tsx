@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { FaMapMarkerAlt, FaEnvelope, FaPhoneAlt, FaLinkedinIn, FaTwitter, FaGithub } from "react-icons/fa";
 import { apiRequest } from "@/lib/queryClient";
 import { toast } from "@/hooks/use-toast";
+import EnhancedQuoteForm from "@/components/EnhancedQuoteForm";
 
 export default function Contact() {
   const [formData, setFormData] = useState({
