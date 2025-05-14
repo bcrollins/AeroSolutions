@@ -97,6 +97,11 @@ const Navbar: React.FC = () => {
     { name: 'Email Campaigns', path: '/email-campaigns', description: 'Design and send engaging email marketing campaigns' },
     { name: 'Social Media Suggestions', path: '/social-media-suggestions', description: 'Get AI-powered post ideas for social media' },
   ];
+  
+  const aiProductsLinks = [
+    { name: 'AI Course Platform', path: '/ai-products/course-platform', description: 'Comprehensive AI learning platform with interactive courses and certifications' },
+    { name: 'Course Catalog', path: '/ai-products/course-catalog', description: 'Browse our extensive catalog of AI learning resources and courses' },
+  ];
 
   return (
     <>
@@ -185,6 +190,33 @@ const Navbar: React.FC = () => {
                   </NavigationMenuContent>
                 </NavigationMenuItem>
                 
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger 
+                    className={`group h-10 px-4 py-2 text-sm font-medium ${
+                      location.startsWith('/ai-products')
+                        ? 'bg-accent text-accent-foreground' : ''
+                    }`}
+                  >
+                    AI Products
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                      {aiProductsLinks.map((item) => (
+                        <li key={item.path}>
+                          <Link href={item.path}>
+                            <NavigationMenuLink className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+                              <div className="text-sm font-medium leading-none">{item.name}</div>
+                              <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                                {item.description}
+                              </p>
+                            </NavigationMenuLink>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+
                 <NavigationMenuItem>
                   <NavigationMenuTrigger 
                     className={`group h-10 px-4 py-2 text-sm font-medium ${
