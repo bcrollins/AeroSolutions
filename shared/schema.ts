@@ -2032,6 +2032,7 @@ export type InsertCourseRating = z.infer<typeof insertCourseRatingSchema>;
 export const forumThreads = pgTable("forum_threads", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  courseId: integer("course_id").references(() => courses.id, { onDelete: "cascade" }), // Optional, for course-specific threads
   title: text("title").notNull(),
   content: text("content").notNull(),
   tags: json("tags").$type<string[]>().default([]),
@@ -2039,6 +2040,11 @@ export const forumThreads = pgTable("forum_threads", {
   views: integer("views").default(0).notNull(),
   isPinned: boolean("is_pinned").default(false).notNull(),
   isLocked: boolean("is_locked").default(false).notNull(),
+  isApproved: boolean("is_approved").default(false).notNull(), // For moderation
+  isRejected: boolean("is_rejected").default(false).notNull(), // For moderation
+  moderationNotes: text("moderation_notes"), // For admin feedback
+  moderatedBy: integer("moderated_by").references(() => users.id), // Admin who moderated
+  moderatedAt: timestamp("moderated_at"), // When moderation happened
   lastReplyAt: timestamp("last_reply_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -2047,6 +2053,13 @@ export const forumThreads = pgTable("forum_threads", {
 export const insertForumThreadSchema = createInsertSchema(forumThreads).omit({
   id: true,
   views: true,
+  isPinned: true,
+  isLocked: true,
+  isApproved: true, 
+  isRejected: true,
+  moderationNotes: true,
+  moderatedBy: true,
+  moderatedAt: true,
   lastReplyAt: true,
   createdAt: true,
   updatedAt: true,
@@ -2062,6 +2075,11 @@ export const forumReplies = pgTable("forum_replies", {
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   content: text("content").notNull(),
   isAcceptedAnswer: boolean("is_accepted_answer").default(false).notNull(),
+  isApproved: boolean("is_approved").default(false).notNull(), // For moderation
+  isRejected: boolean("is_rejected").default(false).notNull(), // For moderation
+  moderationNotes: text("moderation_notes"), // For admin feedback
+  moderatedBy: integer("moderated_by").references(() => users.id), // Admin who moderated
+  moderatedAt: timestamp("moderated_at"), // When moderation happened
   parentReplyId: integer("parent_reply_id").references(() => forumReplies.id), // For threaded replies
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -2069,12 +2087,79 @@ export const forumReplies = pgTable("forum_replies", {
 
 export const insertForumReplySchema = createInsertSchema(forumReplies).omit({
   id: true,
+  isAcceptedAnswer: true,
+  isApproved: true,
+  isRejected: true,
+  moderationNotes: true,
+  moderatedBy: true,
+  moderatedAt: true,
   createdAt: true,
   updatedAt: true,
 });
 
 export type ForumReply = typeof forumReplies.$inferSelect;
 export type InsertForumReply = z.infer<typeof insertForumReplySchema>;
+
+// Forum likes schema (for upvoting threads and replies)
+export const forumLikes = pgTable("forum_likes", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  threadId: integer("thread_id").references(() => forumThreads.id, { onDelete: "cascade" }),
+  replyId: integer("reply_id").references(() => forumReplies.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertForumLikeSchema = createInsertSchema(forumLikes).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type ForumLike = typeof forumLikes.$inferSelect;
+export type InsertForumLike = z.infer<typeof insertForumLikeSchema>;
+
+// Forum notifications schema for real-time updates
+export const forumNotifications = pgTable("forum_notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  threadId: integer("thread_id").references(() => forumThreads.id, { onDelete: "cascade" }),
+  replyId: integer("reply_id").references(() => forumReplies.id, { onDelete: "cascade" }),
+  type: text("type").notNull(), // 'reply', 'mention', 'like', 'thread_update', etc.
+  message: text("message").notNull(),
+  isRead: boolean("is_read").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertForumNotificationSchema = createInsertSchema(forumNotifications).omit({
+  id: true,
+  isRead: true,
+  createdAt: true,
+});
+
+export type ForumNotification = typeof forumNotifications.$inferSelect;
+export type InsertForumNotification = z.infer<typeof insertForumNotificationSchema>;
+
+// User forum activity for tracking contributions and calculating leaderboard
+export const userForumActivity = pgTable("user_forum_activity", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  threadCount: integer("thread_count").default(0).notNull(),
+  replyCount: integer("reply_count").default(0).notNull(),
+  acceptedAnswers: integer("accepted_answers").default(0).notNull(),
+  likesReceived: integer("likes_received").default(0).notNull(),
+  lastActive: timestamp("last_active").defaultNow().notNull(),
+});
+
+export const insertUserForumActivitySchema = createInsertSchema(userForumActivity).omit({
+  id: true,
+  threadCount: true,
+  replyCount: true,
+  acceptedAnswers: true,
+  likesReceived: true,
+  lastActive: true,
+});
+
+export type UserForumActivity = typeof userForumActivity.$inferSelect;
+export type InsertUserForumActivity = z.infer<typeof insertUserForumActivitySchema>;
 
 // Media resources schema
 export const mediaResources = pgTable("media_resources", {

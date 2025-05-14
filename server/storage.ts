@@ -28,6 +28,11 @@ import {
   courses, courseModules, lessons, quizQuestions, courseResources,
   userCourseEnrollments, userLessonCompletions, userQuizAttempts, courseRatings,
   forumThreads, forumReplies, mediaResources,
+  // Community forum imports
+  forumLikes, forumNotifications, userForumActivity,
+  type ForumLike, type InsertForumLike, 
+  type ForumNotification, type InsertForumNotification,
+  type UserForumActivity, type InsertUserForumActivity,
   // AI Course Platform imports
   aiCourses, aiCourseCategories, aiCourseModules, aiCourseLessons,
   type Course, type InsertCourse, 
@@ -549,6 +554,562 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error(`Error getting subscription plan with id ${planId}:`, error);
       return undefined;
+    }
+  }
+
+  // COMMUNITY FORUM METHODS
+
+  // Thread methods
+  async getForumThreads(
+    page = 1,
+    limit = 10,
+    filters?: {
+      courseId?: number;
+      category?: string;
+      userId?: number;
+      search?: string;
+      approved?: boolean;
+    }
+  ): Promise<{ threads: ForumThread[]; total: number }> {
+    try {
+      const offset = (page - 1) * limit;
+      let query = db.select().from(forumThreads);
+
+      // Apply filters if provided
+      if (filters) {
+        const conditions = [];
+        
+        if (filters.courseId !== undefined) {
+          conditions.push(eq(forumThreads.courseId, filters.courseId));
+        }
+        
+        if (filters.category) {
+          conditions.push(eq(forumThreads.category, filters.category));
+        }
+        
+        if (filters.userId) {
+          conditions.push(eq(forumThreads.userId, filters.userId));
+        }
+        
+        if (filters.search) {
+          conditions.push(
+            or(
+              ilike(forumThreads.title, `%${filters.search}%`),
+              ilike(forumThreads.content, `%${filters.search}%`)
+            )
+          );
+        }
+        
+        if (filters.approved !== undefined) {
+          conditions.push(eq(forumThreads.isApproved, filters.approved));
+        }
+        
+        if (conditions.length > 0) {
+          query = query.where(and(...conditions));
+        }
+      }
+
+      // First get the total count for pagination
+      const countResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(query.as('filtered_threads'));
+      
+      const total = countResult[0]?.count || 0;
+
+      // Then get the actual threads with pagination
+      const threads = await query
+        .orderBy(desc(forumThreads.isPinned), desc(forumThreads.lastReplyAt), desc(forumThreads.createdAt))
+        .limit(limit)
+        .offset(offset);
+
+      return { threads, total };
+    } catch (error) {
+      console.error('Error getting forum threads:', error);
+      return { threads: [], total: 0 };
+    }
+  }
+
+  async getForumThreadById(threadId: number): Promise<ForumThread | undefined> {
+    try {
+      const [thread] = await db
+        .select()
+        .from(forumThreads)
+        .where(eq(forumThreads.id, threadId));
+      
+      // Increment view counter
+      if (thread) {
+        await db
+          .update(forumThreads)
+          .set({ views: thread.views + 1 })
+          .where(eq(forumThreads.id, threadId));
+      }
+      
+      return thread;
+    } catch (error) {
+      console.error(`Error getting forum thread ${threadId}:`, error);
+      return undefined;
+    }
+  }
+
+  async createForumThread(threadData: InsertForumThread): Promise<ForumThread | undefined> {
+    try {
+      const [newThread] = await db
+        .insert(forumThreads)
+        .values(threadData)
+        .returning();
+      
+      // Update user forum activity
+      await this.updateUserForumActivity(threadData.userId);
+      
+      return newThread;
+    } catch (error) {
+      console.error('Error creating forum thread:', error);
+      return undefined;
+    }
+  }
+
+  async moderateThread(
+    threadId: number,
+    moderation: {
+      isApproved: boolean;
+      isRejected: boolean;
+      moderationNotes?: string;
+      moderatedBy: number;
+    }
+  ): Promise<ForumThread | undefined> {
+    try {
+      const [updatedThread] = await db
+        .update(forumThreads)
+        .set({
+          isApproved: moderation.isApproved,
+          isRejected: moderation.isRejected,
+          moderationNotes: moderation.moderationNotes,
+          moderatedBy: moderation.moderatedBy,
+          moderatedAt: new Date(),
+        })
+        .where(eq(forumThreads.id, threadId))
+        .returning();
+      
+      return updatedThread;
+    } catch (error) {
+      console.error(`Error moderating thread ${threadId}:`, error);
+      return undefined;
+    }
+  }
+
+  // Reply methods
+  async getForumReplies(
+    threadId: number,
+    page = 1,
+    limit = 20,
+    includeUnapproved = false
+  ): Promise<{ replies: ForumReply[]; total: number }> {
+    try {
+      const offset = (page - 1) * limit;
+      
+      // Build query with conditions
+      let query = db.select().from(forumReplies).where(eq(forumReplies.threadId, threadId));
+      
+      // Only include approved replies unless specified
+      if (!includeUnapproved) {
+        query = query.where(eq(forumReplies.isApproved, true));
+      }
+
+      // Get total count
+      const countResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(query.as('filtered_replies'));
+      
+      const total = countResult[0]?.count || 0;
+
+      // Get the paginated replies
+      const replies = await query
+        .orderBy(desc(forumReplies.isAcceptedAnswer), asc(forumReplies.createdAt))
+        .limit(limit)
+        .offset(offset);
+
+      return { replies, total };
+    } catch (error) {
+      console.error(`Error getting replies for thread ${threadId}:`, error);
+      return { replies: [], total: 0 };
+    }
+  }
+
+  async createForumReply(replyData: InsertForumReply): Promise<ForumReply | undefined> {
+    try {
+      const [newReply] = await db
+        .insert(forumReplies)
+        .values(replyData)
+        .returning();
+      
+      // Update the thread's last reply timestamp
+      await db
+        .update(forumThreads)
+        .set({ lastReplyAt: new Date() })
+        .where(eq(forumThreads.id, replyData.threadId));
+      
+      // Update user forum activity
+      await this.updateUserForumActivity(replyData.userId);
+      
+      // Create notification for thread owner
+      const [thread] = await db
+        .select()
+        .from(forumThreads)
+        .where(eq(forumThreads.id, replyData.threadId));
+      
+      if (thread && thread.userId !== replyData.userId) {
+        await this.createForumNotification({
+          userId: thread.userId,
+          threadId: thread.id,
+          replyId: newReply.id,
+          type: 'reply',
+          message: `Someone replied to your thread "${thread.title}"`,
+        });
+      }
+      
+      // Create notification for parent reply author if this is a nested reply
+      if (replyData.parentReplyId) {
+        const [parentReply] = await db
+          .select()
+          .from(forumReplies)
+          .where(eq(forumReplies.id, replyData.parentReplyId));
+        
+        if (parentReply && parentReply.userId !== replyData.userId) {
+          await this.createForumNotification({
+            userId: parentReply.userId,
+            threadId: replyData.threadId,
+            replyId: newReply.id,
+            type: 'reply',
+            message: 'Someone replied to your comment',
+          });
+        }
+      }
+      
+      return newReply;
+    } catch (error) {
+      console.error('Error creating forum reply:', error);
+      return undefined;
+    }
+  }
+
+  async moderateReply(
+    replyId: number,
+    moderation: {
+      isApproved: boolean;
+      isRejected: boolean;
+      moderationNotes?: string;
+      moderatedBy: number;
+    }
+  ): Promise<ForumReply | undefined> {
+    try {
+      const [updatedReply] = await db
+        .update(forumReplies)
+        .set({
+          isApproved: moderation.isApproved,
+          isRejected: moderation.isRejected,
+          moderationNotes: moderation.moderationNotes,
+          moderatedBy: moderation.moderatedBy,
+          moderatedAt: new Date(),
+        })
+        .where(eq(forumReplies.id, replyId))
+        .returning();
+      
+      return updatedReply;
+    } catch (error) {
+      console.error(`Error moderating reply ${replyId}:`, error);
+      return undefined;
+    }
+  }
+
+  // Likes and activity
+  async likeForumContent(likeData: InsertForumLike): Promise<ForumLike | undefined> {
+    try {
+      // Check if like already exists
+      const [existingLike] = await db
+        .select()
+        .from(forumLikes)
+        .where(
+          and(
+            eq(forumLikes.userId, likeData.userId),
+            likeData.threadId ? eq(forumLikes.threadId, likeData.threadId) : isNull(forumLikes.threadId),
+            likeData.replyId ? eq(forumLikes.replyId, likeData.replyId) : isNull(forumLikes.replyId)
+          )
+        );
+      
+      if (existingLike) {
+        // Unlike if already liked
+        await db
+          .delete(forumLikes)
+          .where(eq(forumLikes.id, existingLike.id));
+        return undefined;
+      }
+      
+      // Create new like
+      const [newLike] = await db
+        .insert(forumLikes)
+        .values(likeData)
+        .returning();
+      
+      // Increment likes received in user activity
+      let contentOwnerId: number | undefined;
+      
+      if (likeData.threadId) {
+        const [thread] = await db
+          .select()
+          .from(forumThreads)
+          .where(eq(forumThreads.id, likeData.threadId));
+        contentOwnerId = thread?.userId;
+      } else if (likeData.replyId) {
+        const [reply] = await db
+          .select()
+          .from(forumReplies)
+          .where(eq(forumReplies.id, likeData.replyId));
+        contentOwnerId = reply?.userId;
+      }
+      
+      if (contentOwnerId && contentOwnerId !== likeData.userId) {
+        await this.incrementUserForumLikes(contentOwnerId);
+        
+        // Create notification for content owner
+        if (likeData.threadId) {
+          const [thread] = await db
+            .select()
+            .from(forumThreads)
+            .where(eq(forumThreads.id, likeData.threadId));
+          
+          await this.createForumNotification({
+            userId: contentOwnerId,
+            threadId: likeData.threadId,
+            type: 'like',
+            message: `Someone liked your thread "${thread?.title}"`,
+          });
+        } else if (likeData.replyId) {
+          const [reply] = await db
+            .select()
+            .from(forumReplies)
+            .where(eq(forumReplies.id, likeData.replyId));
+          
+          await this.createForumNotification({
+            userId: contentOwnerId,
+            threadId: reply?.threadId,
+            replyId: likeData.replyId,
+            type: 'like',
+            message: 'Someone liked your reply',
+          });
+        }
+      }
+      
+      return newLike;
+    } catch (error) {
+      console.error('Error liking forum content:', error);
+      return undefined;
+    }
+  }
+
+  async updateUserForumActivity(userId: number): Promise<UserForumActivity | undefined> {
+    try {
+      // Get thread and reply counts
+      const threadCountResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(forumThreads)
+        .where(eq(forumThreads.userId, userId));
+      
+      const replyCountResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(forumReplies)
+        .where(eq(forumReplies.userId, userId));
+      
+      const acceptedAnswersResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(forumReplies)
+        .where(
+          and(
+            eq(forumReplies.userId, userId),
+            eq(forumReplies.isAcceptedAnswer, true)
+          )
+        );
+      
+      const threadCount = threadCountResult[0]?.count || 0;
+      const replyCount = replyCountResult[0]?.count || 0;
+      const acceptedAnswers = acceptedAnswersResult[0]?.count || 0;
+      
+      // Check if user activity record exists
+      const [existingActivity] = await db
+        .select()
+        .from(userForumActivity)
+        .where(eq(userForumActivity.userId, userId));
+      
+      if (existingActivity) {
+        // Update existing record
+        const [updatedActivity] = await db
+          .update(userForumActivity)
+          .set({
+            threadCount,
+            replyCount,
+            acceptedAnswers,
+            lastActive: new Date(),
+          })
+          .where(eq(userForumActivity.userId, userId))
+          .returning();
+        
+        return updatedActivity;
+      } else {
+        // Create new record
+        const [newActivity] = await db
+          .insert(userForumActivity)
+          .values({
+            userId,
+            threadCount,
+            replyCount,
+            acceptedAnswers,
+          })
+          .returning();
+        
+        return newActivity;
+      }
+    } catch (error) {
+      console.error(`Error updating forum activity for user ${userId}:`, error);
+      return undefined;
+    }
+  }
+
+  async incrementUserForumLikes(userId: number): Promise<void> {
+    try {
+      // Check if user activity record exists
+      const [existingActivity] = await db
+        .select()
+        .from(userForumActivity)
+        .where(eq(userForumActivity.userId, userId));
+      
+      if (existingActivity) {
+        // Increment likes
+        await db
+          .update(userForumActivity)
+          .set({
+            likesReceived: existingActivity.likesReceived + 1,
+            lastActive: new Date(),
+          })
+          .where(eq(userForumActivity.userId, userId));
+      } else {
+        // Create new record with 1 like
+        await db
+          .insert(userForumActivity)
+          .values({
+            userId,
+            likesReceived: 1,
+          });
+      }
+    } catch (error) {
+      console.error(`Error incrementing forum likes for user ${userId}:`, error);
+    }
+  }
+
+  // Notifications methods
+  async createForumNotification(notificationData: InsertForumNotification): Promise<ForumNotification | undefined> {
+    try {
+      const [notification] = await db
+        .insert(forumNotifications)
+        .values(notificationData)
+        .returning();
+      
+      return notification;
+    } catch (error) {
+      console.error('Error creating forum notification:', error);
+      return undefined;
+    }
+  }
+
+  async getUserNotifications(
+    userId: number,
+    page = 1,
+    limit = 10,
+    unreadOnly = false
+  ): Promise<{ notifications: ForumNotification[]; total: number }> {
+    try {
+      const offset = (page - 1) * limit;
+      
+      // Build query with conditions
+      let query = db.select().from(forumNotifications).where(eq(forumNotifications.userId, userId));
+      
+      if (unreadOnly) {
+        query = query.where(eq(forumNotifications.isRead, false));
+      }
+
+      // Get total count
+      const countResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(query.as('filtered_notifications'));
+      
+      const total = countResult[0]?.count || 0;
+
+      // Get the paginated notifications
+      const notifications = await query
+        .orderBy(desc(forumNotifications.createdAt))
+        .limit(limit)
+        .offset(offset);
+
+      return { notifications, total };
+    } catch (error) {
+      console.error(`Error getting notifications for user ${userId}:`, error);
+      return { notifications: [], total: 0 };
+    }
+  }
+
+  async markNotificationsAsRead(userId: number, notificationIds?: number[]): Promise<number> {
+    try {
+      let query = db
+        .update(forumNotifications)
+        .set({ isRead: true })
+        .where(eq(forumNotifications.userId, userId));
+      
+      if (notificationIds && notificationIds.length > 0) {
+        const idConditions = notificationIds.map(id => eq(forumNotifications.id, id));
+        query = query.where(or(...idConditions));
+      }
+      
+      const result = await query;
+      return result.rowCount || 0;
+    } catch (error) {
+      console.error(`Error marking notifications as read for user ${userId}:`, error);
+      return 0;
+    }
+  }
+
+  async getUnreadNotificationCount(userId: number): Promise<number> {
+    try {
+      const result = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(forumNotifications)
+        .where(
+          and(
+            eq(forumNotifications.userId, userId),
+            eq(forumNotifications.isRead, false)
+          )
+        );
+      
+      return result[0]?.count || 0;
+    } catch (error) {
+      console.error(`Error getting unread notification count for user ${userId}:`, error);
+      return 0;
+    }
+  }
+
+  // Top Contributors / Leaderboard
+  async getTopContributors(limit = 10): Promise<UserForumActivity[]> {
+    try {
+      // Get users with the most activity (weighted combination of metrics)
+      const topContributors = await db
+        .select()
+        .from(userForumActivity)
+        .orderBy(
+          sql`(thread_count * 2 + reply_count + accepted_answers * 3 + likes_received) DESC`
+        )
+        .limit(limit);
+      
+      return topContributors;
+    } catch (error) {
+      console.error('Error getting top contributors:', error);
+      return [];
     }
   }
 }
