@@ -136,15 +136,11 @@ export default function App() {
     };
   }, []);
   
-  // Initialize Google Analytics
+  // Initialize Analytics
   useEffect(() => {
-    // Only initialize if VITE_GA_MEASUREMENT_ID exists
-    if (import.meta.env.VITE_GA_MEASUREMENT_ID) {
-      initGA();
-      console.log('Google Analytics initialized');
-    } else {
-      console.warn('Google Analytics Measurement ID missing');
-    }
+    // Always initialize our custom analytics implementation
+    initGA();
+    console.log('RXAI Analytics initialized');
   }, []);
 
   // Add structured data for SPA navigation
