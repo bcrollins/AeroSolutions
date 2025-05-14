@@ -91,11 +91,12 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https:", "http:"], // More permissive for development
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://js.stripe.com", "https://www.googletagmanager.com", "https:", "http:"],
       styleSrc: ["'self'", "'unsafe-inline'", "https:", "http:"],
       imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
       fontSrc: ["'self'", "data:", "https:", "http:"],
-      connectSrc: ["'self'", "https://api.openai.com", "wss:", "ws:", "https:", "http:"]
+      connectSrc: ["'self'", "https://api.openai.com", "https://api.x.ai", "https://api.stripe.com", "wss:", "ws:", "https:", "http:"],
+      frameSrc: ["'self'", "https://js.stripe.com"]
     }
   },
   crossOriginEmbedderPolicy: false,
