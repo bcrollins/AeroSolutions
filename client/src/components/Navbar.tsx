@@ -20,7 +20,7 @@ import {
 import { Menu, X, ChevronDown, User, LogOut, Star, History, Globe, Shield, Users } from 'lucide-react';
 import LanguageSwitcher from './LanguageSwitcher';
 import ClientPreviewModal from './ClientPreviewModal';
-import ROLLINSXLogo from './ROLLINSXLogo';
+import RXAILogo from './RXAILogo';
 import NotificationPopover from './NotificationPopover';
 import { motion } from 'framer-motion';
 
@@ -106,14 +106,14 @@ const Navbar: React.FC = () => {
         <div className="container flex h-16 items-center px-4">
           <div className="mr-4 flex">
             <Link href="/" className="flex items-center space-x-3">
-              <ROLLINSXLogo size="md" animated={true} />
+              <RXAILogo size="md" animated={true} />
               <motion.span 
                 initial={{ opacity: 0, x: -10 }} 
                 animate={{ opacity: 1, x: 0 }} 
                 transition={{ delay: 0.2 }}
                 className="hidden sm:inline-block font-bold text-xl bg-gradient-to-r from-slate-blue to-electric-cyan bg-clip-text text-transparent font-poppins"
               >
-                ROLLINSX
+                RXAI
               </motion.span>
             </Link>
           </div>

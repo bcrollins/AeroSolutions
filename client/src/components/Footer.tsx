@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'wouter';
 import { useTranslation } from 'react-i18next';
-import ROLLINSXLogo from './ROLLINSXLogo';
+import RXAILogo from './RXAILogo';
 import { FaFacebook, FaTwitter, FaLinkedin, FaInstagram, FaYoutube, FaGithub, FaPhoneAlt, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa';
 
 const Footer: React.FC = () => {
@@ -14,9 +14,9 @@ const Footer: React.FC = () => {
           {/* Company Info */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <ROLLINSXLogo size="md" />
+              <RXAILogo size="md" />
               <span className="text-xl font-bold bg-gradient-to-r from-electric-cyan to-light-gray bg-clip-text text-transparent">
-                ROLLINSX
+                RXAI
               </span>
             </div>
             <p className="text-gray-300 max-w-xs">
@@ -150,7 +150,7 @@ const Footer: React.FC = () => {
         {/* Bottom Section */}
         <div className="border-t border-[#00D1D1]/30 py-6 text-sm text-gray-400 flex flex-col md:flex-row justify-between items-center">
           <div>
-            &copy; {new Date().getFullYear()} ROLLINSX. {t('all_rights_reserved')}
+            &copy; {new Date().getFullYear()} RXAI. A Rollins X Technologies Company. {t('all_rights_reserved')}
           </div>
           <div className="mt-4 md:mt-0">
             <span className="mr-4">FAQ</span>
