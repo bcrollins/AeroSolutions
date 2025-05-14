@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,12 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Skeleton } from '@/components/ui/skeleton';
+import { trackEvent } from '@/lib/analytics';
+
+// Lazy loaded components for better performance
+const PersonalizedContent = lazy(() => import('@/components/PersonalizedContent'));
+const ExitIntentPopup = lazy(() => import('@/components/ExitIntentPopup'));
 
 // Quiz questions type
 interface QuizQuestion {
@@ -130,6 +136,74 @@ const LearnAI: React.FC = () => {
   const [score, setScore] = useState<number>(0);
   const [quizCompleted, setQuizCompleted] = useState<boolean>(false);
   const [showTestimonials, setShowTestimonials] = useState<boolean>(false);
+  const [pageLoadTime] = useState<number>(Date.now());
+  const [hasScrolled, setHasScrolled] = useState<boolean>(false);
+  const [showExitIntent, setShowExitIntent] = useState<boolean>(true);
+  
+  // Track page view and engagement metrics
+  useEffect(() => {
+    // Track page view with custom dimensions
+    trackEvent('page_view', 'pages', 'learn_ai_landing');
+    
+    // Track time spent on page when user leaves
+    const handleBeforeUnload = () => {
+      const timeSpent = Date.now() - pageLoadTime;
+      trackEvent('time_on_page', 'engagement', 'learn_ai_landing', Math.floor(timeSpent / 1000));
+    };
+    
+    // Track scroll depth
+    const handleScroll = () => {
+      if (!hasScrolled) {
+        setHasScrolled(true);
+        trackEvent('user_scrolled', 'engagement', 'learn_ai_landing');
+      }
+      
+      // Calculate scroll depth as percentage
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = document.documentElement.clientHeight;
+      
+      const scrollPercentage = Math.round((scrollTop / (scrollHeight - clientHeight)) * 100);
+      
+      // Track at specific thresholds (25%, 50%, 75%, 100%)
+      if (scrollPercentage >= 25 && scrollPercentage < 50) {
+        trackEvent('scroll_depth_25', 'engagement', 'learn_ai_landing');
+      } else if (scrollPercentage >= 50 && scrollPercentage < 75) {
+        trackEvent('scroll_depth_50', 'engagement', 'learn_ai_landing');
+      } else if (scrollPercentage >= 75 && scrollPercentage < 90) {
+        trackEvent('scroll_depth_75', 'engagement', 'learn_ai_landing');
+      } else if (scrollPercentage >= 90) {
+        trackEvent('scroll_depth_100', 'engagement', 'learn_ai_landing');
+      }
+    };
+    
+    // Setup event listeners
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('scroll', handleScroll);
+    
+    // Optimization: Preload critical images for better performance
+    const preloadImages = () => {
+      const imageUrls = [
+        '/images/ai-learning-dashboard.webp',
+        '/images/ai-course-hero.jpg'
+      ];
+      
+      imageUrls.forEach(url => {
+        const img = new Image();
+        img.src = url;
+      });
+    };
+    
+    // Run preload after a short delay to prioritize page render
+    const preloadTimeout = setTimeout(preloadImages, 1000);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(preloadTimeout);
+    };
+  }, [pageLoadTime, hasScrolled]);
 
   // Handle option selection
   const handleOptionSelect = (questionId: number, optionId: string, points: number) => {
@@ -193,7 +267,41 @@ const LearnAI: React.FC = () => {
       <Helmet>
         <title>Learn AI with RXAI - The World Leader in AI Education</title>
         <meta name="description" content="Start your AI learning journey with RXAI's comprehensive courses. From beginners to advanced practitioners, our expert-led curriculum will transform your career." />
+        <meta property="og:title" content="Learn AI with RXAI" />
+        <meta property="og:description" content="Master AI with our comprehensive courses. Join thousands of successful students." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://rxai.com/learnai" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Learn AI with RXAI" />
+        <meta name="twitter:description" content="Master AI with our comprehensive courses. Join thousands of successful students." />
+        {/* Preload critical resources */}
+        <link rel="preload" as="image" href="/images/ai-learning-dashboard.webp" />
+        {/* Add structured data for SEO */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Course",
+            "name": "RXAI Comprehensive AI Course",
+            "description": "Master artificial intelligence with our industry-leading curriculum",
+            "provider": {
+              "@type": "Organization",
+              "name": "RXAI",
+              "sameAs": "https://rxai.com"
+            }
+          })}
+        </script>
       </Helmet>
+      
+      {/* Show exit intent popup */}
+      {showExitIntent && (
+        <Suspense fallback={null}>
+          <ExitIntentPopup 
+            minTimeOnPage={15000} // Show after 15 seconds on page
+            delay={300}
+            cookieDuration={3} // Show again after 3 days
+          />
+        </Suspense>
+      )}
       
       <div className="container mx-auto py-12 px-4">
         <div className="flex flex-col items-center justify-center">
