@@ -1,8 +1,9 @@
 import OpenAI from 'openai';
 
-// Initialize the OpenAI client
+// Initialize the xAI client using the x.ai API
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: "https://api.x.ai/v1",
+  apiKey: process.env.XAI_API_KEY,
 });
 
 // For debugging API issues, track API success rate
@@ -13,8 +14,8 @@ let lastApiError: any = null;
 // Function to call OpenAI endpoints (renamed from callXAI for clarity)
 export async function callOpenAI(endpoint: string, data: any) {
   try {
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error('OpenAI API key (OPENAI_API_KEY) environment variable is not set');
+    if (!process.env.XAI_API_KEY) {
+      throw new Error('xAI API key (XAI_API_KEY) environment variable is not set');
     }
     
     // Track API call attempt
@@ -125,7 +126,7 @@ export async function generateText(prompt: string, options: {
 } = {}) {
   try {
     const {
-      model = 'gpt-4o',
+      model = 'grok-2-1212',
       maxTokens = 1000,
       temperature = 0.7,
       systemPrompt,
@@ -223,7 +224,7 @@ export async function generateJson<T>(prompt: string, options: {
 } = {}): Promise<T> {
   try {
     const {
-      model = 'gpt-4o',
+      model = 'grok-2-1212',
       maxTokens = 1000,
       temperature = 0.7,
       systemPrompt = 'You are a helpful assistant that responds with JSON only. Format your response as a valid JSON object.',
