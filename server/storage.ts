@@ -291,6 +291,37 @@ export interface IStorage {
   getMediaResourceById(id: number): Promise<MediaResource | undefined>;
   createMediaResource(resource: InsertMediaResource): Promise<MediaResource>;
   incrementMediaResourceViews(id: number): Promise<void>;
+  
+  // Analytics methods
+  createPageView(data: InsertPageView): Promise<PageView>;
+  createAnalyticsEvent(data: InsertAnalyticsEvent): Promise<AnalyticsEvent>;
+  getPageViews(startDate: Date, endDate: Date, path?: string): Promise<PageView[]>;
+  getAnalyticsEvents(startDate: Date, endDate: Date, category?: string, action?: string): Promise<AnalyticsEvent[]>;
+  
+  // User analytics methods
+  getUserCount(): Promise<number>;
+  getActiveUserCount(startDate?: Date, endDate?: Date): Promise<number>;
+  getNewUserCount(startDate: Date, endDate: Date): Promise<number>;
+  getAverageSessionDuration(startDate: Date, endDate: Date): Promise<number>;
+  getTopPages(startDate: Date, endDate: Date, limit?: number): Promise<{ path: string, views: number, avgDuration: number }[]>;
+  getTopReferrers(startDate: Date, endDate: Date, limit?: number): Promise<{ referrer: string, count: number }[]>;
+  
+  // Device and browser analytics
+  getDeviceBreakdown(startDate: Date, endDate: Date): Promise<{ device: string, count: number, percentage: number }[]>;
+  getBrowserBreakdown(startDate: Date, endDate: Date): Promise<{ browser: string, count: number, percentage: number }[]>;
+  
+  // Subscription analytics methods
+  createSubscriptionAnalytics(data: InsertSubscriptionAnalytic): Promise<SubscriptionAnalytic>;
+  getSubscriptionAnalytics(startDate: Date, endDate: Date): Promise<SubscriptionAnalytic[]>;
+  getActiveSubscriptionCount(startDate?: Date, endDate?: Date): Promise<number>;
+  getTrialSubscriptionCount(): Promise<number>;
+  getCanceledSubscriptionCount(startDate: Date, endDate: Date): Promise<number>;
+  getTrialConversionCount(startDate: Date, endDate: Date): Promise<number>;
+  getCompletedTrialCount(startDate: Date, endDate: Date): Promise<number>;
+  getTotalRevenue(): Promise<number>;
+  getMonthlyRecurringRevenue(): Promise<number>;
+  getAnnualRecurringRevenue(): Promise<number>;
+  getSubscriptionChurnRate(startDate: Date, endDate: Date): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2084,6 +2115,505 @@ export class DatabaseStorage implements IStorage {
         .where(eq(posts.id, id));
     } catch (error) {
       console.error(`Error incrementing likes for post with ID ${id}:`, error);
+      throw error;
+    }
+  }
+  
+  // Analytics methods implementation
+  async createPageView(data: InsertPageView): Promise<PageView> {
+    try {
+      const [pageView] = await db
+        .insert(pageViews)
+        .values(data)
+        .returning();
+      return pageView;
+    } catch (error) {
+      console.error("Error creating page view:", error);
+      throw error;
+    }
+  }
+  
+  async createAnalyticsEvent(data: InsertAnalyticsEvent): Promise<AnalyticsEvent> {
+    try {
+      const [event] = await db
+        .insert(analyticsEvents)
+        .values(data)
+        .returning();
+      return event;
+    } catch (error) {
+      console.error("Error creating analytics event:", error);
+      throw error;
+    }
+  }
+  
+  async getPageViews(startDate: Date, endDate: Date, path?: string): Promise<PageView[]> {
+    try {
+      let query = db
+        .select()
+        .from(pageViews)
+        .where(
+          and(
+            gte(pageViews.timestamp, startDate),
+            lte(pageViews.timestamp, endDate)
+          )
+        );
+      
+      if (path) {
+        query = query.where(eq(pageViews.path, path));
+      }
+      
+      return await query.orderBy(desc(pageViews.timestamp));
+    } catch (error) {
+      console.error("Error getting page views:", error);
+      throw error;
+    }
+  }
+  
+  async getAnalyticsEvents(startDate: Date, endDate: Date, category?: string, action?: string): Promise<AnalyticsEvent[]> {
+    try {
+      let query = db
+        .select()
+        .from(analyticsEvents)
+        .where(
+          and(
+            gte(analyticsEvents.timestamp, startDate),
+            lte(analyticsEvents.timestamp, endDate)
+          )
+        );
+      
+      if (category) {
+        query = query.where(eq(analyticsEvents.category, category));
+      }
+      
+      if (action) {
+        query = query.where(eq(analyticsEvents.action, action));
+      }
+      
+      return await query.orderBy(desc(analyticsEvents.timestamp));
+    } catch (error) {
+      console.error("Error getting analytics events:", error);
+      throw error;
+    }
+  }
+  
+  // User analytics methods
+  async getUserCount(): Promise<number> {
+    try {
+      const result = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(users);
+      return result[0].count;
+    } catch (error) {
+      console.error("Error getting user count:", error);
+      throw error;
+    }
+  }
+  
+  async getActiveUserCount(startDate?: Date, endDate?: Date): Promise<number> {
+    try {
+      // If no date range is provided, get count of all users that have logged in at least once
+      if (!startDate || !endDate) {
+        const result = await db
+          .select({ count: sql<number>`count(distinct "userId")` })
+          .from(userSessions);
+        return result[0].count;
+      }
+      
+      // Get count of users who have logged in during the specified date range
+      const result = await db
+        .select({ count: sql<number>`count(distinct "userId")` })
+        .from(userSessions)
+        .where(
+          and(
+            gte(userSessions.startTime, startDate),
+            lte(userSessions.endTime, endDate)
+          )
+        );
+      return result[0].count;
+    } catch (error) {
+      console.error("Error getting active user count:", error);
+      throw error;
+    }
+  }
+  
+  async getNewUserCount(startDate: Date, endDate: Date): Promise<number> {
+    try {
+      const result = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(users)
+        .where(
+          and(
+            gte(users.createdAt, startDate),
+            lte(users.createdAt, endDate)
+          )
+        );
+      return result[0].count;
+    } catch (error) {
+      console.error("Error getting new user count:", error);
+      throw error;
+    }
+  }
+  
+  async getAverageSessionDuration(startDate: Date, endDate: Date): Promise<number> {
+    try {
+      const result = await db
+        .select({
+          avgDuration: sql<number>`avg(extract(epoch from ("endTime" - "startTime")))`,
+        })
+        .from(userSessions)
+        .where(
+          and(
+            gte(userSessions.startTime, startDate),
+            lte(userSessions.endTime, endDate)
+          )
+        );
+      return result[0].avgDuration || 0;
+    } catch (error) {
+      console.error("Error getting average session duration:", error);
+      throw error;
+    }
+  }
+  
+  async getTopPages(startDate: Date, endDate: Date, limit: number = 10): Promise<{ path: string, views: number, avgDuration: number }[]> {
+    try {
+      const result = await db
+        .select({
+          path: pageViews.path,
+          views: sql<number>`count(*)`,
+          avgDuration: sql<number>`avg(${pageViews.duration})`,
+        })
+        .from(pageViews)
+        .where(
+          and(
+            gte(pageViews.timestamp, startDate),
+            lte(pageViews.timestamp, endDate)
+          )
+        )
+        .groupBy(pageViews.path)
+        .orderBy(sql`count(*)`, "desc")
+        .limit(limit);
+      
+      return result.map(row => ({
+        path: row.path,
+        views: row.views,
+        avgDuration: row.avgDuration || 0,
+      }));
+    } catch (error) {
+      console.error("Error getting top pages:", error);
+      throw error;
+    }
+  }
+  
+  async getTopReferrers(startDate: Date, endDate: Date, limit: number = 10): Promise<{ referrer: string, count: number }[]> {
+    try {
+      const result = await db
+        .select({
+          referrer: pageViews.referrer,
+          count: sql<number>`count(*)`,
+        })
+        .from(pageViews)
+        .where(
+          and(
+            gte(pageViews.timestamp, startDate),
+            lte(pageViews.timestamp, endDate),
+            sql`${pageViews.referrer} is not null`,
+          )
+        )
+        .groupBy(pageViews.referrer)
+        .orderBy(sql`count(*)`, "desc")
+        .limit(limit);
+      
+      return result.map(row => ({
+        referrer: row.referrer || 'Direct',
+        count: row.count,
+      }));
+    } catch (error) {
+      console.error("Error getting top referrers:", error);
+      throw error;
+    }
+  }
+  
+  // Device and browser analytics
+  async getDeviceBreakdown(startDate: Date, endDate: Date): Promise<{ device: string, count: number, percentage: number }[]> {
+    try {
+      const result = await db
+        .select({
+          device: pageViews.device,
+          count: sql<number>`count(*)`,
+        })
+        .from(pageViews)
+        .where(
+          and(
+            gte(pageViews.timestamp, startDate),
+            lte(pageViews.timestamp, endDate)
+          )
+        )
+        .groupBy(pageViews.device)
+        .orderBy(sql`count(*)`, "desc");
+      
+      const total = result.reduce((sum, row) => sum + row.count, 0);
+      
+      return result.map(row => ({
+        device: row.device || 'Unknown',
+        count: row.count,
+        percentage: total > 0 ? Math.round((row.count / total) * 100) : 0,
+      }));
+    } catch (error) {
+      console.error("Error getting device breakdown:", error);
+      throw error;
+    }
+  }
+  
+  async getBrowserBreakdown(startDate: Date, endDate: Date): Promise<{ browser: string, count: number, percentage: number }[]> {
+    try {
+      const result = await db
+        .select({
+          browser: pageViews.browser,
+          count: sql<number>`count(*)`,
+        })
+        .from(pageViews)
+        .where(
+          and(
+            gte(pageViews.timestamp, startDate),
+            lte(pageViews.timestamp, endDate)
+          )
+        )
+        .groupBy(pageViews.browser)
+        .orderBy(sql`count(*)`, "desc");
+      
+      const total = result.reduce((sum, row) => sum + row.count, 0);
+      
+      return result.map(row => ({
+        browser: row.browser || 'Unknown',
+        count: row.count,
+        percentage: total > 0 ? Math.round((row.count / total) * 100) : 0,
+      }));
+    } catch (error) {
+      console.error("Error getting browser breakdown:", error);
+      throw error;
+    }
+  }
+  
+  // Subscription analytics methods
+  async createSubscriptionAnalytics(data: InsertSubscriptionAnalytic): Promise<SubscriptionAnalytic> {
+    try {
+      const [analytics] = await db
+        .insert(subscriptionAnalytics)
+        .values(data)
+        .returning();
+      return analytics;
+    } catch (error) {
+      console.error("Error creating subscription analytics:", error);
+      throw error;
+    }
+  }
+  
+  async getSubscriptionAnalytics(startDate: Date, endDate: Date): Promise<SubscriptionAnalytic[]> {
+    try {
+      return await db
+        .select()
+        .from(subscriptionAnalytics)
+        .where(
+          and(
+            gte(subscriptionAnalytics.date, startDate),
+            lte(subscriptionAnalytics.date, endDate)
+          )
+        )
+        .orderBy(subscriptionAnalytics.date);
+    } catch (error) {
+      console.error("Error getting subscription analytics:", error);
+      throw error;
+    }
+  }
+  
+  async getActiveSubscriptionCount(startDate?: Date, endDate?: Date): Promise<number> {
+    try {
+      if (!startDate || !endDate) {
+        const result = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(userSubscriptions)
+          .where(eq(userSubscriptions.status, 'active'));
+        return result[0].count;
+      }
+      
+      const result = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(userSubscriptions)
+        .where(
+          and(
+            eq(userSubscriptions.status, 'active'),
+            gte(userSubscriptions.startDate, startDate),
+            lte(userSubscriptions.endDate, endDate)
+          )
+        );
+      return result[0].count;
+    } catch (error) {
+      console.error("Error getting active subscription count:", error);
+      throw error;
+    }
+  }
+  
+  async getTrialSubscriptionCount(): Promise<number> {
+    try {
+      const result = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(userSubscriptions)
+        .where(eq(userSubscriptions.status, 'trial'));
+      return result[0].count;
+    } catch (error) {
+      console.error("Error getting trial subscription count:", error);
+      throw error;
+    }
+  }
+  
+  async getCanceledSubscriptionCount(startDate: Date, endDate: Date): Promise<number> {
+    try {
+      const result = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(userSubscriptions)
+        .where(
+          and(
+            eq(userSubscriptions.status, 'canceled'),
+            gte(userSubscriptions.canceledAt, startDate),
+            lte(userSubscriptions.canceledAt, endDate)
+          )
+        );
+      return result[0].count;
+    } catch (error) {
+      console.error("Error getting canceled subscription count:", error);
+      throw error;
+    }
+  }
+  
+  async getTrialConversionCount(startDate: Date, endDate: Date): Promise<number> {
+    try {
+      // Count subscriptions that were in trial and then became active
+      const result = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(userSubscriptions)
+        .where(
+          and(
+            eq(userSubscriptions.status, 'active'),
+            eq(userSubscriptions.trialConverted, true),
+            gte(userSubscriptions.updatedAt, startDate),
+            lte(userSubscriptions.updatedAt, endDate)
+          )
+        );
+      return result[0].count;
+    } catch (error) {
+      console.error("Error getting trial conversion count:", error);
+      throw error;
+    }
+  }
+  
+  async getCompletedTrialCount(startDate: Date, endDate: Date): Promise<number> {
+    try {
+      // Count all trials that ended during the period
+      const result = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(userSubscriptions)
+        .where(
+          and(
+            or(
+              eq(userSubscriptions.status, 'active'),
+              eq(userSubscriptions.status, 'canceled'),
+              eq(userSubscriptions.status, 'expired')
+            ),
+            gte(userSubscriptions.trialEndDate, startDate),
+            lte(userSubscriptions.trialEndDate, endDate)
+          )
+        );
+      return result[0].count;
+    } catch (error) {
+      console.error("Error getting completed trial count:", error);
+      throw error;
+    }
+  }
+  
+  async getTotalRevenue(): Promise<number> {
+    try {
+      // Calculate total revenue from all active subscriptions
+      const result = await db
+        .select({
+          revenue: sql<number>`sum(${userSubscriptions.price})`,
+        })
+        .from(userSubscriptions)
+        .where(eq(userSubscriptions.status, 'active'));
+      return result[0].revenue || 0;
+    } catch (error) {
+      console.error("Error getting total revenue:", error);
+      throw error;
+    }
+  }
+  
+  async getMonthlyRecurringRevenue(): Promise<number> {
+    try {
+      // Calculate MRR from all active monthly subscriptions
+      const result = await db
+        .select({
+          mrr: sql<number>`sum(${userSubscriptions.price})`,
+        })
+        .from(userSubscriptions)
+        .where(
+          and(
+            eq(userSubscriptions.status, 'active'),
+            eq(userSubscriptions.billingCycle, 'monthly')
+          )
+        );
+      
+      // Add prorated amount from annual subscriptions
+      const annualResult = await db
+        .select({
+          annual: sql<number>`sum(${userSubscriptions.price} / 12)`,
+        })
+        .from(userSubscriptions)
+        .where(
+          and(
+            eq(userSubscriptions.status, 'active'),
+            eq(userSubscriptions.billingCycle, 'annual')
+          )
+        );
+      
+      return (result[0].mrr || 0) + (annualResult[0].annual || 0);
+    } catch (error) {
+      console.error("Error getting monthly recurring revenue:", error);
+      throw error;
+    }
+  }
+  
+  async getAnnualRecurringRevenue(): Promise<number> {
+    try {
+      // Get MRR and multiply by 12
+      const mrr = await this.getMonthlyRecurringRevenue();
+      return mrr * 12;
+    } catch (error) {
+      console.error("Error getting annual recurring revenue:", error);
+      throw error;
+    }
+  }
+  
+  async getSubscriptionChurnRate(startDate: Date, endDate: Date): Promise<number> {
+    try {
+      // Get count of subscriptions that were canceled during the period
+      const canceledCount = await this.getCanceledSubscriptionCount(startDate, endDate);
+      
+      // Get count of subscriptions that were active at the start of the period
+      const startOfPeriodActiveResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(userSubscriptions)
+        .where(
+          and(
+            eq(userSubscriptions.status, 'active'),
+            lte(userSubscriptions.startDate, startDate)
+          )
+        );
+      
+      const startOfPeriodActive = startOfPeriodActiveResult[0].count;
+      
+      // Calculate churn rate
+      return startOfPeriodActive > 0 ? (canceledCount / startOfPeriodActive) * 100 : 0;
+    } catch (error) {
+      console.error("Error getting subscription churn rate:", error);
       throw error;
     }
   }
