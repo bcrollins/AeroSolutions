@@ -20,6 +20,16 @@ declare global {
       startTime?: [number, number]; // hrtime tuple
     }
   }
+  
+  // Add backgroundTaskMetrics to global scope
+  interface BackgroundTaskMetrics {
+    lastRun: string;
+    status: 'success' | 'failed';
+    taskCount: number;
+    lastError?: string;
+  }
+  
+  var backgroundTaskMetrics: BackgroundTaskMetrics | undefined;
 }
 
 const app = express();
@@ -154,14 +164,19 @@ app.use((req, res, next) => {
   const server = await registerRoutes(app);
 
   // Add a health check endpoint
-  app.get('/', (req, res) => {
-    res.status(200).send('OK');
-  });
-
-  // Setup server to listen on port 5000
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on port ${PORT}`);
+  app.get('/health', (req, res) => {
+    const backgroundTasks = (global as any).backgroundTaskMetrics || {
+      status: 'unknown',
+      lastRun: 'never'
+    };
+    
+    res.status(200).json({ 
+      status: 'OK',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+      backgroundTasks
+    });
   });
 
   // Global error handling middleware
@@ -219,11 +234,32 @@ app.use((req, res, next) => {
   // Start background tasks
   async function runBackgroundTasks() {
     try {
-      console.log('Starting background tasks...');
-      // Place background task logic here
-      console.log('Background tasks completed');
+      log('Starting background tasks...', 'info');
+      
+      // Run any scheduled tasks here in sequence
+      // Example: await generateContentTask();
+      //          await cleanupOldDataTask();
+      //          await updateCacheTask();
+      
+      // Add health check metrics to indicate background tasks are running
+      const taskMetrics: BackgroundTaskMetrics = {
+        lastRun: new Date().toISOString(),
+        status: 'success' as const,
+        taskCount: 0 // Update this with actual count when tasks are added
+      };
+      
+      // Store metrics for health check endpoint to access
+      (global as any).backgroundTaskMetrics = taskMetrics;
+      
+      log('Background tasks completed successfully', 'info');
     } catch (error) {
-      console.error('Error in background tasks:', error);
+      log(`Error in background tasks: ${error}`, 'error');
+      
+      // Update metrics even on failure
+      if ((global as any).backgroundTaskMetrics) {
+        (global as any).backgroundTaskMetrics.status = 'failed';
+        (global as any).backgroundTaskMetrics.lastError = String(error);
+      }
     }
 
     // Schedule the next run in 10 minutes
