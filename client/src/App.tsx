@@ -837,7 +837,40 @@ export default function App() {
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
-              <AiProductDetailPage />
+              <AiProductDetailPage slug={params.slug} />
+            </>
+          )}
+        </Route>
+        
+        {/* AI Course Platform Routes */}
+        <Route path="/ai-courses">
+          {() => (
+            <>
+              <Helmet>
+                <title>AI Course Platform | ROLLINSX</title>
+                <meta name="description" content="Learn AI skills with our comprehensive courses taught by industry experts. Access a variety of courses on AI, machine learning, and data science." />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href="https://rollinsx.dev/ai-courses" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <AiCoursePlatform />
+            </>
+          )}
+        </Route>
+        
+        <Route path="/ai-courses/:id">
+          {(params) => (
+            <>
+              <Helmet>
+                <title>AI Course | ROLLINSX</title>
+                <meta name="description" content="Detailed curriculum and learning resources for our professional AI courses. Develop your skills with interactive lessons and expert instruction." />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href={`https://rollinsx.dev/ai-courses/${params.id}`} />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <AiCourseDetail />
             </>
           )}
         </Route>

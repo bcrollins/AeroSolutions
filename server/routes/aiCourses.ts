@@ -1,134 +1,137 @@
-import { Router } from "express";
-import { db } from "../db";
-import { 
-  aiCourses, 
-  aiCourseCategories,
+import express from 'express';
+import { z } from 'zod';
+import { db } from '../db';
+import { isAuthenticated } from '../replitAuth';
+import { eq, and, desc, sql } from 'drizzle-orm';
+import {
+  aiCourses,
   aiCourseModules,
   aiCourseLessons,
   aiCourseEnrollments,
   aiLessonProgress,
-  aiCourseCertifications,
-  aiCourseForums,
-  aiForumPosts,
-  insertAiCourseSchema,
-  insertAiCourseCategorySchema,
-  insertAiCourseModuleSchema,
-  insertAiCourseLessonSchema
-} from "@shared/schema";
-import { eq, and, desc, asc } from "drizzle-orm";
-import { isAuthenticated } from "../replitAuth";
-import { z } from "zod";
+  aiCourseCategories
+} from '@shared/schema';
 
-const router = Router();
+const router = express.Router();
 
-// Get all courses
-router.get("/api/ai-courses", async (req, res) => {
+// Get all AI courses
+router.get('/api/ai-courses', async (req, res) => {
   try {
-    const courses = await db.select().from(aiCourses)
-      .where(eq(aiCourses.isPublished, true))
-      .orderBy(desc(aiCourses.createdAt));
-    return res.json(courses);
-  } catch (error) {
-    console.error("Error fetching AI courses:", error);
-    return res.status(500).json({ message: "Failed to fetch AI courses" });
+    const courses = await db.select().from(aiCourses).orderBy(desc(aiCourses.createdAt));
+    res.json(courses);
+  } catch (error: any) {
+    console.error('Error fetching AI courses:', error);
+    res.status(500).json({ message: 'Failed to fetch AI courses' });
   }
 });
 
-// Get course by ID
-router.get("/api/ai-courses/:id", async (req, res) => {
+// Get all course categories
+router.get('/api/ai-course-categories', async (req, res) => {
   try {
-    const courseId = parseInt(req.params.id);
+    const categories = await db.select().from(aiCourseCategories);
+    res.json(categories);
+  } catch (error: any) {
+    console.error('Error fetching AI course categories:', error);
+    res.status(500).json({ message: 'Failed to fetch course categories' });
+  }
+});
+
+// Get specific AI course with modules and lessons
+router.get('/api/ai-courses/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const courseId = parseInt(id);
+
     if (isNaN(courseId)) {
-      return res.status(400).json({ message: "Invalid course ID" });
+      return res.status(400).json({ message: 'Invalid course ID' });
     }
 
-    const [course] = await db.select().from(aiCourses)
+    // Get the course
+    const [course] = await db
+      .select()
+      .from(aiCourses)
       .where(eq(aiCourses.id, courseId));
 
     if (!course) {
-      return res.status(404).json({ message: "Course not found" });
+      return res.status(404).json({ message: 'Course not found' });
     }
 
     // Get modules for this course
-    const modules = await db.select().from(aiCourseModules)
+    const modules = await db
+      .select()
+      .from(aiCourseModules)
       .where(eq(aiCourseModules.courseId, courseId))
-      .orderBy(asc(aiCourseModules.position));
+      .orderBy(aiCourseModules.order);
 
     // Get lessons for each module
-    const moduleIds = modules.map(module => module.id);
-    const lessons = await db.select().from(aiCourseLessons)
-      .where(
-        moduleIds.length > 0 
-          ? aiCourseLessons.moduleId.in(moduleIds)
-          : undefined
-      )
-      .orderBy(asc(aiCourseLessons.position));
+    const modulesWithLessons = await Promise.all(
+      modules.map(async (module) => {
+        const lessons = await db
+          .select()
+          .from(aiCourseLessons)
+          .where(eq(aiCourseLessons.moduleId, module.id))
+          .orderBy(aiCourseLessons.order);
 
-    // Create course details with modules and lessons
-    const result = {
-      ...course,
-      modules: modules.map(module => ({
-        ...module,
-        lessons: lessons.filter(lesson => lesson.moduleId === module.id)
-      }))
-    };
+        return {
+          ...module,
+          lessons,
+        };
+      })
+    );
 
-    return res.json(result);
-  } catch (error) {
-    console.error("Error fetching AI course details:", error);
-    return res.status(500).json({ message: "Failed to fetch course details" });
-  }
-});
-
-// Get course categories
-router.get("/api/ai-course-categories", async (req, res) => {
-  try {
-    const categories = await db.select().from(aiCourseCategories);
-    return res.json(categories);
-  } catch (error) {
-    console.error("Error fetching course categories:", error);
-    return res.status(500).json({ message: "Failed to fetch course categories" });
-  }
-});
-
-// Get courses by category
-router.get("/api/ai-courses/category/:categoryId", async (req, res) => {
-  try {
-    const categoryId = parseInt(req.params.categoryId);
-    if (isNaN(categoryId)) {
-      return res.status(400).json({ message: "Invalid category ID" });
+    // Get category if available
+    let category = null;
+    if (course.categoryId) {
+      const [courseCategory] = await db
+        .select()
+        .from(aiCourseCategories)
+        .where(eq(aiCourseCategories.id, course.categoryId));
+      category = courseCategory;
     }
 
-    const courses = await db.select().from(aiCourses)
-      .where(
-        and(
-          eq(aiCourses.categoryId, categoryId),
-          eq(aiCourses.isPublished, true)
-        )
-      )
-      .orderBy(desc(aiCourses.createdAt));
+    // Update course view count
+    await db
+      .update(aiCourses)
+      .set({ viewCount: (course.viewCount || 0) + 1 })
+      .where(eq(aiCourses.id, courseId));
 
-    return res.json(courses);
-  } catch (error) {
-    console.error("Error fetching courses by category:", error);
-    return res.status(500).json({ message: "Failed to fetch courses by category" });
+    // Return course with modules and lessons
+    res.json({
+      ...course,
+      category,
+      modules: modulesWithLessons,
+    });
+  } catch (error: any) {
+    console.error('Error fetching AI course:', error);
+    res.status(500).json({ message: 'Failed to fetch course' });
   }
 });
-
-// AUTHENTICATED ROUTES
 
 // Enroll in a course
-router.post("/api/ai-courses/:id/enroll", isAuthenticated, async (req: any, res) => {
+router.post('/api/ai-courses/:id/enroll', isAuthenticated, async (req: any, res) => {
   try {
-    const courseId = parseInt(req.params.id);
-    if (isNaN(courseId)) {
-      return res.status(400).json({ message: "Invalid course ID" });
-    }
-
+    const { id } = req.params;
+    const courseId = parseInt(id);
     const userId = req.user.claims.sub;
 
+    if (isNaN(courseId)) {
+      return res.status(400).json({ message: 'Invalid course ID' });
+    }
+
+    // Check if course exists
+    const [course] = await db
+      .select()
+      .from(aiCourses)
+      .where(eq(aiCourses.id, courseId));
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
     // Check if already enrolled
-    const [existingEnrollment] = await db.select().from(aiCourseEnrollments)
+    const [existingEnrollment] = await db
+      .select()
+      .from(aiCourseEnrollments)
       .where(
         and(
           eq(aiCourseEnrollments.userId, userId),
@@ -137,71 +140,259 @@ router.post("/api/ai-courses/:id/enroll", isAuthenticated, async (req: any, res)
       );
 
     if (existingEnrollment) {
-      return res.status(400).json({ message: "Already enrolled in this course" });
+      return res.status(400).json({ message: 'Already enrolled in this course' });
     }
 
     // Create enrollment
-    const [enrollment] = await db.insert(aiCourseEnrollments)
+    const [enrollment] = await db
+      .insert(aiCourseEnrollments)
       .values({
-        userId: userId,
-        courseId: courseId,
-        status: "active",
-        progressPercentage: 0
+        userId,
+        courseId,
+        enrolledAt: new Date(),
+        status: 'active',
       })
       .returning();
 
     // Update course enrollment count
-    await db.update(aiCourses)
-      .set({
-        enrollmentCount: aiCourses.enrollmentCount + 1
-      })
+    await db
+      .update(aiCourses)
+      .set({ enrollmentCount: sql`${aiCourses.enrollmentCount} + 1` })
       .where(eq(aiCourses.id, courseId));
 
-    return res.json(enrollment);
-  } catch (error) {
-    console.error("Error enrolling in course:", error);
-    return res.status(500).json({ message: "Failed to enroll in course" });
+    // Initialize progress records for all lessons
+    const modules = await db
+      .select()
+      .from(aiCourseModules)
+      .where(eq(aiCourseModules.courseId, courseId));
+
+    for (const module of modules) {
+      const lessons = await db
+        .select()
+        .from(aiCourseLessons)
+        .where(eq(aiCourseLessons.moduleId, module.id));
+
+      for (const lesson of lessons) {
+        await db
+          .insert(aiLessonProgress)
+          .values({
+            userId,
+            courseId,
+            moduleId: module.id,
+            lessonId: lesson.id,
+            startedAt: new Date(),
+            progressPercentage: 0,
+            completed: false,
+          })
+          .onConflictDoNothing();
+      }
+    }
+
+    res.status(201).json({
+      message: 'Successfully enrolled in course',
+      enrollment,
+    });
+  } catch (error: any) {
+    console.error('Error enrolling in course:', error);
+    res.status(500).json({ message: 'Failed to enroll in course' });
   }
 });
 
 // Get user enrollments
-router.get("/api/user/enrollments", isAuthenticated, async (req: any, res) => {
+router.get('/api/user/enrollments', isAuthenticated, async (req: any, res) => {
   try {
     const userId = req.user.claims.sub;
 
-    const enrollments = await db.select({
-      enrollment: aiCourseEnrollments,
-      course: aiCourses
-    })
-    .from(aiCourseEnrollments)
-    .innerJoin(aiCourses, eq(aiCourseEnrollments.courseId, aiCourses.id))
-    .where(eq(aiCourseEnrollments.userId, userId));
+    const enrollments = await db
+      .select({
+        enrollment: aiCourseEnrollments,
+        course: aiCourses,
+      })
+      .from(aiCourseEnrollments)
+      .innerJoin(aiCourses, eq(aiCourseEnrollments.courseId, aiCourses.id))
+      .where(eq(aiCourseEnrollments.userId, userId))
+      .orderBy(desc(aiCourseEnrollments.enrolledAt));
 
+    // Format the results
     const formattedEnrollments = enrollments.map(({ enrollment, course }) => ({
       ...enrollment,
-      course
+      course,
     }));
 
-    return res.json(formattedEnrollments);
-  } catch (error) {
-    console.error("Error fetching user enrollments:", error);
-    return res.status(500).json({ message: "Failed to fetch enrollments" });
+    res.json(formattedEnrollments);
+  } catch (error: any) {
+    console.error('Error fetching user enrollments:', error);
+    res.status(500).json({ message: 'Failed to fetch enrollments' });
+  }
+});
+
+// Get course progress for a user
+router.get('/api/course/:id/progress', isAuthenticated, async (req: any, res) => {
+  try {
+    const { id } = req.params;
+    const courseId = parseInt(id);
+    const userId = req.user.claims.sub;
+
+    if (isNaN(courseId)) {
+      return res.status(400).json({ message: 'Invalid course ID' });
+    }
+
+    // Check if enrolled
+    const [enrollment] = await db
+      .select()
+      .from(aiCourseEnrollments)
+      .where(
+        and(
+          eq(aiCourseEnrollments.userId, userId),
+          eq(aiCourseEnrollments.courseId, courseId)
+        )
+      );
+
+    if (!enrollment) {
+      return res.status(404).json({ message: 'Not enrolled in this course' });
+    }
+
+    // Get all progress entries for this course
+    const progressEntries = await db
+      .select()
+      .from(aiLessonProgress)
+      .where(
+        and(
+          eq(aiLessonProgress.userId, userId),
+          eq(aiLessonProgress.courseId, courseId)
+        )
+      );
+
+    // Get course modules and lessons
+    const modules = await db
+      .select()
+      .from(aiCourseModules)
+      .where(eq(aiCourseModules.courseId, courseId))
+      .orderBy(aiCourseModules.order);
+
+    const modulesWithProgress = await Promise.all(
+      modules.map(async (module) => {
+        const lessons = await db
+          .select()
+          .from(aiCourseLessons)
+          .where(eq(aiCourseLessons.moduleId, module.id))
+          .orderBy(aiCourseLessons.order);
+
+        const lessonsWithProgress = lessons.map((lesson) => {
+          const progress = progressEntries.find(
+            (entry) => entry.lessonId === lesson.id
+          );
+
+          return {
+            ...lesson,
+            progress: progress || {
+              progressPercentage: 0,
+              completed: false,
+            },
+          };
+        });
+
+        // Calculate module progress
+        const totalLessons = lessonsWithProgress.length;
+        const completedLessons = lessonsWithProgress.filter(
+          (lesson) => lesson.progress.completed
+        ).length;
+        const moduleProgressPercentage = totalLessons > 0
+          ? Math.round((completedLessons / totalLessons) * 100)
+          : 0;
+
+        return {
+          ...module,
+          lessons: lessonsWithProgress,
+          progress: {
+            progressPercentage: moduleProgressPercentage,
+            completedLessons,
+            totalLessons,
+          },
+        };
+      })
+    );
+
+    // Calculate overall course progress
+    const totalLessons = progressEntries.length;
+    const completedLessons = progressEntries.filter(
+      (entry) => entry.completed
+    ).length;
+    const overallProgressPercentage = totalLessons > 0
+      ? Math.round((completedLessons / totalLessons) * 100)
+      : 0;
+
+    res.json({
+      courseId,
+      userId,
+      enrollmentId: enrollment.id,
+      modules: modulesWithProgress,
+      overallProgress: {
+        progressPercentage: overallProgressPercentage,
+        completedLessons,
+        totalLessons,
+      },
+      lastUpdated: new Date(),
+    });
+  } catch (error: any) {
+    console.error('Error fetching course progress:', error);
+    res.status(500).json({ message: 'Failed to fetch course progress' });
   }
 });
 
 // Update lesson progress
-router.post("/api/lessons/:id/progress", isAuthenticated, async (req: any, res) => {
+router.post('/api/lessons/:id/progress', isAuthenticated, async (req: any, res) => {
   try {
-    const lessonId = parseInt(req.params.id);
+    const { id } = req.params;
+    const lessonId = parseInt(id);
+    const userId = req.user.claims.sub;
+    const { completed, progressPercentage } = req.body;
+
     if (isNaN(lessonId)) {
-      return res.status(400).json({ message: "Invalid lesson ID" });
+      return res.status(400).json({ message: 'Invalid lesson ID' });
     }
 
-    const userId = req.user.claims.sub;
-    const { completed, progressPercentage, timeSpent } = req.body;
+    // Get the lesson to find its course
+    const [lesson] = await db
+      .select()
+      .from(aiCourseLessons)
+      .where(eq(aiCourseLessons.id, lessonId));
 
-    // Find existing progress or create new
-    const [existingProgress] = await db.select().from(aiLessonProgress)
+    if (!lesson) {
+      return res.status(404).json({ message: 'Lesson not found' });
+    }
+
+    // Get module to find course ID
+    const [module] = await db
+      .select()
+      .from(aiCourseModules)
+      .where(eq(aiCourseModules.id, lesson.moduleId));
+
+    if (!module) {
+      return res.status(404).json({ message: 'Module not found' });
+    }
+
+    const courseId = module.courseId;
+
+    // Check if enrolled in this course
+    const [enrollment] = await db
+      .select()
+      .from(aiCourseEnrollments)
+      .where(
+        and(
+          eq(aiCourseEnrollments.userId, userId),
+          eq(aiCourseEnrollments.courseId, courseId)
+        )
+      );
+
+    if (!enrollment) {
+      return res.status(403).json({ message: 'Not enrolled in this course' });
+    }
+
+    // Get existing progress or create new
+    const [existingProgress] = await db
+      .select()
+      .from(aiLessonProgress)
       .where(
         and(
           eq(aiLessonProgress.userId, userId),
@@ -209,271 +400,41 @@ router.post("/api/lessons/:id/progress", isAuthenticated, async (req: any, res) 
         )
       );
 
-    let progress;
-
     if (existingProgress) {
       // Update existing progress
-      [progress] = await db.update(aiLessonProgress)
+      const [updatedProgress] = await db
+        .update(aiLessonProgress)
         .set({
-          completed: completed ?? existingProgress.completed,
+          progressPercentage: progressPercentage || existingProgress.progressPercentage,
+          completed: completed !== undefined ? completed : existingProgress.completed,
           completedAt: completed ? new Date() : existingProgress.completedAt,
-          progressPercentage: progressPercentage ?? existingProgress.progressPercentage,
-          timeSpent: (timeSpent ?? 0) + (existingProgress.timeSpent ?? 0),
-          lastAccessedAt: new Date()
+          updatedAt: new Date(),
         })
-        .where(
-          and(
-            eq(aiLessonProgress.userId, userId),
-            eq(aiLessonProgress.lessonId, lessonId)
-          )
-        )
+        .where(eq(aiLessonProgress.id, existingProgress.id))
         .returning();
+
+      res.json(updatedProgress);
     } else {
-      // Create new progress
-      [progress] = await db.insert(aiLessonProgress)
+      // Create new progress entry
+      const [newProgress] = await db
+        .insert(aiCourseProgress)
         .values({
           userId,
+          courseId,
+          moduleId: lesson.moduleId,
           lessonId,
-          completed: completed ?? false,
+          startedAt: new Date(),
+          progressPercentage: progressPercentage || 0,
+          completed: completed || false,
           completedAt: completed ? new Date() : null,
-          progressPercentage: progressPercentage ?? 0,
-          timeSpent: timeSpent ?? 0
         })
         .returning();
+
+      res.status(201).json(newProgress);
     }
-
-    // Update course enrollment progress if this completes a lesson
-    if (completed) {
-      // Get the module and course for this lesson
-      const [lesson] = await db.select().from(aiCourseLessons)
-        .where(eq(aiCourseLessons.id, lessonId));
-      
-      if (lesson) {
-        const [module] = await db.select().from(aiCourseModules)
-          .where(eq(aiCourseModules.id, lesson.moduleId));
-        
-        if (module) {
-          // Get all lessons in the course
-          const modules = await db.select().from(aiCourseModules)
-            .where(eq(aiCourseModules.courseId, module.courseId));
-          
-          const moduleIds = modules.map(m => m.id);
-          const lessons = await db.select().from(aiCourseLessons)
-            .where(aiCourseLessons.moduleId.in(moduleIds));
-          
-          // Get completed lessons
-          const completedLessons = await db.select().from(aiLessonProgress)
-            .where(
-              and(
-                eq(aiLessonProgress.userId, userId),
-                aiLessonProgress.lessonId.in(lessons.map(l => l.id)),
-                eq(aiLessonProgress.completed, true)
-              )
-            );
-          
-          // Calculate progress percentage
-          const totalLessons = lessons.length;
-          const completedCount = completedLessons.length;
-          const progressPercentage = Math.round((completedCount / totalLessons) * 100);
-          
-          // Update enrollment progress
-          await db.update(aiCourseEnrollments)
-            .set({
-              progressPercentage,
-              completedAt: progressPercentage === 100 ? new Date() : null,
-              status: progressPercentage === 100 ? 'completed' : 'active',
-              lastAccessedAt: new Date()
-            })
-            .where(
-              and(
-                eq(aiCourseEnrollments.userId, userId),
-                eq(aiCourseEnrollments.courseId, module.courseId)
-              )
-            );
-          
-          // If course is completed, generate certificate
-          if (progressPercentage === 100) {
-            const [existingCertificate] = await db.select().from(aiCourseCertifications)
-              .where(
-                and(
-                  eq(aiCourseCertifications.userId, userId),
-                  eq(aiCourseCertifications.courseId, module.courseId)
-                )
-              );
-            
-            if (!existingCertificate) {
-              // Generate a unique certification number
-              const certNumber = `CERT-${module.courseId}-${userId}-${Date.now()}`;
-              
-              await db.insert(aiCourseCertifications)
-                .values({
-                  userId,
-                  courseId: module.courseId,
-                  certificationNumber: certNumber,
-                  issueDate: new Date(),
-                  expiryDate: null, // No expiry
-                  verified: true
-                });
-            }
-          }
-        }
-      }
-    }
-
-    return res.json(progress);
-  } catch (error) {
-    console.error("Error updating lesson progress:", error);
-    return res.status(500).json({ message: "Failed to update lesson progress" });
-  }
-});
-
-// Get lesson progress for a user
-router.get("/api/course/:courseId/progress", isAuthenticated, async (req: any, res) => {
-  try {
-    const courseId = parseInt(req.params.courseId);
-    if (isNaN(courseId)) {
-      return res.status(400).json({ message: "Invalid course ID" });
-    }
-
-    const userId = req.user.claims.sub;
-
-    // Get modules for this course
-    const modules = await db.select().from(aiCourseModules)
-      .where(eq(aiCourseModules.courseId, courseId));
-    
-    const moduleIds = modules.map(module => module.id);
-    
-    // Get lessons for these modules
-    const lessons = await db.select().from(aiCourseLessons)
-      .where(
-        moduleIds.length > 0 
-          ? aiCourseLessons.moduleId.in(moduleIds)
-          : undefined
-      );
-    
-    // Get progress for these lessons
-    const progress = await db.select().from(aiLessonProgress)
-      .where(
-        and(
-          eq(aiLessonProgress.userId, userId),
-          lessons.length > 0 
-            ? aiLessonProgress.lessonId.in(lessons.map(lesson => lesson.id))
-            : undefined
-        )
-      );
-    
-    // Create a map of lesson progress
-    const progressMap = progress.reduce((map, item) => {
-      map[item.lessonId] = item;
-      return map;
-    }, {} as Record<number, typeof progress[0]>);
-    
-    // Create course progress details
-    const result = {
-      courseId,
-      modules: modules.map(module => ({
-        ...module,
-        lessons: lessons
-          .filter(lesson => lesson.moduleId === module.id)
-          .map(lesson => ({
-            ...lesson,
-            progress: progressMap[lesson.id] || null
-          }))
-      })),
-      overallProgress: {
-        totalLessons: lessons.length,
-        completedLessons: progress.filter(p => p.completed).length,
-        progressPercentage: lessons.length > 0 
-          ? Math.round((progress.filter(p => p.completed).length / lessons.length) * 100)
-          : 0
-      }
-    };
-
-    return res.json(result);
-  } catch (error) {
-    console.error("Error fetching course progress:", error);
-    return res.status(500).json({ message: "Failed to fetch course progress" });
-  }
-});
-
-// FORUM ROUTES
-
-// Get forums for a course
-router.get("/api/course/:courseId/forums", async (req, res) => {
-  try {
-    const courseId = parseInt(req.params.courseId);
-    if (isNaN(courseId)) {
-      return res.status(400).json({ message: "Invalid course ID" });
-    }
-
-    const forums = await db.select().from(aiCourseForums)
-      .where(eq(aiCourseForums.courseId, courseId))
-      .orderBy(desc(aiCourseForums.updatedAt));
-    
-    return res.json(forums);
-  } catch (error) {
-    console.error("Error fetching course forums:", error);
-    return res.status(500).json({ message: "Failed to fetch course forums" });
-  }
-});
-
-// Get posts for a forum
-router.get("/api/forum/:forumId/posts", async (req, res) => {
-  try {
-    const forumId = parseInt(req.params.forumId);
-    if (isNaN(forumId)) {
-      return res.status(400).json({ message: "Invalid forum ID" });
-    }
-
-    const posts = await db.select({
-      post: aiForumPosts,
-      username: { firstName: "users.first_name", lastName: "users.last_name" }
-    })
-    .from(aiForumPosts)
-    .leftJoin("users", eq("users.id", aiForumPosts.userId))
-    .where(eq(aiForumPosts.forumId, forumId))
-    .orderBy(desc(aiForumPosts.createdAt));
-    
-    return res.json(posts);
-  } catch (error) {
-    console.error("Error fetching forum posts:", error);
-    return res.status(500).json({ message: "Failed to fetch forum posts" });
-  }
-});
-
-// Create a post in a forum
-router.post("/api/forum/:forumId/posts", isAuthenticated, async (req: any, res) => {
-  try {
-    const forumId = parseInt(req.params.forumId);
-    if (isNaN(forumId)) {
-      return res.status(400).json({ message: "Invalid forum ID" });
-    }
-
-    const userId = req.user.claims.sub;
-    const { content } = req.body;
-
-    if (!content) {
-      return res.status(400).json({ message: "Content is required" });
-    }
-
-    const [post] = await db.insert(aiForumPosts)
-      .values({
-        forumId,
-        userId,
-        content,
-        isPinned: false
-      })
-      .returning();
-    
-    // Update forum updated_at
-    await db.update(aiCourseForums)
-      .set({ updatedAt: new Date() })
-      .where(eq(aiCourseForums.id, forumId));
-    
-    return res.json(post);
-  } catch (error) {
-    console.error("Error creating forum post:", error);
-    return res.status(500).json({ message: "Failed to create forum post" });
+  } catch (error: any) {
+    console.error('Error updating lesson progress:', error);
+    res.status(500).json({ message: 'Failed to update progress' });
   }
 });
 
