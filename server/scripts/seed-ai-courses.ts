@@ -219,17 +219,16 @@ async function main() {
   }
 }
 
-// Run the script if executed directly
-if (require.main === module) {
-  main()
-    .then(() => {
-      logger.info("Seed script completed successfully");
-      process.exit(0);
-    })
-    .catch(err => {
-      logger.error("Seed script failed:", err);
-      process.exit(1);
-    });
-}
+// Run the script immediately
+// This approach works with ES modules
+main()
+  .then(() => {
+    logger.info("Seed script completed successfully");
+    process.exit(0);
+  })
+  .catch(err => {
+    logger.error("Seed script failed:", err);
+    process.exit(1);
+  });
 
 export default main;
