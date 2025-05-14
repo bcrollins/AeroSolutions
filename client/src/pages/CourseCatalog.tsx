@@ -61,14 +61,18 @@ const CourseCatalog = () => {
   const coursesPerPage = 10;
 
   // Fetch courses data
-  const { data: courses = [], isLoading: coursesLoading } = useQuery({
+  const { data: coursesData, isLoading: coursesLoading } = useQuery({
     queryKey: ["/api/ai-courses"],
   });
 
   // Fetch categories data
-  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
-    queryKey: ["/api/ai-course-categories"],
+  const { data: categoriesData, isLoading: categoriesLoading } = useQuery({
+    queryKey: ["/api/ai-courses/categories"],
   });
+  
+  // Extract courses and categories from response data
+  const courses = coursesData?.courses || [];
+  const categories = categoriesData || [];
 
   // Filter courses based on search query and filters
   const filteredCourses = courses.filter((course: AiCourse) => {
