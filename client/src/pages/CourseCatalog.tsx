@@ -1,17 +1,19 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Input } from "@/components/ui/input";
 import { 
-  Input,
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
-  SelectItem,
+  SelectItem
+} from "@/components/ui/select";
+import {
   Card,
   CardHeader,
   CardContent,
-  CardFooter 
-} from "@/components/ui";
+  CardFooter
+} from "@/components/ui/card";
 import { Search, Clock, User, Book, ChevronLeft, ChevronRight } from "lucide-react";
 
 // Define the types based on the shared schema

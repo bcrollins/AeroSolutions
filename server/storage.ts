@@ -28,6 +28,8 @@ import {
   courses, courseModules, lessons, quizQuestions, courseResources,
   userCourseEnrollments, userLessonCompletions, userQuizAttempts, courseRatings,
   forumThreads, forumReplies, mediaResources,
+  // AI Course Platform imports
+  aiCourses, aiCourseCategories, aiCourseModules, aiCourseLessons,
   type Course, type InsertCourse, 
   type CourseModule, type InsertCourseModule,
   type Lesson, type InsertLesson,
@@ -612,6 +614,18 @@ export class DatabaseStorage implements IStorage {
       const sessionsExist = await db.select().from(userSessions).limit(1);
       if (!sessionsExist || sessionsExist.length === 0) {
         await this.initAnalyticsSampleData();
+      }
+      
+      // Initialize AI course data if needed
+      const coursesExist = await db.select().from(aiCourses).limit(1);
+      if (!coursesExist || coursesExist.length === 0) {
+        try {
+          const seedAiCourses = require('./scripts/seed-ai-courses').default;
+          await seedAiCourses();
+          console.log("Sample AI course data initialized");
+        } catch (error) {
+          console.error("Error initializing AI course data:", error);
+        }
       }
     } catch (error) {
       console.error("Error initializing sample data:", error);
