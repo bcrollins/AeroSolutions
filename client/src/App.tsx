@@ -86,6 +86,7 @@ import CaseStudies from "@/pages/CaseStudies";
 import ArticlesPage from "@/pages/ArticlesPage";
 import ArticleDetailPage from "@/pages/ArticleDetailPage";
 import NewsHubPage from "@/pages/NewsHubPage";
+import ContactPage from "@/pages/ContactPage";
 
 export default function App() {
   const { t, i18n } = useTranslation();
@@ -327,6 +328,23 @@ export default function App() {
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
               <ArticleDetailPage />
+            </>
+          )}
+        </Route>
+        
+        {/* Contact Page Route */}
+        <Route path="/contact">
+          {() => (
+            <>
+              <Helmet>
+                <title>Contact Us | RXAI - Get in Touch with Our Team</title>
+                <meta name="description" content="Have questions about our services or need custom solutions? Contact the RXAI team today for personalized support and expert guidance on your AI and web development projects." />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href="https://rollinsx.dev/contact" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <ContactPage />
             </>
           )}
         </Route>
