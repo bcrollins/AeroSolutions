@@ -71,10 +71,34 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { trackEvent, trackPageView } from '@/lib/analytics';
 
+// Define article type
+type ArticleType = {
+  id: number;
+  slug: string;
+  title: string;
+  description: string;
+  category: string;
+  content: string;
+  image: string;
+  readTime: number;
+  date: string;
+  author: {
+    name: string;
+    title: string;
+    image: string;
+  };
+  faqs: {
+    question: string;
+    answer: string;
+  }[];
+  relatedArticles: number[];
+  isNew?: boolean;
+};
+
 // Hardcoded article data for demo
 // In a real application, this would be fetched from the API
-const getArticleBySlug = (slug: string) => {
-  const articles = [
+const getArticleBySlug = (slug: string): ArticleType | undefined => {
+  const articles: ArticleType[] = [
     {
       id: 1,
       slug: "what-is-artificial-intelligence-beginners-guide-2025",
@@ -835,7 +859,7 @@ const RelatedArticles = ({ ids }: { ids: number[] }) => {
 
 const ArticleDetailPage: React.FC = () => {
   const [, params] = useRoute('/articles/:slug');
-  const [article, setArticle] = useState<any>(null);
+  const [article, setArticle] = useState<ArticleType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [readingProgress, setReadingProgress] = useState(0);
@@ -864,20 +888,24 @@ const ArticleDetailPage: React.FC = () => {
       const fetchedArticle = getArticleBySlug(params.slug);
       
       if (fetchedArticle) {
-        setArticle(fetchedArticle);
-        
-        // Track page view with more details for analytics
-        trackPageView(`/articles/${fetchedArticle.slug}`);
-        trackEvent('view', 'article', fetchedArticle.title);
-        
         // Add 'isNew' flag if article is less than 7 days old
         const now = new Date();
         const articleDate = new Date(fetchedArticle.date);
         const daysDifference = Math.ceil((now.getTime() - articleDate.getTime()) / (1000 * 60 * 60 * 24));
         
         if (daysDifference <= 7) {
-          fetchedArticle.isNew = true;
+          const articleWithNew = {
+            ...fetchedArticle,
+            isNew: true
+          };
+          setArticle(articleWithNew);
+        } else {
+          setArticle(fetchedArticle);
         }
+        
+        // Track page view with more details for analytics
+        trackPageView(`/articles/${fetchedArticle.slug}`);
+        trackEvent('view', 'article', fetchedArticle.title);
         
         // Update meta tags dynamically
         document.title = `${fetchedArticle.title} | RXAI - Rollins X Technologies`;
@@ -916,10 +944,12 @@ const ArticleDetailPage: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [showNewsletter]);
   
+  // Process article content to add IDs for the table of contents
+
   // Process article content to add ids to headings for TOC navigation
   const processedContent = article?.content.replace(
     /<h(2|3)>(.*?)<\/h\1>/g, 
-    (match, level, title) => {
+    (match: string, level: string, title: string) => {
       const id = title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
       return `<h${level} id="${id}">${title}</h${level}>`;
     }
@@ -987,8 +1017,29 @@ const ArticleDetailPage: React.FC = () => {
     window.location.href : 
     `https://rxai.com/articles/${article.slug}`;
   
+  // Function to wrap technical terms with tooltips
+  const enhanceContentWithTooltips = (content: string): string => {
+    let enhancedContent = content;
+    
+    Object.entries(techTerms).forEach(([term, definition]) => {
+      const regex = new RegExp(`\\b${term}\\b`, 'g');
+      enhancedContent = enhancedContent.replace(
+        regex, 
+        `<span class="cursor-help border-b border-dashed border-primary/60 text-primary" data-term="${term}" data-definition="${definition}">${term}</span>`
+      );
+    });
+    
+    return enhancedContent;
+  };
+  
+  // Process content with tooltips and heading IDs
+  const enhancedContent = article?.content ? enhanceContentWithTooltips(processedContent) : '';
+  
   return (
     <div className="container max-w-7xl py-12">
+      {/* Reading Progress Bar */}
+      <ReadingProgressBar />
+      
       <Helmet>
         <title>{article.title} | RXAI - Rollins X Technologies</title>
         <meta name="description" content={article.description} />
@@ -996,20 +1047,25 @@ const ArticleDetailPage: React.FC = () => {
         <meta property="og:description" content={article.description} />
         <meta property="og:type" content="article" />
         <meta property="og:url" content={currentUrl} />
+        <meta name="keywords" content={`AI, artificial intelligence, ${article.category.toLowerCase()}, machine learning, RXAI, Rollins X, tech, technology`} />
         {article.image && <meta property="og:image" content={article.image} />}
         <script type="application/ld+json">
           {JSON.stringify(faqSchema)}
         </script>
       </Helmet>
       
-      {/* Breadcrumb navigation */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+      {/* Blue Breadcrumb navigation */}
+      <div className="flex items-center gap-2 text-sm text-blue-400 mb-6">
         <Link href="/" className="hover:text-primary transition-colors">
           Home
         </Link>
         <ChevronRight className="h-4 w-4" />
         <Link href="/articles" className="hover:text-primary transition-colors">
           Articles
+        </Link>
+        <ChevronRight className="h-4 w-4" />
+        <Link href={`/articles/category/${article.category.toLowerCase()}`} className="hover:text-primary transition-colors">
+          {article.category}
         </Link>
         <ChevronRight className="h-4 w-4" />
         <span className="text-primary font-medium truncate max-w-[200px]">
@@ -1020,9 +1076,19 @@ const ArticleDetailPage: React.FC = () => {
       {/* Article header */}
       <div className="mb-8">
         <div className="mb-4">
-          <Badge variant="outline" className="mb-3 bg-primary/10 text-primary border-primary/20">
-            {article.category}
-          </Badge>
+          <div className="flex flex-wrap gap-2 mb-3">
+            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+              {article.category}
+            </Badge>
+            
+            {/* New badge if article is recent */}
+            {article.isNew && (
+              <Badge className="bg-blue-500 hover:bg-blue-600 text-white border-none">
+                New
+              </Badge>
+            )}
+          </div>
+          
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
             {article.title}
           </h1>
@@ -1043,8 +1109,8 @@ const ArticleDetailPage: React.FC = () => {
                 </span>
               </div>
               <div className="flex items-center gap-1">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">
+                <Clock className="h-4 w-4 text-blue-400" />
+                <span className="text-sm text-blue-400 font-medium">
                   {article.readTime} min read
                 </span>
               </div>
@@ -1065,25 +1131,48 @@ const ArticleDetailPage: React.FC = () => {
         {/* Table of Contents - desktop sidebar */}
         <div className="hidden md:block">
           <TableOfContents content={article.content} />
+          
+          {/* Cross-Device Sync Badge */}
+          <div className="mt-6 p-4 bg-blue-950/30 rounded-lg text-sm border border-blue-800/30">
+            <div className="flex items-center gap-2 mb-2 text-blue-400">
+              <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="2">
+                <path d="M2 12C2 6.48 6.48 2 12 2s10 4.48 10 10-4.48 10-10 10S2 17.52 2 12zm10 6c3.31 0 6-2.69 6-6s-2.69-6-6-6-6 2.69-6 6 2.69 6 6 6z" />
+              </svg>
+              <span className="font-medium">Reading Progress</span>
+            </div>
+            <div className="h-1.5 w-full bg-gray-700 rounded-full overflow-hidden mb-2">
+              <div className="h-full bg-blue-500" style={{ width: `${Math.min(readingProgress, 100)}%` }} />
+            </div>
+            <p className="text-muted-foreground text-xs">
+              Your progress is synced across devices. Continue reading where you left off on any device.
+            </p>
+          </div>
         </div>
         
         {/* Article content */}
-        <div className="md:col-span-3">
-          {/* Author info */}
-          <div className="flex items-center gap-4 mb-8 p-4 bg-muted/30 rounded-lg">
-            <div className="w-16 h-16 rounded-full overflow-hidden bg-muted flex items-center justify-center">
-              <span className="text-2xl font-bold">{article.author.name.charAt(0)}</span>
-            </div>
-            <div>
-              <p className="font-bold">{article.author.name}</p>
-              <p className="text-sm text-muted-foreground">{article.author.title}</p>
-            </div>
+        <div className="md:col-span-3" ref={articleRef}>
+          {/* Enhanced Author Bio */}
+          <AuthorBio author={article.author} />
+          
+          {/* Optional video explainer */}
+          <VideoComponent videoId="jAu1ZsTCA64" title={article.title} />
+          
+          {/* Article body with enhanced content */}
+          <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-headings:text-foreground prose-a:text-primary hover:prose-a:text-primary/80 prose-a:no-underline">
+            <div dangerouslySetInnerHTML={{ __html: enhancedContent }} />
           </div>
           
-          {/* Article body */}
-          <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-headings:text-foreground prose-a:text-primary hover:prose-a:text-primary/80 prose-a:no-underline">
-            <div dangerouslySetInnerHTML={{ __html: processedContent }} />
-          </div>
+          {/* Interactive Poll */}
+          <InteractivePoll 
+            question="Which AI tool do you use most frequently?"
+            options={pollOptions}
+          />
+          
+          {/* Newsletter Signup */}
+          {showNewsletter && <NewsletterSignup />}
+          
+          {/* SEO Audit Tool */}
+          <SeoAuditTool />
           
           {/* Article footer actions */}
           <div className="mt-12 flex flex-col gap-4">
@@ -1124,6 +1213,39 @@ const ArticleDetailPage: React.FC = () => {
           
           {/* Related Articles */}
           <RelatedArticles ids={article.relatedArticles} />
+          
+          {/* Feedback Button */}
+          <div className="mt-12 text-center">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="gap-2 text-blue-400 border-blue-400/30 hover:bg-blue-950/20">
+                  <MessageSquare className="h-4 w-4" />
+                  Help us improve this article
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Article Feedback</DialogTitle>
+                  <DialogDescription>
+                    Help us make our content more useful by sharing your thoughts.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="feedback-text">What could we improve?</Label>
+                    <textarea 
+                      id="feedback-text" 
+                      className="w-full min-h-[100px] rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground"
+                      placeholder="Share your thoughts on how we can make this article better..."
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="submit" className="bg-primary text-primary-foreground">Submit Feedback</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       </div>
     </div>
