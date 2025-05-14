@@ -1072,6 +1072,86 @@ export const insertUserActivitySchema = createInsertSchema(userActivity).omit({
 export type UserActivity = typeof userActivity.$inferSelect;
 export type InsertUserActivity = z.infer<typeof insertUserActivitySchema>;
 
+// Page views schema for analytics tracking
+export const pageViews = pgTable("page_views", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "set null" }),
+  sessionId: text("session_id"), // For anonymous tracking
+  path: text("path").notNull(),
+  referrer: text("referrer"),
+  userAgent: text("user_agent"),
+  device: text("device"),
+  browser: text("browser"),
+  duration: integer("duration").default(0), // Time spent on page in seconds
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertPageViewSchema = createInsertSchema(pageViews).omit({
+  id: true,
+  createdAt: true,
+  timestamp: true,
+});
+
+export type PageView = typeof pageViews.$inferSelect;
+export type InsertPageView = z.infer<typeof insertPageViewSchema>;
+
+// Analytics events schema for tracking user actions
+export const analyticsEvents = pgTable("analytics_events", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "set null" }),
+  sessionId: text("session_id"), // For anonymous tracking
+  category: text("category").notNull(), // subscription, content, feature, etc.
+  action: text("action").notNull(), // view, click, purchase, etc.
+  label: text("label"), // More specific information about the action
+  value: integer("value"), // Numeric value associated with the event
+  path: text("path").notNull(), // Page path where the event occurred
+  metadata: json("metadata").$type<Record<string, any>>().default({}),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).omit({
+  id: true,
+  createdAt: true,
+  timestamp: true,
+});
+
+export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
+export type InsertAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;
+
+// Subscription analytics schema for tracking subscription metrics
+export const subscriptionAnalytics = pgTable("subscription_analytics", {
+  id: serial("id").primaryKey(),
+  date: date("date").notNull(), // Date of the metrics
+  newSubscriptions: integer("new_subscriptions").default(0).notNull(),
+  canceledSubscriptions: integer("canceled_subscriptions").default(0).notNull(),
+  activeSubscriptions: integer("active_subscriptions").default(0).notNull(),
+  trialSubscriptions: integer("trial_subscriptions").default(0).notNull(),
+  trialConversions: integer("trial_conversions").default(0).notNull(),
+  monthlyRecurringRevenue: decimal("monthly_recurring_revenue", { precision: 10, scale: 2 }).default("0").notNull(),
+  annualRecurringRevenue: decimal("annual_recurring_revenue", { precision: 10, scale: 2 }).default("0").notNull(),
+  churnRate: decimal("churn_rate", { precision: 10, scale: 2 }).default("0").notNull(),
+  planBreakdown: json("plan_breakdown").$type<{
+    planId: number;
+    planName: string;
+    subscribers: number;
+    percentageOfTotal: number;
+    revenue: number;
+  }[]>().default([]),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertSubscriptionAnalyticsSchema = createInsertSchema(subscriptionAnalytics).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type SubscriptionAnalytic = typeof subscriptionAnalytics.$inferSelect;
+export type InsertSubscriptionAnalytic = z.infer<typeof insertSubscriptionAnalyticsSchema>;
+
 // User retention messages schema
 export const userRetentionMessages = pgTable("user_retention_messages", {
   id: serial("id").primaryKey(),

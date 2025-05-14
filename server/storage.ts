@@ -39,7 +39,12 @@ import {
   type CourseRating, type InsertCourseRating,
   type ForumThread, type InsertForumThread,
   type ForumReply, type InsertForumReply,
-  type MediaResource, type InsertMediaResource
+  type MediaResource, type InsertMediaResource,
+  // Analytics imports
+  pageViews, analyticsEvents, subscriptionAnalytics,
+  type PageView, type InsertPageView,
+  type AnalyticsEvent, type InsertAnalyticsEvent,
+  type SubscriptionAnalytic, type InsertSubscriptionAnalytic
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gt, lt, sql, desc, asc, ilike, or } from "drizzle-orm";

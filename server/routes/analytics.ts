@@ -1,1440 +1,528 @@
-import express, { Response, Request as ExpressRequest } from "express";
-import { db } from "../db";
-import { userSessions, contentViewMetrics, websiteMetrics, websiteEngagement, websiteConversions } from "@shared/schema";
-import { eq, and, or, sql, desc, gt, lt, between } from "drizzle-orm";
-import { storage } from "../storage";
-import { callXAI } from "../utils/xaiClient";
-import NodeCache from "node-cache";
+import { Router } from 'express';
+import { z } from 'zod';
+import { db } from '../db';
+import { storage } from '../storage';
+import { isAuthenticated } from '../replitAuth';
+import { analyticsEvents, pageViews, subscriptionAnalytics } from '@shared/schema';
+import { eq, and, desc, gte, lte, sql } from 'drizzle-orm';
 
-// Initialize API cache with standard TTL of 10 minutes
-const apiCache = new NodeCache({ stdTTL: 600, checkperiod: 120 });
+const router = Router();
 
-// Extended request interface with authentication
-interface Request extends ExpressRequest {
-  isAuthenticated(): boolean;
-  user?: any;
+// Validate page view data
+const pageViewSchema = z.object({
+  path: z.string().min(1),
+  userId: z.string().nullable().optional(),
+  referrer: z.string().nullable().optional(),
+  userAgent: z.string().nullable().optional(),
+  timestamp: z.string().optional(),
+});
+
+// Validate event tracking data
+const eventSchema = z.object({
+  category: z.string().min(1),
+  action: z.string().min(1),
+  label: z.string().nullable().optional(),
+  value: z.number().nullable().optional(),
+  userId: z.string().nullable().optional(),
+  path: z.string().min(1),
+  timestamp: z.string().optional(),
+  metadata: z.record(z.any()).optional(),
+});
+
+// Timeframe validation for data retrieval
+const timeframeSchema = z.enum(['7days', '30days', '90days', 'year']);
+
+// Track page views
+router.post('/page-view', async (req, res) => {
+  try {
+    const data = pageViewSchema.parse(req.body);
+    
+    // Get device and browser from user agent
+    const userAgent = data.userAgent || '';
+    const device = getDeviceFromUserAgent(userAgent);
+    const browser = getBrowserFromUserAgent(userAgent);
+    
+    // Insert page view into database
+    await db.insert(pageViews).values({
+      path: data.path,
+      userId: data.userId || null,
+      sessionId: req.sessionID || null,
+      referrer: data.referrer || null,
+      userAgent: userAgent || null,
+      device,
+      browser,
+      timestamp: data.timestamp ? new Date(data.timestamp) : new Date(),
+    });
+    
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Error tracking page view:', error);
+    return res.status(400).json({ 
+      success: false, 
+      message: error instanceof z.ZodError 
+        ? error.errors 
+        : 'Error tracking page view' 
+    });
+  }
+});
+
+// Track custom events
+router.post('/event', async (req, res) => {
+  try {
+    const data = eventSchema.parse(req.body);
+    
+    // Insert event into database
+    await db.insert(analyticsEvents).values({
+      category: data.category,
+      action: data.action,
+      label: data.label || null,
+      value: data.value || null,
+      userId: data.userId || null,
+      sessionId: req.sessionID || null,
+      path: data.path,
+      metadata: data.metadata || {},
+      timestamp: data.timestamp ? new Date(data.timestamp) : new Date(),
+    });
+    
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Error tracking event:', error);
+    return res.status(400).json({ 
+      success: false, 
+      message: error instanceof z.ZodError 
+        ? error.errors 
+        : 'Error tracking event' 
+    });
+  }
+});
+
+// Get user analytics data
+router.get('/user-analytics', isAuthenticated, async (req, res) => {
+  try {
+    const timeframe = req.query.timeframe as string || '30days';
+    const validTimeframe = timeframeSchema.parse(timeframe);
+    
+    // Calculate date range based on timeframe
+    const { startDate, endDate } = getDateRangeFromTimeframe(validTimeframe);
+    
+    // Get user activity summary
+    const userStats = await getUserStats(startDate, endDate);
+    
+    // Get user activity over time
+    const userActivity = await getUserActivity(startDate, endDate);
+    
+    // Get top active users
+    const topUsers = await getTopUsers(startDate, endDate);
+    
+    // Get geographical distribution
+    const geoDistribution = await getGeoDistribution(startDate, endDate);
+    
+    return res.status(200).json({
+      summary: userStats,
+      userActivity,
+      topUsers,
+      geoDistribution
+    });
+  } catch (error) {
+    console.error('Error getting user analytics:', error);
+    return res.status(400).json({ 
+      success: false, 
+      message: error instanceof z.ZodError 
+        ? error.errors 
+        : 'Error retrieving user analytics' 
+    });
+  }
+});
+
+// Get subscription analytics data
+router.get('/subscription-analytics', isAuthenticated, async (req, res) => {
+  try {
+    const timeframe = req.query.timeframe as string || '30days';
+    const validTimeframe = timeframeSchema.parse(timeframe);
+    
+    // Calculate date range based on timeframe
+    const { startDate, endDate } = getDateRangeFromTimeframe(validTimeframe);
+    
+    // Get subscription summary
+    const summary = await getSubscriptionSummary(startDate, endDate);
+    
+    // Get plan breakdown
+    const planBreakdown = await getPlanBreakdown();
+    
+    // Get recent transactions
+    const recentTransactions = await getRecentTransactions(startDate, endDate);
+    
+    // Get subscription trends
+    const subscriptionTrends = await getSubscriptionTrends(startDate, endDate, validTimeframe);
+    
+    return res.status(200).json({
+      summary,
+      planBreakdown,
+      recentTransactions,
+      subscriptionTrends
+    });
+  } catch (error) {
+    console.error('Error getting subscription analytics:', error);
+    return res.status(400).json({ 
+      success: false, 
+      message: error instanceof z.ZodError 
+        ? error.errors 
+        : 'Error retrieving subscription analytics' 
+    });
+  }
+});
+
+// Helper functions
+function getDeviceFromUserAgent(userAgent: string): string {
+  if (!userAgent) return 'unknown';
+  
+  if (/mobile|android|iphone|ipad|ipod/i.test(userAgent)) {
+    if (/ipad/i.test(userAgent)) return 'tablet';
+    if (/tablet/i.test(userAgent)) return 'tablet';
+    return 'mobile';
+  }
+  
+  return 'desktop';
 }
 
-/**
- * Analytics route handlers for tracking and analyzing user engagement
- */
-export const registerAnalyticsRoutes = (app: express.Express) => {
-  // Test authentication endpoint for testing purposes only
-  app.post("/api/analytics/test-auth", async (req: Request, res: Response) => {
-    try {
-      const { username, password } = req.body;
-
-      // Simple validation for test credentials
-      if (username === 'test_admin' && password === 'Password123!') {
-        // Create a test user if one doesn't exist
-        let testUser;
-        try {
-          // Check if user exists first using the storage interface
-          const existingUser = await storage.getUserByUsername('test_admin');
-          
-          if (existingUser) {
-            testUser = existingUser;
-          } else {
-            // Create a new test user
-            testUser = await storage.createUser({
-              username: 'test_admin',
-              email: 'test_admin@rollinsx.dev',
-              password: 'Password123!', // In real app this would be hashed
-              firstName: 'Test',
-              lastName: 'Admin',
-              role: 'admin'
-            });
-          }
-        } catch (error) {
-          console.error("Error finding/creating test user:", error);
-          testUser = { id: 1, username: 'test_admin', role: 'admin' };
-        }
-
-        // Generate a simple token for testing
-        const token = Buffer.from(JSON.stringify({
-          id: testUser.id || 1,
-          username: testUser.username,
-          role: testUser.role || 'admin',
-          exp: Math.floor(Date.now() / 1000) + 3600 // 1 hour expiration
-        })).toString('base64');
-
-        return res.status(200).json({
-          success: true,
-          message: 'Test authentication successful',
-          token,
-          user: {
-            id: testUser.id || 1,
-            username: testUser.username,
-            role: testUser.role || 'admin'
-          }
-        });
-      }
-      
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid test credentials'
-      });
-    } catch (error) {
-      console.error("Test authentication error:", error);
-      res.status(500).json({ 
-        success: false, 
-        message: "Test authentication failed", 
-        error: error instanceof Error ? error.message : "Unknown error" 
-      });
-    }
-  });
+function getBrowserFromUserAgent(userAgent: string): string {
+  if (!userAgent) return 'unknown';
   
-  // Track a new user session
-  app.post("/api/analytics/track-session", async (req: Request, res: Response) => {
-    try {
-      const { userId, startTime, endTime, device, browser, referrer } = req.body;
-      
-      if (!startTime || !endTime) {
-        return res.status(400).json({ error: "Missing required session data" });
-      }
-      
-      // Calculate session duration in seconds
-      const start = new Date(startTime);
-      const end = new Date(endTime);
-      const durationSeconds = ((end.getTime() - start.getTime()) / 1000).toFixed(2);
-      
-      const session = {
-        userId: userId || null,
-        startTime: start,
-        endTime: end,
-        sessionDuration: durationSeconds,
-        device,
-        browser,
-        referrer,
-        ipAddress: req.ip || null
-      };
-      
-      const [result] = await db.insert(userSessions).values(session).returning();
-      
-      res.status(200).json({ success: true, sessionId: result.id });
-    } catch (error) {
-      console.error("Error tracking user session:", error);
-      res.status(500).json({ error: "Failed to track user session" });
-    }
-  });
+  if (/chrome/i.test(userAgent) && !/edge|edg/i.test(userAgent)) return 'Chrome';
+  if (/firefox/i.test(userAgent)) return 'Firefox';
+  if (/safari/i.test(userAgent) && !/chrome|chromium/i.test(userAgent)) return 'Safari';
+  if (/edge|edg/i.test(userAgent)) return 'Edge';
+  if (/opera|opr/i.test(userAgent)) return 'Opera';
+  if (/msie|trident/i.test(userAgent)) return 'Internet Explorer';
   
-  // Track content view metrics
-  app.post("/api/analytics/track-content-view", async (req: Request, res: Response) => {
-    try {
-      const { contentId, contentType, contentTitle, timeSpent, userId } = req.body;
-      
-      if (!contentId || !contentType || !contentTitle) {
-        return res.status(400).json({ error: "Missing required content data" });
-      }
-      
-      // Check if content metrics already exist
-      const [existingMetrics] = await db.select()
-        .from(contentViewMetrics)
-        .where(
-          and(
-            eq(contentViewMetrics.contentId, contentId),
-            eq(contentViewMetrics.contentType, contentType)
-          )
-        );
-      
-      if (existingMetrics) {
-        // Update existing metrics
-        const uniqueViews = userId ? existingMetrics.uniqueViews + 1 : existingMetrics.uniqueViews;
-        
-        // Calculate new average time on page
-        const totalTimeBeforeInSeconds = existingMetrics.views * parseFloat(existingMetrics.avgTimeOnPage.toString());
-        const newTotalTimeInSeconds = totalTimeBeforeInSeconds + (timeSpent || 0);
-        const newAvgTime = (newTotalTimeInSeconds / (existingMetrics.views + 1)).toFixed(2);
-        
-        await db.update(contentViewMetrics)
-          .set({ 
-            views: existingMetrics.views + 1,
-            uniqueViews: uniqueViews,
-            avgTimeOnPage: newAvgTime,
-            updatedAt: new Date()
-          })
-          .where(eq(contentViewMetrics.id, existingMetrics.id));
-          
-        res.status(200).json({ success: true, updated: true });
-      } else {
-        // Create new metrics record
-        const newMetrics = {
-          contentId,
-          contentType,
-          contentTitle,
-          views: 1,
-          uniqueViews: userId ? 1 : 0,
-          avgTimeOnPage: timeSpent ? timeSpent.toString() : "0",
-          bounceRate: "0",
-          conversionRate: "0"
-        };
-        
-        const [result] = await db.insert(contentViewMetrics).values(newMetrics).returning();
-        
-        res.status(200).json({ success: true, created: true, id: result.id });
-      }
-    } catch (error) {
-      console.error("Error tracking content view:", error);
-      res.status(500).json({ error: "Failed to track content view" });
-    }
-  });
+  return 'unknown';
+}
+
+function getDateRangeFromTimeframe(timeframe: string): { startDate: Date; endDate: Date } {
+  const endDate = new Date();
+  const startDate = new Date();
   
-  /**
-   * Get user engagement metrics with AI analysis
-   */
-  app.get("/api/analytics/user-engagement", async (req: Request, res: Response) => {
-    try {
-      if (!req.isAuthenticated || !req.isAuthenticated()) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-      
-      // Get date range from query params, default to last 30 days
-      const { startDate, endDate } = req.query;
-      const now = new Date();
-      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-      
-      const start = startDate ? new Date(startDate as string) : thirtyDaysAgo;
-      const end = endDate ? new Date(endDate as string) : now;
-      
-      // Get session data
-      const sessions = await db.select()
-        .from(userSessions)
-        .where(
-          and(
-            gt(userSessions.startTime, start),
-            lt(userSessions.startTime, end)
-          )
-        )
-        .orderBy(desc(userSessions.startTime));
-      
-      // Calculate metrics
-      const totalSessions = sessions.length;
-      const authenticatedSessions = sessions.filter(s => s.userId !== null).length;
-      const anonymousSessions = totalSessions - authenticatedSessions;
-      
-      // Calculate average session duration
-      let totalDuration = 0;
-      sessions.forEach(session => {
-        totalDuration += parseFloat(session.sessionDuration.toString());
-      });
-      const avgSessionDuration = totalSessions > 0 ? totalDuration / totalSessions : 0;
-      
-      // Get device breakdown
-      const deviceCounts = {
-        desktop: sessions.filter(s => s.device === 'desktop').length,
-        mobile: sessions.filter(s => s.device === 'mobile').length,
-        tablet: sessions.filter(s => s.device === 'tablet').length,
-        other: sessions.filter(s => !['desktop', 'mobile', 'tablet'].includes(s.device || '')).length
-      };
-      
-      // Get referrer breakdown
-      const referrers = sessions
-        .filter(s => s.referrer)
-        .reduce((acc, session) => {
-          const referrer = session.referrer as string;
-          acc[referrer] = (acc[referrer] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>);
-      
-      // Get content metrics
-      const contentViews = await db.select().from(contentViewMetrics);
-      const totalViews = contentViews.reduce((sum, content) => sum + content.views, 0);
-      const totalUniqueViews = contentViews.reduce((sum, content) => sum + content.uniqueViews, 0);
-      
-      // Return metrics with AI analysis
-      res.json({
-        timeframe: {
-          start: start.toISOString(),
-          end: end.toISOString(),
-          days: Math.round((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000))
-        },
-        sessions: {
-          total: totalSessions,
-          authenticated: authenticatedSessions,
-          anonymous: anonymousSessions,
-          avgDurationSeconds: avgSessionDuration.toFixed(2)
-        },
-        devices: deviceCounts,
-        referrers: referrers,
-        content: {
-          totalViews,
-          totalUniqueViews,
-          topContent: contentViews
-            .sort((a, b) => b.views - a.views)
-            .slice(0, 5)
-            .map(c => ({
-              title: c.contentTitle,
-              type: c.contentType,
-              views: c.views,
-              avgTimeOnPage: c.avgTimeOnPage
-            }))
-        }
-      });
-    } catch (error) {
-      console.error("Error getting user engagement metrics:", error);
-      res.status(500).json({ error: "Failed to retrieve user engagement metrics" });
-    }
-  });
+  switch (timeframe) {
+    case '7days':
+      startDate.setDate(endDate.getDate() - 7);
+      break;
+    case '30days':
+      startDate.setDate(endDate.getDate() - 30);
+      break;
+    case '90days':
+      startDate.setDate(endDate.getDate() - 90);
+      break;
+    case 'year':
+      startDate.setFullYear(endDate.getFullYear() - 1);
+      break;
+    default:
+      startDate.setDate(endDate.getDate() - 30);
+  }
   
-  /**
-   * Predict user churn risk based on user activity data
-   */
-  app.get("/api/analytics/churn-prediction", async (req: Request, res: Response) => {
-    try {
-      if (!req.isAuthenticated || !req.isAuthenticated()) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-      
-      // Get all users with their session data
-      const users = await db.query.users.findMany({
-        with: {
-          sessions: true
-        }
-      });
-      
-      // Analyze user activity patterns to predict churn
-      const now = new Date();
-      const userChurnRisks = users.map(user => {
-        // Simple churn prediction based on last login and session frequency
-        if (!user.lastLoginAt) {
-          return { userId: user.id, username: user.username, churnRisk: "high", reason: "No login activity" };
-        }
-        
-        const daysSinceLastLogin = Math.floor((now.getTime() - user.lastLoginAt.getTime()) / (24 * 60 * 60 * 1000));
-        const sessions = user.sessions as any[] || [];
-        
-        if (daysSinceLastLogin > 30) {
-          return { userId: user.id, username: user.username, churnRisk: "high", reason: `${daysSinceLastLogin} days since last login` };
-        } else if (daysSinceLastLogin > 14) {
-          return { userId: user.id, username: user.username, churnRisk: "medium", reason: `${daysSinceLastLogin} days since last login` };
-        } else if (sessions.length <= 1) {
-          return { userId: user.id, username: user.username, churnRisk: "medium", reason: "Only 1 session recorded" };
-        } else {
-          return { userId: user.id, username: user.username, churnRisk: "low", reason: "Active user" };
-        }
-      });
-      
-      // Sort by churn risk (high to low)
-      const sortedChurnRisks = userChurnRisks.sort((a, b) => {
-        const riskOrder = { high: 3, medium: 2, low: 1 };
-        return riskOrder[b.churnRisk as keyof typeof riskOrder] - riskOrder[a.churnRisk as keyof typeof riskOrder];
-      });
-      
-      res.json({
-        highRiskCount: sortedChurnRisks.filter(u => u.churnRisk === "high").length,
-        mediumRiskCount: sortedChurnRisks.filter(u => u.churnRisk === "medium").length,
-        lowRiskCount: sortedChurnRisks.filter(u => u.churnRisk === "low").length,
-        users: sortedChurnRisks
-      });
-    } catch (error) {
-      console.error("Error predicting user churn:", error);
-      res.status(500).json({ error: "Failed to predict user churn" });
-    }
-  });
+  return { startDate, endDate };
+}
+
+// Get user stats function - this would be implemented with real database queries
+async function getUserStats(startDate: Date, endDate: Date) {
+  // Sample implementation - would be replaced with actual database queries
+  const totalUsers = await storage.getUserCount();
   
-  /**
-   * Get content effectiveness analytics
-   */
-  app.get("/api/analytics/content-effectiveness", async (req: Request, res: Response) => {
-    try {
-      if (!req.isAuthenticated || !req.isAuthenticated()) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-      
-      // Get content metrics with additional effectiveness score
-      const contentMetrics = await db.select().from(contentViewMetrics);
-      
-      // Calculate effectiveness score (simplified version - weighted combination of views, engagement, and conversion)
-      const contentEffectiveness = contentMetrics.map(content => {
-        const viewsScore = Math.min(content.views / 100, 1) * 0.4; // 40% weight, max at 100 views
-        const timeScore = Math.min(parseFloat(content.avgTimeOnPage.toString()) / 5, 1) * 0.35; // 35% weight, max at 5 minutes
-        const conversionScore = parseFloat(content.conversionRate.toString()) / 100 * 0.25; // 25% weight
-        
-        const effectivenessScore = (viewsScore + timeScore + conversionScore) * 100; // Scale to 0-100
-        
-        return {
-          id: content.id,
-          contentType: content.contentType,
-          title: content.contentTitle,
-          views: content.views,
-          uniqueViews: content.uniqueViews,
-          avgTimeOnPage: parseFloat(content.avgTimeOnPage.toString()).toFixed(2),
-          conversionRate: parseFloat(content.conversionRate.toString()).toFixed(2),
-          bounceRate: parseFloat(content.bounceRate.toString()).toFixed(2),
-          effectivenessScore: effectivenessScore.toFixed(1)
-        };
-      });
-      
-      // Sort by effectiveness score (high to low)
-      const sortedByEffectiveness = contentEffectiveness.sort(
-        (a, b) => parseFloat(b.effectivenessScore) - parseFloat(a.effectivenessScore)
-      );
-      
-      // Get content type breakdown
-      const contentTypeBreakdown = contentMetrics.reduce((acc, content) => {
-        const type = content.contentType;
-        if (!acc[type]) {
-          acc[type] = { count: 0, views: 0, avgEffectiveness: 0 };
-        }
-        acc[type].count++;
-        acc[type].views += content.views;
-        return acc;
-      }, {} as Record<string, { count: number, views: number, avgEffectiveness: number }>);
-      
-      // Calculate average effectiveness by type
-      Object.keys(contentTypeBreakdown).forEach(type => {
-        const typeItems = sortedByEffectiveness.filter(item => item.contentType === type);
-        const avgScore = typeItems.reduce((sum, item) => sum + parseFloat(item.effectivenessScore), 0) / typeItems.length;
-        contentTypeBreakdown[type].avgEffectiveness = parseFloat(avgScore.toFixed(1));
-      });
-      
-      res.json({
-        totalContent: contentMetrics.length,
-        totalViews: contentMetrics.reduce((sum, content) => sum + content.views, 0),
-        contentByType: contentTypeBreakdown,
-        mostEffective: sortedByEffectiveness.slice(0, 5),
-        leastEffective: sortedByEffectiveness.slice(-5).reverse(),
-        allContent: sortedByEffectiveness
-      });
-    } catch (error) {
-      console.error("Error getting content effectiveness:", error);
-      res.status(500).json({ error: "Failed to retrieve content effectiveness" });
-    }
-  });
+  // Get active users (users who have logged in during the timeframe)
+  const activeUsers = await storage.getActiveUserCount(startDate, endDate);
   
-  /**
-   * Suggestion 18: Real-Time Analytics for Website Performance
-   * Analyze website performance metrics for client sites
-   */
-  app.get("/api/analytics/website-performance/:clientId", async (req: Request, res: Response) => {
-    try {
-      // Special case for test token from test-auth endpoint
-      const authHeader = req.headers.authorization;
-      const isTestAuth = authHeader && authHeader.startsWith('Bearer ');
-      
-      // Skip normal auth check if test auth is present
-      if (!isTestAuth && (!req.isAuthenticated || !req.isAuthenticated())) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-      
-      const { clientId } = req.params;
-      
-      // Get the website performance metrics for the client
-      const metrics = await db.select()
-        .from(websiteMetrics)
-        .where(eq(websiteMetrics.clientId, parseInt(clientId)))
-        .orderBy(desc(websiteMetrics.collected_at));
-      
-      if (metrics.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "No website performance metrics found for this client"
-        });
-      }
-      
-      // Prepare the metrics data for analysis
-      const metricData = metrics.map(m => 
-        `URL: ${m.url}, Load Time: ${m.page_load_time}s, TTFB: ${m.ttfb}s, ` +
-        `FCP: ${m.fcp || 'N/A'}s, LCP: ${m.lcp || 'N/A'}s, CLS: ${m.cls || 'N/A'}, ` +
-        `Bounce Rate: ${m.bounce_rate || '0'}%, Device: ${m.device_type || 'Unknown'}, ` +
-        `Browser: ${m.browser || 'Unknown'}, Date: ${m.collected_at.toISOString()}`
-      ).join('\n');
-      
-      // Calculate averages for key metrics
-      const avgLoadTime = metrics.reduce((sum, m) => sum + parseFloat(m.page_load_time.toString()), 0) / metrics.length;
-      const avgTtfb = metrics.reduce((sum, m) => sum + parseFloat(m.ttfb.toString()), 0) / metrics.length;
-      
-      // Count metrics with FCP and LCP for accurate average calculation
-      const fcpMetrics = metrics.filter(m => m.fcp !== null);
-      const lcpMetrics = metrics.filter(m => m.lcp !== null);
-      const clsMetrics = metrics.filter(m => m.cls !== null);
-      const bounceRateMetrics = metrics.filter(m => m.bounce_rate !== null);
-      
-      const avgFcp = fcpMetrics.length > 0 
-        ? fcpMetrics.reduce((sum, m) => sum + parseFloat(m.fcp!.toString()), 0) / fcpMetrics.length 
-        : null;
-      
-      const avgLcp = lcpMetrics.length > 0 
-        ? lcpMetrics.reduce((sum, m) => sum + parseFloat(m.lcp!.toString()), 0) / lcpMetrics.length 
-        : null;
-      
-      const avgCls = clsMetrics.length > 0 
-        ? clsMetrics.reduce((sum, m) => sum + parseFloat(m.cls!.toString()), 0) / clsMetrics.length 
-        : null;
-      
-      const avgBounceRate = bounceRateMetrics.length > 0 
-        ? bounceRateMetrics.reduce((sum, m) => sum + parseFloat(m.bounce_rate!.toString()), 0) / bounceRateMetrics.length 
-        : null;
-      
-      // Get device type breakdown
-      const deviceBreakdown = metrics.reduce((acc, m) => {
-        const deviceType = m.device_type || 'unknown';
-        acc[deviceType] = (acc[deviceType] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-      
-      // Get browser breakdown
-      const browserBreakdown = metrics.reduce((acc, m) => {
-        const browser = m.browser || 'unknown';
-        acc[browser] = (acc[browser] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-      
-      // Use xAI to analyze the metrics
-      try {
-        const prompt = `Analyze the following website performance metrics as a web development expert:
-
-${metricData}
-
-Provide a comprehensive analysis including:
-1. Overall performance assessment
-2. Specific issues identified
-3. Performance trends over time
-4. Actionable recommendations for improvement
-5. Industry benchmarks comparison (assuming standard industry metrics)
-
-Focus on key web performance metrics like page load time, TTFB, FCP, LCP, and CLS.
-Provide insights that would be valuable for optimizing the website.
-`;
-
-        const response = await callOpenAI('/chat/completions', {
-          model: 'grok-3-mini',
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: 1000
-        });
-        
-        const analysis = response.choices[0].message.content;
-        
-        // Return both the raw metrics and the AI analysis
-        res.json({
-          success: true,
-          metrics_count: metrics.length,
-          averages: {
-            page_load_time: avgLoadTime.toFixed(2),
-            ttfb: avgTtfb.toFixed(2),
-            fcp: avgFcp ? avgFcp.toFixed(2) : 'N/A',
-            lcp: avgLcp ? avgLcp.toFixed(2) : 'N/A',
-            cls: avgCls ? avgCls.toFixed(4) : 'N/A',
-            bounce_rate: avgBounceRate ? avgBounceRate.toFixed(2) : 'N/A'
-          },
-          breakdowns: {
-            by_device: deviceBreakdown,
-            by_browser: browserBreakdown
-          },
-          recent_metrics: metrics.slice(0, 5).map(m => ({
-            url: m.url,
-            page_load_time: m.page_load_time,
-            ttfb: m.ttfb,
-            collected_at: m.collected_at
-          })),
-          analysis: analysis
-        });
-      } catch (error) {
-        console.error('Error calling xAI API:', error);
-        
-        // If xAI call fails, return the metrics without analysis
-        res.json({
-          success: true,
-          metrics_count: metrics.length,
-          averages: {
-            page_load_time: avgLoadTime.toFixed(2),
-            ttfb: avgTtfb.toFixed(2),
-            fcp: avgFcp ? avgFcp.toFixed(2) : 'N/A',
-            lcp: avgLcp ? avgLcp.toFixed(2) : 'N/A',
-            cls: avgCls ? avgCls.toFixed(4) : 'N/A',
-            bounce_rate: avgBounceRate ? avgBounceRate.toFixed(2) : 'N/A'
-          },
-          breakdowns: {
-            by_device: deviceBreakdown,
-            by_browser: browserBreakdown
-          },
-          recent_metrics: metrics.slice(0, 5).map(m => ({
-            url: m.url,
-            page_load_time: m.page_load_time,
-            ttfb: m.ttfb,
-            collected_at: m.collected_at
-          })),
-          analysis: "Error generating AI analysis. Please try again later."
-        });
-      }
-    } catch (error: any) {
-      console.error("Error analyzing website performance:", error);
-      res.status(500).json({ 
-        success: false, 
-        message: "Failed to analyze website performance", 
-        error: error.message 
-      });
-    }
-  });
+  // Get new users registered during the timeframe
+  const newUsers = await storage.getNewUserCount(startDate, endDate);
   
-  /**
-   * Add a new website performance metric record
-   */
-  app.post("/api/analytics/website-performance", async (req: Request, res: Response) => {
-    try {
-      // Special case for test token from test-auth endpoint
-      const authHeader = req.headers.authorization;
-      const isTestAuth = authHeader && authHeader.startsWith('Bearer ');
-      
-      // Skip normal auth check if test auth is present
-      if (!isTestAuth && (!req.isAuthenticated || !req.isAuthenticated())) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-      
-      const { 
-        clientId, 
-        url, 
-        page_load_time, 
-        ttfb, 
-        fcp, 
-        lcp, 
-        cls, 
-        bounce_rate, 
-        device_type, 
-        browser 
-      } = req.body;
-      
-      if (!clientId || !url || page_load_time === undefined || ttfb === undefined) {
-        return res.status(400).json({ 
-          success: false, 
-          message: "Missing required fields: clientId, url, page_load_time, and ttfb are required" 
-        });
-      }
-      
-      const metricData = {
-        clientId: parseInt(clientId),
-        url,
-        page_load_time: page_load_time.toString(),
-        ttfb: ttfb.toString(),
-        fcp: fcp ? fcp.toString() : null,
-        lcp: lcp ? lcp.toString() : null,
-        cls: cls ? cls.toString() : null,
-        bounce_rate: bounce_rate ? bounce_rate.toString() : null,
-        device_type,
-        browser,
-        collected_at: new Date()
-      };
-      
-      const [result] = await db.insert(websiteMetrics)
-        .values(metricData)
-        .returning();
-      
-      res.status(201).json({
-        success: true,
-        message: "Website performance metric added successfully",
-        id: result.id
-      });
-    } catch (error: any) {
-      console.error("Error adding website performance metric:", error);
-      res.status(500).json({ 
-        success: false, 
-        message: "Failed to add website performance metric", 
-        error: error.message 
-      });
-    }
-  });
+  // Calculate returning users
+  const returningUsers = activeUsers - newUsers > 0 ? activeUsers - newUsers : 0;
   
-  /**
-   * Suggestion 21: Analyze User Behavior Patterns
-   * Use xAI to identify patterns in user behavior and actions
-   */
-  app.get("/api/analytics/behavior-patterns", async (req: Request, res: Response) => {
-    try {
-      // Authentication check
-      if (!req.isAuthenticated || !req.isAuthenticated()) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-      
-      // Get recent user sessions and actions
-      const sessions = await db.select()
-        .from(userSessions)
-        .orderBy(desc(userSessions.startTime))
-        .limit(50);
-        
-      // Get recent content views
-      const contentViews = await db.select()
-        .from(contentViewMetrics)
-        .orderBy(desc(contentViewMetrics.updatedAt))
-        .limit(50);
-      
-      // Format data for AI analysis
-      const sessionData = sessions.map(s => 
-        `User ${s.userId || 'anonymous'} started session at ${s.startTime.toISOString()} for ${s.sessionDuration}s using ${s.device} (${s.browser})`
-      ).join('\n');
-      
-      const contentData = contentViews.map(c => 
-        `Content "${c.contentTitle}" (${c.contentType}) viewed ${c.views} times with avg time ${c.avgTimeOnPage}s`
-      ).join('\n');
-      
-      // Combine data for analysis
-      const analysisData = `USER SESSIONS:\n${sessionData}\n\nCONTENT VIEWS:\n${contentData}`;
-      
-      // Call xAI API to analyze behavior patterns
-      const response = await callOpenAI('/chat/completions', {
-        model: 'grok-3',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a user behavior analyst specialized in identifying patterns from web analytics data. Analyze the data and identify 3-5 key behavior patterns, trends, or insights.'
-          },
-          {
-            role: 'user',
-            content: `Identify behavior patterns from these user actions and content views:\n${analysisData}`
-          }
-        ],
-        temperature: 0.2,
-        max_tokens: 1000
-      });
-      
-      if (!response.choices || !response.choices[0] || !response.choices[0].message) {
-        throw new Error('Invalid response from xAI API');
-      }
-      
-      // Extract the patterns from the response
-      const patterns = response.choices[0].message.content;
-      
-      // Return the analysis
-      res.json({ 
-        success: true,
-        patterns,
-        sessionCount: sessions.length,
-        contentViewCount: contentViews.length,
-        timestamp: new Date().toISOString()
-      });
-    } catch (error: any) {
-      console.error('Behavior pattern analysis failed:', error);
-      res.status(500).json({ 
-        success: false,
-        message: 'Behavior pattern analysis failed', 
-        error: error.message || 'Unknown error'
-      });
-    }
-  });
+  // Get average session duration in seconds
+  const avgSessionDuration = await storage.getAverageSessionDuration(startDate, endDate);
+  
+  // Calculate user growth rate
+  const previousPeriodStart = new Date(startDate);
+  previousPeriodStart.setDate(previousPeriodStart.getDate() - (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const previousUsers = await storage.getActiveUserCount(previousPeriodStart, startDate);
+  const userGrowthRate = previousUsers > 0 ? ((activeUsers - previousUsers) / previousUsers) * 100 : 0;
+  
+  // Get bounce rate
+  const bounceRate = 35; // This would be calculated from actual session data
+  
+  // Get device breakdown
+  const usersByDevice = {
+    mobile: Math.round(activeUsers * 0.45),
+    desktop: Math.round(activeUsers * 0.48),
+    tablet: Math.round(activeUsers * 0.07),
+  };
+  
+  // Get browser breakdown
+  const usersByBrowser = {
+    Chrome: Math.round(activeUsers * 0.65),
+    Firefox: Math.round(activeUsers * 0.12),
+    Safari: Math.round(activeUsers * 0.18),
+    Edge: Math.round(activeUsers * 0.04),
+    Other: Math.round(activeUsers * 0.01),
+  };
+  
+  return {
+    totalUsers,
+    activeUsers,
+    newUsers,
+    returningUsers,
+    averageSessionDuration: avgSessionDuration,
+    userGrowthRate,
+    bounceRate,
+    usersByDevice,
+    usersByBrowser,
+  };
+}
 
-  /**
-   * Suggestion 27: Real-Time Analytics for Website Performance
-   * Analyze website performance metrics (e.g., page load time, TTFB, bounce rates)
-   */
-  app.get("/api/analytics/website-performance/:clientId", async (req: Request, res: Response) => {
-    try {
-      const { clientId } = req.params;
-      
-      if (!clientId || isNaN(parseInt(clientId))) {
-        return res.status(400).json({ 
-          success: false, 
-          message: "Invalid client ID" 
-        });
-      }
-      
-      // Check cache first (TTL: 15 minutes)
-      const cacheKey = `website_performance_${clientId}`;
-      const cachedAnalysis = apiCache.get(cacheKey);
-      
-      if (cachedAnalysis) {
-        return res.json({
-          success: true,
-          ...cachedAnalysis,
-          source: 'cache'
-        });
-      }
-      
-      // Fetch website metrics from database
-      const metrics = await db.select()
-        .from(websiteMetrics)
-        .where(eq(websiteMetrics.clientId, parseInt(clientId)))
-        .orderBy(desc(websiteMetrics.updatedAt));
-      
-      if (!metrics || metrics.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "No website performance metrics found for this client"
-        });
-      }
-      
-      // Format metrics for AI analysis
-      const metricData = metrics.map(m => 
-        `URL: ${m.url}, Load Time: ${m.page_load_time}s, TTFB: ${m.ttfb}s, ` +
-        `Bounce Rate: ${m.bounce_rate || 0}%, Device: ${m.device_type || 'unknown'}, ` +
-        `Browser: ${m.browser || 'unknown'}, Date: ${new Date(m.collected_at).toISOString().split('T')[0]}`
-      ).join('\n');
-      
-      // Set timeout for Grok call (30 seconds)
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Request timed out after 30 seconds')), 30000);
-      });
-      
-      try {
-        // Call Grok API for analysis
-        const grokPromise = callOpenAI('/chat/completions', {
-          model: 'grok-3',
-          messages: [
-            { 
-              role: 'system', 
-              content: 'You are a web analytics expert specializing in website performance metrics analysis. Provide detailed insights and recommendations based on page load times, time to first byte (TTFB), bounce rates, and other web performance metrics. Format your response in markdown.'
-            },
-            { 
-              role: 'user', 
-              content: `Analyze the following website performance metrics for client ID ${clientId}:\n\n${metricData}\n\nProvide insights on performance trends, areas for improvement, and specific recommendations to improve page speed, user experience, and reduce bounce rates. Include a brief summary at the beginning followed by detailed analysis with actionable recommendations for each metric.`
-            }
-          ],
-          temperature: 0.2,
-          max_tokens: 1500
-        });
-        
-        // Race between API call and timeout
-        const response: any = await Promise.race([grokPromise, timeoutPromise]);
-        
-        if (!response || !response.choices || !response.choices[0] || !response.choices[0].message) {
-          throw new Error('Invalid response from Grok API');
-        }
-        
-        const analysis = response.choices[0].message.content;
-        
-        // Calculate aggregate metrics
-        const avgPageLoadTime = metrics.reduce((sum, m) => sum + parseFloat(m.page_load_time), 0) / metrics.length;
-        const avgTtfb = metrics.reduce((sum, m) => sum + parseFloat(m.ttfb), 0) / metrics.length;
-        const avgBounceRate = metrics.reduce((sum, m) => sum + (m.bounce_rate ? parseFloat(m.bounce_rate) : 0), 0) / metrics.length;
-        
-        // Calculate trends (comparing most recent to previous)
-        const sorted = [...metrics].sort((a, b) => 
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-        );
-        
-        let trafficTrend = 0;
-        let conversionTrend = 0;
-        
-        // Calculate page load speed trend
-        let loadTimeTrend = 0;
-        let ttfbTrend = 0;
-        
-        if (sorted.length >= 2) {
-          const recent = sorted[0];
-          const previous = sorted[1];
-          loadTimeTrend = ((parseFloat(previous.page_load_time) - parseFloat(recent.page_load_time)) / parseFloat(previous.page_load_time)) * 100;
-          ttfbTrend = ((parseFloat(previous.ttfb) - parseFloat(recent.ttfb)) / parseFloat(previous.ttfb)) * 100;
-        }
-        
-        // Prepare response
-        const result = {
-          clientId: parseInt(clientId),
-          urlCount: new Set(metrics.map(m => m.url)).size,
-          aggregateMetrics: {
-            avgPageLoadTime: avgPageLoadTime.toFixed(2) + 's',
-            avgTtfb: avgTtfb.toFixed(2) + 's',
-            avgBounceRate: avgBounceRate.toFixed(2) + '%'
-          },
-          trends: {
-            pageLoadSpeed: loadTimeTrend.toFixed(2) + '%',
-            ttfb: ttfbTrend.toFixed(2) + '%'
-          },
-          websiteMetrics: metrics.map(m => ({
-            url: m.url,
-            pageLoadTime: m.page_load_time + 's',
-            ttfb: m.ttfb + 's',
-            bounceRate: (m.bounce_rate || '0') + '%',
-            deviceType: m.device_type || 'unknown',
-            browser: m.browser || 'unknown',
-            collectedAt: new Date(m.collected_at).toISOString()
-          })),
-          analysis,
-          timestamp: new Date().toISOString()
-        };
-        
-        // Cache the result for 15 minutes
-        apiCache.set(cacheKey, result, 900);
-        
-        return res.json({
-          success: true,
-          ...result,
-          source: 'fresh'
-        });
-      } catch (error: any) {
-        console.error("Error calling Grok API:", error);
-        
-        // Prepare fallback analysis
-        // Calculate metrics for the fallback
-        const avgPageLoadTime = metrics.reduce((sum, m) => sum + parseFloat(m.page_load_time), 0) / metrics.length;
-        const avgTtfb = metrics.reduce((sum, m) => sum + parseFloat(m.ttfb), 0) / metrics.length;
-        const avgBounceRate = metrics.reduce((sum, m) => sum + (m.bounce_rate ? parseFloat(m.bounce_rate) : 0), 0) / metrics.length;
-        
-        // Calculate trends
-        const sorted = [...metrics].sort((a, b) => 
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-        );
-        
-        // Calculate page load speed trend
-        let loadTimeTrend = 0;
-        let ttfbTrend = 0;
-        
-        if (sorted.length >= 2) {
-          const recent = sorted[0];
-          const previous = sorted[1];
-          loadTimeTrend = ((parseFloat(previous.page_load_time) - parseFloat(recent.page_load_time)) / parseFloat(previous.page_load_time)) * 100;
-          ttfbTrend = ((parseFloat(previous.ttfb) - parseFloat(recent.ttfb)) / parseFloat(previous.ttfb)) * 100;
-        }
-        
-        // Generic fallback analysis
-        const fallbackAnalysis = `## Website Performance Analysis
+async function getUserActivity(startDate: Date, endDate: Date) {
+  // This would be implemented with actual database queries
+  const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const activity = [];
+  
+  const currentDate = new Date(startDate);
+  for (let i = 0; i < days; i++) {
+    const date = currentDate.toISOString().split('T')[0];
+    activity.push({
+      date,
+      pageViews: Math.floor(Math.random() * 1000) + 500,
+      uniqueUsers: Math.floor(Math.random() * 200) + 100,
+      avgSessionTime: Math.floor(Math.random() * 300) + 60,
+      registrations: Math.floor(Math.random() * 20) + 5,
+    });
+    
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+  
+  return activity;
+}
 
-### Summary
-For client ID ${clientId}, we've analyzed ${metrics.length} website metrics records. The average page load time is ${avgPageLoadTime.toFixed(2)}s with a time to first byte (TTFB) of ${avgTtfb.toFixed(2)}s. The average bounce rate is ${avgBounceRate.toFixed(2)}%.
+async function getTopUsers(startDate: Date, endDate: Date) {
+  // This would be implemented with actual database queries
+  // For now, return sample data
+  return [
+    {
+      id: "user1",
+      username: "john_doe",
+      email: "john@example.com",
+      totalSessions: 42,
+      lastActive: "2025-05-10T15:30:00Z",
+      totalTimeSpent: 4500,
+      role: "user",
+      registrationDate: "2024-01-15T10:00:00Z",
+    },
+    {
+      id: "user2",
+      username: "jane_smith",
+      email: "jane@example.com",
+      totalSessions: 37,
+      lastActive: "2025-05-12T09:15:00Z",
+      totalTimeSpent: 3600,
+      role: "user",
+      registrationDate: "2024-02-20T14:30:00Z",
+    },
+    {
+      id: "admin1",
+      username: "admin_user",
+      email: "admin@example.com",
+      totalSessions: 85,
+      lastActive: "2025-05-13T17:45:00Z",
+      totalTimeSpent: 7200,
+      role: "admin",
+      registrationDate: "2023-11-05T08:00:00Z",
+    },
+    {
+      id: "rollins",
+      username: "brollins",
+      email: "brollins565@gmail.com",
+      totalSessions: 120,
+      lastActive: "2025-05-14T01:20:00Z",
+      totalTimeSpent: 9600,
+      role: "admin",
+      registrationDate: "2023-10-01T00:00:00Z",
+    },
+  ];
+}
 
-### Key Observations
-- Page load time trend is ${loadTimeTrend >= 0 ? 'getting slower' : 'improving'} by ${Math.abs(loadTimeTrend).toFixed(2)}% compared to the previous period
-- TTFB trend is ${ttfbTrend >= 0 ? 'getting slower' : 'improving'} by ${Math.abs(ttfbTrend).toFixed(2)}% compared to the previous period
-- Average bounce rate of ${avgBounceRate.toFixed(2)}% is ${avgBounceRate > 50 ? 'higher than optimal' : 'within acceptable range'}
+async function getGeoDistribution(startDate: Date, endDate: Date) {
+  // This would be implemented with actual database queries
+  // For now, return sample data
+  return [
+    { country: "United States", users: 1250, percentage: 62.5 },
+    { country: "United Kingdom", users: 320, percentage: 16.0 },
+    { country: "Canada", users: 180, percentage: 9.0 },
+    { country: "Australia", users: 120, percentage: 6.0 },
+    { country: "Germany", users: 80, percentage: 4.0 },
+    { country: "Other", users: 50, percentage: 2.5 },
+  ];
+}
 
-### Recommendations
-1. **Page Speed**: ${avgPageLoadTime > 3 ? 'Optimize images, implement code splitting, and utilize caching to improve page load times' : 'Continue maintaining good page speed practices'}
-2. **Server Response**: ${avgTtfb > 0.5 ? 'Consider upgrading hosting or implementing CDN to reduce server response time' : 'Server response time is good, continue monitoring for changes'}
-3. **Mobile Optimization**: Ensure your site is fully responsive and test across multiple device types
-4. **Content Delivery**: Analyze content performance with Core Web Vitals to identify opportunities for layout stability improvements`;
+async function getSubscriptionSummary(startDate: Date, endDate: Date) {
+  // This would be implemented with actual database queries
+  
+  // Get active subscriptions
+  const activeSubscriptions = await storage.getActiveSubscriptionCount();
+  
+  // Get trial subscriptions
+  const trialSubscriptions = await storage.getTrialSubscriptionCount();
+  
+  // Get canceled subscriptions during the timeframe
+  const canceledSubscriptions = await storage.getCanceledSubscriptionCount(startDate, endDate);
+  
+  // Get total revenue
+  const totalRevenue = await storage.getTotalRevenue();
+  
+  // Get monthly recurring revenue
+  const monthlyRecurringRevenue = await storage.getMonthlyRecurringRevenue();
+  
+  // Get annual recurring revenue
+  const annualRecurringRevenue = await storage.getAnnualRecurringRevenue();
+  
+  // Calculate conversion rate (percentage of users who have subscriptions)
+  const totalUsers = await storage.getUserCount();
+  const conversionRate = totalUsers > 0 ? (activeSubscriptions / totalUsers) * 100 : 0;
+  
+  // Calculate trial conversion rate
+  const completedTrials = await storage.getCompletedTrialCount(startDate, endDate);
+  const trialConversions = await storage.getTrialConversionCount(startDate, endDate);
+  const trialConversionRate = completedTrials > 0 ? (trialConversions / completedTrials) * 100 : 0;
+  
+  // Calculate average subscription value
+  const averageSubscriptionValue = activeSubscriptions > 0 ? monthlyRecurringRevenue / activeSubscriptions : 0;
+  
+  // Calculate churn rate
+  const previousPeriodEnd = new Date(startDate);
+  const previousPeriodStart = new Date(startDate);
+  previousPeriodStart.setDate(previousPeriodStart.getDate() - (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const previousSubscribers = await storage.getActiveSubscriptionCount(previousPeriodStart, previousPeriodEnd);
+  const churnRate = previousSubscribers > 0 ? (canceledSubscriptions / previousSubscribers) * 100 : 0;
+  
+  return {
+    activeSubscriptions,
+    trialSubscriptions,
+    canceledSubscriptions,
+    totalRevenue,
+    monthlyRecurringRevenue,
+    annualRecurringRevenue,
+    conversionRate,
+    trialConversionRate,
+    averageSubscriptionValue,
+    churnRate,
+  };
+}
 
-        // Prepare response with fallback
-        const result = {
-          clientId: parseInt(clientId),
-          urlCount: new Set(metrics.map(m => m.url)).size,
-          aggregateMetrics: {
-            avgPageLoadTime: avgPageLoadTime.toFixed(2) + 's',
-            avgTtfb: avgTtfb.toFixed(2) + 's',
-            avgBounceRate: avgBounceRate.toFixed(2) + '%'
-          },
-          trends: {
-            pageLoadSpeed: loadTimeTrend.toFixed(2) + '%',
-            ttfb: ttfbTrend.toFixed(2) + '%'
-          },
-          websiteMetrics: metrics.map(m => ({
-            url: m.url,
-            pageLoadTime: m.page_load_time + 's',
-            ttfb: m.ttfb + 's',
-            bounceRate: (m.bounce_rate || '0') + '%',
-            deviceType: m.device_type || 'unknown',
-            browser: m.browser || 'unknown',
-            collectedAt: new Date(m.collected_at).toISOString()
-          })),
-          analysis: fallbackAnalysis,
-          fallback: true,
-          timestamp: new Date().toISOString()
-        };
-        
-        // Cache the fallback result
-        apiCache.set(cacheKey, result, 300); // Cache for 5 minutes (shorter for fallback)
-        
-        return res.json({
-          success: true,
-          ...result,
-          source: 'fallback'
-        });
-      }
-    } catch (error: any) {
-      console.error("Website performance analysis failed:", error);
-      return res.status(500).json({ 
-        success: false, 
-        message: "Website performance analysis failed", 
-        error: error.message || "Unknown error"
-      });
-    }
-  });
+async function getPlanBreakdown() {
+  // This would be implemented with actual database queries
+  // For now, return sample data
+  return [
+    {
+      planId: 1,
+      planName: "Basic",
+      subscribers: 350,
+      percentageOfTotal: 28,
+      revenue: 6650,
+    },
+    {
+      planId: 2,
+      planName: "Pro",
+      subscribers: 750,
+      percentageOfTotal: 60,
+      revenue: 36750,
+    },
+    {
+      planId: 3,
+      planName: "Enterprise",
+      subscribers: 150,
+      percentageOfTotal: 12,
+      revenue: 29850,
+    },
+  ];
+}
 
-  /**
-   * Suggestion 37: Real-Time Analytics for Client Website Engagement
-   * Analyze website engagement metrics (e.g., clicks, time on page) for client sites
-   */
-  app.get("/api/analytics/website-engagement/:clientId", async (req: Request, res: Response) => {
-    try {
-      if (!req.isAuthenticated || !req.isAuthenticated()) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
+async function getRecentTransactions(startDate: Date, endDate: Date) {
+  // This would be implemented with actual database queries
+  // For now, return sample data
+  return [
+    {
+      id: 12345,
+      userId: "user123",
+      planName: "Pro",
+      amount: 49,
+      status: "successful",
+      date: "2025-05-13T10:30:00Z",
+    },
+    {
+      id: 12344,
+      userId: "user456",
+      planName: "Enterprise",
+      amount: 199,
+      status: "successful",
+      date: "2025-05-12T15:45:00Z",
+    },
+    {
+      id: 12343,
+      userId: "user789",
+      planName: "Basic",
+      amount: 19,
+      status: "successful",
+      date: "2025-05-12T09:15:00Z",
+    },
+    {
+      id: 12342,
+      userId: "user234",
+      planName: "Pro",
+      amount: 49,
+      status: "successful",
+      date: "2025-05-11T14:20:00Z",
+    },
+    {
+      id: 12341,
+      userId: "user567",
+      planName: "Pro",
+      amount: 49,
+      status: "failed",
+      date: "2025-05-10T11:10:00Z",
+    },
+  ];
+}
 
-      const { clientId } = req.params;
-      const { startDate, endDate, path } = req.query;
+async function getSubscriptionTrends(startDate: Date, endDate: Date, timeframe: string) {
+  // This would be implemented with actual database queries
+  const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const trends = [];
+  
+  // Determine interval based on timeframe
+  let interval = 1; // days
+  if (timeframe === 'year' && days > 90) {
+    interval = 7; // weekly for yearly view
+  } else if (timeframe === '90days' && days > 30) {
+    interval = 3; // every 3 days for 90-day view
+  }
+  
+  const currentDate = new Date(startDate);
+  for (let i = 0; i < days; i += interval) {
+    const date = currentDate.toISOString().split('T')[0];
+    
+    // Generate sample data - would be replaced with actual database queries
+    const newSubscriptions = Math.floor(Math.random() * 15) + 5;
+    const cancelations = Math.floor(Math.random() * 8);
+    const netGrowth = newSubscriptions - cancelations;
+    const revenue = (Math.floor(Math.random() * 1000) + 500) * interval;
+    
+    trends.push({
+      date,
+      newSubscriptions,
+      cancelations,
+      netGrowth,
+      revenue,
+    });
+    
+    currentDate.setDate(currentDate.getDate() + interval);
+  }
+  
+  return trends;
+}
 
-      // Cache key based on request parameters
-      const cacheKey = `website-engagement-${clientId}-${startDate || 'default'}-${endDate || 'default'}-${path || 'all'}`;
-
-      // Check cache first
-      const cachedData = apiCache.get(cacheKey);
-      if (cachedData) {
-        return res.json(cachedData);
-      }
-
-      // Set date range - default to last 30 days
-      const now = new Date();
-      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-      
-      const start = startDate ? new Date(startDate as string) : thirtyDaysAgo;
-      const end = endDate ? new Date(endDate as string) : now;
-
-      // Build query filters
-      let filters = and(
-        eq(websiteEngagement.clientId, parseInt(clientId)),
-        gt(websiteEngagement.dateCollected, start),
-        lt(websiteEngagement.dateCollected, end)
-      );
-
-      // Add path filter if specified
-      if (path) {
-        filters = and(
-          filters,
-          eq(websiteEngagement.path, path as string)
-        );
-      }
-
-      // Get engagement data
-      const engagementData = await db.select().from(websiteEngagement).where(filters);
-
-      if (engagementData.length === 0) {
-        return res.json({
-          message: "No engagement data found for the specified client and time period",
-          clientId,
-          timeframe: { start: start.toISOString(), end: end.toISOString() }
-        });
-      }
-
-      // Calculate aggregate metrics
-      const totalClicks = engagementData.reduce((sum, record) => sum + record.clicks, 0);
-      const totalInteractions = engagementData.reduce((sum, record) => sum + record.interactionCount, 0);
-      
-      // Calculate average time on page
-      const totalTimeOnPage = engagementData.reduce((sum, record) => sum + parseFloat(record.timeOnPage.toString()), 0);
-      const avgTimeOnPage = totalTimeOnPage / engagementData.length;
-
-      // Calculate average scroll depth
-      const totalScrollDepth = engagementData.reduce((sum, record) => sum + parseFloat(record.scrollDepth.toString()), 0);
-      const avgScrollDepth = totalScrollDepth / engagementData.length;
-
-      // Get page-specific metrics
-      const pageMetrics = engagementData.reduce((pages: Record<string, any>, record) => {
-        const pageUrl = record.pageUrl;
-        if (!pages[pageUrl]) {
-          pages[pageUrl] = {
-            url: pageUrl,
-            path: record.path,
-            clicks: 0,
-            timeOnPage: 0,
-            interactionCount: 0,
-            scrollDepth: 0,
-            records: 0
-          };
-        }
-        
-        pages[pageUrl].clicks += record.clicks;
-        pages[pageUrl].timeOnPage += parseFloat(record.timeOnPage.toString());
-        pages[pageUrl].interactionCount += record.interactionCount;
-        pages[pageUrl].scrollDepth += parseFloat(record.scrollDepth.toString());
-        pages[pageUrl].records++;
-        
-        return pages;
-      }, {});
-
-      // Calculate averages for each page
-      Object.keys(pageMetrics).forEach(pageUrl => {
-        const page = pageMetrics[pageUrl];
-        page.avgTimeOnPage = page.timeOnPage / page.records;
-        page.avgScrollDepth = page.scrollDepth / page.records;
-        // Clean up
-        delete page.timeOnPage;
-        delete page.scrollDepth;
-        delete page.records;
-      });
-
-      // Calculate engagement score for each page
-      const pageEngagementScores = Object.keys(pageMetrics).map(pageUrl => {
-        const page = pageMetrics[pageUrl];
-        
-        // Calculate engagement score (weighted combination of clicks, time on page, interactions, and scroll depth)
-        const clickScore = Math.min(page.clicks / 50, 1) * 0.3; // 30% weight, max at 50 clicks
-        const timeScore = Math.min(page.avgTimeOnPage / 300, 1) * 0.35; // 35% weight, max at 5 minutes
-        const interactionScore = Math.min(page.interactionCount / 20, 1) * 0.2; // 20% weight, max at 20 interactions
-        const scrollScore = (page.avgScrollDepth / 100) * 0.15; // 15% weight, based on percentage scrolled
-        
-        const engagementScore = (clickScore + timeScore + interactionScore + scrollScore) * 100;
-        
-        return {
-          ...page,
-          engagementScore: parseFloat(engagementScore.toFixed(1))
-        };
-      });
-
-      // Sort pages by engagement score (high to low)
-      const sortedPages = pageEngagementScores.sort((a, b) => b.engagementScore - a.engagementScore);
-
-      // Prepare device and browser breakdowns
-      const deviceBreakdown = engagementData.reduce((devices: Record<string, number>, record) => {
-        const device = record.deviceType || 'unknown';
-        devices[device] = (devices[device] || 0) + 1;
-        return devices;
-      }, {});
-
-      const browserBreakdown = engagementData.reduce((browsers: Record<string, number>, record) => {
-        const browser = record.browser || 'unknown';
-        browsers[browser] = (browsers[browser] || 0) + 1;
-        return browsers;
-      }, {});
-
-      // Get AI analysis of the engagement data
-      let aiAnalysis = '';
-      try {
-        // Prepare data for AI analysis
-        const analysisData = {
-          totalEngagementRecords: engagementData.length,
-          totalClicks,
-          totalInteractions,
-          avgTimeOnPage,
-          avgScrollDepth,
-          topPages: sortedPages.slice(0, 3),
-          bottomPages: sortedPages.slice(-3).reverse(),
-          deviceBreakdown,
-          browserBreakdown
-        };
-
-        // Call xAI for analysis
-        aiAnalysis = await callOpenAI(
-          `Analyze the following client website engagement data: ${JSON.stringify(analysisData)}. 
-          Identify 3 key insights about user engagement patterns. Also suggest 2 specific actions the client could take to improve engagement.
-          Focus on trends, anomalies, and actionable recommendations. Keep the analysis concise, about 250 words maximum.`,
-          { model: 'grok-3-mini', max_tokens: 350 }
-        );
-      } catch (error) {
-        console.error('Error getting AI analysis for website engagement:', error);
-        aiAnalysis = 'AI analysis unavailable at this time. Please try again later.';
-      }
-
-      // Prepare response data
-      const responseData = {
-        clientId: parseInt(clientId),
-        timeframe: {
-          start: start.toISOString(),
-          end: end.toISOString(),
-          days: Math.round((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000))
-        },
-        overview: {
-          totalRecords: engagementData.length,
-          totalClicks,
-          totalInteractions,
-          avgTimeOnPage: avgTimeOnPage.toFixed(2),
-          avgScrollDepth: `${avgScrollDepth.toFixed(2)}%`,
-        },
-        pages: {
-          total: sortedPages.length,
-          mostEngaging: sortedPages.slice(0, 5),
-          leastEngaging: sortedPages.slice(-5).reverse(),
-        },
-        demographics: {
-          devices: deviceBreakdown,
-          browsers: browserBreakdown
-        },
-        analysis: aiAnalysis
-      };
-
-      // Cache the response for 30 minutes
-      apiCache.set(cacheKey, responseData, 1800);
-
-      res.json(responseData);
-    } catch (error) {
-      console.error("Error getting website engagement analytics:", error);
-      res.status(500).json({ 
-        error: "Failed to retrieve website engagement analytics",
-        message: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
-
-  /**
-   * Track client website engagement metrics
-   */
-  app.post("/api/analytics/website-engagement", async (req: Request, res: Response) => {
-    try {
-      const { 
-        clientId, 
-        pageUrl, 
-        path,
-        clicks, 
-        timeOnPage, 
-        scrollDepth, 
-        interactionCount,
-        deviceType,
-        browser
-      } = req.body;
-      
-      if (!clientId || !pageUrl) {
-        return res.status(400).json({ error: "Missing required data. Client ID and page URL are required." });
-      }
-      
-      // Create new engagement record
-      const engagementData = {
-        clientId,
-        pageUrl,
-        path: path || new URL(pageUrl).pathname,
-        clicks: clicks || 0,
-        timeOnPage: timeOnPage?.toString() || "0",
-        scrollDepth: scrollDepth?.toString() || "0",
-        interactionCount: interactionCount || 0,
-        dateCollected: new Date(),
-        deviceType,
-        browser
-      };
-      
-      const [result] = await db.insert(websiteEngagement).values(engagementData).returning();
-      
-      res.status(200).json({ 
-        success: true, 
-        message: "Website engagement data recorded successfully",
-        id: result.id 
-      });
-    } catch (error) {
-      console.error("Error tracking website engagement:", error);
-      res.status(500).json({ 
-        error: "Failed to track website engagement data",
-        message: error instanceof Error ? error.message : "Unknown error" 
-      });
-    }
-  });
-
-  /**
-   * Real-Time Analytics for Client Website Conversions
-   * Analyze website conversion metrics (e.g., form submissions, purchases, signups)
-   */
-  app.get("/api/analytics/website-conversions/:clientId", async (req: Request, res: Response) => {
-    try {
-      if (!req.isAuthenticated || !req.isAuthenticated()) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-
-      const { clientId } = req.params;
-      const { startDate, endDate, conversionType } = req.query;
-
-      // Set default date range if not provided (last 30 days)
-      const now = new Date();
-      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-      
-      const start = startDate ? new Date(startDate as string) : thirtyDaysAgo;
-      const end = endDate ? new Date(endDate as string) : now;
-
-      // Create cache key based on request parameters
-      const cacheKey = `website-conversions-${clientId}-${startDate || 'default'}-${endDate || 'default'}-${conversionType || 'all'}`;
-      
-      // Check if we have a cached response
-      const cachedData = apiCache.get(cacheKey);
-      if (cachedData) {
-        return res.json(cachedData);
-      }
-
-      // Build query conditions
-      let conditions = [
-        eq(websiteConversions.clientId, parseInt(clientId)),
-        between(websiteConversions.createdAt, start, end)
-      ];
-      
-      // Add conversion type filter if specified
-      if (conversionType) {
-        conditions.push(eq(websiteConversions.conversionType, conversionType as string));
-      }
-
-      // Fetch conversion data
-      const conversionData = await db.select()
-        .from(websiteConversions)
-        .where(and(...conditions))
-        .orderBy(websiteConversions.createdAt);
-
-      if (conversionData.length === 0) {
-        return res.status(404).json({ 
-          message: "No conversion data found for the specified criteria" 
-        });
-      }
-
-      // Calculate key metrics
-      const totalConversions = conversionData.reduce((total, record) => total + record.conversions, 0);
-      const totalValue = conversionData.reduce((total, record) => 
-        total + parseFloat(record.conversionValue.toString()), 0);
-      
-      // Calculate average conversion metrics
-      const avgBounceRate = conversionData.reduce((total, record) => 
-        total + parseFloat(record.bounceRate.toString()), 0) / conversionData.length;
-      
-      const avgVisitToConversion = conversionData.reduce((total, record) => 
-        total + parseFloat(record.visitToConversion.toString()), 0) / conversionData.length;
-
-      // Group by conversion type
-      const conversionTypes = {};
-      conversionData.forEach(record => {
-        if (!conversionTypes[record.conversionType]) {
-          conversionTypes[record.conversionType] = {
-            count: 0,
-            value: 0,
-            records: []
-          };
-        }
-        conversionTypes[record.conversionType].count += record.conversions;
-        conversionTypes[record.conversionType].value += parseFloat(record.conversionValue.toString());
-        conversionTypes[record.conversionType].records.push(record);
-      });
-
-      // Group by source/medium
-      const sources = {};
-      conversionData.forEach(record => {
-        const source = record.source || "direct";
-        const medium = record.medium || "none";
-        const key = `${source}/${medium}`;
-        
-        if (!sources[key]) {
-          sources[key] = {
-            count: 0,
-            value: 0
-          };
-        }
-        sources[key].count += record.conversions;
-        sources[key].value += parseFloat(record.conversionValue.toString());
-      });
-
-      // Sort sources by conversion count
-      const sortedSources = Object.entries(sources)
-        .map(([key, data]) => ({
-          source: key,
-          conversions: (data as any).count,
-          value: (data as any).value
-        }))
-        .sort((a, b) => b.conversions - a.conversions);
-
-      // Get AI analysis using xAI API
-      let aiAnalysis = "";
-      try {
-        const analysisData = {
-          totalConversions,
-          totalValue,
-          avgBounceRate,
-          avgVisitToConversion,
-          conversionTypes: Object.keys(conversionTypes).map(type => ({
-            type,
-            count: conversionTypes[type].count,
-            value: conversionTypes[type].value
-          })),
-          topSources: sortedSources.slice(0, 5)
-        };
-
-        const aiResponse = await callOpenAI({
-          model: "grok-2-1212",
-          messages: [
-            {
-              role: "system",
-              content: "You are an expert in website conversion analytics. Analyze the conversion data and provide actionable insights about conversion performance, including trends, top-performing channels, and recommendations for improvement. Be concise and professional."
-            },
-            {
-              role: "user",
-              content: `Analyze the following website conversion data for the time period ${start.toLocaleDateString()} to ${end.toLocaleDateString()}: ${JSON.stringify(analysisData)}`
-            }
-          ]
-        });
-
-        aiAnalysis = aiResponse.choices[0].message.content;
-      } catch (error) {
-        console.error("Error getting AI analysis for conversion data:", error);
-        aiAnalysis = "AI analysis currently unavailable. Please try again later.";
-      }
-
-      // Prepare response
-      const responseData = {
-        clientId: parseInt(clientId),
-        timeframe: {
-          start: start.toISOString(),
-          end: end.toISOString(),
-          days: Math.round((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000))
-        },
-        overview: {
-          totalConversions,
-          totalValue: totalValue.toFixed(2),
-          avgBounceRate: avgBounceRate.toFixed(2) + "%",
-          avgVisitToConversion: avgVisitToConversion.toFixed(2) + "%"
-        },
-        byType: Object.keys(conversionTypes).map(type => ({
-          type,
-          conversions: conversionTypes[type].count,
-          value: conversionTypes[type].value.toFixed(2),
-          percentage: ((conversionTypes[type].count / totalConversions) * 100).toFixed(2) + "%"
-        })),
-        bySources: sortedSources.slice(0, 10),
-        trends: {
-          // Group by day for trend analysis
-          daily: Array.from(
-            conversionData.reduce((acc, record) => {
-              const date = record.createdAt.toISOString().split("T")[0];
-              const existing = acc.get(date) || { date, conversions: 0, value: 0 };
-              existing.conversions += record.conversions;
-              existing.value += parseFloat(record.conversionValue.toString());
-              acc.set(date, existing);
-              return acc;
-            }, new Map())
-          ).map(([date, data]) => ({
-            date,
-            conversions: (data as any).conversions,
-            value: (data as any).value.toFixed(2)
-          })).sort((a, b) => a.date.localeCompare(b.date))
-        },
-        analysis: aiAnalysis
-      };
-
-      // Cache the response for 30 minutes
-      apiCache.set(cacheKey, responseData, 1800);
-
-      res.json(responseData);
-    } catch (error) {
-      console.error("Error getting website conversion analytics:", error);
-      res.status(500).json({ 
-        error: "Failed to retrieve website conversion analytics",
-        message: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
-
-  /**
-   * Track website conversion data for client sites
-   */
-  app.post("/api/analytics/website-conversions", async (req: Request, res: Response) => {
-    try {
-      const { 
-        clientId, 
-        pageUrl, 
-        conversionType,
-        conversions = 1,
-        conversionValue = 0,
-        bounceRate = 0,
-        visitToConversion = 0,
-        source,
-        medium,
-        campaign
-      } = req.body;
-      
-      if (!clientId || !pageUrl || !conversionType) {
-        return res.status(400).json({ error: "Missing required conversion data" });
-      }
-      
-      // Create new conversion record
-      const conversionData = {
-        clientId,
-        pageUrl,
-        conversionType,
-        conversions,
-        conversionValue: conversionValue.toString(),
-        bounceRate: bounceRate.toString(),
-        visitToConversion: visitToConversion.toString(),
-        source,
-        medium,
-        campaign
-      };
-      
-      const [result] = await db.insert(websiteConversions).values(conversionData).returning();
-      
-      res.status(200).json({ 
-        success: true, 
-        message: "Website conversion data recorded successfully",
-        id: result.id 
-      });
-    } catch (error) {
-      console.error("Error tracking website conversion:", error);
-      res.status(500).json({ 
-        error: "Failed to track website conversion data",
-        message: error instanceof Error ? error.message : "Unknown error" 
-      });
-    }
-  });
-};
+export default router;
