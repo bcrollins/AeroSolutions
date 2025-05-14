@@ -41,7 +41,7 @@ export default function AiCoursePlatform() {
 
   // Fetch all courses
   const { 
-    data: courses, 
+    data: coursesData, 
     isLoading: isLoadingCourses, 
     error: coursesError 
   } = useQuery({
@@ -53,8 +53,11 @@ export default function AiCoursePlatform() {
     data: categories, 
     isLoading: isLoadingCategories 
   } = useQuery({
-    queryKey: ["/api/ai-course-categories"],
+    queryKey: ["/api/ai-courses/categories"],
   });
+  
+  // Extract courses from response data
+  const courses = coursesData?.courses || [];
 
   // Fetch user enrollments if authenticated
   const { 

@@ -1,0 +1,13 @@
+Course Interface and Interactive Learning
+Create a course page template with a sidebar for navigation (e.g., Lessons, Quizzes, Sandbox, Forum) styled with the dark theme and blue accents. Ensure the sidebar collapses into a hamburger menu on mobile.
+Add a progress bar at the top of each course page, showing completion percentage (e.g., 75%) in blue (#007bff) with white text. Update progress dynamically via PostgreSQL.
+Design lesson pages with a clean layout: video player (16:9, max 720p), text content (14px, white, 1.5 line spacing), and blue “Next Lesson” button. Ensure videos are hosted in Replit’s cloud storage.
+Ensure lessons are written in simple, clear language (8th-grade reading level) with practical examples (e.g., “Build a chatbot” for Generative AI). Structure content with headers, bullet points, and images.
+Add interactive quizzes after each lesson with multiple-choice and coding questions. Store questions in PostgreSQL and provide instant AI-driven feedback (e.g., “Correct! Here’s why…”). Style quizzes with blue buttons and white text.
+Integrate a coding sandbox using Replit’s embedded IDE for practical exercises (e.g., “Write a Python script for a neural network”). Ensure the sandbox matches the dark theme with blue accents.
+Add AI-driven feedback in the sandbox, analyzing code submissions and suggesting improvements (e.g., “Consider adding error handling”). Display feedback in a modal with blue buttons.
+Create beginner-level content with step-by-step tutorials (e.g., “What is a variable?”) and visuals. Ensure explanations are visual and interactive (e.g., drag-and-drop variable matching).
+Develop intermediate content with hands-on projects (e.g., “Build a recommendation system”) and clear instructions. Include downloadable resources (e.g., datasets) stored in Replit.
+Design advanced content with real-world applications (e.g., “Optimize AI for supply chain”). Include case studies and links to external tools (e.g., TensorFlow).
+Add offline access by enabling lesson content and quizzes to be downloaded as PDFs or cached via service workers. Test offline functionality on mobile.
+Ensure mobile-friendliness with responsive design: stack elements vertically on screens <768px, maintain readable font sizes (min 14px), and optimize touch targets (min 48px).

@@ -40,7 +40,7 @@ export default function AiCourseDetail() {
     data: progress, 
     isLoading: isLoadingProgress 
   } = useQuery({
-    queryKey: [`/api/course/${courseId}/progress`],
+    queryKey: [`/api/ai-courses/${courseId}/progress`],
     enabled: !!courseId && isAuthenticated,
   });
 
@@ -49,7 +49,7 @@ export default function AiCourseDetail() {
     data: enrollments,
     isLoading: isLoadingEnrollments,
   } = useQuery({
-    queryKey: ["/api/user/enrollments"],
+    queryKey: ["/api/ai-courses/enrollments"],
     enabled: isAuthenticated,
   });
 
@@ -85,11 +85,11 @@ export default function AiCourseDetail() {
   // Update lesson progress mutation
   const updateProgressMutation = useMutation({
     mutationFn: async ({ lessonId, data }: { lessonId: number, data: any }) => {
-      return apiRequest("POST", `/api/lessons/${lessonId}/progress`, data);
+      return apiRequest("POST", `/api/ai-courses/lessons/${lessonId}/progress`, data);
     },
     onSuccess: () => {
       // Invalidate progress query
-      queryClient.invalidateQueries({ queryKey: [`/api/course/${courseId}/progress`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/ai-courses/${courseId}/progress`] });
     },
     onError: (error: any) => {
       toast({
