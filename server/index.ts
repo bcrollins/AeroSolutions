@@ -39,11 +39,33 @@ const app = express();
 // This ensures health checks are processed immediately and without authentication
 app.use(healthCheckMiddleware);
 
-// Add explicit root path handler for health checks
+// Add explicit health check endpoints to ensure deployment health checks pass
+app.get('/health', (req, res) => {
+  return res.status(200).json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    service: 'RXAI Knowledge Hub',
+    version: '1.0.0'
+  });
+});
+
+app.get('/deployment-health', (req, res) => {
+  return res.status(200).json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    service: 'RXAI Knowledge Hub',
+    version: '1.0.0'
+  });
+});
+
+// Root path special handling for health checks
+app.head('/', (req, res) => {
+  return res.status(200).end();
+});
+
+// Also handle JSON-specific GET requests at root
 app.get('/', (req, res, next) => {
-  // Only handle health checks directly here, pass normal requests through
-  if (req.method === 'HEAD' || 
-      req.get('Accept') === 'application/json' || 
+  if (req.get('Accept') === 'application/json' || 
       (req.accepts('json') && !req.accepts('html'))) {
     return res.status(200).json({
       status: 'OK',
@@ -52,9 +74,10 @@ app.get('/', (req, res, next) => {
       version: '1.0.0'
     });
   }
-  // For normal browser requests, let it pass through to the frontend
-  next();
+  return next();
 });
+
+// Middleware for the root path is now handled by explicit routes above
 
 // Performance and security middleware
 // Compress responses
