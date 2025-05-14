@@ -1,3 +1,4 @@
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
@@ -152,6 +153,17 @@ app.use((req, res, next) => {
   
   const server = await registerRoutes(app);
 
+  // Add a health check endpoint
+  app.get('/', (req, res) => {
+    res.status(200).send('OK');
+  });
+
+  // Setup server to listen on port 5000
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+
   // Global error handling middleware
   app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
     // Log detailed error information
@@ -203,4 +215,22 @@ app.use((req, res, next) => {
   }, () => {
     log(`serving on port ${port}`);
   });
+
+  // Start background tasks
+  async function runBackgroundTasks() {
+    try {
+      console.log('Starting background tasks...');
+      // Place background task logic here
+      console.log('Background tasks completed');
+    } catch (error) {
+      console.error('Error in background tasks:', error);
+    }
+
+    // Schedule the next run in 10 minutes
+    setTimeout(runBackgroundTasks, 10 * 60 * 1000);
+  }
+
+  // Start background tasks and keep the server running
+  runBackgroundTasks();
+
 })();
