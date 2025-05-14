@@ -12,6 +12,7 @@ import adminRoutes from "./routes/admin";
 import userOnboardingRoutes from "./routes/userOnboarding";
 import authRoutes from "./routes/auth";
 import analyticsRoutes from "./routes/analytics";
+import aiCoursesRoutes from "./routes/aiCourses";
 import { storage } from "./storage";
 import { logger } from "./utils/logger";
 import { setupAuth } from "./replitAuth";
@@ -38,6 +39,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/courses", coursesRoutes);
   app.use("/api/forum", forumRoutes);
   app.use("/api/media", mediaRoutes);
+  
+  // Register AI Course Platform routes
+  app.use(aiCoursesRoutes);
   
   // Register Admin routes
   app.use("/api/admin", adminRoutes);

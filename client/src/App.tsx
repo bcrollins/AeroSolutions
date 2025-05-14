@@ -62,6 +62,8 @@ import TestROLLINSXBot from "@/pages/TestROLLINSXBot";
 import ParticleBackgroundDemo from "@/pages/ParticleBackgroundDemo";
 import AiProductsPage from "@/pages/AiProductsPage";
 import AiProductDetailPage from "@/pages/AiProductDetailPage";
+import AiCoursePlatform from "@/pages/AiCoursePlatform";
+import AiCourseDetail from "@/pages/AiCourseDetail";
 import MemberDashboard from "@/pages/MemberDashboard";
 import PricingPage from "@/pages/PricingPage";
 import SubscriptionAnalyticsPage from "@/pages/SubscriptionAnalyticsPage";
