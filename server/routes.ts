@@ -15,6 +15,7 @@ import userDashboardRoutes from "./routes/userDashboard";
 import authRoutes from "./routes/auth";
 import analyticsRoutes from "./routes/analytics";
 import aiCoursesRoutes from "./routes/aiCourses";
+import certificatesRoutes from "./routes/certificates";
 import { storage } from "./storage";
 import { logger } from "./utils/logger";
 import { setupAuth } from "./replitAuth";
@@ -53,6 +54,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register User Dashboard routes
   app.use("/api/dashboard", userDashboardRoutes);
+  
+  // Register Certificate routes
+  app.use("/api/certificates", certificatesRoutes);
   
   // Register Analytics routes (for subscription analytics)
   app.use("/api/analytics", analyticsRoutes);
