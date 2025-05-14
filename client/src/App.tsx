@@ -68,6 +68,7 @@ import CourseCatalog from "@/pages/CourseCatalog";
 import MemberDashboard from "@/pages/MemberDashboard";
 import PricingPage from "@/pages/PricingPage";
 import SubscriptionAnalyticsPage from "@/pages/SubscriptionAnalyticsPage";
+import Dashboard from "@/pages/Dashboard";
 
 export default function App() {
   const { t, i18n } = useTranslation();
