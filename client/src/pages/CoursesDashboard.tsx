@@ -23,7 +23,15 @@ import {
   FileText,
   Bookmark,
   MessageCircle,
-  Calendar
+  Calendar,
+  Users,
+  Eye,
+  MessageSquare,
+  Code,
+  Terminal,
+  Play,
+  Download,
+  Share2
 } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics';
 
@@ -731,6 +739,91 @@ const CoursesDashboard = () => {
                         Explore Options
                       </Button>
                     </div>
+                  </div>
+                </Card>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="achievements" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="md:col-span-2">
+                  <BadgesDisplay />
+                </div>
+                <div>
+                  <LeaderboardDisplay />
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="learning-path" className="space-y-6">
+              <LearningPathSelector 
+                initialAssessmentCompleted={false} 
+                onPathSelect={(pathId) => console.log(`Selected path: ${pathId}`)} 
+              />
+            </TabsContent>
+            
+            <TabsContent value="code-practice" className="space-y-6">
+              <div className="grid grid-cols-1 gap-6">
+                <CodeEnvironment 
+                  initialLanguage="python"
+                  instructions="Create a Python function that implements a simple neural network prediction using NumPy. The function should take an input array and return the predicted output using the provided weights and activation function."
+                />
+                
+                <Card className="bg-gray-800 border-gray-700 p-6">
+                  <h3 className="text-xl font-bold mb-4">Coding Challenges</h3>
+                  <p className="text-gray-400 mb-6">Test your skills with these AI-related coding challenges.</p>
+                  
+                  <div className="space-y-4">
+                    <div className="p-4 bg-gray-750 rounded-lg border-l-4 border-green-500">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-bold mb-1">Beginner: Image Classification</h4>
+                          <p className="text-sm text-gray-300">Build a simple image classifier using a pre-trained model.</p>
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            <span className="bg-gray-800 text-xs px-2 py-1 rounded-full">Python</span>
+                            <span className="bg-gray-800 text-xs px-2 py-1 rounded-full">TensorFlow</span>
+                            <span className="bg-green-900/60 text-green-400 text-xs px-2 py-1 rounded-full">Beginner</span>
+                          </div>
+                        </div>
+                        <Button variant="outline" size="sm" className="text-xs h-8 px-3 py-1">Start Challenge</Button>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 bg-gray-750 rounded-lg border-l-4 border-blue-500">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-bold mb-1">Intermediate: Sentiment Analysis</h4>
+                          <p className="text-sm text-gray-300">Build a sentiment analysis model for product reviews.</p>
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            <span className="bg-gray-800 text-xs px-2 py-1 rounded-full">Python</span>
+                            <span className="bg-gray-800 text-xs px-2 py-1 rounded-full">NLP</span>
+                            <span className="bg-blue-900/60 text-blue-400 text-xs px-2 py-1 rounded-full">Intermediate</span>
+                          </div>
+                        </div>
+                        <Button variant="outline" size="sm" className="text-xs h-8 px-3 py-1">Start Challenge</Button>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 bg-gray-750 rounded-lg border-l-4 border-purple-500">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-bold mb-1">Advanced: Reinforcement Learning</h4>
+                          <p className="text-sm text-gray-300">Implement a reinforcement learning agent for a custom environment.</p>
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            <span className="bg-gray-800 text-xs px-2 py-1 rounded-full">Python</span>
+                            <span className="bg-gray-800 text-xs px-2 py-1 rounded-full">OpenAI Gym</span>
+                            <span className="bg-purple-900/60 text-purple-400 text-xs px-2 py-1 rounded-full">Advanced</span>
+                          </div>
+                        </div>
+                        <Button variant="outline" size="sm" className="text-xs h-8 px-3 py-1">Start Challenge</Button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-center mt-6">
+                    <Button className="bg-electric-cyan-600 hover:bg-electric-cyan-700">
+                      Browse All Challenges
+                    </Button>
                   </div>
                 </Card>
               </div>
