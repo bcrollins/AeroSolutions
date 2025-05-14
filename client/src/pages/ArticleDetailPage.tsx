@@ -1002,20 +1002,20 @@ const ArticleDetailPage: React.FC = () => {
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    "mainEntity": article.faqs.map((faq: any) => ({
+    "mainEntity": article?.faqs?.map((faq: { question: string; answer: string }) => ({
       "@type": "Question",
       "name": faq.question,
       "acceptedAnswer": {
         "@type": "Answer",
         "text": faq.answer
       }
-    }))
+    })) || []
   };
   
   // Current URL for sharing
   const currentUrl = typeof window !== 'undefined' ? 
     window.location.href : 
-    `https://rxai.com/articles/${article.slug}`;
+    `https://rxai.com/articles/${article?.slug || 'article'}`;
   
   // Function to wrap technical terms with tooltips
   const enhanceContentWithTooltips = (content: string): string => {
@@ -1064,12 +1064,12 @@ const ArticleDetailPage: React.FC = () => {
           Articles
         </Link>
         <ChevronRight className="h-4 w-4" />
-        <Link href={`/articles/category/${article.category.toLowerCase()}`} className="hover:text-primary transition-colors">
-          {article.category}
+        <Link href={`/articles/category/${article?.category?.toLowerCase() || 'uncategorized'}`} className="hover:text-primary transition-colors">
+          {article?.category || 'Uncategorized'}
         </Link>
         <ChevronRight className="h-4 w-4" />
         <span className="text-primary font-medium truncate max-w-[200px]">
-          {article.title.split(':')[0]}
+          {article?.title?.split(':')[0] || 'Article'}
         </span>
       </div>
       
@@ -1198,7 +1198,7 @@ const ArticleDetailPage: React.FC = () => {
           <div className="mt-12">
             <h2 className="text-2xl font-bold mb-6">Frequently Asked Questions</h2>
             <Accordion type="single" collapsible className="w-full">
-              {article.faqs.map((faq: any, index: number) => (
+              {article?.faqs?.map((faq: { question: string; answer: string }, index: number) => (
                 <AccordionItem key={index} value={`faq-${index}`}>
                   <AccordionTrigger className="text-left font-medium">
                     {faq.question}
@@ -1207,12 +1207,14 @@ const ArticleDetailPage: React.FC = () => {
                     <p className="text-muted-foreground">{faq.answer}</p>
                   </AccordionContent>
                 </AccordionItem>
-              ))}
+              )) || (
+                <p className="text-muted-foreground">No frequently asked questions available for this article.</p>
+              )}
             </Accordion>
           </div>
           
           {/* Related Articles */}
-          <RelatedArticles ids={article.relatedArticles} />
+          <RelatedArticles ids={article?.relatedArticles || []} />
           
           {/* Feedback Button */}
           <div className="mt-12 text-center">
