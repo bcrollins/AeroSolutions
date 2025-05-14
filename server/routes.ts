@@ -10,6 +10,7 @@ import contentRoutes from "./routes/content";
 import aiContentRoutes from "./routes/ai-content";
 import adminRoutes from "./routes/admin";
 import userOnboardingRoutes from "./routes/userOnboarding";
+import userDashboardRoutes from "./routes/userDashboard";
 import authRoutes from "./routes/auth";
 import analyticsRoutes from "./routes/analytics";
 import aiCoursesRoutes from "./routes/aiCourses";
@@ -48,6 +49,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register User Onboarding routes
   app.use("/api/user/onboarding", userOnboardingRoutes);
+  
+  // Register User Dashboard routes
+  app.use("/api/user", userDashboardRoutes);
   
   // Register Analytics routes (for subscription analytics)
   app.use("/api/analytics", analyticsRoutes);
