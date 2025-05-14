@@ -1,73 +1,116 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Award } from "lucide-react";
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Award, Code, BookOpen, Timer, Users, Star, Shield, CheckCircle2 } from 'lucide-react';
 
-interface Badge {
+type UserBadge = {
   id: number;
   name: string;
   description: string;
-  iconUrl: string;
+  type: 'achievement' | 'milestone' | 'skill' | 'participation';
   earnedAt: string;
-  category: string; // "achievement", "milestone", "completion", etc.
-}
+};
 
-interface UserBadgesProps {
-  badges: Badge[];
-}
+// Badge icons based on type
+const getBadgeIcon = (type: string) => {
+  switch (type) {
+    case 'achievement':
+      return <Award className="h-6 w-6 text-amber-500" />;
+    case 'milestone':
+      return <Star className="h-6 w-6 text-blue-500" />;
+    case 'skill':
+      return <Code className="h-6 w-6 text-green-500" />;
+    case 'participation':
+      return <Users className="h-6 w-6 text-purple-500" />;
+    default:
+      return <CheckCircle2 className="h-6 w-6 text-primary" />;
+  }
+};
 
-export default function UserBadges({ badges }: UserBadgesProps) {
-  // No badges state
-  if (!badges.length) {
+// Badge color based on type
+const getBadgeColor = (type: string) => {
+  switch (type) {
+    case 'achievement':
+      return 'bg-amber-500/10 text-amber-500 border-amber-500/30';
+    case 'milestone':
+      return 'bg-blue-500/10 text-blue-500 border-blue-500/30';
+    case 'skill':
+      return 'bg-green-500/10 text-green-500 border-green-500/30';
+    case 'participation':
+      return 'bg-purple-500/10 text-purple-500 border-purple-500/30';
+    default:
+      return 'bg-primary/10 text-primary border-primary/30';
+  }
+};
+
+export const UserBadges = () => {
+  const { data: badges, isLoading, error } = useQuery({
+    queryKey: ['/api/dashboard/badges'],
+    retry: false,
+  });
+
+  if (isLoading) {
     return (
-      <section className="mb-12">
-        <h2 className="text-2xl font-bold text-white mb-6">My Achievements</h2>
-        <Card className="bg-slate-800 border-slate-700 text-white">
-          <CardContent className="pt-6 text-center">
-            <div className="flex flex-col items-center justify-center py-8">
-              <Award className="h-16 w-16 text-slate-500 mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No badges yet</h3>
-              <p className="text-slate-400 max-w-md">
-                Complete courses and challenges to earn achievement badges. Your accomplishments will be displayed here.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 animate-pulse">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="h-24 bg-muted rounded-md"></div>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-10 text-red-500">
+        <p>Error loading badges. Please try again later.</p>
+      </div>
+    );
+  }
+
+  if (!badges || badges.length === 0) {
+    return (
+      <div className="text-center py-10">
+        <Shield className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
+        <h3 className="text-xl font-semibold mb-2">No Badges Yet</h3>
+        <p className="text-muted-foreground">
+          Complete courses and interactions to earn badges.
+        </p>
+      </div>
     );
   }
 
   return (
-    <section className="mb-12">
-      <h2 className="text-2xl font-bold text-white mb-6">My Achievements</h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {badges.map((badge) => (
-          <Card 
-            key={badge.id} 
-            className="bg-slate-800 border-slate-700 text-white overflow-hidden hover:border-blue-500 transition-all hover:scale-[1.05] duration-300"
-          >
-            <div className="flex flex-col items-center p-6">
-              <div className="w-20 h-20 rounded-full bg-slate-700 flex items-center justify-center mb-4 p-1 border-2 border-blue-500">
-                {badge.iconUrl ? (
-                  <img 
-                    src={badge.iconUrl} 
-                    alt={badge.name} 
-                    className="w-16 h-16 object-contain" 
-                  />
-                ) : (
-                  <Award className="w-10 h-10 text-blue-400" />
-                )}
-              </div>
-              
-              <h3 className="text-lg font-semibold text-center mb-1">{badge.name}</h3>
-              <p className="text-sm text-slate-400 text-center">{badge.description}</p>
-              
-              <div className="mt-4 px-3 py-1 bg-slate-700 rounded-full text-xs text-blue-300">
-                Earned on {new Date(badge.earnedAt).toLocaleDateString()}
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      {badges.map((badge: UserBadge) => (
+        <Card 
+          key={badge.id}
+          className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:scale-105 hover:border-blue-500"
+        >
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className={`rounded-full p-3 ${getBadgeColor(badge.type)}`}>
+              {getBadgeIcon(badge.type)}
+            </div>
+            
+            <div className="flex flex-col">
+              <h3 className="font-medium text-base">{badge.name}</h3>
+              <p className="text-sm text-muted-foreground line-clamp-2">
+                {badge.description}
+              </p>
+              <div className="flex items-center mt-1 space-x-2">
+                <Badge variant="outline" className={getBadgeColor(badge.type)}>
+                  {badge.type.charAt(0).toUpperCase() + badge.type.slice(1)}
+                </Badge>
+                <span className="text-xs text-muted-foreground">
+                  {new Date(badge.earnedAt).toLocaleDateString()}
+                </span>
               </div>
             </div>
-          </Card>
-        ))}
-      </div>
-    </section>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
-}
+};
+
+export default UserBadges;

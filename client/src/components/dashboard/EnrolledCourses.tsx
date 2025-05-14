@@ -1,171 +1,153 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from 'wouter';
+import { ChevronRight, Play } from 'lucide-react';
 
-interface EnrollmentType {
+type Course = {
   id: number;
-  courseId: number;
-  userId: string;
   title: string;
   description: string;
-  thumbnail: string;
-  progressPercentage: number;
-  lastAccessedLessonId?: number;
-  enrolledAt: string;
-  status: string;
-}
+  thumbnail: string | null;
+  progress: number;
+  lastViewedLessonId: number | null;
+};
 
-interface EnrolledCoursesProps {
-  enrollments: EnrollmentType[];
-}
+export const EnrolledCourses = () => {
+  const { data: courses, isLoading, error } = useQuery({
+    queryKey: ['/api/dashboard/enrolled-courses'],
+    retry: false,
+  });
 
-export default function EnrolledCourses({ enrollments }: EnrolledCoursesProps) {
-  const [page, setPage] = useState(0);
-  const coursesPerPage = 6;
-  const totalPages = Math.ceil(enrollments.length / coursesPerPage);
-  
-  // No enrollments state
-  if (!enrollments.length) {
+  if (isLoading) {
     return (
-      <section className="mb-12">
-        <h2 className="text-2xl font-bold text-white mb-6">My Courses</h2>
-        <Card className="bg-slate-800 border-slate-700 text-white">
-          <CardContent className="pt-6 text-center">
-            <div className="flex flex-col items-center justify-center py-10">
-              <BookOpen className="h-16 w-16 text-slate-500 mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No courses yet</h3>
-              <p className="text-slate-400 mb-6 max-w-md">You haven't enrolled in any courses yet. Explore our catalog to find courses that match your interests.</p>
-              <a 
-                href="/ai-courses" 
-                className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm transition-colors"
-              >
-                Browse Courses
-              </a>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+        {[...Array(3)].map((_, i) => (
+          <Card key={i} className="bg-card/50">
+            <CardContent className="p-0">
+              <div className="h-[160px] bg-muted rounded-t-md"></div>
+              <div className="p-4 space-y-3">
+                <div className="h-4 w-3/4 bg-muted rounded"></div>
+                <div className="h-3 w-full bg-muted rounded"></div>
+                <div className="h-2 w-full bg-muted rounded mt-4"></div>
+                <div className="h-9 w-full bg-muted rounded mt-4"></div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     );
   }
 
-  // Render enrolled courses with pagination
-  return (
-    <section className="mb-12">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-white">My Courses</h2>
-        {totalPages > 1 && (
-          <div className="flex items-center space-x-2">
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={() => setPage(p => Math.max(0, p - 1))}
-              disabled={page === 0}
-              className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-sm text-slate-400">
-              {page + 1} / {totalPages}
-            </span>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-              disabled={page === totalPages - 1}
-              className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
+  if (error) {
+    return (
+      <div className="text-center py-10 text-red-500">
+        <p>Error loading enrolled courses. Please try again later.</p>
       </div>
+    );
+  }
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {enrollments
-          .slice(page * coursesPerPage, (page + 1) * coursesPerPage)
-          .map((enrollment) => (
-            <Card 
-              key={enrollment.id} 
-              className="bg-slate-800 border-slate-700 text-white overflow-hidden hover:border-blue-500 transition-all hover:scale-[1.05] duration-300"
-            >
-              <div className="relative aspect-video overflow-hidden">
+  if (!courses || courses.length === 0) {
+    return (
+      <div className="text-center py-10">
+        <h3 className="text-xl font-semibold mb-2">No Enrolled Courses</h3>
+        <p className="text-muted-foreground mb-4">
+          You haven't enrolled in any courses yet. Browse our catalog to find courses that interest you.
+        </p>
+        <Link href="/ai-courses">
+          <Button>Browse Courses</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {courses.map((course: Course) => (
+        <Card 
+          key={course.id} 
+          className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:scale-105 hover:border-blue-500"
+        >
+          <CardContent className="p-0">
+            <div className="h-[160px] relative">
+              {course.thumbnail ? (
                 <img 
-                  src={enrollment.thumbnail || "https://placehold.co/600x400/1a1a1a/007bff?text=Course"} 
-                  alt={enrollment.title} 
+                  src={course.thumbnail} 
+                  alt={course.title} 
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent opacity-70"></div>
-              </div>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-700 to-blue-900">
+                  <span className="text-white text-2xl font-bold">{course.title.charAt(0)}</span>
+                </div>
+              )}
               
-              <CardHeader className="pb-2">
-                <CardTitle className="line-clamp-1">{enrollment.title}</CardTitle>
-                <CardDescription className="text-slate-400 line-clamp-2">
-                  {enrollment.description || "Continue your learning journey with this course."}
-                </CardDescription>
-              </CardHeader>
-              
-              <CardContent>
-                <div className="mb-3">
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-slate-400">Progress</span>
-                    <span className="text-blue-400">{enrollment.progressPercentage}%</span>
-                  </div>
-                  <div className="relative">
-                    {/* Circular progress bar */}
-                    <div className="w-16 h-16 mx-auto relative">
-                      <svg className="w-full h-full" viewBox="0 0 100 100">
-                        {/* Background circle */}
-                        <circle
-                          className="text-slate-700"
-                          strokeWidth="8"
-                          stroke="currentColor"
-                          fill="transparent"
-                          r="40"
-                          cx="50"
-                          cy="50"
-                        />
-                        {/* Progress circle */}
-                        <circle
-                          className="text-blue-500"
-                          strokeWidth="8"
-                          strokeLinecap="round"
-                          stroke="currentColor"
-                          fill="transparent"
-                          r="40"
-                          cx="50"
-                          cy="50"
-                          strokeDasharray={`${40 * 2 * Math.PI}`}
-                          strokeDashoffset={`${40 * 2 * Math.PI * (1 - enrollment.progressPercentage / 100)}`}
-                          transform="rotate(-90 50 50)"
-                        />
-                      </svg>
-                      <div className="absolute inset-0 flex items-center justify-center text-sm font-medium">
-                        {enrollment.progressPercentage}%
-                      </div>
-                    </div>
-                    
-                    {/* Regular progress bar (mobile friendly) */}
-                    <Progress 
-                      value={enrollment.progressPercentage} 
-                      className="h-2 mt-4 bg-slate-700" 
+              {/* Progress Circle */}
+              <div className="absolute top-3 right-3 flex items-center justify-center bg-black bg-opacity-75 rounded-full w-12 h-12 border-2 border-primary">
+                <div className="relative w-full h-full">
+                  <svg className="w-full h-full" viewBox="0 0 36 36">
+                    <circle 
+                      cx="18" cy="18" r="15" 
+                      fill="none" 
+                      stroke="rgba(255,255,255,0.2)" 
+                      strokeWidth="3"
                     />
+                    <circle 
+                      cx="18" cy="18" r="15" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="3" 
+                      strokeDasharray={`${15 * 2 * Math.PI}`} 
+                      strokeDashoffset={`${15 * 2 * Math.PI * (1 - course.progress / 100)}`} 
+                      className="text-primary transform -rotate-90 origin-center"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">
+                    {course.progress}%
                   </div>
                 </div>
-              </CardContent>
+              </div>
+            </div>
+            
+            <div className="p-4">
+              <h3 className="font-semibold text-lg mb-2 line-clamp-1">{course.title}</h3>
+              <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                {course.description}
+              </p>
               
-              <CardFooter>
+              {/* Progress Bar */}
+              <div className="w-full h-2 bg-muted rounded-full mb-4">
+                <div 
+                  className="h-full bg-primary rounded-full" 
+                  style={{ width: `${course.progress}%` }}
+                ></div>
+              </div>
+              
+              <Link href={course.lastViewedLessonId ? `/lessons/${course.lastViewedLessonId}` : `/courses/${course.id}`}>
                 <Button 
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                  asChild
+                  className="w-full font-bold text-base flex items-center justify-between"
+                  variant={course.progress > 0 ? "default" : "outline"}
                 >
-                  <a href={`/ai-courses/${enrollment.courseId}`}>Continue Learning</a>
+                  {course.progress > 0 ? (
+                    <>
+                      <Play className="h-4 w-4 mr-2" />
+                      Continue Learning
+                    </>
+                  ) : (
+                    <>
+                      Start Course
+                    </>
+                  )}
+                  <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
-              </CardFooter>
-            </Card>
-          ))}
-      </div>
-    </section>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
-}
+};
+
+export default EnrolledCourses;

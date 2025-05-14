@@ -276,8 +276,8 @@ export class DatabaseStorage implements IStorage {
           and(
             or(
               and(
-                gt(userSubscriptions.endedAt, startDate),
-                lt(userSubscriptions.endedAt, endDate)
+                gt(userSubscriptions.endDate, startDate),
+                lt(userSubscriptions.endDate, endDate)
               ),
               and(
                 gt(userSubscriptions.canceledAt, startDate),

@@ -1,193 +1,185 @@
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Helmet } from "react-helmet";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
-import EnrolledCourses from "@/components/dashboard/EnrolledCourses";
-import UserBadges from "@/components/dashboard/UserBadges";
-import CourseRecommendations from "@/components/dashboard/CourseRecommendations";
-import MainLayout from "@/components/MainLayout";
+import React, { useState } from 'react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/hooks/useAuth';
+import { useTitle } from '@/hooks/useTitle';
+import EnrolledCourses from '@/components/dashboard/EnrolledCourses';
+import UserBadges from '@/components/dashboard/UserBadges';
+import CourseRecommendations from '@/components/dashboard/CourseRecommendations';
+import { BarChart3, Trophy, BookOpen, BookMarked } from 'lucide-react';
 
-export default function Dashboard() {
-  const { toast } = useToast();
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-  const [activeTab, setActiveTab] = useState("courses");
+const Dashboard = () => {
+  useTitle('Dashboard | RollinsX');
+  const [activeTab, setActiveTab] = useState('overview');
+  const { user, isLoading } = useAuth();
 
-  // Fetch enrolled courses
-  const { 
-    data: enrollments, 
-    isLoading: enrollmentsLoading,
-    error: enrollmentsError 
-  } = useQuery({
-    queryKey: ["/api/user/enrollments"],
-    enabled: isAuthenticated,
-  });
-
-  // Fetch user badges
-  const { 
-    data: badges, 
-    isLoading: badgesLoading,
-    error: badgesError 
-  } = useQuery({
-    queryKey: ["/api/user/badges"],
-    enabled: isAuthenticated,
-  });
-
-  // Fetch course recommendations
-  const { 
-    data: recommendations, 
-    isLoading: recommendationsLoading,
-    error: recommendationsError 
-  } = useQuery({
-    queryKey: ["/api/user/course-recommendations"],
-    enabled: isAuthenticated,
-  });
-
-  // Show error toasts for data fetching errors
-  useEffect(() => {
-    if (enrollmentsError) {
-      toast({
-        title: "Error loading courses",
-        description: "We couldn't load your enrolled courses. Please try again later.",
-        variant: "destructive",
-      });
-    }
-    
-    if (badgesError) {
-      toast({
-        title: "Error loading achievements",
-        description: "We couldn't load your achievement badges. Please try again later.",
-        variant: "destructive",
-      });
-    }
-    
-    if (recommendationsError) {
-      toast({
-        title: "Error loading recommendations",
-        description: "We couldn't load your course recommendations. Please try again later.",
-        variant: "destructive",
-      });
-    }
-  }, [enrollmentsError, badgesError, recommendationsError, toast]);
-
-  // Not authenticated redirect handling
-  if (!authLoading && !isAuthenticated) {
-    // Redirect to login page after a brief delay
-    useEffect(() => {
-      const timer = setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 2000);
-      
-      return () => clearTimeout(timer);
-    }, []);
-
+  if (isLoading) {
     return (
-      <MainLayout>
-        <div className="container py-12 mx-auto text-center">
-          <h1 className="text-3xl font-bold text-white mb-4">Access Required</h1>
-          <p className="text-xl text-slate-400 mb-8">Please log in to view your dashboard</p>
-          <div className="animate-pulse">
-            <p className="text-blue-400">Redirecting to login page...</p>
-          </div>
+      <div className="container mx-auto py-8 animate-pulse">
+        <div className="h-8 w-1/4 bg-muted rounded mb-6"></div>
+        <div className="h-12 w-full bg-muted rounded mb-6"></div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="h-40 bg-muted rounded"></div>
+          <div className="h-40 bg-muted rounded"></div>
+          <div className="h-40 bg-muted rounded"></div>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
-  // Loading state
-  const isLoading = authLoading || enrollmentsLoading || badgesLoading || recommendationsLoading;
+  if (!user) {
+    return (
+      <div className="container mx-auto py-20 text-center">
+        <h2 className="text-2xl font-bold mb-4">Please log in to access your dashboard</h2>
+        <p className="text-muted-foreground mb-6">
+          You need to be logged in to view your personal dashboard and track your learning progress.
+        </p>
+        <a href="/api/login" className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+          Log In
+        </a>
+      </div>
+    );
+  }
 
   return (
-    <MainLayout>
-      <Helmet>
-        <title>My Dashboard | ROLLINSX</title>
-        <meta 
-          name="description" 
-          content="Track your course progress, view achievements, and discover recommended courses tailored to your interests."
-        />
-      </Helmet>
-
-      <div className="container py-8 mx-auto">
-        <div className="mb-10">
-          <h1 className="text-3xl font-bold text-white mb-2">
-            {isLoading ? <Skeleton className="h-10 w-1/3 bg-slate-700" /> : `Welcome Back, ${user?.firstName || 'Learner'}`}
-          </h1>
-          <p className="text-slate-400 text-lg">
-            {isLoading ? <Skeleton className="h-6 w-1/2 bg-slate-700" /> : 'Track your progress and discover new learning opportunities'}
-          </p>
-        </div>
-
-        <Tabs defaultValue="courses" className="mb-8" onValueChange={setActiveTab}>
-          <TabsList className="bg-slate-800 border-slate-700">
-            <TabsTrigger value="courses" className="data-[state=active]:bg-blue-600">My Courses</TabsTrigger>
-            <TabsTrigger value="achievements" className="data-[state=active]:bg-blue-600">Achievements</TabsTrigger>
-            <TabsTrigger value="recommendations" className="data-[state=active]:bg-blue-600">Recommended</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="courses" className="mt-6">
-            {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[...Array(3)].map((_, i) => (
-                  <Skeleton key={i} className="h-80 w-full bg-slate-800" />
-                ))}
-              </div>
-            ) : (
-              <EnrolledCourses enrollments={enrollments || []} />
-            )}
-          </TabsContent>
-          
-          <TabsContent value="achievements" className="mt-6">
-            {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[...Array(3)].map((_, i) => (
-                  <Skeleton key={i} className="h-60 w-full bg-slate-800" />
-                ))}
-              </div>
-            ) : (
-              <UserBadges badges={badges || []} />
-            )}
-          </TabsContent>
-          
-          <TabsContent value="recommendations" className="mt-6">
-            {isLoading ? (
-              <div className="space-y-6">
-                <Skeleton className="h-80 w-full bg-slate-800" />
-              </div>
-            ) : (
-              <CourseRecommendations recommendations={recommendations || []} />
-            )}
-          </TabsContent>
-        </Tabs>
-
-        {/* Always show other sections regardless of active tab */}
-        {activeTab !== "achievements" && (
-          <div className={activeTab === "achievements" ? "hidden" : "block"}>
-            {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
-                {[...Array(3)].map((_, i) => (
-                  <Skeleton key={i} className="h-60 w-full bg-slate-800" />
-                ))}
-              </div>
-            ) : (
-              <UserBadges badges={badges || []} />
-            )}
-          </div>
-        )}
-        
-        {activeTab !== "recommendations" && (
-          <div className={activeTab === "recommendations" ? "hidden" : "block"}>
-            {isLoading ? (
-              <div className="space-y-6 mt-12">
-                <Skeleton className="h-80 w-full bg-slate-800" />
-              </div>
-            ) : (
-              <CourseRecommendations recommendations={recommendations || []} />
-            )}
-          </div>
-        )}
+    <div className="container mx-auto py-8 space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold mb-2">Your Dashboard</h1>
+        <p className="text-muted-foreground">
+          Track your course progress, achievements and get personalized recommendations.
+        </p>
       </div>
-    </MainLayout>
+
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-6"
+      >
+        <TabsList className="grid grid-cols-3 md:grid-cols-4 md:w-[500px]">
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            <span className="hidden md:inline">Overview</span>
+          </TabsTrigger>
+          <TabsTrigger value="courses" className="flex items-center gap-2">
+            <BookOpen className="h-4 w-4" />
+            <span className="hidden md:inline">My Courses</span>
+          </TabsTrigger>
+          <TabsTrigger value="badges" className="flex items-center gap-2">
+            <Trophy className="h-4 w-4" />
+            <span className="hidden md:inline">Badges</span>
+          </TabsTrigger>
+          <TabsTrigger value="recommendations" className="flex items-center gap-2">
+            <BookMarked className="h-4 w-4" />
+            <span className="hidden md:inline">For You</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium flex items-center">
+                  <BookOpen className="h-5 w-5 mr-2 text-blue-500" />
+                  Enrolled Courses
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">
+                  {/* This would be dynamic in the real app */}
+                  3
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Continue your learning journey
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium flex items-center">
+                  <Trophy className="h-5 w-5 mr-2 text-amber-500" />
+                  Achievements
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">
+                  {/* This would be dynamic in the real app */}
+                  5
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Badges and certificates earned
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium flex items-center">
+                  <BarChart3 className="h-5 w-5 mr-2 text-green-500" />
+                  Overall Progress
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">
+                  {/* This would be dynamic in the real app */}
+                  42%
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Average completion across courses
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Continue Learning</h2>
+            </div>
+            <EnrolledCourses />
+          </div>
+          
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Recommended for You</h2>
+            </div>
+            <CourseRecommendations />
+          </div>
+          
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Recent Achievements</h2>
+            </div>
+            <UserBadges />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="courses">
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Your Enrolled Courses</h2>
+            <EnrolledCourses />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="badges">
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Your Achievements</h2>
+            <UserBadges />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="recommendations">
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Recommended for You</h2>
+            <p className="text-muted-foreground mb-6">
+              Based on your learning patterns and interests, we think you might enjoy these courses:
+            </p>
+            <CourseRecommendations />
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
-}
+};
+
+export default Dashboard;

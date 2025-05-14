@@ -1,42 +1,77 @@
 import express from 'express';
-import { storage } from '../storage';
 import { isAuthenticated } from '../replitAuth';
+import { storage } from '../storage';
 
 const router = express.Router();
 
-// Get user's enrolled courses with progress
-router.get('/enrollments', isAuthenticated, async (req: any, res) => {
+// Get enrolled courses for the user
+router.get('/enrolled-courses', isAuthenticated, async (req: any, res) => {
   try {
     const userId = req.user.claims.sub;
-    const enrollments = await storage.getUserEnrollments(userId);
-    res.json(enrollments);
+    const enrolledCourses = await storage.getUserEnrollments(userId);
+    return res.json(enrolledCourses);
   } catch (error) {
-    console.error('Error fetching user enrollments:', error);
-    res.status(500).json({ message: 'Failed to fetch enrollments' });
+    console.error('Error fetching enrolled courses:', error);
+    return res.status(500).json({
+      message: 'Failed to fetch enrolled courses'
+    });
   }
 });
 
-// Get user's achievement badges
+// Get badges for the user
 router.get('/badges', isAuthenticated, async (req: any, res) => {
   try {
     const userId = req.user.claims.sub;
     const badges = await storage.getUserBadges(userId);
-    res.json(badges);
+    return res.json(badges);
   } catch (error) {
     console.error('Error fetching user badges:', error);
-    res.status(500).json({ message: 'Failed to fetch badges' });
+    return res.status(500).json({
+      message: 'Failed to fetch badges'
+    });
   }
 });
 
-// Get personalized course recommendations for the user
-router.get('/course-recommendations', isAuthenticated, async (req: any, res) => {
+// Get course recommendations for the user
+router.get('/recommendations', isAuthenticated, async (req: any, res) => {
   try {
     const userId = req.user.claims.sub;
     const recommendations = await storage.getRecommendedCourses(userId);
-    res.json(recommendations);
+    return res.json(recommendations);
   } catch (error) {
     console.error('Error fetching course recommendations:', error);
-    res.status(500).json({ message: 'Failed to fetch recommendations' });
+    return res.status(500).json({
+      message: 'Failed to fetch course recommendations'
+    });
+  }
+});
+
+// Get dashboard summary (counts and stats)
+router.get('/summary', isAuthenticated, async (req: any, res) => {
+  try {
+    const userId = req.user.claims.sub;
+    
+    // Get enrolled courses to calculate count and avg progress
+    const enrolledCourses = await storage.getUserEnrollments(userId);
+    const badges = await storage.getUserBadges(userId);
+    
+    // Calculate the average progress
+    let avgProgress = 0;
+    if (enrolledCourses.length > 0) {
+      const totalProgress = enrolledCourses.reduce((acc, course) => acc + course.progress, 0);
+      avgProgress = Math.round(totalProgress / enrolledCourses.length);
+    }
+    
+    return res.json({
+      enrolledCoursesCount: enrolledCourses.length,
+      badgesCount: badges.length,
+      averageProgress: avgProgress
+    });
+  } catch (error) {
+    console.error('Error fetching dashboard summary:', error);
+    return res.status(500).json({
+      message: 'Failed to fetch dashboard summary'
+    });
   }
 });
 
