@@ -72,6 +72,8 @@ import SubscriptionAnalyticsPage from "@/pages/SubscriptionAnalyticsPage";
 import Dashboard from "@/pages/Dashboard";
 import Forum from "@/pages/Forum";
 import ForumThreadDetail from "@/pages/ForumThreadDetail";
+import Certificates from "@/pages/Certificates";
+import VerifyCertificate from "@/pages/VerifyCertificate";
 
 export default function App() {
   const { t, i18n } = useTranslation();
