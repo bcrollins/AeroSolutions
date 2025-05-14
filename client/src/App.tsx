@@ -87,6 +87,7 @@ import ArticlesPage from "@/pages/ArticlesPage";
 import ArticleDetailPage from "@/pages/ArticleDetailPage";
 import NewsHubPage from "@/pages/NewsHubPage";
 import ContactPage from "@/pages/ContactPage";
+import LearnAI from "@/pages/LearnAI";
 
 export default function App() {
   const { t, i18n } = useTranslation();
