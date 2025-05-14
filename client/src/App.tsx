@@ -417,6 +417,21 @@ export default function App() {
             </>
           )}
         </Route>
+        
+        <Route path="/admin/subscription-analytics">
+          {() => (
+            <>
+              <Helmet>
+                <title>Subscription Analytics | Admin | ROLLINSX</title>
+                <meta name="description" content="Monitor subscription metrics, trends and optimize subscription strategy." />
+                <meta name="robots" content="noindex, nofollow" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <SubscriptionAnalyticsPage />
+            </>
+          )}
+        </Route>
         <Route path="/content-hub">
           {() => (
             <>

@@ -40,6 +40,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
     { name: 'Users', href: '/admin/users', icon: Users, current: location === '/admin/users' },
     { name: 'Content Moderation', href: '/admin/content', icon: Flag, current: location === '/admin/content' },
     { name: 'Subscriptions', href: '/admin/subscriptions', icon: CreditCard, current: location === '/admin/subscriptions' },
+    { name: 'Subscription Analytics', href: '/admin/subscription-analytics', icon: LineChart, current: location === '/admin/subscription-analytics' },
     { name: 'Analytics', href: '/admin/analytics', icon: BarChart3, current: location === '/admin/analytics' },
     { name: 'Settings', href: '/admin/settings', icon: Settings, current: location === '/admin/settings' },
   ];
