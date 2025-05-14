@@ -19,14 +19,27 @@ export default function WebSocketListener() {
   const [connected, setConnected] = useState(false);
   
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.log('No user ID available, skipping WebSocket connection');
+      return;
+    }
+    
+    console.log('Attempting to establish WebSocket connection for user:', user.id);
     
     // Create WebSocket connection
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws`;
     
-    const socket = new WebSocket(wsUrl);
-    socketRef.current = socket;
+    let socket: WebSocket;
+    
+    try {
+      socket = new WebSocket(wsUrl);
+      socketRef.current = socket;
+      console.log('WebSocket connection initialized to:', wsUrl);
+    } catch (error) {
+      console.error('Error creating WebSocket connection:', error);
+      return;
+    }
     
     // Connection opened
     socket.addEventListener('open', () => {
@@ -34,15 +47,25 @@ export default function WebSocketListener() {
       setConnected(true);
       
       // Authenticate the WebSocket connection
-      socket.send(JSON.stringify({
-        type: 'auth',
-        userId: user.id
-      }));
+      try {
+        if (user.id) {
+          socket.send(JSON.stringify({
+            type: 'auth',
+            userId: user.id
+          }));
+          console.log('WebSocket authentication sent for user:', user.id);
+        } else {
+          console.error('User ID is undefined, cannot authenticate WebSocket');
+        }
+      } catch (error) {
+        console.error('Error sending WebSocket authentication:', error);
+      }
     });
     
     // Listen for messages
     socket.addEventListener('message', (event) => {
       try {
+        console.log('WebSocket message received:', event.data);
         const message: WebSocketMessage = JSON.parse(event.data);
         
         // Handle different message types
@@ -68,14 +91,15 @@ export default function WebSocketListener() {
     });
     
     // Connection closed
-    socket.addEventListener('close', () => {
-      console.log('WebSocket connection closed');
+    socket.addEventListener('close', (event) => {
+      console.log('WebSocket connection closed with code:', event.code, 'reason:', event.reason);
       setConnected(false);
     });
     
     // Clean up on unmount
     return () => {
-      if (socket.readyState === WebSocket.OPEN) {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        console.log('Closing WebSocket connection on cleanup');
         socket.close();
       }
     };

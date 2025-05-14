@@ -11,32 +11,94 @@ const router = Router();
 const connections: Map<number, WebSocket> = new Map();
 
 export function setupForumWebSocket(wss: WebSocket.Server) {
-  wss.on('connection', (ws: WebSocket) => {
+  console.log('Setting up forum WebSocket server');
+  
+  wss.on('connection', (ws: WebSocket, req: any) => {
+    console.log('New WebSocket connection received');
     let userId: number | null = null;
+
+    // Send a welcome message to confirm connection is working
+    try {
+      ws.send(JSON.stringify({
+        type: 'connection_status',
+        status: 'connected',
+        message: 'Connected to RXAI Forum WebSocket server'
+      }));
+    } catch (error) {
+      console.error('Error sending welcome message:', error);
+    }
 
     ws.on('message', async (message: string) => {
       try {
+        console.log('WebSocket message received:', message);
         const data = JSON.parse(message);
         
         // Handle authentication message
         if (data.type === 'auth' && data.userId) {
-          userId = Number(data.userId);
-          connections.set(userId, ws);
-          console.log(`User ${userId} connected to forum WebSocket`);
-          
-          // Send unread notification count on connect
-          const unreadCount = await storage.getUnreadNotificationCount(userId);
-          ws.send(JSON.stringify({
-            type: 'unread_count',
-            count: unreadCount
-          }));
+          try {
+            userId = Number(data.userId);
+            // Verify that the user exists
+            const user = await storage.getUser(userId);
+            
+            if (!user) {
+              console.error(`WebSocket auth failed: User ${userId} not found`);
+              ws.send(JSON.stringify({
+                type: 'auth_error',
+                message: 'User not found'
+              }));
+              return;
+            }
+            
+            connections.set(userId, ws);
+            console.log(`User ${userId} authenticated on forum WebSocket`);
+            
+            // Send confirmation back to client
+            ws.send(JSON.stringify({
+              type: 'auth_success',
+              userId: userId
+            }));
+            
+            // Send unread notification count on connect
+            try {
+              const unreadCount = await storage.getUnreadNotificationCount(userId);
+              ws.send(JSON.stringify({
+                type: 'unread_count',
+                count: unreadCount
+              }));
+            } catch (countError) {
+              console.error('Error getting unread notification count:', countError);
+            }
+          } catch (authError) {
+            console.error('Error during WebSocket authentication:', authError);
+            ws.send(JSON.stringify({
+              type: 'auth_error',
+              message: 'Authentication failed'
+            }));
+          }
         }
       } catch (error) {
         console.error('Error processing WebSocket message:', error);
+        try {
+          ws.send(JSON.stringify({
+            type: 'error',
+            message: 'Error processing message'
+          }));
+        } catch (sendError) {
+          console.error('Error sending error message back to client:', sendError);
+        }
       }
     });
 
-    ws.on('close', () => {
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
+      if (userId) {
+        connections.delete(userId);
+        console.log(`User ${userId} disconnected from forum WebSocket due to error`);
+      }
+    });
+
+    ws.on('close', (code, reason) => {
+      console.log(`WebSocket closed with code ${code}${reason ? `, reason: ${reason}` : ''}`);
       if (userId) {
         connections.delete(userId);
         console.log(`User ${userId} disconnected from forum WebSocket`);
@@ -47,12 +109,34 @@ export function setupForumWebSocket(wss: WebSocket.Server) {
 
 // Send notification to a user via WebSocket if they're connected
 export function sendNotification(userId: number, notification: any) {
-  const connection = connections.get(userId);
-  if (connection && connection.readyState === WebSocket.OPEN) {
+  try {
+    const connection = connections.get(userId);
+    
+    if (!connection) {
+      console.log(`User ${userId} is not connected, can't send notification`);
+      return false;
+    }
+    
+    if (connection.readyState !== WebSocket.OPEN) {
+      console.log(`User ${userId} connection is not open (state: ${connection.readyState}), can't send notification`);
+      // Remove stale connection
+      if (connection.readyState === WebSocket.CLOSED || connection.readyState === WebSocket.CLOSING) {
+        connections.delete(userId);
+      }
+      return false;
+    }
+    
+    // Send the notification
     connection.send(JSON.stringify({
       type: 'notification',
       data: notification
     }));
+    
+    console.log(`Notification sent to user ${userId}`);
+    return true;
+  } catch (error) {
+    console.error(`Error sending notification to user ${userId}:`, error);
+    return false;
   }
 }
 
