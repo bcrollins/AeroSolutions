@@ -362,6 +362,23 @@ export default function App() {
             </>
           )}
         </Route>
+
+        {/* LearnAI Landing Page */}
+        <Route path="/learnai">
+          {() => (
+            <>
+              <Helmet>
+                <title>Learn AI with RXAI - The World Leader in AI Education</title>
+                <meta name="description" content="Start your AI learning journey with RXAI's comprehensive courses. From beginners to advanced practitioners, our expert-led curriculum will transform your career." />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href="https://rollinsx.dev/learnai" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <LearnAI />
+            </>
+          )}
+        </Route>
         
         {/* Continue with rest of existing routes */}
         

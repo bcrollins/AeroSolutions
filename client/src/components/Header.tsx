@@ -69,6 +69,7 @@ export default function Header() {
     {  
       label: 'AI Products',  
       dropdown: [  
+        { label: 'Learn AI', path: '/learnai' },
         { label: 'AI Courses', path: '/ai-course-platform' },
         { label: 'Course Catalog', path: '/course-catalog' },
         { label: 'Design Tools', path: '/design-tools' },
@@ -174,7 +175,7 @@ export default function Header() {
             
             <div className="flex items-center space-x-3">
               <Link  
-                href="/ai-course-platform"  
+                href="/learnai"  
                 className="font-medium text-sm px-4 py-2 rounded-md border border-electric-cyan-400 text-white hover:bg-electric-cyan-400/20 transition-all duration-300 hover:shadow-lg"  
               >  
                 Learn AI
@@ -297,7 +298,7 @@ export default function Header() {
                 </div>
                 
                 <Link  
-                  href="/ai-course-platform"  
+                  href="/learnai"  
                   onClick={toggleMobileMenu}  
                   className="font-medium text-sm border border-electric-cyan-400 text-white py-3 px-4 rounded-md hover:bg-electric-cyan-400/20 transition-colors duration-200 text-center"  
                 >  
