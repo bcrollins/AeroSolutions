@@ -33,7 +33,7 @@ export async function callOpenAI(endpoint: string, data: any) {
         })) : [];
         
       response = await openai.chat.completions.create({
-        model: data.model || 'gpt-4o',
+        model: data.model || 'grok-2-1212',
         messages: messages,
         max_tokens: data.max_tokens,
         temperature: data.temperature,
@@ -56,7 +56,7 @@ export async function callOpenAI(endpoint: string, data: any) {
     else if (typeof endpoint === 'string' && !endpoint.startsWith('/')) {
       // Handle simple text prompts
       response = await openai.chat.completions.create({
-        model: data.model || 'gpt-4o',
+        model: data.model || 'grok-2-1212',
         messages: [{ 
           role: 'user', 
           content: endpoint 
@@ -69,7 +69,7 @@ export async function callOpenAI(endpoint: string, data: any) {
       // Generic fallback for other API endpoints
       console.warn(`Using generic OpenAI API request for endpoint: ${endpoint}`);
       response = await openai.chat.completions.create({
-        model: 'gpt-4o',
+        model: 'grok-2-1212',
         messages: [
           { 
             role: 'system', 
@@ -343,7 +343,7 @@ export async function analyzeImage(imageBase64: string, prompt: string, options:
 } = {}) {
   try {
     const {
-      model = 'gpt-4o',
+      model = 'grok-2-vision-1212',
       maxTokens = 1000,
       fallbackResponse
     } = options;
@@ -449,7 +449,7 @@ export async function validateUserProfileChanges(changes: any, userData: any) {
       issues: string[];
       suggestions: string[];
     }>(prompt, {
-      model: 'gpt-4o',
+      model: 'grok-2-1212',
       systemPrompt,
       temperature: 0.3,
     });
@@ -498,7 +498,7 @@ export async function analyzeUserDataChanges(oldData: any, newData: any) {
       recommendedFeatures: string[];
       personalizationInsights: string[];
     }>(prompt, {
-      model: 'gpt-4o',
+      model: 'grok-2-1212',
       systemPrompt,
       temperature: 0.4,
     });

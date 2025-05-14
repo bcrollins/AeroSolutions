@@ -29,9 +29,9 @@ const apiStats = {
   }
 };
 
-// Class for interacting with OpenAI API
+// Class for interacting with xAI API (Grok)
 class OpenAIApi {
-  private defaultModel: string = 'gpt-4o';
+  private defaultModel: string = 'grok-2-1212';
   
   /**
    * Generate a text response from OpenAI
@@ -135,7 +135,7 @@ class OpenAIApi {
   ): Promise<string> {
     try {
       const result = await analyzeImageUtil(base64Image, prompt, {
-        model: this.defaultModel,
+        model: 'grok-2-vision-1212',
         maxTokens: options.max_tokens ?? 500,
       });
       apiStats.recordSuccess();
