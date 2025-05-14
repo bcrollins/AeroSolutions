@@ -8,6 +8,7 @@ import { authMiddleware } from "./utils/auth";
 import { cachingMiddleware, conditionalRequestMiddleware } from "./utils/caching";
 import { apiRateLimiter, authRateLimiter, defaultRateLimiter } from "./utils/rate-limiting";
 import { healthCheckMiddleware, getHealthStatus } from "./middlewares/healthCheckMiddleware";
+import { enhancedSecurityHeadersMiddleware } from "./middlewares/enhancedSecurityHeadersMiddleware";
 import compression from "express-compression";
 import fs from "fs/promises";
 import path from "path";
@@ -85,7 +86,7 @@ app.use(compression({
   }
 }));
 
-// Apply security headers
+// Apply security headers with Helmet for base protection
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -100,6 +101,9 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
+
+// Apply enhanced security headers for stricter protection
+app.use(enhancedSecurityHeadersMiddleware);
 
 // Apply caching headers
 app.use(cachingMiddleware());
