@@ -327,11 +327,20 @@ const LearnAI: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-lg md:text-xl text-center mb-12 max-w-3xl"
+            className="text-lg md:text-xl text-center mb-6 max-w-3xl"
           >
             Transform your career with our industry-leading AI courses. Gain practical skills through 
             hands-on projects, receive mentorship from AI experts, and join a community of innovators.
           </motion.p>
+          
+          {/* Personalized Content Section */}
+          <div className="w-full max-w-4xl mx-auto mb-8">
+            <Suspense fallback={
+              <div className="w-full h-24 bg-gray-800/50 animate-pulse rounded-lg"></div>
+            }>
+              <PersonalizedContent />
+            </Suspense>
+          </div>
           
           <div className="w-full max-w-6xl">
             <motion.div

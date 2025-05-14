@@ -1,214 +1,69 @@
-/**
- * RXAI Custom Analytics
- * 
- * This module provides custom analytics tracking functionality without relying on Google Analytics.
- * It includes tracking for page views, article interactions, and custom events.
- */
-
-import { apiRequest } from "@/lib/queryClient";
-
-// Analytics event types
-interface PageViewEvent {
-  type: 'pageview';
-  path: string;
-  referrer?: string;
-  timestamp: number;
+// Define the gtag function globally
+declare global {
+  interface Window {
+    dataLayer: any[];
+    gtag: (...args: any[]) => void;
+  }
 }
 
-interface ArticleEvent {
-  type: 'article';
-  action: 'view' | 'share' | 'like' | 'comment' | 'complete' | 'progress';
-  articleId: number | string;
-  articleTitle?: string;
-  articleCategory?: string;
-  readTime?: number;
-  timeSpent?: number;
-  progressPercentage?: number;
-  timestamp: number;
-}
+// Initialize Google Analytics
+export const initGA = () => {
+  const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
 
-interface CustomEvent {
-  type: 'custom';
-  action: string;
-  category?: string;
-  label?: string;
-  value?: number;
-  timestamp: number;
-}
+  if (!measurementId) {
+    console.warn('Missing required Google Analytics key: VITE_GA_MEASUREMENT_ID');
+    return;
+  }
 
-export type AnalyticsEvent = PageViewEvent | ArticleEvent | CustomEvent;
+  // Add Google Analytics script to the head
+  const script1 = document.createElement('script');
+  script1.async = true;
+  script1.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
+  document.head.appendChild(script1);
 
-// Queue for batching analytics events
-let eventQueue: AnalyticsEvent[] = [];
-let isInitialized = false;
-let sessionId: string;
-
-/**
- * Initialize the analytics system
- */
-export const initAnalytics = () => {
-  if (isInitialized) return;
-  
-  // Generate a unique session ID if not present
-  sessionId = localStorage.getItem('rxai_session_id') || generateSessionId();
-  localStorage.setItem('rxai_session_id', sessionId);
-  
-  // Setup event flushing interval (send events every 30 seconds)
-  setInterval(flushEvents, 30000);
-  
-  // Setup unload flush (send events when user leaves the page)
-  window.addEventListener('beforeunload', () => {
-    flushEvents(true);
-  });
+  // Initialize gtag
+  const script2 = document.createElement('script');
+  script2.innerHTML = `
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '${measurementId}');
+  `;
+  document.head.appendChild(script2);
   
   console.log('RXAI Analytics initialized');
-  isInitialized = true;
 };
 
-// Alias for Google Analytics migration compatibility
-export const initGA = initAnalytics;
-
-/**
- * Track page view
- */
-export const trackPageView = (path: string) => {
-  if (!isInitialized) initAnalytics();
+// Track page views - useful for single-page applications
+export const trackPageView = (url: string) => {
+  if (typeof window === 'undefined' || !window.gtag) return;
   
-  const referrer = document.referrer;
+  const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
+  if (!measurementId) return;
   
-  const event: PageViewEvent = {
-    type: 'pageview',
-    path,
-    referrer,
-    timestamp: Date.now()
-  };
-  
-  queueEvent(event);
-};
-
-/**
- * Track article-specific events
- */
-export const trackArticleEvent = (
-  action: 'view' | 'share' | 'like' | 'comment' | 'complete' | 'progress',
-  articleId: number | string,
-  articleTitle?: string,
-  articleCategory?: string,
-  readTime?: number,
-  timeSpent?: number,
-  progressPercentage?: number
-) => {
-  if (!isInitialized) initAnalytics();
-  
-  const event: ArticleEvent = {
-    type: 'article',
-    action,
-    articleId,
-    articleTitle,
-    articleCategory,
-    readTime,
-    timeSpent,
-    progressPercentage,
-    timestamp: Date.now()
-  };
-  
-  queueEvent(event);
-};
-
-/**
- * Track custom events
- */
-export const trackEvent = (
-  action: string,
-  category?: string,
-  label?: string,
-  value?: number
-) => {
-  if (!isInitialized) initAnalytics();
-  
-  const event: CustomEvent = {
-    type: 'custom',
-    action,
-    category,
-    label,
-    value,
-    timestamp: Date.now()
-  };
-  
-  queueEvent(event);
-};
-
-/**
- * Add event to the queue
- */
-const queueEvent = (event: AnalyticsEvent) => {
-  eventQueue.push(event);
-  
-  // If queue gets too large, flush immediately
-  if (eventQueue.length >= 10) {
-    flushEvents();
-  }
-};
-
-/**
- * Send events to the server
- */
-const flushEvents = async (immediate = false) => {
-  if (eventQueue.length === 0) return;
-  
-  const events = [...eventQueue];
-  
-  // Clear the queue
-  eventQueue = [];
-  
-  try {
-    const syncMethod = immediate ? sendEventsSync : sendEventsAsync;
-    await syncMethod(events);
-  } catch (error) {
-    console.error('Failed to send analytics events:', error);
-    
-    // Put events back in the queue if they failed to send
-    eventQueue = [...events, ...eventQueue];
-  }
-};
-
-/**
- * Send events asynchronously
- */
-const sendEventsAsync = async (events: AnalyticsEvent[]) => {
-  await apiRequest('POST', '/api/analytics/events', { 
-    events,
-    sessionId
+  window.gtag('config', measurementId, {
+    page_path: url
   });
 };
 
-/**
- * Send events synchronously (for page unload)
- */
-const sendEventsSync = (events: AnalyticsEvent[]) => {
-  // Use sendBeacon for reliable delivery during page unload
-  if (navigator.sendBeacon) {
-    const blob = new Blob(
-      [JSON.stringify({ events, sessionId })], 
-      { type: 'application/json' }
-    );
-    return navigator.sendBeacon('/api/analytics/events', blob);
+// Track events
+export const trackEvent = (
+  action: string, 
+  category?: string, 
+  label?: string, 
+  value?: number
+) => {
+  if (typeof window === 'undefined' || !window.gtag) {
+    // If in development mode without GA, log to console instead
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[Analytics Event] ${action}`, { category, label, value });
+    }
+    return;
   }
   
-  // Fallback to sync XHR if sendBeacon is not available
-  const xhr = new XMLHttpRequest();
-  xhr.open('POST', '/api/analytics/events', false);
-  xhr.setRequestHeader('Content-Type', 'application/json');
-  xhr.send(JSON.stringify({ events, sessionId }));
-  return xhr.status === 200;
-};
-
-/**
- * Generate a unique session ID
- */
-const generateSessionId = (): string => {
-  return 'rxai-' + 
-    Math.random().toString(36).substring(2, 15) + 
-    Math.random().toString(36).substring(2, 15) + 
-    '-' + Date.now();
+  window.gtag('event', action, {
+    event_category: category,
+    event_label: label,
+    value: value,
+  });
 };

@@ -109,7 +109,7 @@ const PersonalizedContent: React.FC = () => {
       const interestCounts: Record<string, number> = {};
       
       updatedHistory.forEach(view => {
-        view.interests.forEach(interest => {
+        view.interests.forEach((interest: string) => {
           interestCounts[interest] = (interestCounts[interest] || 0) + 1;
         });
       });
@@ -173,7 +173,7 @@ const PersonalizedContent: React.FC = () => {
       setHasInteracted(true);
       
       // Save this interest more permanently
-      const updatedInterests = [...new Set([...userInterests, recommendedCategory.id])];
+      const updatedInterests = Array.from(new Set([...userInterests, recommendedCategory.id]));
       
       if (isAuthenticated && user) {
         localStorage.setItem(`user-interests-${user.id}`, JSON.stringify(updatedInterests));
