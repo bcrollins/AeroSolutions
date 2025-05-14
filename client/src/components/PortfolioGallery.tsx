@@ -202,10 +202,8 @@ export default function PortfolioGallery() {
                     </span>
                   </div>
                   <p className="text-gray-300 mb-4 line-clamp-2">{project.description}</p>
-                  <Link href={project.url}>
-                    <a className="inline-flex items-center text-blue-400 hover:text-blue-300 font-medium">
-                      View case study <FaArrowRight className="ml-1 text-sm" />
-                    </a>
+                  <Link href={project.url} className="inline-flex items-center text-blue-400 hover:text-blue-300 font-medium">
+                    View case study <FaArrowRight className="ml-1 text-sm" />
                   </Link>
                 </div>
               </motion.div>
@@ -227,10 +225,8 @@ export default function PortfolioGallery() {
           variants={fadeIn}
           custom={8}
         >
-          <Link href="/case-studies">
-            <a className="inline-flex items-center bg-blue-700 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors">
-              View all projects <FaArrowRight className="ml-2" />
-            </a>
+          <Link href="/case-studies" className="inline-flex items-center bg-blue-700 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+            View all projects <FaArrowRight className="ml-2" />
           </Link>
           <p className="text-sm text-gray-400 mt-3">
             Discover our complete portfolio of full-stack development solutions
