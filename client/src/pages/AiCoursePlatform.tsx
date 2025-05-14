@@ -50,35 +50,35 @@ const AiCoursePlatform: React.FC = () => {
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
             >
               {/* Course Categories */}
-              <div className="bg-[#2a2a2a] rounded-lg p-6 hover:bg-[#3a3a3a] transition-colors duration-300 cursor-pointer">
+              <a href="/ai-courses/catalog?category=machine-learning" className="bg-[#2a2a2a] rounded-lg p-6 hover:bg-[#3a3a3a] transition-colors duration-300 cursor-pointer block">
                 <h3 className="text-xl font-bold mb-3 text-[#007bff]">Machine Learning</h3>
                 <p className="text-gray-300">Master the fundamentals of machine learning algorithms and applications.</p>
-              </div>
+              </a>
               
-              <div className="bg-[#2a2a2a] rounded-lg p-6 hover:bg-[#3a3a3a] transition-colors duration-300 cursor-pointer">
+              <a href="/ai-courses/catalog?category=deep-learning" className="bg-[#2a2a2a] rounded-lg p-6 hover:bg-[#3a3a3a] transition-colors duration-300 cursor-pointer block">
                 <h3 className="text-xl font-bold mb-3 text-[#007bff]">Deep Learning</h3>
                 <p className="text-gray-300">Explore neural networks, computer vision, and advanced deep learning techniques.</p>
-              </div>
+              </a>
               
-              <div className="bg-[#2a2a2a] rounded-lg p-6 hover:bg-[#3a3a3a] transition-colors duration-300 cursor-pointer">
+              <a href="/ai-courses/catalog?category=nlp" className="bg-[#2a2a2a] rounded-lg p-6 hover:bg-[#3a3a3a] transition-colors duration-300 cursor-pointer block">
                 <h3 className="text-xl font-bold mb-3 text-[#007bff]">Natural Language Processing</h3>
                 <p className="text-gray-300">Learn to build applications that understand and generate human language.</p>
-              </div>
+              </a>
               
-              <div className="bg-[#2a2a2a] rounded-lg p-6 hover:bg-[#3a3a3a] transition-colors duration-300 cursor-pointer">
+              <a href="/ai-courses/catalog?category=reinforcement-learning" className="bg-[#2a2a2a] rounded-lg p-6 hover:bg-[#3a3a3a] transition-colors duration-300 cursor-pointer block">
                 <h3 className="text-xl font-bold mb-3 text-[#007bff]">Reinforcement Learning</h3>
                 <p className="text-gray-300">Discover how AI can learn from interactions with dynamic environments.</p>
-              </div>
+              </a>
               
-              <div className="bg-[#2a2a2a] rounded-lg p-6 hover:bg-[#3a3a3a] transition-colors duration-300 cursor-pointer">
+              <a href="/ai-courses/catalog?category=computer-vision" className="bg-[#2a2a2a] rounded-lg p-6 hover:bg-[#3a3a3a] transition-colors duration-300 cursor-pointer block">
                 <h3 className="text-xl font-bold mb-3 text-[#007bff]">Computer Vision</h3>
                 <p className="text-gray-300">Build AI systems that can see and interpret visual information.</p>
-              </div>
+              </a>
               
-              <div className="bg-[#2a2a2a] rounded-lg p-6 hover:bg-[#3a3a3a] transition-colors duration-300 cursor-pointer">
+              <a href="/ai-courses/catalog?category=ai-ethics" className="bg-[#2a2a2a] rounded-lg p-6 hover:bg-[#3a3a3a] transition-colors duration-300 cursor-pointer block">
                 <h3 className="text-xl font-bold mb-3 text-[#007bff]">AI Ethics</h3>
                 <p className="text-gray-300">Understand the ethical implications and responsible use of AI technologies.</p>
-              </div>
+              </a>
             </motion.div>
             
             <motion.div 
@@ -88,9 +88,9 @@ const AiCoursePlatform: React.FC = () => {
               className="mt-12 text-center"
             >
               <h2 className="text-2xl font-bold mb-6">Ready to start your AI learning journey?</h2>
-              <button className="bg-[#007bff] hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg transition-colors duration-300">
+              <a href="/ai-courses/catalog" className="inline-block bg-[#007bff] hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg transition-colors duration-300">
                 Browse Course Catalog
-              </button>
+              </a>
             </motion.div>
           </div>
         </div>
