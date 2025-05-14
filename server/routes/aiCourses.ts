@@ -417,7 +417,7 @@ router.post('/api/lessons/:id/progress', isAuthenticated, async (req: any, res) 
     } else {
       // Create new progress entry
       const [newProgress] = await db
-        .insert(aiCourseProgress)
+        .insert(aiLessonProgress)
         .values({
           userId,
           courseId,
