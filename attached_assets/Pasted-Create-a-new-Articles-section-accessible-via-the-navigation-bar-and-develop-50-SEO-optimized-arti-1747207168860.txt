@@ -1,0 +1,16 @@
+Create a new “Articles” section accessible via the navigation bar, and develop 50 SEO-optimized articles answering the identified customer questions, designed to drive traffic and conversions. Each article should follow these guidelines:
+
+Length: 1,500–2,500 words, structured with an introduction, subheadings (H2/H3), and a conclusion.
+SEO Optimization: Include the target question as the primary keyword in the title, meta description (160 characters), and first paragraph. Use related keywords naturally. Add schema markup (e.g., FAQ or HowTo).
+Content Structure:
+Introduction: Address the question and outline the article’s value.
+Body: Provide a detailed, actionable answer with examples and data.
+Cross-Promotion: Include 2–3 internal links to Rollins X courses, tools, or development services (e.g., “Learn more in our AI for Business course”).
+CTA: End with a call-to-action (e.g., “Start your free trial with Rollins X to master AI today”), styled like the “Try Free” button.
+Tone and Style: Professional and engaging, similar to New York Times. Use clear language and explain jargon.
+Visuals: Include 3 high-quality images per article (e.g., charts, screenshots), styled with the same dark background and blue accents, optimized with descriptive alt text.
+User Engagement: Add collapsible FAQs and a clickable table of contents, styled to match the homepage’s typography and colors.
+Examples:
+“What Are the Best Online AI Courses for Beginners?”: Highlight Rollins X’s beginner courses, linking to the course catalog.
+“How to Optimize a Website for SEO in 2025?”: Reference Rollins X’s development services, with a case study styled like the homepage’s text.
+Design the articles section with a grid-based layout, featuring article thumbnails, titles, and descriptions, styled with the same dark theme and blue accents. Add a search bar and category filters (e.g., AI, Development, Tools), styled like the navigation bar. Ensure articles load in <2 seconds and are mobile-responsive. Submit XML sitemaps to Google Search Console after publishing.
