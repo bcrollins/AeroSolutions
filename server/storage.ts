@@ -1260,6 +1260,242 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
   }
+  
+  // CONTENT CALENDAR CREATOR METHODS
+  
+  async createContentCalendar(data: InsertContentCalendar): Promise<ContentCalendar> {
+    try {
+      const [calendar] = await db
+        .insert(contentCalendars)
+        .values({
+          ...data,
+          status: "ready",
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+        
+      return calendar;
+    } catch (error) {
+      console.error('Error creating content calendar:', error);
+      throw error;
+    }
+  }
+  
+  async getUserContentCalendars(userId: string, limit = 20, offset = 0): Promise<{ calendars: ContentCalendar[], total: number }> {
+    try {
+      const calendars = await db
+        .select()
+        .from(contentCalendars)
+        .where(eq(contentCalendars.userId, userId))
+        .orderBy(desc(contentCalendars.createdAt))
+        .limit(limit)
+        .offset(offset);
+        
+      const [{ count }] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(contentCalendars)
+        .where(eq(contentCalendars.userId, userId));
+        
+      return {
+        calendars,
+        total: Number(count)
+      };
+    } catch (error) {
+      console.error(`Error fetching content calendars for user ${userId}:`, error);
+      return { calendars: [], total: 0 };
+    }
+  }
+  
+  async getContentCalendarById(id: number): Promise<ContentCalendar | undefined> {
+    try {
+      const [calendar] = await db
+        .select()
+        .from(contentCalendars)
+        .where(eq(contentCalendars.id, id));
+        
+      return calendar;
+    } catch (error) {
+      console.error(`Error fetching content calendar ${id}:`, error);
+      return undefined;
+    }
+  }
+  
+  async updateContentCalendar(id: number, data: Partial<InsertContentCalendar>): Promise<ContentCalendar | undefined> {
+    try {
+      const [updatedCalendar] = await db
+        .update(contentCalendars)
+        .set({
+          ...data,
+          updatedAt: new Date()
+        })
+        .where(eq(contentCalendars.id, id))
+        .returning();
+        
+      return updatedCalendar;
+    } catch (error) {
+      console.error(`Error updating content calendar ${id}:`, error);
+      return undefined;
+    }
+  }
+  
+  async deleteContentCalendar(id: number): Promise<boolean> {
+    try {
+      // This will cascade delete all content items due to foreign key constraints
+      const result = await db
+        .delete(contentCalendars)
+        .where(eq(contentCalendars.id, id));
+        
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error(`Error deleting content calendar ${id}:`, error);
+      return false;
+    }
+  }
+  
+  async createCalendarContentItem(data: InsertCalendarContentItem): Promise<CalendarContentItem> {
+    try {
+      const [contentItem] = await db
+        .insert(calendarContentItems)
+        .values({
+          ...data,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+        
+      return contentItem;
+    } catch (error) {
+      console.error('Error creating calendar content item:', error);
+      throw error;
+    }
+  }
+  
+  async getCalendarContentItems(calendarId: number, limit = 100, offset = 0): Promise<{ contentItems: CalendarContentItem[], total: number }> {
+    try {
+      const contentItems = await db
+        .select()
+        .from(calendarContentItems)
+        .where(eq(calendarContentItems.calendarId, calendarId))
+        .orderBy(asc(calendarContentItems.postDate))
+        .limit(limit)
+        .offset(offset);
+        
+      const [{ count }] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(calendarContentItems)
+        .where(eq(calendarContentItems.calendarId, calendarId));
+        
+      return {
+        contentItems,
+        total: Number(count)
+      };
+    } catch (error) {
+      console.error(`Error fetching content items for calendar ${calendarId}:`, error);
+      return { contentItems: [], total: 0 };
+    }
+  }
+  
+  async getCalendarContentItemsByPlatform(calendarId: number, platform: string): Promise<CalendarContentItem[]> {
+    try {
+      const contentItems = await db
+        .select()
+        .from(calendarContentItems)
+        .where(
+          and(
+            eq(calendarContentItems.calendarId, calendarId),
+            eq(calendarContentItems.platform, platform)
+          )
+        )
+        .orderBy(asc(calendarContentItems.postDate));
+        
+      return contentItems;
+    } catch (error) {
+      console.error(`Error fetching content items for calendar ${calendarId} and platform ${platform}:`, error);
+      return [];
+    }
+  }
+  
+  async updateCalendarContentItem(id: number, data: Partial<InsertCalendarContentItem>): Promise<CalendarContentItem | undefined> {
+    try {
+      const [updatedItem] = await db
+        .update(calendarContentItems)
+        .set({
+          ...data,
+          updatedAt: new Date()
+        })
+        .where(eq(calendarContentItems.id, id))
+        .returning();
+        
+      return updatedItem;
+    } catch (error) {
+      console.error(`Error updating content item ${id}:`, error);
+      return undefined;
+    }
+  }
+  
+  async deleteCalendarContentItem(id: number): Promise<boolean> {
+    try {
+      const result = await db
+        .delete(calendarContentItems)
+        .where(eq(calendarContentItems.id, id));
+        
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error(`Error deleting content item ${id}:`, error);
+      return false;
+    }
+  }
+  
+  async addContentPerformanceAnalytics(data: InsertContentPerformanceAnalytics): Promise<ContentPerformanceAnalytics> {
+    try {
+      const [analytics] = await db
+        .insert(contentPerformanceAnalytics)
+        .values({
+          ...data,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+        
+      return analytics;
+    } catch (error) {
+      console.error('Error adding content performance analytics:', error);
+      throw error;
+    }
+  }
+  
+  async getContentPerformanceAnalytics(contentItemId: number): Promise<ContentPerformanceAnalytics | undefined> {
+    try {
+      const [analytics] = await db
+        .select()
+        .from(contentPerformanceAnalytics)
+        .where(eq(contentPerformanceAnalytics.contentItemId, contentItemId));
+        
+      return analytics;
+    } catch (error) {
+      console.error(`Error fetching performance analytics for content item ${contentItemId}:`, error);
+      return undefined;
+    }
+  }
+  
+  async updateContentPerformanceAnalytics(contentItemId: number, data: Partial<InsertContentPerformanceAnalytics>): Promise<ContentPerformanceAnalytics | undefined> {
+    try {
+      const [updatedAnalytics] = await db
+        .update(contentPerformanceAnalytics)
+        .set({
+          ...data,
+          updatedAt: new Date()
+        })
+        .where(eq(contentPerformanceAnalytics.contentItemId, contentItemId))
+        .returning();
+        
+      return updatedAnalytics;
+    } catch (error) {
+      console.error(`Error updating performance analytics for content item ${contentItemId}:`, error);
+      return undefined;
+    }
+  }
 }
 
 // Create a new instance of DatabaseStorage
