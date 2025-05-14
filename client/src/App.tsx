@@ -946,6 +946,39 @@ export default function App() {
           }}
         </Route>
         
+        {/* Community Forum Routes */}
+        <Route path="/forum">
+          {() => (
+            <>
+              <Helmet>
+                <title>Community Forum | ROLLINSX</title>
+                <meta name="description" content="Join discussions, ask questions, and share knowledge with the ROLLINSX community in our interactive forum." />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href="https://rollinsx.dev/forum" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <Forum />
+            </>
+          )}
+        </Route>
+
+        <Route path="/forum/threads/:threadId">
+          {(params) => (
+            <>
+              <Helmet>
+                <title>Forum Discussion | ROLLINSX</title>
+                <meta name="description" content="View and participate in community discussions on ROLLINSX forums." />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href={`https://rollinsx.dev/forum/threads/${params.threadId}`} />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <ForumThreadDetail />
+            </>
+          )}
+        </Route>
+        
         {/* Popup routes - Added for better modal/popup handling */}
         <Route path="/popup/client-input">
           {() => {

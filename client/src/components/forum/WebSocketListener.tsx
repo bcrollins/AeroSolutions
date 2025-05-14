@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 
 interface WebSocketMessage {
   type: string;
@@ -13,7 +13,7 @@ interface WebSocketMessage {
 export default function WebSocketListener() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const socketRef = useRef<WebSocket | null>(null);
   const [connected, setConnected] = useState(false);
   
@@ -98,8 +98,8 @@ export default function WebSocketListener() {
       description: notification.message,
       variant: notification.type.includes('rejected') ? 'destructive' : 'default',
       action: notification.threadId ? {
-        label: 'View',
-        onClick: () => navigate(`/forum/threads/${notification.threadId}`),
+        altText: "View thread",
+        onClick: () => setLocation(`/forum/threads/${notification.threadId}`),
       } : undefined,
     });
   };
