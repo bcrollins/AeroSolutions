@@ -7,6 +7,9 @@ import ContentProtection from "@/components/ContentProtection";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import ABTestClient from "@/components/ABTestClient";
+import { initGA } from "@/lib/analytics";
+import { useAnalytics } from "@/hooks/use-analytics";
+import { useAuth } from "@/hooks/useAuth";
 
 // Popup Components
 import ClientInputPopup from "@/components/popups/ClientInputPopup";
@@ -68,6 +71,12 @@ export default function App() {
   const [accessCode, setAccessCode] = useState<string | null>(null);
   const [currentPath, setCurrentPath] = useState<string>("");
   const [consentAccepted, setConsentAccepted] = useState<boolean>(false);
+  
+  // Use authentication hook
+  const { user, isAuthenticated, isLoading } = useAuth();
+  
+  // Use analytics hook for page tracking
+  useAnalytics();
 
   // Listen for messages from the ClientPreviewModal
   useEffect(() => {

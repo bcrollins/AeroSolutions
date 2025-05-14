@@ -59,3 +59,51 @@ export const trackEvent = (
     value: value,
   });
 };
+
+// Subscription-specific tracking events
+export const trackSubscriptionEvents = {
+  viewPricingPage: () => {
+    trackEvent('view_pricing_page', 'subscription');
+  },
+  toggleBillingCycle: (cycle: 'monthly' | 'annual') => {
+    trackEvent('toggle_billing_cycle', 'subscription', cycle);
+  },
+  selectPlan: (planName: string, planPrice: number, billingCycle: 'monthly' | 'annual') => {
+    trackEvent('select_plan', 'subscription', planName, planPrice);
+    
+    // Also send as ecommerce event for more detailed analytics
+    if (window.gtag) {
+      window.gtag('event', 'select_item', {
+        items: [{
+          item_id: planName,
+          item_name: planName,
+          price: planPrice,
+          item_category: 'subscription',
+          item_variant: billingCycle
+        }]
+      });
+    }
+  },
+  startSubscription: (planName: string, planPrice: number, billingCycle: 'monthly' | 'annual') => {
+    trackEvent('start_subscription', 'subscription', planName, planPrice);
+    
+    // Send purchase event
+    if (window.gtag) {
+      window.gtag('event', 'purchase', {
+        transaction_id: 'subscription_' + Date.now(),
+        value: planPrice,
+        currency: 'USD',
+        items: [{
+          item_id: planName,
+          item_name: planName,
+          price: planPrice,
+          item_category: 'subscription',
+          item_variant: billingCycle
+        }]
+      });
+    }
+  },
+  cancelSubscription: (planName: string, reason?: string) => {
+    trackEvent('cancel_subscription', 'subscription', `${planName}${reason ? ': ' + reason : ''}`);
+  }
+};

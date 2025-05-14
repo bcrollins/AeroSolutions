@@ -10,10 +10,18 @@ import contentRoutes from "./routes/content";
 import aiContentRoutes from "./routes/ai-content";
 import adminRoutes from "./routes/admin";
 import userOnboardingRoutes from "./routes/userOnboarding";
+import authRoutes from "./routes/auth";
 import { storage } from "./storage";
 import { logger } from "./utils/logger";
+import { setupAuth } from "./replitAuth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup authentication
+  await setupAuth(app);
+  
+  // Register auth routes
+  app.use("/api/auth", authRoutes);
+  
   // Register Stripe routes
   app.use("/api/stripe", stripeRoutes);
   
