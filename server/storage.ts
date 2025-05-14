@@ -46,16 +46,18 @@ import { eq, and, gt, lt, sql, desc, asc, ilike, or } from "drizzle-orm";
 
 // Extend the interface with needed CRUD methods
 export interface IStorage {
-  // User methods
-  getUser(id: number): Promise<User | undefined>;
+  // User methods for Replit Auth
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
+  
+  // Additional user methods
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
-  updateUser(id: number, data: Partial<User>): Promise<User>;
+  updateUser(id: string, data: Partial<User>): Promise<User>;
   getUserByStripeCustomerId(stripeCustomerId: string): Promise<User | undefined>;
-  validateUserCredentials(username: string, password: string): Promise<User | undefined>;
-  updateUserVerification(userId: number, verified: boolean): Promise<User>;
-  createOrUpdateSuperAdmin(): Promise<void>;
+  updateUserVerification(userId: string, verified: boolean): Promise<User>;
+  updateStripeCustomerId(userId: string, stripeCustomerId: string): Promise<User>;
+  updateUserStripeInfo(userId: string, data: { stripeCustomerId: string, stripeSubscriptionId: string }): Promise<User>;
   
   // User onboarding methods
   createUserOnboarding(onboarding: InsertUserOnboarding): Promise<UserOnboarding>;
@@ -287,9 +289,49 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  // User methods
-  async getUser(id: number): Promise<User | undefined> {
+  // User methods for Replit Auth
+  async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+  
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+  
+  // Additional user methods
+  async updateStripeCustomerId(userId: string, stripeCustomerId: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ 
+        stripeCustomerId,
+        updatedAt: new Date() 
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+  
+  async updateUserStripeInfo(userId: string, data: { stripeCustomerId: string, stripeSubscriptionId: string }): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ 
+        stripeCustomerId: data.stripeCustomerId,
+        updatedAt: new Date() 
+      })
+      .where(eq(users.id, userId))
+      .returning();
     return user;
   }
   
