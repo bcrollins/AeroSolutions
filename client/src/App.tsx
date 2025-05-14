@@ -69,6 +69,8 @@ import MemberDashboard from "@/pages/MemberDashboard";
 import PricingPage from "@/pages/PricingPage";
 import SubscriptionAnalyticsPage from "@/pages/SubscriptionAnalyticsPage";
 import Dashboard from "@/pages/Dashboard";
+import Forum from "@/pages/Forum";
+import ForumThreadDetail from "@/pages/ForumThreadDetail";
 
 export default function App() {
   const { t, i18n } = useTranslation();
