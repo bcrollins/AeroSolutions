@@ -146,6 +146,29 @@ export default function WebSocketListener() {
     window.dispatchEvent(new CustomEvent('unreadNotificationsUpdate', { detail: { count } }));
   };
   
-  // This component doesn't render anything visible
+  // In development mode, show a connection indicator
+  if (import.meta.env.DEV) {
+    return (
+      <div 
+        style={{ 
+          position: 'fixed', 
+          bottom: '10px', 
+          right: '10px',
+          zIndex: 1000,
+          background: connected ? '#1e9638' : '#e63946',
+          color: 'white',
+          padding: '5px 10px',
+          borderRadius: '5px',
+          fontSize: '12px',
+          opacity: 0.8,
+          pointerEvents: 'none'
+        }}
+      >
+        {connected ? 'WebSocket Connected' : 'WebSocket Disconnected'}
+      </div>
+    );
+  }
+  
+  // In production, don't render anything visible
   return null;
 }
