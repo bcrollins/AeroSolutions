@@ -283,7 +283,20 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ className }) =>
         </TabsContent>
         
         <TabsContent value="subscriptions">
-          <SubscriptionAnalytics />
+          <div className="grid gap-6">
+            <SubscriptionAnalytics />
+            <Card>
+              <CardHeader>
+                <CardTitle>Subscription Events</CardTitle>
+                <CardDescription>
+                  Track the lifecycle of subscriptions through various events
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <SubscriptionEventsAnalytics />
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
         
         <TabsContent value="users">

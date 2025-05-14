@@ -64,6 +64,7 @@ import AiProductsPage from "@/pages/AiProductsPage";
 import AiProductDetailPage from "@/pages/AiProductDetailPage";
 import MemberDashboard from "@/pages/MemberDashboard";
 import PricingPage from "@/pages/PricingPage";
+import SubscriptionAnalyticsPage from "@/pages/SubscriptionAnalyticsPage";
 
 export default function App() {
   const { t, i18n } = useTranslation();
