@@ -1,20 +1,20 @@
 import { useState } from "react";
-import ROLLINSXBot from "@/components/ROLLINSXBot";
+import RXAIBot from "@/components/RXAIBot";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function TestROLLINSXBot() {
+export default function TestRXAIBot() {
   const [isOpen, setIsOpen] = useState(false);
   const [initialOption, setInitialOption] = useState<string | null>(null);
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6 text-[#3B5B9D]">ROLLINSXBot Testing</h1>
+      <h1 className="text-3xl font-bold mb-6 text-[#3B5B9D]">RXAIBot Testing</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <Card>
           <CardHeader>
-            <CardTitle>Open ROLLINSXBot</CardTitle>
+            <CardTitle>Open RXAIBot</CardTitle>
             <CardDescription>Test basic open/close functionality</CardDescription>
           </CardHeader>
           <CardContent>
@@ -25,14 +25,14 @@ export default function TestROLLINSXBot() {
               }}
               className="bg-[#3B5B9D] hover:bg-[#2A4A8C]"
             >
-              Open ROLLINSXBot
+              Open RXAIBot
             </Button>
             <Button 
               onClick={() => setIsOpen(false)}
               variant="outline"
               className="ml-2"
             >
-              Close ROLLINSXBot
+              Close RXAIBot
             </Button>
           </CardContent>
         </Card>
@@ -92,7 +92,7 @@ export default function TestROLLINSXBot() {
         </CardHeader>
         <CardContent>
           <ol className="list-decimal ml-4 space-y-2">
-            <li>Click "Open ROLLINSXBot" to test the basic chat interface</li>
+            <li>Click "Open RXAIBot" to test the basic chat interface</li>
             <li>Try selecting different topics from the chat options</li>
             <li>Test sending custom messages and check the responses</li>
             <li>Use the buttons above to test opening the bot with specific preset topics</li>
@@ -101,8 +101,8 @@ export default function TestROLLINSXBot() {
         </CardContent>
       </Card>
 
-      {/* Embed the ROLLINSXBot component */}
-      <ROLLINSXBot isOpen={isOpen} initialOption={initialOption} hideFloatingButton={false} />
+      {/* Embed the RXAIBot component */}
+      <RXAIBot isOpen={isOpen} initialOption={initialOption} hideFloatingButton={false} />
     </div>
   );
 }
