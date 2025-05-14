@@ -415,13 +415,34 @@ router.post("/lessons/:id/progress", isAuthenticated, async (req, res) => {
     
     const courseId = module.courseId;
     
+    // Check if user has subscription access to this lesson
+    const hasAccess = await hasAccessToLesson(userId, courseId, module.id, lessonId);
+    
+    if (!hasAccess) {
+      return res.status(403).json({
+        error: "Forbidden",
+        message: "You don't have access to this lesson. Please upgrade your subscription to access this content.",
+        requiresSubscription: true,
+        courseId: courseId,
+        subscriptionInfo: {
+          url: "/pricing",
+        },
+      });
+    }
+    
     // Check if user is enrolled
     const enrollment = await storage.getUserCourseEnrollment(userId, courseId);
     
     if (!enrollment) {
-      return res.status(403).json({
-        error: "Forbidden",
-        message: "User is not enrolled in this course",
+      // Auto-enroll the user since they have subscription access
+      await storage.createAiCourseEnrollment({
+        userId,
+        courseId,
+        enrollmentDate: new Date(),
+        status: "active",
+        completionStatus: null,
+        completionDate: null,
+        lastAccessDate: new Date(),
       });
     }
     
