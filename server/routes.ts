@@ -37,11 +37,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register Learning System routes
   app.use("/api/courses", coursesRoutes);
+  app.use("/api/ai-courses", aiCoursesRoutes);
   app.use("/api/forum", forumRoutes);
   app.use("/api/media", mediaRoutes);
   
-  // Register AI Course Platform routes
-  app.use(aiCoursesRoutes);
+  // The AI Course routes are already registered above
   
   // Register Admin routes
   app.use("/api/admin", adminRoutes);
