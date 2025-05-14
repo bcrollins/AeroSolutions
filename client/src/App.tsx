@@ -10,6 +10,7 @@ import ABTestClient from "@/components/ABTestClient";
 import { initGA } from "@/lib/analytics";
 import { useAnalytics } from "@/hooks/use-analytics";
 import { useAuth } from "@/hooks/useAuth";
+import WebSocketListener from "@/components/forum/WebSocketListener";
 
 // Popup Components
 import ClientInputPopup from "@/components/popups/ClientInputPopup";
@@ -151,6 +152,9 @@ export default function App() {
       <NotificationProvider>
         {/* A/B Testing Client - applied to all routes */}
         <ABTestClient />
+        
+        {/* WebSocket Listener for forum notifications - only for authenticated users */}
+        {isAuthenticated && <WebSocketListener />}
         
         {/* Global App Metadata - applied to all routes */}
       <Helmet>

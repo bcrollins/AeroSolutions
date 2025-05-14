@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
+import { ToastAction } from "@/components/ui/toast";
 
 interface WebSocketMessage {
   type: string;
@@ -97,10 +98,14 @@ export default function WebSocketListener() {
              'New Notification',
       description: notification.message,
       variant: notification.type.includes('rejected') ? 'destructive' : 'default',
-      action: notification.threadId ? {
-        altText: "View thread",
-        onClick: () => setLocation(`/forum/threads/${notification.threadId}`),
-      } : undefined,
+      action: notification.threadId ? (
+        <ToastAction 
+          altText="View thread" 
+          onClick={() => setLocation(`/forum/threads/${notification.threadId}`)}
+        >
+          View
+        </ToastAction>
+      ) : undefined,
     });
   };
   
