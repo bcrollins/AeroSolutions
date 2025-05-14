@@ -7,6 +7,7 @@ import helmet from "helmet";
 import { authMiddleware } from "./utils/auth";
 import { cachingMiddleware, conditionalRequestMiddleware } from "./utils/caching";
 import { apiRateLimiter, authRateLimiter, defaultRateLimiter } from "./utils/rate-limiting";
+import { healthCheckMiddleware } from "./middlewares/healthCheckMiddleware";
 import compression from "express-compression";
 import fs from "fs/promises";
 import path from "path";
@@ -33,6 +34,10 @@ declare global {
 }
 
 const app = express();
+
+// Register health check middleware first, before any other middleware
+// This ensures health checks are processed immediately
+app.use(healthCheckMiddleware);
 
 // Performance and security middleware
 // Compress responses
@@ -162,42 +167,9 @@ app.use((req, res, next) => {
   }
   
   const server = await registerRoutes(app);
-
-  // Add health check endpoints - both at '/health' and root path '/' for deployment
-  const healthCheckHandler = (req: Request, res: Response) => {
-    const backgroundTasks = (global as any).backgroundTaskMetrics || {
-      status: 'unknown',
-      lastRun: 'never'
-    };
-    
-    res.status(200).json({ 
-      status: 'OK',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      memory: process.memoryUsage(),
-      backgroundTasks
-    });
-  };
   
-  // Add health check at '/health' path
-  app.get('/health', healthCheckHandler);
-  
-  // Add health check at root path '/' for deployment
-  app.get('/', (req, res, next) => {
-    // Check if request accepts HTML (browser request)
-    if (req.accepts('html')) {
-      // Forward to client app (handled by Vite or static server)
-      return next();
-    } 
-    // If request is JSON (API health check), respond with health status
-    else if (req.accepts('json')) {
-      return healthCheckHandler(req, res);
-    }
-    // Default to next middleware
-    else {
-      return next();
-    }
-  });
+  // We now handle health checks via the healthCheckMiddleware 
+  // that's registered at the top of the middleware stack
 
   // Global error handling middleware
   app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
