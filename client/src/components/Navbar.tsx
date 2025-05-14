@@ -99,8 +99,8 @@ const Navbar: React.FC = () => {
   ];
   
   const aiProductsLinks = [
-    { name: 'AI Course Platform', path: '/ai-products/course-platform', description: 'Comprehensive AI learning platform with interactive courses and certifications' },
-    { name: 'Course Catalog', path: '/ai-products/course-catalog', description: 'Browse our extensive catalog of AI learning resources and courses' },
+    { name: 'AI Course Platform', path: '/ai-courses', description: 'Comprehensive AI learning platform with interactive courses and certifications' },
+    { name: 'Course Catalog', path: '/ai-courses/catalog', description: 'Browse our extensive catalog of AI learning resources and courses' },
   ];
 
   return (

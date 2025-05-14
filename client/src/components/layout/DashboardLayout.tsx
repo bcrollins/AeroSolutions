@@ -3,7 +3,7 @@ import { Link, useLocation } from 'wouter';
 import {
   BarChart3,
   Calendar,
-  Certificate,
+  Award,
   ChevronLeft,
   ChevronRight,
   Home,
@@ -55,7 +55,7 @@ const navigation = [
   {
     name: 'Certificates',
     href: '/certificates',
-    icon: Certificate,
+    icon: Award,
   },
   {
     name: 'Content Calendar',
