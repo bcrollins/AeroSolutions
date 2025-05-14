@@ -95,7 +95,10 @@ const ArticleCard: React.FC<{ post: Post }> = ({ post }) => {
         </div>
         
         {/* Title */}
-        <Link href={`/articles/${post.slug}`}>
+        <Link 
+          href={`/articles/${post.slug}`}
+          onClick={() => trackArticleEvent('view', post.id, post.title, post.category, post.readTimeMinutes)}
+        >
           <h3 className="text-lg font-bold leading-tight mb-2 transition-colors group-hover:text-blue-600">
             {post.title}
           </h3>
@@ -307,7 +310,10 @@ const ArticlesPage: React.FC = () => {
                         </span>
                       )}
                       
-                      <Link href={`/articles/${featuredPosts[0].slug}`}>
+                      <Link 
+                        href={`/articles/${featuredPosts[0].slug}`}
+                        onClick={() => trackArticleEvent('view', featuredPosts[0].id, featuredPosts[0].title, featuredPosts[0].category, featuredPosts[0].readTimeMinutes)}
+                      >
                         <h3 className="text-2xl md:text-3xl font-bold mb-3 leading-tight hover:text-blue-600 transition-colors">
                           {featuredPosts[0].title}
                         </h3>
@@ -323,7 +329,10 @@ const ArticlesPage: React.FC = () => {
                           <span>{featuredPosts[0].readTimeMinutes || '5'} min read</span>
                         </div>
                         
-                        <Link href={`/articles/${featuredPosts[0].slug}`}>
+                        <Link 
+                          href={`/articles/${featuredPosts[0].slug}`}
+                          onClick={() => trackArticleEvent('view', featuredPosts[0].id, featuredPosts[0].title, featuredPosts[0].category, featuredPosts[0].readTimeMinutes)}
+                        >
                           <span className="font-medium text-blue-600 hover:text-blue-700 hover:underline flex items-center">
                             Continue Reading <ArrowRight className="h-3 w-3 ml-1" />
                           </span>

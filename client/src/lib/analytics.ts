@@ -5,6 +5,9 @@
  * It includes tracking for page views, article interactions, and custom events.
  */
 
+import { apiRequest } from "@/lib/queryClient";
+
+// Analytics event types
 interface PageViewEvent {
   type: 'pageview';
   path: string;
@@ -33,82 +36,86 @@ interface CustomEvent {
 
 export type AnalyticsEvent = PageViewEvent | ArticleEvent | CustomEvent;
 
-// In-memory storage for analytics events (will be sent in batches)
+// Queue for batching analytics events
 let eventQueue: AnalyticsEvent[] = [];
-const MAX_QUEUE_SIZE = 20; // Send events when queue reaches this length
+let isInitialized = false;
+let sessionId: string;
 
-// Initialize analytics
+/**
+ * Initialize the analytics system
+ */
 export const initAnalytics = () => {
-  console.log('RXAI Custom Analytics initialized');
+  if (isInitialized) return;
   
-  // Send any queued events before user leaves the page
+  // Generate a unique session ID if not present
+  sessionId = localStorage.getItem('rxai_session_id') || generateSessionId();
+  localStorage.setItem('rxai_session_id', sessionId);
+  
+  // Setup event flushing interval (send events every 30 seconds)
+  setInterval(flushEvents, 30000);
+  
+  // Setup unload flush (send events when user leaves the page)
   window.addEventListener('beforeunload', () => {
-    if (eventQueue.length > 0) {
-      sendEvents();
-    }
+    flushEvents(true);
   });
   
-  // Set up periodic sending of events (every 30 seconds)
-  setInterval(() => {
-    if (eventQueue.length > 0) {
-      sendEvents();
-    }
-  }, 30000);
+  console.log('RXAI Analytics initialized');
+  isInitialized = true;
 };
 
-// Track page views
+/**
+ * Track page view
+ */
 export const trackPageView = (path: string) => {
-  if (typeof window === 'undefined') return;
+  if (!isInitialized) initAnalytics();
+  
+  const referrer = document.referrer;
   
   const event: PageViewEvent = {
     type: 'pageview',
     path,
-    referrer: document.referrer,
+    referrer,
     timestamp: Date.now()
   };
   
   queueEvent(event);
-  
-  // Debug
-  console.log(`📊 Page View: ${path}`);
 };
 
-// Track article interactions
+/**
+ * Track article-specific events
+ */
 export const trackArticleEvent = (
   action: 'view' | 'share' | 'like' | 'comment' | 'complete',
   articleId: number | string,
-  metadata?: {
-    title?: string;
-    category?: string;
-    readTime?: number;
-  }
+  articleTitle?: string,
+  articleCategory?: string,
+  readTime?: number
 ) => {
-  if (typeof window === 'undefined') return;
+  if (!isInitialized) initAnalytics();
   
   const event: ArticleEvent = {
     type: 'article',
     action,
     articleId,
-    articleTitle: metadata?.title,
-    articleCategory: metadata?.category,
-    readTime: metadata?.readTime,
+    articleTitle,
+    articleCategory,
+    readTime,
     timestamp: Date.now()
   };
   
   queueEvent(event);
-  
-  // Debug
-  console.log(`📊 Article ${action}: ${metadata?.title || articleId}`);
 };
 
-// Track custom events
+/**
+ * Track custom events
+ */
 export const trackEvent = (
-  action: string, 
-  category?: string, 
-  label?: string, 
+  action: string,
+  category?: string,
+  label?: string,
   value?: number
 ) => {
-  if (typeof window === 'undefined') return;
+  if (!isInitialized) initAnalytics();
   
   const event: CustomEvent = {
     type: 'custom',
@@ -120,45 +127,79 @@ export const trackEvent = (
   };
   
   queueEvent(event);
-  
-  // Debug
-  console.log(`📊 Custom Event: ${action} (${category || 'uncategorized'})`);
 };
 
-// Add event to queue and send if queue is full
+/**
+ * Add event to the queue
+ */
 const queueEvent = (event: AnalyticsEvent) => {
   eventQueue.push(event);
   
-  // Send events if queue is full
-  if (eventQueue.length >= MAX_QUEUE_SIZE) {
-    sendEvents();
+  // If queue gets too large, flush immediately
+  if (eventQueue.length >= 10) {
+    flushEvents();
   }
 };
 
-// Send queued events to the server
-const sendEvents = async () => {
+/**
+ * Send events to the server
+ */
+const flushEvents = async (immediate = false) => {
   if (eventQueue.length === 0) return;
   
+  const events = [...eventQueue];
+  
+  // Clear the queue
+  eventQueue = [];
+  
   try {
-    const eventsToSend = [...eventQueue];
-    eventQueue = []; // Clear queue
-    
-    const response = await fetch('/api/analytics/events', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ events: eventsToSend }),
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Error sending analytics: ${response.statusText}`);
-    }
-    
-    console.log(`📊 Sent ${eventsToSend.length} analytics events`);
+    const syncMethod = immediate ? sendEventsSync : sendEventsAsync;
+    await syncMethod(events);
   } catch (error) {
     console.error('Failed to send analytics events:', error);
-    // Put events back in queue to try again later
-    eventQueue = [...eventQueue, ...eventQueue];
+    
+    // Put events back in the queue if they failed to send
+    eventQueue = [...events, ...eventQueue];
   }
+};
+
+/**
+ * Send events asynchronously
+ */
+const sendEventsAsync = async (events: AnalyticsEvent[]) => {
+  await apiRequest('POST', '/api/analytics/events', { 
+    events,
+    sessionId
+  });
+};
+
+/**
+ * Send events synchronously (for page unload)
+ */
+const sendEventsSync = (events: AnalyticsEvent[]) => {
+  // Use sendBeacon for reliable delivery during page unload
+  if (navigator.sendBeacon) {
+    const blob = new Blob(
+      [JSON.stringify({ events, sessionId })], 
+      { type: 'application/json' }
+    );
+    return navigator.sendBeacon('/api/analytics/events', blob);
+  }
+  
+  // Fallback to sync XHR if sendBeacon is not available
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', '/api/analytics/events', false);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.send(JSON.stringify({ events, sessionId }));
+  return xhr.status === 200;
+};
+
+/**
+ * Generate a unique session ID
+ */
+const generateSessionId = (): string => {
+  return 'rxai-' + 
+    Math.random().toString(36).substring(2, 15) + 
+    Math.random().toString(36).substring(2, 15) + 
+    '-' + Date.now();
 };

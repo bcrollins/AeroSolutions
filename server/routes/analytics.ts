@@ -1,9 +1,33 @@
 import { Router } from 'express';
 import { db } from '../db';
 import { analytics, insertAnalyticsSchema } from '@shared/schema';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, count, sql, desc, asc } from 'drizzle-orm';
+import { logger } from '../utils/logger';
+import { isAuthenticated } from '../replitAuth';
+import { z } from 'zod';
 
 const router = Router();
+
+// Schema for validating analytics events
+const analyticsEventSchema = z.object({
+  events: z.array(
+    z.object({
+      type: z.enum(['pageview', 'article', 'custom']),
+      action: z.string().optional(),
+      path: z.string().optional(),
+      referrer: z.string().optional(),
+      articleId: z.union([z.string(), z.number()]).optional(),
+      articleTitle: z.string().optional(),
+      articleCategory: z.string().optional(),
+      category: z.string().optional(), 
+      label: z.string().optional(),
+      value: z.number().optional(),
+      readTime: z.number().optional(),
+      timestamp: z.number()
+    })
+  ),
+  sessionId: z.string()
+});
 
 /**
  * POST /api/analytics/events
@@ -12,42 +36,53 @@ const router = Router();
  */
 router.post('/events', async (req, res) => {
   try {
-    const { events } = req.body;
+    const { events, sessionId } = analyticsEventSchema.parse(req.body);
     
-    if (!Array.isArray(events) || events.length === 0) {
-      return res.status(400).json({ message: 'No events provided or invalid format' });
+    // Get user ID if authenticated
+    const userId = req.user?.id;
+    
+    // Process and store each event
+    for (const event of events) {
+      try {
+        await db.insert(analytics).values({
+          userId: userId || null,
+          sessionId,
+          eventType: event.type,
+          eventAction: event.action,
+          path: event.path,
+          referrer: event.referrer,
+          articleId: event.articleId?.toString(),
+          articleTitle: event.articleTitle,
+          category: event.category || event.articleCategory,
+          label: event.label,
+          value: event.value || event.readTime,
+          clientTimestamp: new Date(event.timestamp)
+        });
+      } catch (error: any) {
+        logger.error('Error storing individual analytics event', { 
+          error: error.message,
+          event
+        });
+        // Continue processing other events even if one fails
+      }
     }
     
-    // Map events to database format
-    const dbEvents = events.map(event => {
-      const userId = req.user?.claims?.sub || null;
-      const sessionId = req.sessionID || null;
-
-      return {
-        userId,
-        sessionId,
-        eventType: event.type,
-        eventAction: 'action' in event ? event.action : null,
-        path: 'path' in event ? event.path : null,
-        referrer: 'referrer' in event ? event.referrer : null,
-        articleId: 'articleId' in event ? event.articleId : null,
-        articleTitle: 'articleTitle' in event ? event.articleTitle : null,
-        category: ('category' in event ? event.category : 
-                 ('articleCategory' in event ? event.articleCategory : null)),
-        label: 'label' in event ? event.label : null,
-        value: 'value' in event ? event.value : 
-              ('readTime' in event ? event.readTime : null),
-        clientTimestamp: new Date(event.timestamp)
-      };
+    res.status(200).json({ success: true });
+  } catch (error: any) {
+    logger.error('Error processing analytics events', { error: error.message });
+    
+    // Send appropriate error response
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        error: 'Invalid request data',
+        details: error.errors
+      });
+    }
+    
+    res.status(500).json({
+      error: 'Server error',
+      message: 'Failed to process analytics events'
     });
-    
-    // Store events in database
-    await db.insert(analytics).values(dbEvents);
-    
-    res.status(200).json({ message: `Successfully stored ${events.length} events` });
-  } catch (error) {
-    console.error('Error storing analytics events:', error);
-    res.status(500).json({ message: 'Failed to store analytics events' });
   }
 });
 
@@ -56,54 +91,111 @@ router.post('/events', async (req, res) => {
  * 
  * Endpoint to get a summary of analytics data (for admin dashboards)
  */
-router.get('/summary', async (req, res) => {
+router.get('/summary', isAuthenticated, async (req, res) => {
   try {
-    // Get page view counts
-    const pageViews = await db
+    // Only allow admins to access this endpoint
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'Only administrators can access analytics summary'
+      });
+    }
+    
+    // Period selection (default to last 30 days)
+    const periodDays = parseInt(req.query.period as string) || 30;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - periodDays);
+    
+    // Get pageview stats
+    const pageviews = await db
       .select({
         path: analytics.path,
-        count: db.fn.count(analytics.id)
+        count: count(),
       })
       .from(analytics)
-      .where(eq(analytics.eventType, 'pageview'))
+      .where(
+        and(
+          eq(analytics.eventType, 'pageview'),
+          sql`${analytics.timestamp} >= ${startDate}`
+        )
+      )
       .groupBy(analytics.path)
-      .orderBy(db.desc(db.fn.count(analytics.id)));
+      .orderBy(desc(count()))
+      .limit(10);
     
-    // Get popular articles
-    const popularArticles = await db
+    // Get article view stats
+    const articleViews = await db
       .select({
         articleId: analytics.articleId,
         articleTitle: analytics.articleTitle,
-        count: db.fn.count(analytics.id)
+        views: count(),
       })
       .from(analytics)
-      .where(and(
-        eq(analytics.eventType, 'article'),
-        eq(analytics.eventAction, 'view')
-      ))
+      .where(
+        and(
+          eq(analytics.eventType, 'article'),
+          eq(analytics.eventAction, 'view'),
+          sql`${analytics.timestamp} >= ${startDate}`
+        )
+      )
       .groupBy(analytics.articleId, analytics.articleTitle)
-      .orderBy(db.desc(db.fn.count(analytics.id)))
+      .orderBy(desc(count()))
       .limit(10);
     
-    // Get event counts by type
-    const eventCounts = await db
+    // Get article engagement metrics (likes, shares, comments)
+    const articleEngagement = await db
       .select({
-        eventType: analytics.eventType,
-        count: db.fn.count(analytics.id)
+        articleId: analytics.articleId,
+        articleTitle: analytics.articleTitle,
+        action: analytics.eventAction,
+        count: count(),
       })
       .from(analytics)
-      .groupBy(analytics.eventType)
-      .orderBy(db.desc(db.fn.count(analytics.id)));
+      .where(
+        and(
+          eq(analytics.eventType, 'article'),
+          sql`${analytics.eventAction} IN ('like', 'share', 'comment')`,
+          sql`${analytics.timestamp} >= ${startDate}`
+        )
+      )
+      .groupBy(analytics.articleId, analytics.articleTitle, analytics.eventAction)
+      .orderBy(desc(count()))
+      .limit(15);
     
-    res.status(200).json({
-      pageViews,
-      popularArticles,
-      eventCounts
+    // Get referral sources
+    const referralSources = await db
+      .select({
+        referrer: analytics.referrer,
+        count: count(),
+      })
+      .from(analytics)
+      .where(
+        and(
+          eq(analytics.eventType, 'pageview'),
+          sql`${analytics.referrer} IS NOT NULL`,
+          sql`${analytics.timestamp} >= ${startDate}`
+        )
+      )
+      .groupBy(analytics.referrer)
+      .orderBy(desc(count()))
+      .limit(10);
+    
+    res.json({
+      period: periodDays,
+      pageviews,
+      articleViews,
+      articleEngagement,
+      referralSources
     });
-  } catch (error) {
-    console.error('Error fetching analytics summary:', error);
-    res.status(500).json({ message: 'Failed to fetch analytics summary' });
+    
+  } catch (error: any) {
+    logger.error('Error fetching analytics summary', { error: error.message });
+    res.status(500).json({
+      error: 'Server error',
+      message: 'Failed to fetch analytics summary'
+    });
   }
 });
 
+// Export routes
 export default router;
