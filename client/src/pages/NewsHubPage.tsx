@@ -24,15 +24,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { Pagination } from "@/components/ui/pagination";
 import {
   Tooltip,
   TooltipContent,
@@ -40,6 +32,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Post } from '@shared/schema';
+
+// Define a safer version of Post type to handle potentially missing type definitions
+interface SafePost extends Post {
+  tags?: string[];
+}
 
 // News Hub Page component
 const NewsHubPage: React.FC = () => {
@@ -78,8 +75,8 @@ const NewsHubPage: React.FC = () => {
     retryDelay: 1000,
   });
 
-  // Make sure we have an array of posts
-  const allPosts = Array.isArray(postsData) ? postsData : [];
+  // Make sure we have an array of posts with proper typing
+  const allPosts: SafePost[] = Array.isArray(postsData) ? postsData : [];
   
   useEffect(() => {
     if (allPosts.length > 0) {
@@ -102,17 +99,17 @@ const NewsHubPage: React.FC = () => {
     if (activeTab !== 'all') {
       if (activeTab === 'ai') {
         filtered = filtered.filter(post => 
-          post.tags?.some(tag => tag.toLowerCase().includes('ai')) ||
+          post.tags?.some((tag: Tag) => tag.toLowerCase().includes('ai')) ||
           (post.category && post.category.toLowerCase().includes('ai'))
         );
       } else if (activeTab === 'business') {
         filtered = filtered.filter(post => 
-          post.tags?.some(tag => tag.toLowerCase().includes('business')) ||
+          post.tags?.some((tag: Tag) => tag.toLowerCase().includes('business')) ||
           (post.category && post.category.toLowerCase().includes('business'))
         );
       } else if (activeTab === 'tech') {
         filtered = filtered.filter(post => 
-          post.tags?.some(tag => tag.toLowerCase().includes('tech')) ||
+          post.tags?.some((tag: Tag) => tag.toLowerCase().includes('tech')) ||
           (post.category && post.category.toLowerCase().includes('tech'))
         );
       }
@@ -125,7 +122,7 @@ const NewsHubPage: React.FC = () => {
         post.title.toLowerCase().includes(query) ||
         (post.summary && post.summary.toLowerCase().includes(query)) ||
         (post.content && post.content.toLowerCase().includes(query)) ||
-        (post.tags && post.tags.some(tag => tag.toLowerCase().includes(query)))
+        (post.tags && post.tags.some((tag: Tag) => tag.toLowerCase().includes(query)))
       );
     }
 
@@ -411,72 +408,15 @@ const NewsHubPage: React.FC = () => {
               
               {/* Pagination */}
               {totalPages > 1 && (
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious 
-                        onClick={() => setPage(p => Math.max(1, p - 1))}
-                        disabled={page === 1}
-                        className={page === 1 ? 'pointer-events-none opacity-50' : ''}
-                      />
-                    </PaginationItem>
-                    
-                    {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
-                      let pageNumber;
-                      
-                      // First page
-                      if (i === 0) {
-                        pageNumber = 1;
-                      } 
-                      // Last page in pagination display
-                      else if (i === Math.min(5, totalPages) - 1) {
-                        pageNumber = totalPages;
-                      }
-                      // Middle pages
-                      else {
-                        const middleOffset = Math.floor(Math.min(5, totalPages) / 2);
-                        if (page <= middleOffset + 1) {
-                          pageNumber = i + 1;
-                        } else if (page >= totalPages - middleOffset) {
-                          pageNumber = totalPages - (Math.min(5, totalPages) - 1 - i);
-                        } else {
-                          pageNumber = page - middleOffset + i;
-                        }
-                      }
-                      
-                      // Show ellipsis
-                      if (
-                        (i === 1 && pageNumber > 2) ||
-                        (i === Math.min(5, totalPages) - 2 && pageNumber < totalPages - 1)
-                      ) {
-                        return (
-                          <PaginationItem key={`ellipsis-${i}`}>
-                            <PaginationEllipsis />
-                          </PaginationItem>
-                        );
-                      }
-                      
-                      return (
-                        <PaginationItem key={pageNumber}>
-                          <PaginationLink
-                            onClick={() => setPage(pageNumber)}
-                            isActive={page === pageNumber}
-                          >
-                            {pageNumber}
-                          </PaginationLink>
-                        </PaginationItem>
-                      );
-                    })}
-                    
-                    <PaginationItem>
-                      <PaginationNext 
-                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                        disabled={page === totalPages}
-                        className={page === totalPages ? 'pointer-events-none opacity-50' : ''}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
+                <Pagination
+                  currentPage={page - 1} // Our component is 0-indexed
+                  totalPages={totalPages}
+                  onPageChange={(newPage) => setPage(newPage + 1)} // Convert back to 1-indexed for our state
+                  showFirstLastButtons={true}
+                  siblingCount={1}
+                  className="mt-6"
+                  disabled={isLoading}
+                />
               )}
             </>
           )}
