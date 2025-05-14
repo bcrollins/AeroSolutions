@@ -3,6 +3,11 @@ import { z } from "zod";
 import { storage } from "../storage";
 import { logger } from "../utils/logger";
 import { isAuthenticated } from "../replitAuth";
+import { 
+  hasAccessToCourse, 
+  hasAccessToLesson, 
+  getAccessibleCourses 
+} from "../utils/subscriptionAccess";
 
 const router = express.Router();
 
@@ -51,9 +56,10 @@ router.get("/categories", async (req, res) => {
 });
 
 // Get specific AI course
-router.get("/:id", async (req, res) => {
+router.get("/:id", isAuthenticated, async (req, res) => {
   try {
     const courseId = parseInt(req.params.id);
+    const userId = req.user?.id;
     
     if (isNaN(courseId)) {
       return res.status(400).json({
@@ -71,6 +77,10 @@ router.get("/:id", async (req, res) => {
       });
     }
     
+    // Check if the user has access to this course
+    const hasAccess = await hasAccessToCourse(userId, courseId);
+    const hasFreeAccess = !hasAccess; // Used to determine which lessons to show
+
     // Get course modules and lessons
     const modules = await storage.getAiCourseModules(courseId);
     
@@ -78,9 +88,32 @@ router.get("/:id", async (req, res) => {
     const modulesWithLessons = await Promise.all(
       modules.map(async (module) => {
         const lessons = await storage.getAiCourseLessons(module.id);
+        
+        // If user doesn't have full access, determine which lessons they can access
+        if (hasFreeAccess) {
+          const accessibleLessons = await Promise.all(
+            lessons.map(async (lesson) => {
+              const canAccess = await hasAccessToLesson(userId, courseId, module.id, lesson.id);
+              return {
+                ...lesson,
+                isAccessible: canAccess,
+              };
+            })
+          );
+          
+          return {
+            ...module,
+            lessons: accessibleLessons,
+          };
+        }
+        
+        // If user has full access, mark all lessons as accessible
         return {
           ...module,
-          lessons,
+          lessons: lessons.map(lesson => ({
+            ...lesson,
+            isAccessible: true,
+          })),
         };
       })
     );
@@ -88,6 +121,7 @@ router.get("/:id", async (req, res) => {
     res.json({
       ...course,
       modules: modulesWithLessons,
+      hasFullAccess: hasAccess,
     });
   } catch (error: any) {
     logger.error("Error fetching AI course", { error: error.message });
@@ -99,9 +133,10 @@ router.get("/:id", async (req, res) => {
 });
 
 // Get specific lesson
-router.get("/lessons/:id", async (req, res) => {
+router.get("/lessons/:id", isAuthenticated, async (req, res) => {
   try {
     const lessonId = parseInt(req.params.id);
+    const userId = req.user?.id;
     
     if (isNaN(lessonId)) {
       return res.status(400).json({
@@ -118,8 +153,46 @@ router.get("/lessons/:id", async (req, res) => {
         message: "Lesson not found",
       });
     }
+    // Get the module this lesson belongs to
+    const module = await storage.getAiCourseModuleByLessonId(lessonId);
     
-    res.json(lesson);
+    if (!module) {
+      return res.status(404).json({
+        error: "Not Found",
+        message: "Lesson module not found",
+      });
+    }
+    
+    // Get the course this module belongs to
+    const course = await storage.getAiCourse(module.courseId);
+    
+    if (!course) {
+      return res.status(404).json({
+        error: "Not Found",
+        message: "Course not found",
+      });
+    }
+    
+    // Check if the user has access to this lesson
+    const hasAccess = await hasAccessToLesson(userId, module.courseId, module.id, lessonId);
+    
+    if (!hasAccess) {
+      return res.status(403).json({
+        error: "Forbidden",
+        message: "You don't have access to this lesson. Please upgrade your subscription to access this content.",
+        requiresSubscription: true,
+        courseId: module.courseId,
+        subscriptionInfo: {
+          url: "/pricing",
+        },
+      });
+    }
+    
+    res.json({
+      ...lesson,
+      courseId: module.courseId,
+      moduleId: module.id,
+    });
   } catch (error: any) {
     logger.error("Error fetching lesson", { error: error.message });
     res.status(500).json({
