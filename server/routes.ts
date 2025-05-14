@@ -11,6 +11,7 @@ import aiContentRoutes from "./routes/ai-content";
 import adminRoutes from "./routes/admin";
 import userOnboardingRoutes from "./routes/userOnboarding";
 import authRoutes from "./routes/auth";
+import analyticsRoutes from "./routes/analytics";
 import { storage } from "./storage";
 import { logger } from "./utils/logger";
 import { setupAuth } from "./replitAuth";
@@ -43,6 +44,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register User Onboarding routes
   app.use("/api/user/onboarding", userOnboardingRoutes);
+  
+  // Register Analytics routes (for subscription analytics)
+  app.use("/api/analytics", analyticsRoutes);
 
   // API route to fetch active subscription plans
   app.get("/api/subscription-plans", async (req, res) => {

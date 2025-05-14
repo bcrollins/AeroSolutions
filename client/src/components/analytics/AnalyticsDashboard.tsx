@@ -20,10 +20,12 @@ import {
   Activity,
   Globe,
   Zap,
-  Settings
+  Settings,
+  LineChart
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import SubscriptionAnalytics from './SubscriptionAnalytics';
+import SubscriptionEventsAnalytics from './SubscriptionEventsAnalytics';
 import UserAnalytics from './UserAnalytics';
 
 interface AnalyticsDashboardProps {
