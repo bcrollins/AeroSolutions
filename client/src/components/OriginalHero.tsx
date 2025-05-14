@@ -101,7 +101,7 @@ export default function OriginalHero() {
               animate="visible"
               custom={0}
             >
-              <span className="text-[#3B82F6] text-sm font-medium tracking-wider uppercase font-inter">Professional Web Development</span>
+              <span className="text-[#3B82F6] text-sm font-medium tracking-wider uppercase font-inter">Premium Subscription Services</span>
             </motion.div>
             
             <motion.h1 
@@ -111,7 +111,7 @@ export default function OriginalHero() {
               animate="visible"
               custom={1}
             >
-              Enterprise-Grade <span className="text-[#3B82F6]">Web Solutions</span> for Business Growth
+              AI Courses, <span className="text-[#3B82F6]">Digital Tools</span> & Web Development
             </motion.h1>
             
             <motion.p 
@@ -121,7 +121,7 @@ export default function OriginalHero() {
               animate="visible"
               custom={2}
             >
-              Transformative web development services designed for today's digital marketplace, delivering measurable business results.
+              Accelerate your skills and workflow with premium subscription plans for AI education, professional design tools, and complete web development services.
             </motion.p>
             
             <motion.p 
@@ -131,7 +131,7 @@ export default function OriginalHero() {
               animate="visible"
               custom={3}
             >
-              <span className="font-semibold">ROLLINSX</span> delivers full-stack web development with our unique guarantee: no payment until you're 100% satisfied. Based in Miami and built by developers who understand your business challenges, our platforms integrate seamlessly with your existing systems.
+              <span className="font-semibold">ROLLINSX</span> offers flexible monthly and annual subscriptions with a 16% discount on yearly plans. Access our complete ecosystem of AI training courses, professional-grade design tools, and comprehensive web development resources designed for today's digital creators.
             </motion.p>
             
             <motion.div 
@@ -141,19 +141,19 @@ export default function OriginalHero() {
               animate="visible"
               custom={4}
             >
-              <a 
-                href="#contact" 
+              <Link 
+                href="/subscriptionspage" 
                 className="bg-[#3B82F6] hover:bg-[#3B82F6]/90 text-[#1E3A8A] font-bold py-4 px-8 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_5px_15px_rgba(59,130,246,0.35)] font-inter"
-                aria-label="Get started with a custom web development solution"
+                aria-label="View all subscription plans"
               >
-                Get Started
-              </a>
+                View Plans
+              </Link>
               <a 
                 href="#platforms" 
                 className="bg-transparent hover:bg-white/10 text-white font-semibold py-4 px-8 rounded-lg border border-[#3B82F6]/30 transition-all duration-300 hover:scale-105 hover:border-[#3B82F6]/60 font-inter"
-                aria-label="Explore our web development platforms"
+                aria-label="Try free for 7 days"
               >
-                Explore Platforms
+                Try Free
               </a>
             </motion.div>
           </div>
