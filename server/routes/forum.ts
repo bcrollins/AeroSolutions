@@ -1,264 +1,586 @@
-import { Router, Request, Response } from 'express';
-import { storage } from '../storage';
-import { logger } from '../utils/logger';
-import { isAuthenticated } from '../middlewares/auth';
-import { z } from 'zod';
-import { validateRequest } from '../middlewares/validate';
-import { 
-  insertForumThreadSchema, 
-  insertForumReplySchema,
-} from '@shared/schema';
+import { Router } from "express";
+import { storage } from "../storage";
+import { z } from "zod";
+import { insertForumThreadSchema, insertForumReplySchema, insertForumLikeSchema } from "@shared/schema";
+import { isAuthenticated } from "../replitAuth";
+import WebSocket from "ws";
 
 const router = Router();
 
-// Validation schemas
-const threadIdParam = z.object({
-  id: z.coerce.number()
-});
+// WebSocket connections map to track active users
+const connections: Map<number, WebSocket> = new Map();
 
-const replyIdParam = z.object({
-  id: z.coerce.number()
-});
+export function setupForumWebSocket(wss: WebSocket.Server) {
+  wss.on('connection', (ws: WebSocket) => {
+    let userId: number | null = null;
 
-const getThreadsQuery = z.object({
-  category: z.string().optional(),
-  limit: z.coerce.number().optional()
-});
+    ws.on('message', async (message: string) => {
+      try {
+        const data = JSON.parse(message);
+        
+        // Handle authentication message
+        if (data.type === 'auth' && data.userId) {
+          userId = Number(data.userId);
+          connections.set(userId, ws);
+          console.log(`User ${userId} connected to forum WebSocket`);
+          
+          // Send unread notification count on connect
+          const unreadCount = await storage.getUnreadNotificationCount(userId);
+          ws.send(JSON.stringify({
+            type: 'unread_count',
+            count: unreadCount
+          }));
+        }
+      } catch (error) {
+        console.error('Error processing WebSocket message:', error);
+      }
+    });
 
-/**
- * @route GET /api/forum/threads
- * @desc Get forum threads, optionally filtered by category
- * @access Public
- */
-router.get('/threads', validateRequest({ query: getThreadsQuery }), async (req: Request, res: Response) => {
+    ws.on('close', () => {
+      if (userId) {
+        connections.delete(userId);
+        console.log(`User ${userId} disconnected from forum WebSocket`);
+      }
+    });
+  });
+}
+
+// Send notification to a user via WebSocket if they're connected
+export function sendNotification(userId: number, notification: any) {
+  const connection = connections.get(userId);
+  if (connection && connection.readyState === WebSocket.OPEN) {
+    connection.send(JSON.stringify({
+      type: 'notification',
+      data: notification
+    }));
+  }
+}
+
+// Get course-specific forum threads
+router.get('/courses/:courseId/threads', async (req, res) => {
   try {
-    const { category, limit } = req.query;
-    const threads = await storage.getForumThreads(
-      category as string | undefined, 
-      limit ? parseInt(limit as string) : undefined
-    );
-    res.json(threads);
+    const courseId = parseInt(req.params.courseId);
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const search = req.query.search as string;
+    
+    const result = await storage.getForumThreads(page, limit, {
+      courseId,
+      search,
+      approved: true // Only return approved threads
+    });
+    
+    res.json(result);
   } catch (error) {
-    logger.error('Error fetching forum threads', { error });
-    res.status(500).json({ error: 'Failed to fetch forum threads' });
+    console.error('Error fetching forum threads:', error);
+    res.status(500).json({ message: 'Failed to fetch forum threads' });
   }
 });
 
-/**
- * @route GET /api/forum/threads/:id
- * @desc Get a specific forum thread with its replies
- * @access Public
- */
-router.get('/threads/:id', validateRequest({ params: threadIdParam }), async (req: Request, res: Response) => {
+// Get all forum threads (with optional category filter)
+router.get('/threads', async (req, res) => {
   try {
-    const { id } = req.params;
-    const thread = await storage.getForumThreadById(parseInt(id));
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const category = req.query.category as string;
+    const search = req.query.search as string;
     
-    if (!thread) {
-      return res.status(404).json({ error: 'Thread not found' });
+    const result = await storage.getForumThreads(page, limit, {
+      category,
+      search,
+      approved: true // Only return approved threads
+    });
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error fetching forum threads:', error);
+    res.status(500).json({ message: 'Failed to fetch forum threads' });
+  }
+});
+
+// Get threads for moderation (admin only)
+router.get('/moderation/threads', isAuthenticated, async (req: any, res) => {
+  try {
+    // Check if user is admin
+    const userId = req.user.claims?.sub;
+    const user = await storage.getUser(userId);
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ message: 'Forbidden: Admin access required' });
     }
     
-    // Increment view count
-    await storage.incrementThreadViews(thread.id);
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const approved = req.query.approved === 'true';
+    const rejected = req.query.rejected === 'true';
+    const pending = req.query.pending === 'true';
     
-    // Get replies
-    const replies = await storage.getForumRepliesByThreadId(thread.id);
+    let filters: any = {};
     
-    // Get author details
-    const author = await storage.getUser(thread.userId);
+    if (pending) {
+      filters.approved = false;
+    } else if (approved) {
+      filters.approved = true;
+    } else if (rejected) {
+      filters.rejected = true;
+    }
     
-    // Get reply authors
-    const replyAuthors = await Promise.all(
-      replies.map(async (reply) => {
-        const author = await storage.getUser(reply.userId);
-        return {
-          id: author?.id,
-          username: author?.username,
-          profileImageUrl: author?.profileImageUrl
-        };
-      })
-    );
+    const result = await storage.getForumThreads(page, limit, filters);
     
-    // Format thread with replies and authors
-    const threadWithReplies = {
-      ...thread,
-      author: {
-        id: author?.id,
-        username: author?.username,
-        profileImageUrl: author?.profileImageUrl
-      },
-      replies: replies.map((reply, index) => ({
-        ...reply,
-        author: replyAuthors[index]
-      }))
-    };
-    
-    res.json(threadWithReplies);
+    res.json(result);
   } catch (error) {
-    logger.error('Error fetching forum thread', { error, threadId: req.params.id });
-    res.status(500).json({ error: 'Failed to fetch forum thread' });
+    console.error('Error fetching threads for moderation:', error);
+    res.status(500).json({ message: 'Failed to fetch threads for moderation' });
   }
 });
 
-/**
- * @route POST /api/forum/threads
- * @desc Create a new forum thread
- * @access Private
- */
-router.post('/threads', isAuthenticated, validateRequest({ 
-  body: insertForumThreadSchema.extend({
-    title: z.string().min(5).max(200),
-    content: z.string().min(20),
-    category: z.string().min(2)
-  })
-}), async (req: Request, res: Response) => {
+// Get a specific thread with its replies
+router.get('/threads/:threadId', async (req, res) => {
   try {
-    const userId = (req.user as any).id;
-    const { title, content, tags, category } = req.body;
-    
-    const threadData = {
-      userId,
-      title,
-      content,
-      tags: tags || [],
-      category,
-      isPinned: false,
-      isLocked: false
-    };
-    
-    const thread = await storage.createForumThread(threadData);
-    
-    res.status(201).json(thread);
-  } catch (error) {
-    logger.error('Error creating forum thread', { error, userId: (req.user as any).id });
-    res.status(500).json({ error: 'Failed to create forum thread' });
-  }
-});
-
-/**
- * @route POST /api/forum/threads/:id/replies
- * @desc Reply to a forum thread
- * @access Private
- */
-router.post('/threads/:id/replies', isAuthenticated, validateRequest({ 
-  params: threadIdParam,
-  body: insertForumReplySchema.extend({
-    content: z.string().min(5),
-    parentReplyId: z.number().optional()
-  })
-}), async (req: Request, res: Response) => {
-  try {
-    const threadId = parseInt(req.params.id);
-    const userId = (req.user as any).id;
-    const { content, parentReplyId } = req.body;
-    
-    // Check if thread exists and is not locked
+    const threadId = parseInt(req.params.threadId);
     const thread = await storage.getForumThreadById(threadId);
     
     if (!thread) {
-      return res.status(404).json({ error: 'Thread not found' });
+      return res.status(404).json({ message: 'Thread not found' });
     }
     
-    if (thread.isLocked) {
-      return res.status(403).json({ error: 'Thread is locked' });
-    }
-    
-    // If there's a parent reply, check if it exists
-    if (parentReplyId) {
-      const replies = await storage.getForumRepliesByThreadId(threadId);
-      const parentExists = replies.some(reply => reply.id === parentReplyId);
-      
-      if (!parentExists) {
-        return res.status(404).json({ error: 'Parent reply not found' });
+    // Only allow access to approved threads unless the user is the creator or an admin
+    if (!thread.isApproved) {
+      if (req.isAuthenticated()) {
+        const userId = req.user.claims?.sub;
+        const user = await storage.getUser(userId);
+        
+        if (thread.userId !== Number(userId) && user?.role !== 'admin') {
+          return res.status(403).json({ message: 'Thread awaiting moderation' });
+        }
+      } else {
+        return res.status(403).json({ message: 'Thread awaiting moderation' });
       }
     }
     
-    // Create reply
-    const replyData = {
-      threadId,
-      userId,
-      content,
-      isAcceptedAnswer: false,
-      parentReplyId
-    };
+    // Get thread replies (paginated)
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
     
-    const reply = await storage.createForumReply(replyData);
+    // Check if user is admin or thread creator to show unapproved replies
+    let includeUnapproved = false;
+    if (req.isAuthenticated()) {
+      const userId = req.user.claims?.sub;
+      const user = await storage.getUser(userId);
+      includeUnapproved = thread.userId === Number(userId) || user?.role === 'admin';
+    }
     
-    // Update thread's lastReplyAt timestamp (done by database trigger if possible)
-    // Or do it manually here if needed
+    const { replies, total } = await storage.getForumReplies(threadId, page, limit, includeUnapproved);
     
-    res.status(201).json(reply);
-  } catch (error) {
-    logger.error('Error creating forum reply', { 
-      error, 
-      threadId: req.params.id, 
-      userId: (req.user as any).id 
+    // Get author info
+    const author = await storage.getUser(thread.userId);
+    const authorActivity = await storage.getUserForumActivity(thread.userId);
+    
+    const replyAuthors = new Map();
+    for (const reply of replies) {
+      if (!replyAuthors.has(reply.userId)) {
+        const user = await storage.getUser(reply.userId);
+        replyAuthors.set(reply.userId, {
+          id: user.id,
+          username: user.username,
+          profileImageUrl: user.profileImageUrl
+        });
+      }
+    }
+    
+    res.json({
+      thread,
+      replies,
+      total,
+      author: {
+        id: author.id,
+        username: author.username,
+        profileImageUrl: author.profileImageUrl,
+        threadCount: authorActivity?.threadCount || 0,
+        replyCount: authorActivity?.replyCount || 0,
+        acceptedAnswers: authorActivity?.acceptedAnswers || 0
+      },
+      replyAuthors: Object.fromEntries(replyAuthors)
     });
-    res.status(500).json({ error: 'Failed to create forum reply' });
+  } catch (error) {
+    console.error('Error fetching thread details:', error);
+    res.status(500).json({ message: 'Failed to fetch thread details' });
   }
 });
 
-/**
- * @route PUT /api/forum/replies/:id/accept
- * @desc Mark a reply as accepted answer (thread creator or admin only)
- * @access Private
- */
-router.put('/replies/:id/accept', isAuthenticated, validateRequest({ 
-  params: replyIdParam
-}), async (req: Request, res: Response) => {
+// Create a new thread
+router.post('/threads', isAuthenticated, async (req: any, res) => {
   try {
-    const replyId = parseInt(req.params.id);
-    const userId = (req.user as any).id;
+    const userId = Number(req.user.claims?.sub);
     
-    // Get the reply
-    const replies = await storage.getForumRepliesByThreadId(-1); // This is a workaround, we need a method to get a reply by id
-    const reply = replies.find(r => r.id === replyId);
+    // Validate request body
+    const threadSchema = insertForumThreadSchema.extend({
+      courseId: z.number().optional(),
+      category: z.string().min(1).max(50),
+      title: z.string().min(5).max(200),
+      content: z.string().min(20).max(10000),
+      tags: z.array(z.string()).optional()
+    });
     
-    if (!reply) {
-      return res.status(404).json({ error: 'Reply not found' });
+    const validatedData = threadSchema.parse({
+      ...req.body,
+      userId
+    });
+    
+    // Create the thread
+    const newThread = await storage.createForumThread(validatedData);
+    
+    if (!newThread) {
+      return res.status(500).json({ message: 'Failed to create thread' });
     }
     
-    // Get the thread to check if user is the creator
-    const thread = await storage.getForumThreadById(reply.threadId);
+    res.status(201).json(newThread);
+  } catch (error) {
+    console.error('Error creating forum thread:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: 'Validation error', errors: error.errors });
+    }
+    res.status(500).json({ message: 'Failed to create thread' });
+  }
+});
+
+// Create a reply to a thread
+router.post('/threads/:threadId/replies', isAuthenticated, async (req: any, res) => {
+  try {
+    const threadId = parseInt(req.params.threadId);
+    const userId = Number(req.user.claims?.sub);
     
+    // Check if thread exists and is not locked
+    const thread = await storage.getForumThreadById(threadId);
     if (!thread) {
-      return res.status(404).json({ error: 'Thread not found' });
+      return res.status(404).json({ message: 'Thread not found' });
+    }
+    
+    if (thread.isLocked) {
+      return res.status(403).json({ message: 'Thread is locked and cannot receive new replies' });
+    }
+    
+    // Validate request body
+    const replySchema = insertForumReplySchema.extend({
+      content: z.string().min(5).max(5000),
+      parentReplyId: z.number().optional()
+    });
+    
+    const validatedData = replySchema.parse({
+      ...req.body,
+      threadId,
+      userId
+    });
+    
+    // Check if parent reply exists if provided
+    if (validatedData.parentReplyId) {
+      const parentReply = await storage.getReplyById(validatedData.parentReplyId);
+      if (!parentReply || parentReply.threadId !== threadId) {
+        return res.status(400).json({ message: 'Invalid parent reply' });
+      }
+    }
+    
+    // Create the reply
+    const newReply = await storage.createForumReply(validatedData);
+    
+    if (!newReply) {
+      return res.status(500).json({ message: 'Failed to create reply' });
+    }
+    
+    // Get author info for the response
+    const author = await storage.getUser(userId);
+    
+    res.status(201).json({
+      ...newReply,
+      author: {
+        id: author.id,
+        username: author.username,
+        profileImageUrl: author.profileImageUrl
+      }
+    });
+  } catch (error) {
+    console.error('Error creating forum reply:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: 'Validation error', errors: error.errors });
+    }
+    res.status(500).json({ message: 'Failed to create reply' });
+  }
+});
+
+// Like/unlike a thread or reply
+router.post('/like', isAuthenticated, async (req: any, res) => {
+  try {
+    const userId = Number(req.user.claims?.sub);
+    
+    // Validate request body
+    const likeSchema = insertForumLikeSchema.extend({
+      threadId: z.number().optional(),
+      replyId: z.number().optional()
+    }).refine(data => data.threadId || data.replyId, {
+      message: 'Either threadId or replyId must be provided'
+    });
+    
+    const validatedData = likeSchema.parse({
+      ...req.body,
+      userId
+    });
+    
+    // Check if thread or reply exists
+    if (validatedData.threadId) {
+      const thread = await storage.getForumThreadById(validatedData.threadId);
+      if (!thread) {
+        return res.status(404).json({ message: 'Thread not found' });
+      }
+    } else if (validatedData.replyId) {
+      const reply = await storage.getReplyById(validatedData.replyId);
+      if (!reply) {
+        return res.status(404).json({ message: 'Reply not found' });
+      }
+    }
+    
+    // Toggle like
+    const like = await storage.likeForumContent(validatedData);
+    
+    res.json({ liked: !!like });
+  } catch (error) {
+    console.error('Error liking forum content:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: 'Validation error', errors: error.errors });
+    }
+    res.status(500).json({ message: 'Failed to like content' });
+  }
+});
+
+// Moderate a thread (admin only)
+router.post('/moderation/threads/:threadId', isAuthenticated, async (req: any, res) => {
+  try {
+    const threadId = parseInt(req.params.threadId);
+    const moderatorId = Number(req.user.claims?.sub);
+    
+    // Check if user is admin
+    const user = await storage.getUser(moderatorId);
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ message: 'Forbidden: Admin access required' });
+    }
+    
+    // Validate request body
+    const moderationSchema = z.object({
+      isApproved: z.boolean(),
+      isRejected: z.boolean(),
+      moderationNotes: z.string().optional()
+    }).refine(data => !(data.isApproved && data.isRejected), {
+      message: "A thread cannot be both approved and rejected"
+    });
+    
+    const validatedData = moderationSchema.parse(req.body);
+    
+    // Update thread moderation status
+    const updatedThread = await storage.moderateThread(threadId, {
+      ...validatedData,
+      moderatedBy: moderatorId
+    });
+    
+    if (!updatedThread) {
+      return res.status(404).json({ message: 'Thread not found' });
+    }
+    
+    // Notify thread author
+    const notification = await storage.createForumNotification({
+      userId: updatedThread.userId,
+      threadId: updatedThread.id,
+      type: validatedData.isApproved ? 'thread_approved' : 'thread_rejected',
+      message: validatedData.isApproved 
+        ? `Your thread "${updatedThread.title}" has been approved` 
+        : `Your thread "${updatedThread.title}" has been rejected`
+    });
+    
+    // Send real-time notification if user is connected
+    if (notification) {
+      sendNotification(updatedThread.userId, notification);
+    }
+    
+    res.json(updatedThread);
+  } catch (error) {
+    console.error('Error moderating thread:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: 'Validation error', errors: error.errors });
+    }
+    res.status(500).json({ message: 'Failed to moderate thread' });
+  }
+});
+
+// Moderate a reply (admin only)
+router.post('/moderation/replies/:replyId', isAuthenticated, async (req: any, res) => {
+  try {
+    const replyId = parseInt(req.params.replyId);
+    const moderatorId = Number(req.user.claims?.sub);
+    
+    // Check if user is admin
+    const user = await storage.getUser(moderatorId);
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ message: 'Forbidden: Admin access required' });
+    }
+    
+    // Validate request body
+    const moderationSchema = z.object({
+      isApproved: z.boolean(),
+      isRejected: z.boolean(),
+      moderationNotes: z.string().optional()
+    }).refine(data => !(data.isApproved && data.isRejected), {
+      message: "A reply cannot be both approved and rejected"
+    });
+    
+    const validatedData = moderationSchema.parse(req.body);
+    
+    // Update reply moderation status
+    const updatedReply = await storage.moderateReply(replyId, {
+      ...validatedData,
+      moderatedBy: moderatorId
+    });
+    
+    if (!updatedReply) {
+      return res.status(404).json({ message: 'Reply not found' });
+    }
+    
+    // Notify reply author
+    const notification = await storage.createForumNotification({
+      userId: updatedReply.userId,
+      threadId: updatedReply.threadId,
+      replyId: updatedReply.id,
+      type: validatedData.isApproved ? 'reply_approved' : 'reply_rejected',
+      message: validatedData.isApproved 
+        ? 'Your reply has been approved' 
+        : 'Your reply has been rejected'
+    });
+    
+    // Send real-time notification if user is connected
+    if (notification) {
+      sendNotification(updatedReply.userId, notification);
+    }
+    
+    res.json(updatedReply);
+  } catch (error) {
+    console.error('Error moderating reply:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: 'Validation error', errors: error.errors });
+    }
+    res.status(500).json({ message: 'Failed to moderate reply' });
+  }
+});
+
+// Mark a reply as accepted answer (thread creator or admin only)
+router.post('/threads/:threadId/replies/:replyId/accept', isAuthenticated, async (req: any, res) => {
+  try {
+    const threadId = parseInt(req.params.threadId);
+    const replyId = parseInt(req.params.replyId);
+    const userId = Number(req.user.claims?.sub);
+    
+    // Check if thread exists and user has permission
+    const thread = await storage.getForumThreadById(threadId);
+    if (!thread) {
+      return res.status(404).json({ message: 'Thread not found' });
     }
     
     // Check if user is thread creator or admin
     const user = await storage.getUser(userId);
-    
     if (thread.userId !== userId && user?.role !== 'admin') {
-      return res.status(403).json({ error: 'Only thread creators or admins can mark answers as accepted' });
+      return res.status(403).json({ message: 'Only thread creator or admin can mark accepted answer' });
     }
     
-    // Mark as accepted
-    const updatedReply = await storage.markReplyAsAcceptedAnswer(replyId);
+    // Check if reply exists and belongs to the thread
+    const reply = await storage.getReplyById(replyId);
+    if (!reply || reply.threadId !== threadId) {
+      return res.status(404).json({ message: 'Reply not found or does not belong to this thread' });
+    }
+    
+    // Toggle accepted answer status
+    const updatedReply = await storage.toggleAcceptedAnswer(replyId);
+    
+    if (!updatedReply) {
+      return res.status(500).json({ message: 'Failed to update reply' });
+    }
+    
+    // If reply was accepted, notify reply author
+    if (updatedReply.isAcceptedAnswer && updatedReply.userId !== userId) {
+      const notification = await storage.createForumNotification({
+        userId: updatedReply.userId,
+        threadId: threadId,
+        replyId: replyId,
+        type: 'accepted_answer',
+        message: 'Your reply has been marked as the accepted answer'
+      });
+      
+      // Send real-time notification if user is connected
+      if (notification) {
+        sendNotification(updatedReply.userId, notification);
+      }
+      
+      // Update user's forum activity to include accepted answer
+      await storage.updateUserForumActivity(updatedReply.userId);
+    }
     
     res.json(updatedReply);
   } catch (error) {
-    logger.error('Error accepting forum reply', { 
-      error, 
-      replyId: req.params.id, 
-      userId: (req.user as any).id 
-    });
-    res.status(500).json({ error: 'Failed to accept forum reply' });
+    console.error('Error accepting answer:', error);
+    res.status(500).json({ message: 'Failed to accept answer' });
   }
 });
 
-/**
- * @route GET /api/forum/user/activity
- * @desc Get a user's forum activity (threads and replies)
- * @access Private
- */
-router.get('/user/activity', isAuthenticated, async (req: Request, res: Response) => {
+// Get notifications for the current user
+router.get('/notifications', isAuthenticated, async (req: any, res) => {
   try {
-    const userId = (req.user as any).id;
-    const activity = await storage.getUserForumActivity(userId);
-    res.json(activity);
+    const userId = Number(req.user.claims?.sub);
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const unreadOnly = req.query.unread === 'true';
+    
+    const { notifications, total } = await storage.getUserNotifications(userId, page, limit, unreadOnly);
+    
+    res.json({ notifications, total });
   } catch (error) {
-    logger.error('Error fetching user forum activity', { error, userId: (req.user as any).id });
-    res.status(500).json({ error: 'Failed to fetch user forum activity' });
+    console.error('Error fetching notifications:', error);
+    res.status(500).json({ message: 'Failed to fetch notifications' });
+  }
+});
+
+// Mark notifications as read
+router.post('/notifications/read', isAuthenticated, async (req: any, res) => {
+  try {
+    const userId = Number(req.user.claims?.sub);
+    const { notificationIds } = req.body;
+    
+    // Mark specific notifications or all notifications as read
+    const updatedCount = await storage.markNotificationsAsRead(userId, notificationIds);
+    
+    res.json({ success: true, count: updatedCount });
+  } catch (error) {
+    console.error('Error marking notifications as read:', error);
+    res.status(500).json({ message: 'Failed to mark notifications as read' });
+  }
+});
+
+// Get top contributors
+router.get('/top-contributors', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 10;
+    
+    const contributors = await storage.getTopContributors(limit);
+    
+    // Enrich with user details
+    const enrichedContributors = await Promise.all(
+      contributors.map(async (contributor) => {
+        const user = await storage.getUser(contributor.userId);
+        return {
+          ...contributor,
+          username: user?.username,
+          profileImageUrl: user?.profileImageUrl
+        };
+      })
+    );
+    
+    res.json(enrichedContributors);
+  } catch (error) {
+    console.error('Error fetching top contributors:', error);
+    res.status(500).json({ message: 'Failed to fetch top contributors' });
   }
 });
 

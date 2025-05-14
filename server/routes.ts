@@ -1,9 +1,10 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer } from "ws";
 import stripeRoutes from "./routes/stripe";
 import postsRoutes from "./routes/posts";
 import coursesRoutes from "./routes/courses";
-import forumRoutes from "./routes/forum";
+import forumRoutes, { setupForumWebSocket } from "./routes/forum";
 import mediaRoutes from "./routes/media";
 import contentGenerationRoutes from "./routes/content-generation";
 import contentRoutes from "./routes/content";
@@ -135,6 +136,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // Initialize WebSocket server for real-time features
+  const wss = new WebSocketServer({ 
+    server: httpServer,
+    path: '/ws'
+  });
+  
+  // Setup forum WebSocket functionality
+  setupForumWebSocket(wss);
+  
+  logger.info('WebSocket server initialized');
 
   return httpServer;
 }
