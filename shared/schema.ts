@@ -155,27 +155,34 @@ export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
 // User subscriptions schema
 export const userSubscriptions = pgTable("user_subscriptions", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
+  userId: varchar("user_id").notNull().references(() => users.id), // Changed to varchar for Replit Auth compatibility
   planId: integer("plan_id").notNull().references(() => subscriptionPlans.id),
-  status: text("status").notNull(), // 'active', 'canceled', 'past_due'
+  status: text("status").notNull(), // 'active', 'canceled', 'past_due', 'trial', 'expired'
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(), // Current price paid by user
+  billingCycle: text("billing_cycle").notNull(), // 'monthly', 'annual'
+  startDate: timestamp("start_date").defaultNow().notNull(), // When subscription started
+  endDate: timestamp("end_date"), // When subscription ends, if scheduled
   currentPeriodStart: timestamp("current_period_start").notNull(),
   currentPeriodEnd: timestamp("current_period_end").notNull(),
   cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false).notNull(),
+  canceledAt: timestamp("canceled_at"), // When user canceled their subscription
   stripeSubscriptionId: text("stripe_subscription_id").notNull(),
   stripeCustomerId: text("stripe_customer_id").notNull(),
+  trialStart: timestamp("trial_start"), // When the trial started, if applicable
+  trialEnd: timestamp("trial_end"), // When the trial ends, if applicable
+  trialEndDate: timestamp("trial_end_date"), // When the trial ended historically
+  trialConverted: boolean("trial_converted").default(false), // Whether the trial converted to paid
+  lastPaymentDate: timestamp("last_payment_date"), // Date of last successful payment
+  nextPaymentDate: timestamp("next_payment_date"), // Date of next expected payment
+  failedPaymentCount: integer("failed_payment_count").default(0), // Count of failed payment attempts
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const insertUserSubscriptionSchema = createInsertSchema(userSubscriptions).pick({
-  userId: true,
-  planId: true,
-  status: true,
-  currentPeriodStart: true,
-  currentPeriodEnd: true,
-  cancelAtPeriodEnd: true,
-  stripeSubscriptionId: true,
-  stripeCustomerId: true,
+export const insertUserSubscriptionSchema = createInsertSchema(userSubscriptions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 export type InsertUserSubscription = z.infer<typeof insertUserSubscriptionSchema>;
@@ -1151,6 +1158,28 @@ export const insertSubscriptionAnalyticsSchema = createInsertSchema(subscription
 
 export type SubscriptionAnalytic = typeof subscriptionAnalytics.$inferSelect;
 export type InsertSubscriptionAnalytic = z.infer<typeof insertSubscriptionAnalyticsSchema>;
+
+// Subscription events schema for tracking subscription lifecycle events
+export const subscriptionEvents = pgTable("subscription_events", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  subscriptionId: integer("subscription_id").references(() => userSubscriptions.id),
+  eventType: text("event_type").notNull(), // 'created', 'updated', 'canceled', 'trial_started', 'trial_ended', 'payment_succeeded', 'payment_failed'
+  previousStatus: text("previous_status"), // Previous subscription status if applicable
+  newStatus: text("new_status"), // New subscription status if applicable
+  metadata: json("metadata").$type<Record<string, any>>().default({}), // Additional event data
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertSubscriptionEventSchema = createInsertSchema(subscriptionEvents).omit({
+  id: true,
+  createdAt: true,
+  timestamp: true,
+});
+
+export type SubscriptionEvent = typeof subscriptionEvents.$inferSelect;
+export type InsertSubscriptionEvent = z.infer<typeof insertSubscriptionEventSchema>;
 
 // User retention messages schema
 export const userRetentionMessages = pgTable("user_retention_messages", {

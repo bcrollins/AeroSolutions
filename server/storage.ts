@@ -2617,6 +2617,96 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
+  
+  // Subscription events tracking
+  async createSubscriptionEvent(data: InsertSubscriptionEvent): Promise<SubscriptionEvent> {
+    try {
+      const [event] = await db
+        .insert(subscriptionEvents)
+        .values(data)
+        .returning();
+      return event;
+    } catch (error) {
+      console.error("Error creating subscription event:", error);
+      throw error;
+    }
+  }
+  
+  async getSubscriptionEventsByUser(userId: string, limit: number = 20): Promise<SubscriptionEvent[]> {
+    try {
+      return await db
+        .select()
+        .from(subscriptionEvents)
+        .where(eq(subscriptionEvents.userId, userId))
+        .orderBy(desc(subscriptionEvents.timestamp))
+        .limit(limit);
+    } catch (error) {
+      console.error(`Error getting subscription events for user ${userId}:`, error);
+      throw error;
+    }
+  }
+  
+  async getSubscriptionEventsByType(eventType: string, startDate: Date, endDate: Date, limit: number = 100): Promise<SubscriptionEvent[]> {
+    try {
+      return await db
+        .select()
+        .from(subscriptionEvents)
+        .where(
+          and(
+            eq(subscriptionEvents.eventType, eventType),
+            gte(subscriptionEvents.timestamp, startDate),
+            lte(subscriptionEvents.timestamp, endDate)
+          )
+        )
+        .orderBy(desc(subscriptionEvents.timestamp))
+        .limit(limit);
+    } catch (error) {
+      console.error(`Error getting subscription events of type ${eventType}:`, error);
+      throw error;
+    }
+  }
+  
+  async getSubscriptionConversionRate(startDate: Date, endDate: Date): Promise<number> {
+    try {
+      // Count total trials started in the period
+      const trialsStartedResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(subscriptionEvents)
+        .where(
+          and(
+            eq(subscriptionEvents.eventType, 'trial_started'),
+            gte(subscriptionEvents.timestamp, startDate),
+            lte(subscriptionEvents.timestamp, endDate)
+          )
+        );
+      
+      const trialsStarted = trialsStartedResult[0].count;
+      
+      if (trialsStarted === 0) {
+        return 0;
+      }
+      
+      // Count users who converted from trial to paid
+      const trialConversionsResult = await db
+        .select({ count: sql<number>`count(distinct "userId")` })
+        .from(subscriptionEvents)
+        .where(
+          and(
+            eq(subscriptionEvents.eventType, 'trial_converted'),
+            gte(subscriptionEvents.timestamp, startDate),
+            lte(subscriptionEvents.timestamp, endDate)
+          )
+        );
+      
+      const trialConversions = trialConversionsResult[0].count;
+      
+      // Calculate conversion rate as percentage
+      return (trialConversions / trialsStarted) * 100;
+    } catch (error) {
+      console.error("Error getting subscription conversion rate:", error);
+      throw error;
+    }
+  }
 }
 
 // Create a new instance of DatabaseStorage
