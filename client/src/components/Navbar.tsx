@@ -102,6 +102,8 @@ const Navbar: React.FC = () => {
     { name: 'AI Course Platform', path: '/ai-courses', description: 'Comprehensive AI learning platform with interactive courses and certifications' },
     { name: 'Course Catalog', path: '/ai-courses/catalog', description: 'Browse our extensive catalog of AI learning resources and courses' },
     { name: 'Digital Tools Suite', path: '/ai-tools', description: 'Suite of AI-powered tools for content creation, code assistance, analytics, design, and more' },
+    { name: 'Service Packages', path: '/service-packages', description: 'Explore our full-stack development service packages with no payment until satisfied' },
+    { name: 'Case Studies', path: '/case-studies', description: 'Browse our portfolio of successful web development projects across multiple industries' },
   ];
 
   return (
