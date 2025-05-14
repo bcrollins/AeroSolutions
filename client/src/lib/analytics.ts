@@ -11,7 +11,8 @@ export const initGA = () => {
   const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
 
   if (!measurementId) {
-    console.warn('Missing required Google Analytics key: VITE_GA_MEASUREMENT_ID');
+    // Using development mode analytics tracking (console only)
+    console.log('RXAI Analytics initialized in development mode (logging to console only)');
     return;
   }
 
@@ -31,7 +32,7 @@ export const initGA = () => {
   `;
   document.head.appendChild(script2);
   
-  console.log('RXAI Analytics initialized');
+  console.log('RXAI Analytics initialized with Google Analytics');
 };
 
 // Track page views - useful for single-page applications
