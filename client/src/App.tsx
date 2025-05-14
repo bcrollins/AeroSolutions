@@ -87,7 +87,6 @@ import ArticlesPage from "@/pages/ArticlesPage";
 import ArticleDetailPage from "@/pages/ArticleDetailPage";
 import NewsHubPage from "@/pages/NewsHubPage";
 import ContactPage from "@/pages/ContactPage";
-import SubscriptionsPage from "@/pages/SubscriptionsPage";
 
 export default function App() {
   const { t, i18n } = useTranslation();
@@ -362,7 +361,7 @@ export default function App() {
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
-              <SubscriptionsPage />
+              <PricingPage />
             </>
           )}
         </Route>
