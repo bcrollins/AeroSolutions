@@ -891,6 +891,22 @@ export default function App() {
             </>
           )}
         </Route>
+        
+        <Route path="/ai-courses/:courseId/lessons/:lessonId">
+          {(params) => (
+            <>
+              <Helmet>
+                <title>AI Course Lesson | ROLLINSX</title>
+                <meta name="description" content="Interactive AI course lesson with video content, practice exercises, and real-time feedback. Learn at your own pace with our comprehensive curriculum." />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href={`https://rollinsx.dev/ai-courses/${params.courseId}/lessons/${params.lessonId}`} />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <AiCourseLesson />
+            </>
+          )}
+        </Route>
 
         <Route path="/particle-background">
           {() => {
