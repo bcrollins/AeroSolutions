@@ -65,6 +65,9 @@ export const initAnalytics = () => {
   isInitialized = true;
 };
 
+// Alias for Google Analytics migration compatibility
+export const initGA = initAnalytics;
+
 /**
  * Track page view
  */
