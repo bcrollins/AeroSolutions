@@ -1,0 +1,30 @@
+Create a new “Articles” section for the Rollins X RXAI website, accessible via the navigation bar, styled to match the homepage’s dark theme, blue accents, and typography (Inter, 16px). Design the section with a 3-column grid layout for article cards, each featuring a 16:9 thumbnail (800x450px, WebP, <100KB), a title (blue, 20px, bold), and a 100-character description (white, 14px). Ensure cards stack vertically on mobile, with touch-friendly blue buttons. Add a full-width search bar with a blue border and autocomplete, plus category filters (AI, Development, Tools) as blue pill buttons above the grid. Implement infinite scroll with a blue “Load More” button fallback, ensuring <2-second page loads via lazy-loaded images and minified assets. Include a hero section for 1 featured article, with a large thumbnail and blue CTA button. Add a right sidebar with 5 trending articles, styled as blue-bordered cards, and a newsletter signup form styled as a blue card. Ensure WCAG 2.1 compliance with ARIA labels and blue focus states. Auto-generate and submit XML sitemaps to Google Search Console post-publishing.
+
+Create 25 SEO-optimized articles answering these questions:
+
+What Is Artificial Intelligence? A Beginner’s Guide for 2025
+How to Learn AI from Scratch: Your 2025 Step-by-Step Guide
+Best Online AI Courses for Beginners in 2025: Top Picks
+How to Use AI for Web Development: 2025 Tools & Tips
+What Is Machine Learning? How It Works in 2025
+How to Build an AI-Powered Website in 2025: Ultimate Guide
+Top AI Tools for Developers in 2025: Must-Have Software
+How to Optimize a Website for SEO in 2025: Proven Strategies
+What Is Deep Learning? Applications to Know in 2025
+How to Integrate AI into Your Business: 2025 Guide
+Best AI Programming Languages to Learn in 2025
+How to Use AI for Content Creation: 2025 Best Practices
+What Is NLP? Understanding Natural Language Processing in 2025
+How to Create an AI Chatbot for Your Website in 2025
+What Are the Ethical Issues in AI Development? 2025 Insights
+How to Use AI for Data Analysis: 2025 Tools & Techniques
+What Is Generative AI? Uses and Trends for 2025
+How to Optimize AI Models for Performance in 2025
+Best AI Certifications to Boost Your Career in 2025
+How to Use AI for SEO Keyword Research in 2025
+What Is Computer Vision? Top Uses in 2025
+How to Deploy AI Models on the Cloud: 2025 Guide
+Top AI Trends to Watch in 2025: What’s Next?
+How to Use AI for E-Commerce Websites in 2025
+What Is Reinforcement Learning? AI Basics for 2025
+Each article must be 1,500–2,500 words, structured with an introduction, H2/H3 subheadings, and a conclusion. Use the target question as the primary keyword in the title (50–60 characters), meta description (160 characters), and first paragraph. Incorporate related keywords naturally (e.g., “AI tools,” “web development trends”). Add FAQ schema in JSON-LD for 3–5 FAQs, styled as collapsible blue chevrons. Include a clickable table of contents, styled as a sticky left sidebar with blue links. Embed 3 high-quality images (charts, screenshots, WebP, <100KB) with descriptive alt text, styled with dark backgrounds and blue accents. Add 2–3 internal links to Rollins X courses, tools, or development services (e.g., “Learn more in our AI for Business course”), styled as blue inline text. End with a CTA styled like the “Try Free” button (e.g., “Start your free trial with Rollins X to master AI today”). Use a professional, engaging tone like the New York Times, explaining jargon clearly. Include a summary box with key takeaways, styled with a blue border, above the introduction. Add a moderated comment section, social sharing buttons (X, LinkedIn) as blue icons, and a blue progress bar at the top. Ensure articles are scannable with bullet points and examples, and support voice narration with a blue play button.
