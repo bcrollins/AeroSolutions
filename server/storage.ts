@@ -56,9 +56,9 @@ import {
   courseCertificates,
   type CourseCertificate, type InsertCourseCertificate,
   // Analytics imports
-  pageViews, analyticsEvents, subscriptionAnalytics, subscriptionEvents,
+  pageViews, analytics, subscriptionAnalytics, subscriptionEvents,
   type PageView, type InsertPageView,
-  type AnalyticsEvent, type InsertAnalyticsEvent,
+  type Analytics, type InsertAnalytics,
   type SubscriptionAnalytic, type InsertSubscriptionAnalytic,
   type SubscriptionEvent, type InsertSubscriptionEvent
 } from "@shared/schema";
@@ -70,6 +70,9 @@ export interface IStorage {
   // User methods for Replit Auth
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: InsertUser): Promise<User>;
+  
+  // Sample data initialization
+  initSampleData(): Promise<void>;
   
   // Dashboard methods
   getUserEnrollments(userId: string): Promise<any[]>;

@@ -33,13 +33,16 @@ function getHealthStatus() {
  * for deployment health checks
  */
 export function healthCheckMiddleware(req: Request, res: Response, next: NextFunction) {
-  // Special handling for root path
+  // Special handling for root path - always respond to it for health checks
+  // but only with JSON if it's an API call
   if (req.path === '/') {
-    // If request accepts JSON but not HTML, it's likely a health check
-    if ((req.get('Accept') === 'application/json') || 
+    // If it's a HEAD request or specifically wants JSON, treat as health check
+    if (req.method === 'HEAD' || 
+        req.get('Accept') === 'application/json' || 
         (req.accepts('json') && !req.accepts('html'))) {
       return res.status(200).json(getHealthStatus());
     }
+    // For GET requests to root that accept HTML, we'll let the frontend router handle it
   }
   
   // Special handling for specific health check endpoints
