@@ -397,7 +397,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
             const price = plan.price || '$0.00';
             const isCurrentPlan = currentPlan?.id === plan.id;
             const accent = getAccentColor(plan.name);
-            const gradient = planGradients[plan.name as keyof typeof planGradients] || '';
+            const gradient = getPlanGradient(plan.name);
             const buttonGradient = getButtonColor(plan.name, plan.isPopular);
             
             // Set up animations with staggered delay based on index
