@@ -88,6 +88,7 @@ import ArticleDetailPage from "@/pages/ArticleDetailPage";
 import NewsHubPage from "@/pages/NewsHubPage";
 import ContactPage from "@/pages/ContactPage";
 import LearnAI from "@/pages/LearnAI";
+import CoursesDashboard from "@/pages/CoursesDashboard";
 
 export default function App() {
   const { t, i18n } = useTranslation();
@@ -376,6 +377,22 @@ export default function App() {
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
               <LearnAI />
+            </>
+          )}
+        </Route>
+        
+        {/* Course Dashboard for subscribers */}
+        <Route path="/courses/dashboard">
+          {() => (
+            <>
+              <Helmet>
+                <title>Course Dashboard | RXAI Learning Platform</title>
+                <meta name="description" content="Track your progress, access course materials, and interact with the AI learning community on the RXAI platform." />
+                <meta name="robots" content="noindex, nofollow" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <CoursesDashboard />
             </>
           )}
         </Route>
