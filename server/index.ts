@@ -7,7 +7,7 @@ import helmet from "helmet";
 import { authMiddleware } from "./utils/auth";
 import { cachingMiddleware, conditionalRequestMiddleware } from "./utils/caching";
 import { apiRateLimiter, authRateLimiter, defaultRateLimiter } from "./utils/rate-limiting";
-import { healthCheckMiddleware } from "./middlewares/healthCheckMiddleware";
+import { healthCheckMiddleware, getHealthStatus } from "./middlewares/healthCheckMiddleware";
 import compression from "express-compression";
 import fs from "fs/promises";
 import path from "path";
@@ -39,40 +39,32 @@ const app = express();
 // This ensures health checks are processed immediately and without authentication
 app.use(healthCheckMiddleware);
 
-// Add explicit health check endpoints to ensure deployment health checks pass
+// These explicit health check endpoints are deliberately redundant
+// with the healthCheckMiddleware to ensure deployment health checks never fail
+// even if middleware registration has issues.
+
+// Explicit /health endpoint (fallback in case middleware fails)
 app.get('/health', (req, res) => {
-  return res.status(200).json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    service: 'RXAI Knowledge Hub',
-    version: '1.0.0'
-  });
+  res.status(200).json(getHealthStatus());
 });
 
+// Explicit /deployment-health endpoint (fallback in case middleware fails)
 app.get('/deployment-health', (req, res) => {
-  return res.status(200).json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    service: 'RXAI Knowledge Hub',
-    version: '1.0.0'
-  });
+  res.status(200).json(getHealthStatus());
 });
 
-// Root path special handling for health checks
+// Explicit HEAD handler for root path (fallback in case middleware fails)
 app.head('/', (req, res) => {
-  return res.status(200).end();
+  res.status(200).end();
 });
 
-// Also handle JSON-specific GET requests at root
+// Explicit JSON handler for root path (fallback in case middleware fails)
 app.get('/', (req, res, next) => {
+  // Only handle JSON requests
   if (req.get('Accept') === 'application/json' || 
       (req.accepts('json') && !req.accepts('html'))) {
-    return res.status(200).json({
-      status: 'OK',
-      timestamp: new Date().toISOString(),
-      service: 'RXAI Knowledge Hub',
-      version: '1.0.0'
-    });
+    res.status(200).json(getHealthStatus());
+    return;
   }
   return next();
 });

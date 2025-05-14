@@ -12,7 +12,7 @@ import { Request, Response, NextFunction } from 'express';
  * Get health status information
  * @returns Health status object
  */
-function getHealthStatus() {
+export function getHealthStatus() {
   const backgroundTasks = (global as any).backgroundTaskMetrics || {
     status: 'unknown',
     lastRun: 'never'
@@ -32,28 +32,39 @@ function getHealthStatus() {
  * This is specifically designed to handle root path requests
  * for deployment health checks
  */
+/**
+ * Health check middleware function
+ * - Always responds to HEAD requests at root path with 200 OK
+ * - Always responds to GET requests with proper Accept headers at root with health status JSON
+ * - Always responds to GET requests at /health or /deployment-health with health status JSON
+ * - Passes through all other requests to next middleware
+ */
 export function healthCheckMiddleware(req: Request, res: Response, next: NextFunction) {
-  // Special handling for root path - always respond to it for health checks
-  if (req.path === '/') {
+  // CRITICAL: Root path handling for deployment health checks
+  // Replit Deployments perform health checks at the root path
+  if (req.path === '/' || req.path === '') {
     // Always respond to HEAD requests at root with 200 OK
     if (req.method === 'HEAD') {
-      return res.status(200).end();
+      res.status(200).end();
+      return;
     }
     
-    // If it's a GET request that specifically wants JSON, treat as health check
+    // If it's a GET request that wants JSON, respond with health status
     if (req.method === 'GET' && 
         (req.get('Accept') === 'application/json' || 
         (req.accepts('json') && !req.accepts('html')))) {
-      return res.status(200).json(getHealthStatus());
+      res.status(200).json(getHealthStatus());
+      return;
     }
     
-    // For GET requests to root that accept HTML, we'll continue to the next middleware
+    // For GET requests to root that accept HTML, continue to next middleware
     // which will eventually serve the frontend app
   }
   
   // Special handling for specific health check endpoints
   if (req.path === '/health' || req.path === '/deployment-health') {
-    return res.status(200).json(getHealthStatus());
+    res.status(200).json(getHealthStatus());
+    return;
   }
   
   // Not a health check request, continue to next middleware
