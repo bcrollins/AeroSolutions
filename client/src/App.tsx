@@ -75,6 +75,8 @@ import ForumThreadDetail from "@/pages/ForumThreadDetail";
 import Certificates from "@/pages/Certificates";
 import VerifyCertificate from "@/pages/VerifyCertificate";
 import ContentCalendar from "@/pages/ContentCalendar";
+import DigitalToolsPage from "@/pages/DigitalToolsPage";
+import ContentGeneratorPage from "@/pages/tools/ContentGeneratorPage";
 
 export default function App() {
   const { t, i18n } = useTranslation();
@@ -370,6 +372,35 @@ export default function App() {
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
               <ContentCalendar />
+            </>
+          )}
+        </Route>
+        
+        {/* Digital Tools Routes */}
+        <Route path="/ai-tools">
+          {() => (
+            <>
+              <Helmet>
+                <title>Digital Tools Suite | RXAI</title>
+                <meta name="description" content="Access a suite of AI-powered digital tools for content creation, code assistance, analytics, design, and more." />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <DigitalToolsPage />
+            </>
+          )}
+        </Route>
+        
+        <Route path="/ai-tools/content-generator">
+          {() => (
+            <>
+              <Helmet>
+                <title>AI Content Generator | RXAI Digital Tools</title>
+                <meta name="description" content="Create SEO-optimized articles, social media posts, and product descriptions with AI assistance." />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <ContentGeneratorPage />
             </>
           )}
         </Route>
