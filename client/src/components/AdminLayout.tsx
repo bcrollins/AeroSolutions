@@ -10,7 +10,8 @@ import {
   Menu, 
   X, 
   Home,
-  CreditCard
+  CreditCard,
+  LineChart
 } from 'lucide-react';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Button } from '@/components/ui/button';
