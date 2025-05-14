@@ -112,6 +112,17 @@ export default function App() {
       window.removeEventListener('popstate', updateCurrentPath);
     };
   }, []);
+  
+  // Initialize Google Analytics
+  useEffect(() => {
+    // Only initialize if VITE_GA_MEASUREMENT_ID exists
+    if (import.meta.env.VITE_GA_MEASUREMENT_ID) {
+      initGA();
+      console.log('Google Analytics initialized');
+    } else {
+      console.warn('Google Analytics Measurement ID missing');
+    }
+  }, []);
 
   // Add structured data for SPA navigation
   useEffect(() => {
