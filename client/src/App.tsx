@@ -64,6 +64,7 @@ import AiProductsPage from "@/pages/AiProductsPage";
 import AiProductDetailPage from "@/pages/AiProductDetailPage";
 import AiCoursePlatform from "@/pages/AiCoursePlatform";
 import AiCourseDetail from "@/pages/AiCourseDetail";
+import CourseCatalog from "@/pages/CourseCatalog";
 import MemberDashboard from "@/pages/MemberDashboard";
 import PricingPage from "@/pages/PricingPage";
 import SubscriptionAnalyticsPage from "@/pages/SubscriptionAnalyticsPage";
@@ -855,6 +856,22 @@ export default function App() {
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
               <AiCoursePlatform />
+            </>
+          )}
+        </Route>
+        
+        <Route path="/ai-courses/catalog">
+          {() => (
+            <>
+              <Helmet>
+                <title>AI Course Catalog | ROLLINSX</title>
+                <meta name="description" content="Browse our complete catalog of AI courses. Filter by difficulty, duration, and topic to find the perfect course for your skill level and interests." />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href="https://rollinsx.dev/ai-courses/catalog" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <CourseCatalog />
             </>
           )}
         </Route>
