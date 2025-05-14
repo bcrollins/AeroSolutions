@@ -120,7 +120,7 @@ const RXAILogo: React.FC<LogoProps> = ({
             RXAI
           </span>
           <span className="ml-2 text-xs font-light" style={{ color: selectedColors.text }}>
-            A Rollins X Technologies Company
+            The World Leader in Artificial Intelligence Education
           </span>
         </div>
       )}

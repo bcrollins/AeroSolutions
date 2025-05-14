@@ -83,7 +83,7 @@ export default function Header() {
               </div>
               <div className="flex flex-col">
                 <span className="font-bold tracking-wider text-xl text-white group-hover:text-electric-cyan-400 transition-colors duration-300">RXAI</span>
-                <span className="text-xs text-gray-400">a ROLLINSX technologies company</span>
+                <span className="text-xs text-gray-400">The World Leader in Artificial Intelligence Education</span>
               </div>
             </div>
           </Link>  
@@ -150,6 +150,13 @@ export default function Header() {
             <ThemeToggle />
             
             <div className="flex items-center space-x-3">
+              <Link  
+                href="/ai-course-platform"  
+                className="font-medium text-sm px-4 py-2 rounded-md border border-electric-cyan-400 text-white hover:bg-electric-cyan-400/20 transition-all duration-300 hover:shadow-lg"  
+              >  
+                Learn AI
+              </Link>
+              
               <Link  
                 href="/subscriptions"  
                 className="font-medium text-sm px-4 py-2 rounded-md bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 hover:shadow-lg"  
@@ -260,6 +267,14 @@ export default function Header() {
                   <ThemeToggle />
                 </div>
                 
+                <Link  
+                  href="/ai-course-platform"  
+                  onClick={toggleMobileMenu}  
+                  className="font-medium text-sm border border-electric-cyan-400 text-white py-3 px-4 rounded-md hover:bg-electric-cyan-400/20 transition-colors duration-200 text-center"  
+                >  
+                  Learn AI
+                </Link>
+
                 <Link  
                   href="/subscriptions"  
                   onClick={toggleMobileMenu}  

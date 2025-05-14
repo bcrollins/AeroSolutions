@@ -155,7 +155,7 @@ const Footer: React.FC = () => {
         {/* Bottom Section */}
         <div className="border-t border-[#00D1D1]/30 py-6 text-sm text-gray-400 flex flex-col md:flex-row justify-between items-center">
           <div>
-            &copy; {new Date().getFullYear()} RXAI. A Rollins X Technologies Company. {t('all_rights_reserved')}
+            &copy; {new Date().getFullYear()} RXAI. The World Leader in Artificial Intelligence Education. {t('all_rights_reserved')}
           </div>
           <div className="mt-4 md:mt-0">
             <span className="mr-4">FAQ</span>
