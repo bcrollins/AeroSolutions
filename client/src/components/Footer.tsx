@@ -54,18 +54,23 @@ const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link href="/services" className="text-gray-300 hover:text-[#FF7043] transition-colors">
-                  {t('services')}
+                <Link href="/ai-course-platform" className="text-gray-300 hover:text-[#FF7043] transition-colors">
+                  {t('ai_courses')}
                 </Link>
               </li>
               <li>
-                <Link href="/platforms" className="text-gray-300 hover:text-[#FF7043] transition-colors">
-                  {t('platforms')}
+                <Link href="/articles" className="text-gray-300 hover:text-[#FF7043] transition-colors">
+                  {t('articles')}
                 </Link>
               </li>
               <li>
-                <Link href="/marketplace" className="text-gray-300 hover:text-[#FF7043] transition-colors">
-                  {t('marketplace')}
+                <Link href="/news" className="text-gray-300 hover:text-[#FF7043] transition-colors">
+                  {t('news_hub')}
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="text-gray-300 hover:text-[#FF7043] transition-colors">
+                  {t('contact')}
                 </Link>
               </li>
               <li>

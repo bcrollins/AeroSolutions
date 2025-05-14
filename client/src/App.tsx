@@ -87,6 +87,7 @@ import ArticlesPage from "@/pages/ArticlesPage";
 import ArticleDetailPage from "@/pages/ArticleDetailPage";
 import NewsHubPage from "@/pages/NewsHubPage";
 import ContactPage from "@/pages/ContactPage";
+import SubscriptionsPage from "@/pages/SubscriptionsPage";
 
 export default function App() {
   const { t, i18n } = useTranslation();
@@ -345,6 +346,23 @@ export default function App() {
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
               <ContactPage />
+            </>
+          )}
+        </Route>
+        
+        {/* Subscriptions Page Route */}
+        <Route path="/subscriptions">
+          {() => (
+            <>
+              <Helmet>
+                <title>Subscription Plans | RXAI - Choose Your Plan</title>
+                <meta name="description" content="Explore RXAI subscription plans and choose the perfect one for your needs. From free access to enterprise solutions, find the right AI-powered tools and courses for your growth." />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href="https://rollinsx.dev/subscriptions" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <SubscriptionsPage />
             </>
           )}
         </Route>

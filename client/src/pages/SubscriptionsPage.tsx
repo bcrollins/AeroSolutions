@@ -1,232 +1,281 @@
 import React from 'react';
-import { useSubscription } from '@/hooks/useSubscription';
-import SubscriptionPlans from '@/components/SubscriptionPlans';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Helmet } from 'react-helmet';
+import MainLayout from '@/components/layouts/MainLayout';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useLocation } from 'wouter';
-import { Shield, Zap, CheckCircle, Calendar, CreditCard, AlertTriangle } from 'lucide-react';
-import { cancelSubscription } from '@/utils/stripe';
+import { Badge } from '@/components/ui/badge';
+import { Check, X } from 'lucide-react';
+import { trackEvent } from '@/lib/analytics';
 import { useToast } from '@/hooks/use-toast';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+
+interface PlanFeature {
+  name: string;
+  included: boolean;
+}
+
+interface SubscriptionPlan {
+  id: string;
+  name: string;
+  price: {
+    monthly: number;
+    annually: number;
+  };
+  description: string;
+  features: PlanFeature[];
+  highlight?: boolean;
+  badge?: string;
+}
+
+const subscriptionPlans: SubscriptionPlan[] = [
+  {
+    id: 'free',
+    name: 'Free',
+    price: {
+      monthly: 0,
+      annually: 0,
+    },
+    description: 'Basic access to RXAI platform with limited features.',
+    features: [
+      { name: 'Access to Free Articles', included: true },
+      { name: 'News Hub Access', included: true },
+      { name: 'Community Forum (Read-Only)', included: true },
+      { name: 'Basic AI Course Content', included: true },
+      { name: 'Course Certificates', included: false },
+      { name: 'AI Tools Access', included: false },
+      { name: 'Content Calendar Creator', included: false },
+      { name: 'Priority Support', included: false },
+      { name: 'Custom Analytics', included: false },
+    ],
+  },
+  {
+    id: 'basic',
+    name: 'Basic',
+    price: {
+      monthly: 19,
+      annually: 16,
+    },
+    description: 'Perfect for individuals looking to explore AI and learn new skills.',
+    badge: 'Popular',
+    highlight: true,
+    features: [
+      { name: 'Access to Free Articles', included: true },
+      { name: 'News Hub Access', included: true },
+      { name: 'Community Forum (Full Access)', included: true },
+      { name: 'Full AI Course Library', included: true },
+      { name: 'Course Certificates', included: true },
+      { name: 'Basic AI Tools Access', included: true },
+      { name: 'Content Calendar Creator', included: false },
+      { name: 'Priority Support', included: false },
+      { name: 'Custom Analytics', included: false },
+    ],
+  },
+  {
+    id: 'pro',
+    name: 'Pro',
+    price: {
+      monthly: 49,
+      annually: 39,
+    },
+    description: 'Ideal for professionals and small businesses leveraging AI solutions.',
+    features: [
+      { name: 'Access to Free Articles', included: true },
+      { name: 'News Hub Access', included: true },
+      { name: 'Community Forum (Full Access)', included: true },
+      { name: 'Full AI Course Library', included: true },
+      { name: 'Course Certificates', included: true },
+      { name: 'Full AI Tools Suite', included: true },
+      { name: 'Content Calendar Creator', included: true },
+      { name: 'Priority Support', included: true },
+      { name: 'Basic Analytics', included: true },
+    ],
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    price: {
+      monthly: 199,
+      annually: 179,
+    },
+    description: 'Complete solution for organizations requiring custom AI implementation.',
+    features: [
+      { name: 'Access to Free Articles', included: true },
+      { name: 'News Hub Access', included: true },
+      { name: 'Community Forum (Full Access)', included: true },
+      { name: 'Full AI Course Library', included: true },
+      { name: 'Course Certificates', included: true },
+      { name: 'Full AI Tools Suite', included: true },
+      { name: 'Content Calendar Creator', included: true },
+      { name: 'Priority Support', included: true },
+      { name: 'Advanced Analytics Dashboard', included: true },
+      { name: 'Custom AI Solutions', included: true },
+      { name: 'Dedicated Account Manager', included: true },
+    ],
+  },
+];
 
 const SubscriptionsPage: React.FC = () => {
-  const [, setLocation] = useLocation();
+  const [billingCycle, setBillingCycle] = React.useState<'monthly' | 'annually'>('monthly');
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  
-  const {
-    subscription,
-    plan,
-    hasActiveSubscription,
-    isLoading
-  } = useSubscription();
 
-  // Mutation for canceling subscription
-  const cancelSubscriptionMutation = useMutation({
-    mutationFn: ({ subscriptionId, immediate }: { subscriptionId: string, immediate: boolean }) => 
-      cancelSubscription(subscriptionId),
-    onSuccess: () => {
-      toast({
-        title: 'Subscription canceled',
-        description: 'Your subscription has been canceled.',
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/stripe/current-subscription'] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'Error canceling subscription',
-        description: error.message || 'An unexpected error occurred.',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  // Handle subscription cancellation
-  const handleCancelSubscription = (immediate: boolean = false) => {
-    if (!subscription?.id) return;
+  const handleSubscribe = (planId: string, planName: string) => {
+    // Track subscription click event
+    trackEvent('subscription_click', 'pricing', planId);
     
-    if (confirm('Are you sure you want to cancel your subscription?')) {
-      cancelSubscriptionMutation.mutate({ 
-        subscriptionId: subscription.id,
-        immediate 
-      });
-    }
-  };
-
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    }).format(date);
+    // Show a success message (this would be replaced with actual subscription logic)
+    toast({
+      title: `${planName} Subscription`,
+      description: "Subscription functionality will be available soon!",
+      variant: "default",
+    });
   };
 
   return (
-    <div className="container py-10 max-w-6xl">
-      <div className="flex flex-col gap-8">
-        {/* Empty div to preserve spacing */}
-        <div></div>
+    <MainLayout>
+      <Helmet>
+        <title>Subscription Plans | RXAI - Choose Your Plan</title>
+        <meta name="description" content="Explore RXAI subscription plans and choose the perfect one for your needs. From free access to enterprise solutions, find the right AI-powered tools and courses for your growth." />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://rollinsx.dev/subscriptions" />
+      </Helmet>
 
-        {/* Current subscription section (if user has an active subscription) */}
-        {hasActiveSubscription && plan && (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-primary" />
-                <CardTitle>Current Subscription</CardTitle>
-              </div>
-              <CardDescription>
-                You are currently subscribed to the {plan.name} plan.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-6 md:grid-cols-2">
-                {/* Left column: Subscription details */}
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="font-medium mb-1">Plan Details</h3>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                      <div className="text-muted-foreground">Plan</div>
-                      <div className="font-medium">{plan.name}</div>
-                      
-                      <div className="text-muted-foreground">Price</div>
-                      <div className="font-medium">{subscription?.plan?.interval === 'year' ? plan.annualPrice : plan.monthlyPrice}</div>
-                      
-                      <div className="text-muted-foreground">Billing cycle</div>
-                      <div className="font-medium capitalize">
-                        {subscription?.plan?.interval === 'year' ? 'Annual' : 'Monthly'}
+      <section className="py-20 bg-black/30">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto text-center mb-16">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-violet-500">Choose Your RXAI Plan</h1>
+            <p className="text-xl text-gray-300 mb-8">
+              Unlock the full potential of AI with our tiered subscription plans
+            </p>
+            
+            {/* Billing toggle */}
+            <div className="inline-flex items-center bg-black/50 p-1 rounded-lg border border-gray-800 mb-4">
+              <button
+                onClick={() => setBillingCycle('monthly')}
+                className={`px-4 py-2 rounded-md text-sm ${
+                  billingCycle === 'monthly' 
+                    ? 'bg-primary text-white' 
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingCycle('annually')}
+                className={`px-4 py-2 rounded-md text-sm ${
+                  billingCycle === 'annually' 
+                    ? 'bg-primary text-white' 
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Annually <span className="text-xs text-emerald-400 ml-1">Save 20%</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {subscriptionPlans.map((plan) => (
+              <Card 
+                key={plan.id} 
+                className={`relative border ${
+                  plan.highlight 
+                    ? 'border-primary/50 bg-black/70' 
+                    : 'border-gray-800 bg-black/50'
+                } overflow-hidden`}
+              >
+                {plan.badge && (
+                  <Badge className="absolute top-4 right-4 bg-primary text-white">
+                    {plan.badge}
+                  </Badge>
+                )}
+                <CardHeader>
+                  <CardTitle className="text-xl">{plan.name}</CardTitle>
+                  <div className="mt-3">
+                    <span className="text-3xl font-bold">${billingCycle === 'monthly' ? plan.price.monthly : plan.price.annually}</span>
+                    <span className="text-gray-400 ml-1">/month</span>
+                    {billingCycle === 'annually' && plan.price.monthly > 0 && (
+                      <div className="text-sm text-emerald-400 mt-1">
+                        ${(plan.price.monthly - plan.price.annually) * 12} saved annually
                       </div>
-                      
-                      {subscription?.current_period_end && (
-                        <>
-                          <div className="text-muted-foreground">Next billing date</div>
-                          <div className="font-medium">
-                            {formatDate(subscription.current_period_end)}
-                          </div>
-                        </>
-                      )}
-                      
-                      <div className="text-muted-foreground">Status</div>
-                      <div className="font-medium flex items-center gap-1">
-                        <span className={
-                          subscription?.status === 'active' || subscription?.status === 'trialing'
-                            ? 'text-green-500' 
-                            : 'text-amber-500'
-                        }>
-                          {subscription?.status === 'active' 
-                            ? 'Active' 
-                            : subscription?.status === 'trialing'
-                              ? 'Trial'
-                              : subscription?.status || 'Unknown'}
-                        </span>
-                        {(subscription?.status === 'active' || subscription?.status === 'trialing') && (
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                        )}
-                        {subscription?.cancel_at_period_end && (
-                          <span className="ml-2 text-rose-500 flex items-center gap-1">
-                            <AlertTriangle className="h-4 w-4" />
-                            Cancels at period end
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    )}
                   </div>
-                  
-                  {/* Buttons for subscription management */}
-                  <div className="flex flex-wrap gap-2 pt-4">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setLocation('/billing')}
-                      className="flex items-center gap-1"
-                    >
-                      <CreditCard className="h-4 w-4 mr-1" />
-                      Billing History
-                    </Button>
-                    
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleCancelSubscription()}
-                      className="flex items-center gap-1"
-                      disabled={cancelSubscriptionMutation.isPending}
-                    >
-                      {cancelSubscriptionMutation.isPending ? (
-                        <span className="animate-spin mr-1">⏳</span>
-                      ) : (
-                        <Calendar className="h-4 w-4 mr-1" />
-                      )}
-                      Cancel Subscription
-                    </Button>
-                  </div>
-                </div>
-                
-                {/* Right column: Included features */}
-                <div className="space-y-4">
-                  <h3 className="font-medium mb-2">Included Features</h3>
-                  <ul className="space-y-2">
+                  <CardDescription className="mt-2">
+                    {plan.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3">
                     {plan.features.map((feature, index) => (
-                      <li key={index} className="flex items-start text-sm">
-                        <CheckCircle className="h-4 w-4 text-green-500 mr-2 mt-0.5" />
-                        <span>{feature}</span>
+                      <li key={index} className="flex items-start">
+                        {feature.included ? (
+                          <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                        ) : (
+                          <X className="h-5 w-5 text-gray-500 mr-2 flex-shrink-0" />
+                        )}
+                        <span className={feature.included ? "text-gray-200" : "text-gray-500"}>
+                          {feature.name}
+                        </span>
                       </li>
                     ))}
                   </ul>
-                </div>
+                </CardContent>
+                <CardFooter>
+                  <Button 
+                    className={`w-full ${
+                      plan.id === 'free' 
+                        ? 'bg-gray-700 hover:bg-gray-600' 
+                        : plan.highlight 
+                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700' 
+                          : ''
+                    }`}
+                    onClick={() => handleSubscribe(plan.id, plan.name)}
+                  >
+                    {plan.id === 'free' ? 'Get Started' : 'Subscribe'}
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+
+          <div className="mt-20 bg-black/40 border border-gray-800 rounded-lg p-8 max-w-4xl mx-auto">
+            <h2 className="text-2xl font-bold mb-6 text-center">Frequently Asked Questions</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-lg font-medium mb-2">Can I cancel my subscription?</h3>
+                <p className="text-gray-400">Yes, you can cancel your subscription at any time. Your access will continue until the end of your billing period.</p>
               </div>
-            </CardContent>
-          </Card>
-        )}
+              <div>
+                <h3 className="text-lg font-medium mb-2">How do I upgrade my plan?</h3>
+                <p className="text-gray-400">You can upgrade your plan at any time from your account dashboard. The price difference will be prorated for the remainder of your billing cycle.</p>
+              </div>
+              <div>
+                <h3 className="text-lg font-medium mb-2">Do you offer team pricing?</h3>
+                <p className="text-gray-400">Yes, for teams of 5 or more, we offer special pricing. Please contact our sales team for details.</p>
+              </div>
+              <div>
+                <h3 className="text-lg font-medium mb-2">What payment methods do you accept?</h3>
+                <p className="text-gray-400">We accept all major credit cards, PayPal, and bank transfers for Enterprise accounts.</p>
+              </div>
+            </div>
+          </div>
 
-        {/* Subscription plans */}
-        <div>
-          <SubscriptionPlans 
-            hideCurrentPlan={hasActiveSubscription} 
-          />
-        </div>
-
-        {/* FAQ section */}
-        <div className="mt-8">
-          <h2 className="text-2xl font-bold mb-4">Frequently Asked Questions</h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Can I change plans later?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>Yes, you can upgrade or downgrade your plan at any time. Changes will take effect immediately.</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">How do I cancel my subscription?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>You can cancel your subscription from this page. Your access will continue until the end of your current billing period.</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">What payment methods do you accept?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>We accept all major credit cards, including Visa, Mastercard, and American Express. Payment is securely processed through Stripe.</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Do you offer refunds?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>If you're not satisfied with your subscription, contact our support team within 14 days of purchase for a full refund.</p>
-              </CardContent>
-            </Card>
+          <div className="mt-16 text-center">
+            <h2 className="text-2xl font-bold mb-4">Need a Custom Solution?</h2>
+            <p className="text-gray-400 max-w-2xl mx-auto mb-6">
+              Contact our team for a tailored solution designed specifically for your organization's unique requirements.
+            </p>
+            <Button 
+              variant="outline" 
+              className="border-primary text-primary hover:bg-primary hover:text-white"
+              onClick={() => {
+                trackEvent('contact_sales_click', 'pricing', 'custom_solution');
+                window.location.href = '/contact';
+              }}
+            >
+              Contact Sales
+            </Button>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </MainLayout>
   );
 };
 
