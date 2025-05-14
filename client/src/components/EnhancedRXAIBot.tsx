@@ -53,7 +53,7 @@ export default function EnhancedRXAIBot({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Get user subscription tier (Free, Pro, Enterprise)
-  const userTier = user?.subscriptionPlan?.name || 'Free';
+  const userTier = (user as any)?.subscriptionPlan?.name || 'Free';
   const hasHumanSupportAccess = userTier === 'Pro' || userTier === 'Enterprise';
   
   // AI assistant personas based on subscription tier

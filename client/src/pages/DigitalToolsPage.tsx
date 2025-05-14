@@ -35,7 +35,7 @@ const DigitalToolsPage: React.FC = () => {
   const [currentTutorial, setCurrentTutorial] = useState<Tutorial | null>(null);
   const [activeTab, setActiveTab] = useState('all');
 
-  const userPlan = user?.subscriptionPlan || 'free';
+  const userPlan = (user as any)?.subscriptionPlan || 'free';
 
   const tools: Tool[] = [
     {

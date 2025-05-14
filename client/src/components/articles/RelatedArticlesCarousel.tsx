@@ -173,11 +173,13 @@ const RelatedArticlesCarousel: React.FC<RelatedArticlesCarouselProps> = ({
       </div>
       
       {/* Add custom CSS to hide scrollbar */}
-      <style jsx>{`
-        .hide-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
+        `
+      }} />
     </div>
   );
 };
