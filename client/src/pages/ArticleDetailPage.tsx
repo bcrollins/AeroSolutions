@@ -108,59 +108,7 @@ const RelatedArticleCard: React.FC<{ post: Post }> = ({ post }) => {
   );
 };
 
-// Table of Contents Component
-const TableOfContents: React.FC<{ content: string }> = ({ content }) => {
-  // Extract headings from markdown content
-  const headings: { id: string; text: string; level: number }[] = [];
-  
-  // Simple regex to find markdown headings
-  const headingRegex = /^(#{2,3})\s+(.+)$/gm;
-  let match;
-  
-  while ((match = headingRegex.exec(content)) !== null) {
-    const level = match[1].length;
-    const text = match[2].trim();
-    const id = text.toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, '-');
-    
-    headings.push({ id, text, level });
-  }
-  
-  if (headings.length === 0) return null;
-  
-  return (
-    <Card className="mb-8 sticky top-20">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg">Table of Contents</CardTitle>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <ul className="space-y-1">
-          {headings.map((heading, index) => (
-            <li 
-              key={index} 
-              className={`text-sm ${heading.level === 2 ? 'font-medium' : 'pl-4 text-muted-foreground'}`}
-            >
-              <a 
-                href={`#${heading.id}`} 
-                className="hover:text-blue-600 transition-colors"
-                onClick={(e) => {
-                  e.preventDefault();
-                  const element = document.getElementById(heading.id);
-                  if (element) {
-                    const yOffset = -100; // Adjust for header height
-                    const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
-                    window.scrollTo({ top: y, behavior: 'smooth' });
-                  }
-                }}
-              >
-                {heading.text}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </CardContent>
-    </Card>
-  );
-};
+// Using EnhancedTableOfContents component instead
 
 // Main Article Detail Page Component
 const ArticleDetailPage: React.FC = () => {
@@ -324,7 +272,7 @@ const ArticleDetailPage: React.FC = () => {
 
     // Add FAQ schema if available
     if (post.faqs && post.faqs.length > 0) {
-      articleSchema.mainEntity = post.faqs.map(faq => ({
+      (articleSchema as any).mainEntity = post.faqs.map(faq => ({
         "@type": "Question",
         "name": faq.question,
         "acceptedAnswer": {
@@ -600,22 +548,31 @@ const ArticleDetailPage: React.FC = () => {
             </div>
           )}
 
-          {/* Related Articles */}
-          {relatedArticles.length > 0 && (
-            <div className="mt-16">
-              <h2 className="text-2xl font-bold mb-6">Related Articles</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {relatedArticles.map((relatedPost) => (
-                  <RelatedArticleCard key={relatedPost.id} post={relatedPost} />
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Comments Section */}
+          <CommentsSection 
+            postId={post.id}
+            comments={getMockComments()}
+          />
+
+          {/* Related Articles Carousel */}
+          <RelatedArticlesCarousel 
+            articles={relatedArticles}
+            currentPostId={post.id}
+          />
         </div>
 
         {/* Sidebar */}
         <div className="lg:col-span-1">
-          <TableOfContents content={post.content} />
+          {/* Enhanced Table of Contents */}
+          <EnhancedTableOfContents content={post.content} />
+          
+          {/* Personalized Recommendations */}
+          <PersonalizedRecommendations
+            recentPosts={relatedArticles}
+            trendingPosts={relatedArticles}
+            personalizedPosts={relatedArticles}
+            currentPostId={post.id}
+          />
           
           {/* Cross-Promotion for Premium Subscription */}
           <Card className="mb-8">
