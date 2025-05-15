@@ -11,6 +11,33 @@ interface MicroInteractionProps {
   as?: React.ElementType;
 }
 
+// HoverScale Animation
+interface HoverScaleProps extends Omit<MicroInteractionProps, 'delay'> {
+  scale?: number;
+}
+
+export const HoverScale = ({ 
+  children, 
+  className = '', 
+  scale = 1.05,
+  duration = 0.2,
+  as = motion.div 
+}: HoverScaleProps) => {
+  const Component = as;
+  
+  return (
+    <Component
+      className={cn(className)}
+      whileHover={{ 
+        scale,
+        transition: { duration }
+      }}
+    >
+      {children}
+    </Component>
+  );
+};
+
 // Button Press Animation
 interface ButtonPressProps extends Omit<MicroInteractionProps, 'delay' | 'duration'> {
   scale?: number;
@@ -250,6 +277,7 @@ export const Stagger = ({
         if (!React.isValidElement(child)) return child;
         
         return React.cloneElement(child, {
+          // @ts-ignore - we know this is a valid Framer Motion element
           variants: {
             visible: { opacity: 1, y: 0 },
             hidden: { opacity: 0, y: 20 }
@@ -465,7 +493,9 @@ const MicroAnimations = {
   Rotate,
   Shimmer,
   Attention,
-  Typing
+  Typing,
+  HoverScale,
+  ButtonPress
 };
 
 export default MicroAnimations;
