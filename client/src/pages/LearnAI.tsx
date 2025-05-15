@@ -376,19 +376,19 @@ const expertEndorsements = [
     name: 'Dr. Michael Chen',
     title: 'AI Research Director, Stanford University',
     quote: 'RXAI provides the most comprehensive AI curriculum I\'ve seen. Their teaching methodology bridges theory and practice exceptionally well.',
-    image: 'https://placehold.co/150x150/2a2a2a/007bff?text=MC'
+    image: 'https://placehold.co/150x150/f0f0f0/0066cc?text=MC'
   },
   {
     name: 'Sarah Johnson, PhD',
     title: 'Chief AI Officer, TechVision Corp',
     quote: 'I\'ve hired multiple RXAI graduates and they consistently demonstrate superior practical knowledge compared to other candidates.',
-    image: 'https://placehold.co/150x150/2a2a2a/007bff?text=SJ'
+    image: 'https://placehold.co/150x150/f0f0f0/0066cc?text=SJ'
   },
   {
     name: 'James Wilson',
     title: 'Senior ML Engineer, NVIDIA',
     quote: 'The hands-on projects in RXAI\'s curriculum directly translate to real-world applications. This is what the industry needs.',
-    image: 'https://placehold.co/150x150/2a2a2a/007bff?text=JW'
+    image: 'https://placehold.co/150x150/f0f0f0/0066cc?text=JW'
   }
 ];
 
@@ -1424,10 +1424,10 @@ const LearnAI: React.FC = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {expertEndorsements.map((expert, index) => (
-                <Card key={index} className="bg-white border border-gray-200 shadow-sm overflow-hidden hover:border-gray-300 transition-colors duration-300">
+                <Card key={index} className="bg-white border border-gray-100 shadow-[0_10px_20px_rgba(0,0,0,0.05)] overflow-hidden hover:shadow-[0_15px_30px_rgba(0,0,0,0.08)] hover:translate-y-[-2px] transition-all duration-300 rounded-xl">
                   <div className="p-6">
                     <div className="flex items-center mb-4">
-                      <div className="w-16 h-16 rounded-full overflow-hidden mr-4 border border-gray-200 shadow-sm">
+                      <div className="w-16 h-16 rounded-full overflow-hidden mr-4 border-2 border-[#0066cc]/10 shadow-sm">
                         <img 
                           src={expert.image} 
                           alt={expert.name} 
@@ -1435,12 +1435,12 @@ const LearnAI: React.FC = () => {
                         />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-800">{expert.name}</h3>
-                        <p className="text-sm text-gray-500">{expert.title}</p>
+                        <h3 className="font-semibold text-gray-800 tracking-tight">{expert.name}</h3>
+                        <p className="text-sm text-[#0066cc]/80 font-medium">{expert.title}</p>
                       </div>
                     </div>
                     
-                    <p className="italic text-gray-700 leading-relaxed">"{expert.quote}"</p>
+                    <p className="text-gray-700 text-sm leading-relaxed">"{expert.quote}"</p>
                   </div>
                 </Card>
               ))}
@@ -2041,12 +2041,12 @@ const LearnAI: React.FC = () => {
                             </p>
                           </div>
                           
-                          <div className="bg-[#2a2a2a] p-4 rounded-lg">
+                          <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
                             <div className="flex items-center mb-2">
                               <Star className="w-4 h-4 text-[#0066cc] mr-2" />
-                              <span className="font-medium">Recommended Path:</span>
+                              <span className="font-medium text-gray-800">Recommended Path:</span>
                             </div>
-                            <div className="pl-6">
+                            <div className="pl-6 text-gray-700">
                               {enrollmentForm.experience === 'beginner' ? (
                                 <span>AI Foundations → Python for AI → Machine Learning Essentials</span>
                               ) : enrollmentForm.experience === 'intermediate' ? (
