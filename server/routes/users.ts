@@ -134,10 +134,9 @@ router.delete('/:id', isAuthenticated, isAdmin, async (req: any, res) => {
       });
     }
     
-    // Soft delete by updating status
+    // Soft delete by updating verification status
     await db.update(users)
       .set({ 
-        // Using verified as a proxy for active status since we don't have an active field
         verified: false,
         updatedAt: new Date()
       })

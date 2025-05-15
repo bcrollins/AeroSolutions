@@ -110,7 +110,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if user is authenticated
-      const userId = req.user?.id;
+      const userId = req.user?.claims?.sub;
       
       // If no user, return public access info
       if (!userId) {
