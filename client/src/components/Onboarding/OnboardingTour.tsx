@@ -256,6 +256,31 @@ export default function OnboardingTour({ forceTour = false }: OnboardingTourProp
   const currentStep = tourSteps[currentStepIndex];
   const isLastStep = currentStepIndex === tourSteps.length - 1;
   const isFirstStep = currentStepIndex === 0;
+  
+  // Add keyboard navigation with sound effects
+  useKeyboardSound({
+    onEnter: handleNextStep,
+    onEsc: skipTour,
+    enabled: showTour
+  });
+  
+  // Handle arrow keys for navigation
+  useEffect(() => {
+    if (!showTour) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight' && !isLastStep) {
+        if (soundEnabled) playSound('click');
+        handleNextStep();
+      } else if (e.key === 'ArrowLeft' && !isFirstStep) {
+        if (soundEnabled) playSound('click');
+        handlePrevStep();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showTour, isFirstStep, isLastStep, handleNextStep, handlePrevStep, soundEnabled, playSound]);
 
   // Calculate tooltip position based on element position and specified position
   const getTooltipPosition = () => {

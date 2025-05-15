@@ -1,702 +1,144 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useCommandPalette } from '@/hooks/use-command-palette';
-import { ScaleIn, FadeIn } from './MicroInteractions';
-import { cn } from '@/lib/utils';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'wouter';
 import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle,
-  DialogDescription,
-  DialogFooter
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import {
-  Search,
-  Settings,
-  Lightbulb,
-  User,
-  BookOpen,
-  MessageSquare,
-  BarChart,
-  Calendar,
-  FileText,
-  Home,
-  Coffee,
-  Compass,
-  Keyboard,
-  Layers,
-  HelpCircle,
-  Code,
-  Cpu,
-  Bell,
-  Zap
-} from 'lucide-react';
+  CommandDialog, 
+  CommandInput, 
+  CommandList, 
+  CommandEmpty, 
+  CommandGroup, 
+  CommandItem,
+  CommandSeparator,
+  CommandShortcut
+} from '@/components/ui/command';
+import { SearchIcon, Settings, User, LayoutDashboard, Book, FileText, HelpCircle, Github, LogOut } from 'lucide-react';
+import { restartOnboardingTour } from '../Onboarding/OnboardingTour';
+import useSoundEffects from '../../hooks/use-sound-effects';
+import useKeyboardSound from '../../hooks/use-keyboard-sound';
 
-// Command categories
-export type CommandCategory = 
-  | 'navigation' 
-  | 'tools' 
-  | 'learning' 
-  | 'account' 
-  | 'settings' 
-  | 'help'
-  | 'analytics'
-  | 'ai'
-  | 'experimental';
+export function EnhancedCommandPalette() {
+  const [open, setOpen] = useState(false);
+  const [location, setLocation] = useLocation();
+  const { playSound, soundEnabled } = useSoundEffects();
 
-// Command definition
-export interface Command {
-  id: string;
-  title: string;
-  description?: string;
-  category: CommandCategory;
-  icon?: React.ReactNode;
-  action: () => void;
-  keywords?: string[];
-  shortcut?: string;
-  disabled?: boolean;
-  isNew?: boolean;
-  isPopular?: boolean;
-}
-
-// Category labels for display
-const categoryLabels: Record<CommandCategory, string> = {
-  navigation: 'Navigation',
-  tools: 'Tools',
-  learning: 'Learning',
-  account: 'Account',
-  settings: 'Settings',
-  help: 'Help',
-  analytics: 'Analytics',
-  ai: 'AI',
-  experimental: 'Experimental'
-};
-
-/**
- * EnhancedCommandPalette - An enhanced version of the command palette with more functionality
- */
-export const EnhancedCommandPalette: React.FC = () => {
-  const { isOpen, setIsOpen } = useCommandPalette();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredCommands, setFilteredCommands] = useState<Command[]>([]);
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [selectedCategory, setSelectedCategory] = useState<CommandCategory | null>(null);
-  const [recentCommands, setRecentCommands] = useState<Command[]>([]);
-  const [showKeyboardShortcutsModal, setShowKeyboardShortcutsModal] = useState(false);
-  const commandsRef = useRef<Command[]>([]);
-  
-  // Simulated global commands (would be registered from various parts of the app)
-  const globalCommands: Command[] = [
-    // Navigation commands
-    {
-      id: 'home',
-      title: 'Go to Home',
-      description: 'Navigate to the homepage',
-      category: 'navigation',
-      icon: <Home size={18} />,
-      action: () => { window.location.href = '/'; },
-      keywords: ['home', 'main', 'dashboard'],
-      shortcut: 'g h',
-      isPopular: true
-    },
-    {
-      id: 'courses',
-      title: 'Browse Courses',
-      description: 'View all available courses',
-      category: 'navigation',
-      icon: <BookOpen size={18} />,
-      action: () => { window.location.href = '/courses'; },
-      keywords: ['courses', 'learning', 'education'],
-      shortcut: 'g c'
-    },
-    {
-      id: 'articles',
-      title: 'Read Articles',
-      description: 'Browse AI-related articles',
-      category: 'navigation',
-      icon: <FileText size={18} />,
-      action: () => { window.location.href = '/articles'; },
-      keywords: ['articles', 'blog', 'news', 'read'],
-      shortcut: 'g a'
-    },
-
-    // Tools
-    {
-      id: 'ai-assistant',
-      title: 'Open AI Assistant',
-      description: 'Get help from our AI assistant',
-      category: 'tools',
-      icon: <Cpu size={18} />,
-      action: () => { window.location.href = '/assistant'; },
-      keywords: ['ai', 'assistant', 'help', 'chat'],
-      shortcut: 't a',
-      isNew: true
-    },
-    {
-      id: 'calendar',
-      title: 'My Learning Calendar',
-      description: 'View your learning schedule',
-      category: 'tools',
-      icon: <Calendar size={18} />,
-      action: () => { window.location.href = '/calendar'; },
-      keywords: ['calendar', 'schedule', 'planner'],
-      shortcut: 't c'
-    },
-    {
-      id: 'analytics',
-      title: 'Learning Analytics',
-      description: 'View your learning progress',
-      category: 'analytics',
-      icon: <BarChart size={18} />,
-      action: () => { window.location.href = '/analytics'; },
-      keywords: ['analytics', 'stats', 'progress', 'metrics'],
-      shortcut: 't s'
-    },
-
-    // Account
-    {
-      id: 'profile',
-      title: 'My Profile',
-      description: 'View and edit your profile',
-      category: 'account',
-      icon: <User size={18} />,
-      action: () => { window.location.href = '/profile'; },
-      keywords: ['profile', 'account', 'user', 'me'],
-      shortcut: 'a p'
-    },
-    {
-      id: 'notifications',
-      title: 'Notifications',
-      description: 'View your notifications',
-      category: 'account',
-      icon: <Bell size={18} />,
-      action: () => { window.location.href = '/notifications'; },
-      keywords: ['notifications', 'alerts', 'messages'],
-      shortcut: 'a n'
-    },
-
-    // Settings
-    {
-      id: 'settings',
-      title: 'Settings',
-      description: 'Adjust your preferences',
-      category: 'settings',
-      icon: <Settings size={18} />,
-      action: () => { window.location.href = '/settings'; },
-      keywords: ['settings', 'preferences', 'options', 'configure'],
-      shortcut: 's'
-    },
-    {
-      id: 'theme',
-      title: 'Change Theme',
-      description: 'Switch between light and dark mode',
-      category: 'settings',
-      icon: <Layers size={18} />,
-      action: () => { /* Toggle theme */ },
-      keywords: ['theme', 'dark', 'light', 'mode', 'appearance'],
-      shortcut: 's t'
-    },
-    {
-      id: 'keyboard-shortcuts',
-      title: 'View Keyboard Shortcuts',
-      description: 'See all available keyboard shortcuts',
-      category: 'help',
-      icon: <Keyboard size={18} />,
-      action: () => { setShowKeyboardShortcutsModal(true); },
-      keywords: ['keyboard', 'shortcuts', 'hotkeys', 'keys'],
-      shortcut: '?'
-    },
-
-    // AI
-    {
-      id: 'ai-tools',
-      title: 'AI Toolkit',
-      description: 'Access specialized AI tools',
-      category: 'ai',
-      icon: <Zap size={18} />,
-      action: () => { window.location.href = '/ai-tools'; },
-      keywords: ['ai', 'tools', 'toolkit', 'smart', 'intelligence'],
-      shortcut: 'ai t',
-      isNew: true
-    },
-    {
-      id: 'ai-playground',
-      title: 'AI Playground',
-      description: 'Experiment with AI models',
-      category: 'ai',
-      icon: <Code size={18} />,
-      action: () => { window.location.href = '/playground'; },
-      keywords: ['playground', 'experiment', 'ai', 'models'],
-      shortcut: 'ai p',
-      isNew: true
-    },
-
-    // Help
-    {
-      id: 'help-center',
-      title: 'Help Center',
-      description: 'Browse help articles and guides',
-      category: 'help',
-      icon: <HelpCircle size={18} />,
-      action: () => { window.location.href = '/help'; },
-      keywords: ['help', 'support', 'guides', 'faq', 'questions'],
-      shortcut: 'h'
-    },
-    {
-      id: 'quick-tips',
-      title: 'Quick Tips',
-      description: 'Get helpful tips for using the platform',
-      category: 'help',
-      icon: <Lightbulb size={18} />,
-      action: () => { /* Show quick tips */ },
-      keywords: ['tips', 'tricks', 'help', 'advice'],
-      shortcut: 'h t'
-    }
+  // Define command groups and items
+  const navigationCommands = [
+    { label: 'Dashboard', icon: <LayoutDashboard className="mr-2 h-4 w-4" />, action: () => setLocation('/dashboard'), shortcut: 'D' },
+    { label: 'Courses', icon: <Book className="mr-2 h-4 w-4" />, action: () => setLocation('/courses'), shortcut: 'C' },
+    { label: 'Articles', icon: <FileText className="mr-2 h-4 w-4" />, action: () => setLocation('/articles'), shortcut: 'A' },
   ];
-  
-  // Initialize commands
+
+  const userCommands = [
+    { label: 'Profile', icon: <User className="mr-2 h-4 w-4" />, action: () => setLocation('/profile'), shortcut: 'P' },
+    { label: 'Settings', icon: <Settings className="mr-2 h-4 w-4" />, action: () => setLocation('/settings'), shortcut: 'S' },
+    { label: 'Logout', icon: <LogOut className="mr-2 h-4 w-4" />, action: () => setLocation('/logout'), shortcut: 'L' },
+  ];
+
+  const helpCommands = [
+    { label: 'Documentation', icon: <FileText className="mr-2 h-4 w-4" />, action: () => window.open('/docs', '_blank'), shortcut: 'D' },
+    { label: 'GitHub', icon: <Github className="mr-2 h-4 w-4" />, action: () => window.open('https://github.com/rollins-x/rxai', '_blank'), shortcut: 'G' },
+    { label: 'Restart Tour', icon: <HelpCircle className="mr-2 h-4 w-4" />, action: () => {
+      restartOnboardingTour(); 
+      setOpen(false);
+    }, shortcut: 'T' },
+  ];
+
+  // Handle keyboard shortcut to open command palette
   useEffect(() => {
-    commandsRef.current = globalCommands;
-  }, []);
-  
-  // Load recent commands from localStorage
-  useEffect(() => {
-    try {
-      const storedRecent = localStorage.getItem('rxai-recent-commands');
-      if (storedRecent) {
-        const recentIds = JSON.parse(storedRecent) as string[];
-        const foundCommands = recentIds
-          .map(id => commandsRef.current.find(cmd => cmd.id === id))
-          .filter(Boolean) as Command[];
-        setRecentCommands(foundCommands.slice(0, 5));
+    const down = (e: KeyboardEvent) => {
+      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        if (soundEnabled) playSound('notification');
+        setOpen((open) => !open);
       }
-    } catch (error) {
-      console.error('Failed to load recent commands:', error);
-    }
-  }, []);
-  
-  // Filter commands based on search term
-  useEffect(() => {
-    const allCommands = commandsRef.current;
-    
-    if (!searchTerm && !selectedCategory) {
-      setFilteredCommands(allCommands);
-      return;
-    }
-    
-    let filtered = allCommands;
-    
-    if (selectedCategory) {
-      filtered = filtered.filter(cmd => cmd.category === selectedCategory);
-    }
-    
-    if (searchTerm) {
-      const lowerTerm = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        cmd =>
-          cmd.title.toLowerCase().includes(lowerTerm) ||
-          (cmd.description && cmd.description.toLowerCase().includes(lowerTerm)) ||
-          (cmd.keywords && cmd.keywords.some(k => k.toLowerCase().includes(lowerTerm)))
-      );
-    }
-    
-    setFilteredCommands(filtered);
-    setSelectedIndex(0);
-  }, [searchTerm, selectedCategory]);
-  
-  // Handle keyboard navigation within command palette
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (!isOpen) return;
-    
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        setSelectedIndex(prev => (prev < filteredCommands.length - 1 ? prev + 1 : prev));
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        setSelectedIndex(prev => (prev > 0 ? prev - 1 : prev));
-        break;
-      case 'Enter':
-        e.preventDefault();
-        if (filteredCommands[selectedIndex]) {
-          executeCommand(filteredCommands[selectedIndex]);
-        }
-        break;
-      case 'Escape':
-        e.preventDefault();
-        setIsOpen(false);
-        break;
-      default:
-        break;
-    }
-  }, [isOpen, filteredCommands, selectedIndex, setIsOpen]);
-  
-  // Handle global keyboard shortcuts to open command palette or execute commands
-  const handleGlobalKeyPress = useCallback((e: KeyboardEvent) => {
-    // Skip if inside input, textarea or other editable elements
-    if (
-      e.target instanceof HTMLInputElement ||
-      e.target instanceof HTMLTextAreaElement ||
-      (e.target as HTMLElement)?.isContentEditable
-    ) {
-      return;
-    }
-    
-    // Command Palette activation with Cmd/Ctrl+K
-    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-      e.preventDefault();
-      setIsOpen(true);
-      return;
-    }
-    
-    // Keyboard shortcut handling for shortcut keys
-    if (!isOpen && !e.metaKey && !e.ctrlKey) {
-      const pressedKey = e.key.toLowerCase();
-      
-      // Handle single-key shortcuts
-      if (pressedKey === '?') {
-        e.preventDefault();
-        const helpCommand = commandsRef.current.find(cmd => cmd.id === 'keyboard-shortcuts');
-        if (helpCommand) executeCommand(helpCommand);
-        return;
-      }
-      
-      // Check all command shortcuts
-      for (const command of commandsRef.current) {
-        if (command.shortcut && command.shortcut.toLowerCase() === pressedKey) {
-          e.preventDefault();
-          executeCommand(command);
-          return;
-        }
-      }
-    }
-  }, [isOpen, setIsOpen]);
-  
-  useEffect(() => {
-    // Add both event listeners for command palette navigation and global shortcuts
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keydown', handleGlobalKeyPress);
-    
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keydown', handleGlobalKeyPress);
     };
-  }, [handleKeyDown, handleGlobalKeyPress]);
-  
-  // Execute a command and add to recent list
-  const executeCommand = (command: Command) => {
-    if (command.disabled) return;
     
-    command.action();
-    setIsOpen(false);
-    
-    // Update recent commands
-    const newRecent = [
-      command.id,
-      ...recentCommands.map(cmd => cmd.id).filter(id => id !== command.id)
-    ].slice(0, 5);
-    
-    try {
-      localStorage.setItem('rxai-recent-commands', JSON.stringify(newRecent));
-      
-      const foundCommands = newRecent
-        .map(id => commandsRef.current.find(cmd => cmd.id === id))
-        .filter(Boolean) as Command[];
-      
-      setRecentCommands(foundCommands);
-    } catch (error) {
-      console.error('Failed to save recent commands:', error);
-    }
-  };
-  
-  // Get category icon
-  const getCategoryIcon = (category: CommandCategory) => {
-    switch (category) {
-      case 'navigation': return <Compass size={16} />;
-      case 'tools': return <Coffee size={16} />;
-      case 'learning': return <BookOpen size={16} />;
-      case 'account': return <User size={16} />;
-      case 'settings': return <Settings size={16} />;
-      case 'help': return <HelpCircle size={16} />;
-      case 'analytics': return <BarChart size={16} />;
-      case 'ai': return <Cpu size={16} />;
-      case 'experimental': return <Zap size={16} />;
-      default: return null;
-    }
-  };
-  
-  // Group commands by category
-  const commandsByCategory = filteredCommands.reduce<Record<CommandCategory, Command[]>>(
-    (acc, command) => {
-      if (!acc[command.category]) {
-        acc[command.category] = [];
-      }
-      acc[command.category].push(command);
-      return acc;
+    document.addEventListener('keydown', down);
+    return () => document.removeEventListener('keydown', down);
+  }, [playSound, soundEnabled]);
+
+  // Use keyboard sound hook for focused navigation
+  useKeyboardSound({
+    enabled: open,
+    onEnter: () => {
+      // Handle in the component itself
     },
-    {} as Record<CommandCategory, Command[]>
-  );
-  
-  // Group commands by category for the keyboard shortcuts modal
-  const groupedCommands = commandsRef.current.reduce<Record<CommandCategory, Command[]>>(
-    (acc, command) => {
-      if (!acc[command.category]) {
-        acc[command.category] = [];
-      }
-      if (command.shortcut) {
-        acc[command.category].push(command);
-      }
-      return acc;
-    },
-    {} as Record<CommandCategory, Command[]>
-  );
-  
-  // Format shortcut key for display
-  const formatShortcut = (shortcut: string) => {
-    return shortcut.split(' ').map(part => (
-      <kbd key={part} className="px-2 py-1 mx-0.5 text-xs font-semibold bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700 shadow-sm">
-        {part}
-      </kbd>
-    ));
+    onEsc: () => {
+      if (open) setOpen(false);
+    }
+  });
+
+  // Handle command selection with sound
+  const handleSelect = (action: () => void) => {
+    if (soundEnabled) playSound('click');
+    action();
+    setOpen(false);
   };
 
   return (
-    <div>
-      {/* Keyboard Shortcuts Modal */}
-      <Dialog open={showKeyboardShortcutsModal} onOpenChange={setShowKeyboardShortcutsModal}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl flex items-center">
-              <Keyboard className="mr-2" /> Keyboard Shortcuts
-            </DialogTitle>
-            <DialogDescription>
-              Use these keyboard shortcuts to navigate quickly through the RXAI platform
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="py-4 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {Object.entries(groupedCommands).map(([category, commands]) => (
-                <FadeIn key={category}>
-                  <div className="border rounded-lg overflow-hidden">
-                    <div className="bg-gray-50 dark:bg-gray-800 px-4 py-2 border-b">
-                      <h3 className="font-medium flex items-center">
-                        {getCategoryIcon(category as CommandCategory)}
-                        <span className="ml-2 capitalize">{category}</span>
-                      </h3>
-                    </div>
-                    <div className="divide-y">
-                      {commands.map(command => (
-                        <div key={command.id} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800">
-                          <div className="flex items-center">
-                            {command.icon && <span className="mr-2 text-gray-500">{command.icon}</span>}
-                            <div>
-                              <div>{command.title}</div>
-                              {command.description && (
-                                <div className="text-xs text-gray-500 mt-0.5">{command.description}</div>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex items-center">
-                            {command.shortcut && formatShortcut(command.shortcut)}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </FadeIn>
-              ))}
-            </div>
-            
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mt-4">
-              <h3 className="font-medium mb-2 flex items-center">
-                <Keyboard className="mr-2 h-4 w-4" /> Global Shortcuts
-              </h3>
-              <ul className="space-y-2">
-                <li className="flex justify-between items-center">
-                  <span>Open Command Palette</span>
-                  <div>
-                    <kbd className="px-2 py-1 text-xs font-semibold bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700 shadow-sm">
-                      {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+K
-                    </kbd>
-                  </div>
-                </li>
-                <li className="flex justify-between items-center">
-                  <span>Show Keyboard Shortcuts</span>
-                  <div>
-                    <kbd className="px-2 py-1 text-xs font-semibold bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700 shadow-sm">?</kbd>
-                  </div>
-                </li>
-              </ul>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button onClick={() => setShowKeyboardShortcutsModal(false)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Custom Command Palette UI */}
-      <div 
-        className={cn("fixed inset-0 z-50 bg-black/50 flex items-center justify-center", 
-          isOpen ? "block" : "hidden"
-        )} 
-        onClick={() => setIsOpen(false)}
-      >
-        <div 
-          className="bg-background border border-border rounded-lg shadow-xl w-full max-w-xl max-h-[80vh] overflow-hidden"
-          onClick={e => e.stopPropagation()}
-        >
-          {/* Search Input */}
-          <div className="flex items-center border-b p-3 sticky top-0 bg-background/90 backdrop-blur-sm z-10">
-            <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-            <input
-              type="text"
-              placeholder="Search commands, navigation, and more..."
-              className="flex h-9 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              autoFocus
-            />
-            {searchTerm && (
-              <button 
-                className="rounded text-xs px-1.5 py-0.5 hover:bg-accent text-muted-foreground"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSearchTerm('');
-                }}
-              >
-                Clear
-              </button>
-            )}
-          </div>
-          
-          {/* Command Content */}
-          <div className="overflow-y-auto max-h-[50vh] p-2">
-            {selectedCategory ? (
-              <div className="space-y-4">
-                <button
-                  className="text-xs text-blue-600 dark:text-blue-400 flex items-center px-2"
-                  onClick={() => setSelectedCategory(null)}
-                >
-                  ← Back to all categories
-                </button>
-                <div className="space-y-1">
-                  {Object.entries(commandsByCategory)
-                    .filter(([category]) => category === selectedCategory)
-                    .map(([, commands]) => 
-                      commands.map((command, index) => (
-                        <button
-                          key={command.id}
-                          className={cn(
-                            'w-full flex items-center px-2 py-1.5 text-sm rounded text-left',
-                            index === selectedIndex ? 'bg-blue-50 text-blue-900 dark:bg-blue-900/20 dark:text-blue-100' : 'hover:bg-gray-100 dark:hover:bg-gray-800'
-                          )}
-                          onClick={() => executeCommand(command)}
-                        >
-                          {command.icon && <span className="mr-2">{command.icon}</span>}
-                          <span>{command.title}</span>
-                        </button>
-                      ))
-                    )
-                  }
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {/* Recent Commands */}
-                {!searchTerm && recentCommands.length > 0 && (
-                  <div className="mb-4">
-                    <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Recent
-                    </div>
-                    <div className="space-y-1">
-                      {recentCommands.map((command, index) => (
-                        <button
-                          key={command.id}
-                          className={cn(
-                            'w-full flex items-center px-2 py-1.5 text-sm rounded text-left',
-                            index === selectedIndex && !selectedCategory ? 'bg-blue-50 text-blue-900 dark:bg-blue-900/20 dark:text-blue-100' : 'hover:bg-gray-100 dark:hover:bg-gray-800'
-                          )}
-                          onClick={() => executeCommand(command)}
-                        >
-                          {command.icon && <span className="mr-2">{command.icon}</span>}
-                          <span>{command.title}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {/* Command categories */}
-                {!searchTerm && (
-                  <div className="grid grid-cols-2 gap-2 px-2 mb-4">
-                    {Object.entries(commandsByCategory).map(([category, commands]) => (
-                      <button
-                        key={category}
-                        className="flex items-center p-2 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                        onClick={() => setSelectedCategory(category as CommandCategory)}
-                      >
-                        <span className="mr-2 text-gray-500">{getCategoryIcon(category as CommandCategory)}</span>
-                        <div className="flex-1">
-                          <div className="font-medium capitalize">{categoryLabels[category as CommandCategory] || category}</div>
-                          <div className="text-xs text-gray-500">{commands.length} command{commands.length !== 1 ? 's' : ''}</div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-                
-                {/* Filtered commands */}
-                {searchTerm && (
-                  <div className="px-2">
-                    {filteredCommands.length === 0 ? (
-                      <div className="text-center py-4 text-gray-500">
-                        No commands matching <span className="font-medium">{searchTerm}</span>
-                      </div>
-                    ) : (
-                      <div className="space-y-1">
-                        {filteredCommands.map((command, index) => (
-                          <button
-                            key={command.id}
-                            className={cn(
-                              'w-full flex items-center px-2 py-1.5 text-sm rounded text-left',
-                              index === selectedIndex ? 'bg-blue-50 text-blue-900 dark:bg-blue-900/20 dark:text-blue-100' : 'hover:bg-gray-100 dark:hover:bg-gray-800'
-                            )}
-                            onClick={() => executeCommand(command)}
-                          >
-                            {command.icon && <span className="mr-2">{command.icon}</span>}
-                            <span>{command.title}</span>
-                            {command.shortcut && (
-                              <span className="ml-auto text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded">
-                                {command.shortcut}
-                              </span>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-          
-          {/* Footer with keyboard shortcuts */}
-          <div className="border-t p-2 text-center text-xs text-muted-foreground">
-            <span className="flex justify-center gap-2">
-              <kbd className="px-1.5 py-0.5 bg-muted border border-border rounded text-xs">ESC</kbd> to close, 
-              <kbd className="px-1.5 py-0.5 bg-muted border border-border rounded text-xs">↑</kbd> 
-              <kbd className="px-1.5 py-0.5 bg-muted border border-border rounded text-xs">↓</kbd> to navigate
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
+    <CommandDialog open={open} onOpenChange={setOpen}>
+      <CommandInput 
+        placeholder="Type a command or search..." 
+        onFocus={() => soundEnabled && playSound('hover')}
+      />
+      <CommandList>
+        <CommandEmpty className="py-6 text-center text-sm">
+          No results found.
+        </CommandEmpty>
+        
+        <CommandGroup heading="Navigation">
+          {navigationCommands.map((command, index) => (
+            <CommandItem 
+              key={`nav-${index}`} 
+              onSelect={() => handleSelect(command.action)}
+              onMouseEnter={() => soundEnabled && playSound('hover')}
+            >
+              {command.icon}
+              <span>{command.label}</span>
+              {command.shortcut && (
+                <CommandShortcut>⌘{command.shortcut}</CommandShortcut>
+              )}
+            </CommandItem>
+          ))}
+        </CommandGroup>
+        
+        <CommandSeparator />
+        
+        <CommandGroup heading="User">
+          {userCommands.map((command, index) => (
+            <CommandItem 
+              key={`user-${index}`} 
+              onSelect={() => handleSelect(command.action)}
+              onMouseEnter={() => soundEnabled && playSound('hover')}
+            >
+              {command.icon}
+              <span>{command.label}</span>
+              {command.shortcut && (
+                <CommandShortcut>⌘{command.shortcut}</CommandShortcut>
+              )}
+            </CommandItem>
+          ))}
+        </CommandGroup>
+        
+        <CommandSeparator />
+        
+        <CommandGroup heading="Help & Resources">
+          {helpCommands.map((command, index) => (
+            <CommandItem 
+              key={`help-${index}`} 
+              onSelect={() => handleSelect(command.action)}
+              onMouseEnter={() => soundEnabled && playSound('hover')}
+            >
+              {command.icon}
+              <span>{command.label}</span>
+              {command.shortcut && (
+                <CommandShortcut>⌘{command.shortcut}</CommandShortcut>
+              )}
+            </CommandItem>
+          ))}
+        </CommandGroup>
+      </CommandList>
+    </CommandDialog>
   );
-};
+}
+
+export default EnhancedCommandPalette;

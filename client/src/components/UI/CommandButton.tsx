@@ -1,28 +1,39 @@
 import React from 'react';
-import { useCommandPalette } from '@/hooks/use-command-palette';
-import { Button } from '@/components/ui/button';
-import { Command } from 'lucide-react';
+import { Button, ButtonProps } from '@/components/ui/button';
+import { CommandIcon } from 'lucide-react';
+import useSoundEffects from '@/hooks/use-sound-effects';
 
-interface CommandButtonProps {
-  className?: string;
+interface CommandButtonProps extends ButtonProps {
+  setOpen: (open: boolean) => void;
 }
 
 /**
- * A button component that opens the command palette when clicked
+ * CommandButton - A button that opens the command palette with sound effects
  */
-export const CommandButton: React.FC<CommandButtonProps> = ({ className }) => {
-  const { setIsOpen } = useCommandPalette();
-  
+const CommandButton: React.FC<CommandButtonProps> = ({
+  setOpen,
+  className,
+  children,
+  ...props
+}) => {
+  const { playSound, soundEnabled } = useSoundEffects();
+
+  const handleOpenCommandPalette = () => {
+    if (soundEnabled) playSound('notification');
+    setOpen(true);
+  };
+
   return (
     <Button
       variant="outline"
       size="sm"
-      className={className}
-      onClick={() => setIsOpen(true)}
+      className={`flex items-center gap-1 px-2 h-8 bg-background/60 backdrop-blur-sm ${className}`}
+      onClick={handleOpenCommandPalette}
+      {...props}
     >
-      <Command className="h-4 w-4 mr-1" />
-      <span className="hidden sm:inline-block">Command</span>
-      <kbd className="ml-2 hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+      <CommandIcon className="h-3.5 w-3.5" />
+      <span className="text-xs">Command Menu</span>
+      <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
         <span className="text-xs">⌘</span>K
       </kbd>
     </Button>

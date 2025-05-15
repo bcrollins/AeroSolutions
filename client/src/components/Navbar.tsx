@@ -23,7 +23,7 @@ import LanguageSwitcher from './LanguageSwitcher';
 import ClientPreviewModal from './ClientPreviewModal';
 import RXAILogo from './RXAILogo';
 import NotificationPopover from './NotificationPopover';
-import { CommandButton } from '@/components/UI/CommandButton';
+import CommandButton from '@/components/UI/CommandButton';
 import { motion } from 'framer-motion';
 
 const Navbar: React.FC = () => {
