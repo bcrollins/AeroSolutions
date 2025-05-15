@@ -1359,15 +1359,15 @@ const LearnAI: React.FC = () => {
                   
                   <div className="p-4">
                     <h3 className="font-bold">{video.name}</h3>
-                    <p className="text-sm text-gray-400 mb-2">{video.role}</p>
-                    <p className="text-sm italic">"{video.quote}"</p>
+                    <p className="text-sm text-gray-600 mb-2">{video.role}</p>
+                    <p className="text-sm italic text-gray-800">"{video.quote}"</p>
                   </div>
                 </Card>
               ))}
             </div>
             
             <Dialog open={showVideoDialog} onOpenChange={setShowVideoDialog}>
-              <DialogContent className="bg-[#1a1a1a] border-[#444] max-w-3xl">
+              <DialogContent className="bg-white border-gray-200 max-w-3xl shadow-lg">
                 <DialogHeader>
                   <DialogTitle>
                     {videoTestimonials[selectedVideoIndex]?.name} - Success Story
@@ -1455,7 +1455,7 @@ const LearnAI: React.FC = () => {
                       <select 
                         value={careerGoals}
                         onChange={(e) => setCareerGoals(e.target.value)}
-                        className="w-full bg-[#333] text-white border-[#444] rounded-md px-3 py-2 focus:border-[#007bff] focus:ring-[#007bff]"
+                        className="w-full bg-white text-gray-800 border-gray-200 rounded-md px-3 py-2 focus:border-[#007bff] focus:ring-[#007bff]"
                       >
                         <option value="promotion">Promotion in Current Role</option>
                         <option value="new-career">Complete Career Change</option>
@@ -1463,33 +1463,33 @@ const LearnAI: React.FC = () => {
                       </select>
                     </div>
                     
-                    <div className="bg-[#333] p-4 rounded-lg">
-                      <h3 className="font-semibold mb-2">Your Investment</h3>
-                      <div className="flex justify-between">
+                    <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                      <h3 className="font-semibold text-gray-800 mb-2">Your Investment</h3>
+                      <div className="flex justify-between text-gray-700">
                         <span>RXAI Professional Plan</span>
-                        <span>${courseCost}/year</span>
+                        <span className="font-medium">${courseCost}/year</span>
                       </div>
-                      <div className="text-sm text-gray-400 mt-2">
+                      <div className="text-sm text-gray-600 mt-2">
                         One-time investment giving you lifetime access to course materials and 1 year of community access.
                       </div>
                     </div>
                   </div>
                   
-                  <div className="bg-[#1e1e1e] p-6 rounded-lg">
-                    <h3 className="text-xl font-semibold mb-6 text-center">Your Return on Investment</h3>
+                  <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                    <h3 className="text-xl font-semibold mb-6 text-center text-gray-800">Your Return on Investment</h3>
                     
                     <div className="space-y-6">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between text-gray-700">
                         <span>Average Salary Increase</span>
-                        <span className="text-xl font-bold text-green-400">+${projectedSalaryIncrease.toLocaleString()}/year</span>
+                        <span className="text-xl font-bold text-green-600">+${projectedSalaryIncrease.toLocaleString()}/year</span>
                       </div>
                       
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between text-gray-700">
                         <span>Typical Time to Achievement</span>
                         <span className="font-semibold">{avgTimeToPromotion} months</span>
                       </div>
                       
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between text-gray-700">
                         <span>Job Placement Rate</span>
                         <span className="font-semibold">{Math.round(jobPlacementRate * 100)}%</span>
                       </div>
