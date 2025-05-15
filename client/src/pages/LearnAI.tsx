@@ -898,7 +898,7 @@ const LearnAI: React.FC = () => {
                       type="email" 
                       placeholder="Enter your email"
                       id="quick-demo-email"
-                      className="bg-white/10 border-0 focus:ring-[#007bff] text-white h-12"
+                      className="bg-white border border-gray-200 focus:ring-[#007bff] focus:border-[#007bff] text-gray-900 h-12 shadow-sm"
                     />
                   </div>
                   <Button 
@@ -906,9 +906,9 @@ const LearnAI: React.FC = () => {
                       const email = (document.getElementById('quick-demo-email') as HTMLInputElement).value;
                       handleQuickDemoSignup(email);
                     }}
-                    className="bg-[#007bff] hover:bg-blue-600 h-12 px-6 text-base"
+                    className="bg-[#007bff] hover:bg-blue-600 h-12 px-6 text-base text-white shadow-sm"
                   >
-                    <Play className="w-4 h-4 mr-2" /> Try Free Demo
+                    <Play className="w-4 h-4 mr-2" /> Start AI Training Free
                   </Button>
                 </motion.div>
                 
@@ -997,12 +997,12 @@ const LearnAI: React.FC = () => {
             transition={{ duration: 0.5, delay: 0.4 }}
             className="w-full max-w-6xl mb-16"
           >
-            <h2 className="text-2xl font-bold mb-2 text-center">Trusted by Industry Leaders</h2>
-            <p className="text-center text-gray-400 mb-8">Our graduates work at top technology companies worldwide</p>
+            <h2 className="text-2xl font-bold mb-2 text-center text-gray-900">Trusted by Industry Leaders</h2>
+            <p className="text-center text-gray-600 mb-8">Our graduates work at top technology companies worldwide</p>
             
             <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
               {trustedCompanies.map((company, index) => (
-                <div key={index} className="text-gray-400 text-lg font-semibold">{company}</div>
+                <div key={index} className="text-gray-700 text-lg font-semibold">{company}</div>
               ))}
             </div>
           </motion.div>
@@ -1548,12 +1548,12 @@ const LearnAI: React.FC = () => {
                     </p>
                   </div>
                   
-                  <div className="bg-[#333] p-6 rounded-lg">
+                  <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                     <div className="flex items-center justify-center mb-4">
                       <DollarSign className="w-8 h-8 text-[#007bff]" />
                     </div>
-                    <h3 className="text-xl font-bold text-center mb-2">$138,500</h3>
-                    <p className="text-center text-gray-400">
+                    <h3 className="text-xl font-bold text-center mb-2 text-gray-900">$138,500</h3>
+                    <p className="text-center text-gray-600">
                       Average salary for AI professionals
                     </p>
                   </div>
