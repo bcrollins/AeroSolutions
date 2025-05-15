@@ -42,6 +42,7 @@ import HistoryPage from "@/pages/HistoryPage";
 import LoginPage from "@/pages/LoginPage";
 import AdminDashboardPage from "@/pages/AdminDashboardPage";
 import AdminClientPreviewsPage from "@/pages/AdminClientPreviewsPage";
+import AdminUsersPage from "@/pages/AdminUsersPage";
 import ContentHubPage from "@/pages/ContentHubPage";
 import AIServices from "@/pages/AIServices";
 import FeedbackPage from "@/pages/FeedbackPage";
