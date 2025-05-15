@@ -1624,28 +1624,28 @@ const LearnAI: React.FC = () => {
                     <div className="flex items-start">
                       <Trophy className="w-5 h-5 text-[#0066cc] mr-3 mt-1" />
                       <div>
-                        <h4 className="font-semibold">Preferred Hiring Status</h4>
-                        <p className="text-sm text-gray-400">
+                        <h4 className="font-semibold text-gray-800">Preferred Hiring Status</h4>
+                        <p className="text-sm text-gray-600">
                           RXAI graduates receive preferred hiring status at over 120 partner companies.
                         </p>
                       </div>
                     </div>
                     
                     <div className="flex items-start">
-                      <Star className="w-5 h-5 text-[#007bff] mr-3 mt-1" />
+                      <Star className="w-5 h-5 text-[#0066cc] mr-3 mt-1" />
                       <div>
-                        <h4 className="font-semibold">87% Placement Rate</h4>
-                        <p className="text-sm text-gray-400">
+                        <h4 className="font-semibold text-gray-800">87% Placement Rate</h4>
+                        <p className="text-sm text-gray-600">
                           87% of our graduates find relevant employment within 6 months of program completion.
                         </p>
                       </div>
                     </div>
                     
                     <div className="flex items-start">
-                      <Users className="w-5 h-5 text-[#007bff] mr-3 mt-1" />
+                      <Users className="w-5 h-5 text-[#0066cc] mr-3 mt-1" />
                       <div>
-                        <h4 className="font-semibold">Alumni Network</h4>
-                        <p className="text-sm text-gray-400">
+                        <h4 className="font-semibold text-gray-800">Alumni Network</h4>
+                        <p className="text-sm text-gray-600">
                           Access to our 50,000+ alumni network for job referrals and career opportunities.
                         </p>
                       </div>
@@ -1653,17 +1653,17 @@ const LearnAI: React.FC = () => {
                   </div>
                 </div>
                 
-                <div className="bg-[#252525] p-6 rounded-lg">
-                  <h3 className="text-lg font-semibold mb-4 text-center">What Employers Say</h3>
+                <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                  <h3 className="text-lg font-semibold mb-4 text-center text-gray-800">What Employers Say</h3>
                   
                   <div className="space-y-4">
-                    <Card className="bg-[#333] border-none">
+                    <Card className="bg-white border border-gray-200 shadow-sm">
                       <div className="p-4">
-                        <p className="text-sm italic mb-3">"RXAI graduates consistently demonstrate strong practical skills and theoretical knowledge. They're able to contribute immediately to our AI projects."</p>
+                        <p className="text-sm italic text-gray-700 mb-3">"RXAI graduates consistently demonstrate strong practical skills and theoretical knowledge. They're able to contribute immediately to our AI projects."</p>
                         <div className="flex items-center">
                           <div className="text-sm">
-                            <div className="font-semibold">Mark Johnson</div>
-                            <div className="text-gray-400">AI Hiring Manager, Google</div>
+                            <div className="font-semibold text-gray-900">Mark Johnson</div>
+                            <div className="text-gray-500">AI Hiring Manager, Google</div>
                           </div>
                         </div>
                       </div>
@@ -1691,10 +1691,10 @@ const LearnAI: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="bg-[#2a2a2a] rounded-lg p-6 md:p-8 mb-16"
+            className="bg-white rounded-lg p-6 md:p-8 mb-16 border border-gray-200 shadow-sm"
           >
-            <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center">Is this course for you?</h2>
-            <p className="text-center mb-8 text-gray-300">
+            <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center text-gray-800">Is this course for you?</h2>
+            <p className="text-center mb-8 text-gray-600">
               Take our quick readiness quiz to see if you're prepared for our AI courses and get personalized recommendations.
             </p>
             
