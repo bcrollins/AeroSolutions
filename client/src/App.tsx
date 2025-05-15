@@ -17,6 +17,8 @@ import { Button } from "@/components/ui/button";
 import { Shield } from "lucide-react";
 // Import Apple-inspired effects
 import { initAppleEffects, initSoundEffects } from "@/utils/appleEffects";
+// Import OnboardingTour component
+import OnboardingTour from "@/components/Onboarding/OnboardingTour";
 
 // Popup Components
 import ClientInputPopup from "@/components/popups/ClientInputPopup";

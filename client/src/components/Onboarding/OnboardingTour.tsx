@@ -1,92 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation } from 'wouter';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { X, ArrowRight, CheckCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { X, ArrowRight, ArrowLeft, Check } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import { FadeIn, ButtonPress } from '@/components/UI/MicroInteractions';
+import { useToast } from '@/hooks/use-toast';
 
-// Define tour steps by page route
-const tourStepsByRoute: Record<string, TourStep[]> = {
-  '/': [
-    {
-      id: 'home-welcome',
-      title: 'Welcome to RXAI',
-      description: 'Your journey into AI education starts here. This tour will guide you through the key features of our platform.',
-      target: '.hero-section', // CSS selector for element to highlight
-      position: 'bottom',
-    },
-    {
-      id: 'home-courses',
-      title: 'Featured Courses',
-      description: 'Explore our handpicked collection of cutting-edge AI courses designed for all skill levels.',
-      target: '.featured-courses',
-      position: 'bottom',
-    },
-    {
-      id: 'home-navigation',
-      title: 'Easy Navigation',
-      description: 'Access all platform features from the main navigation bar at the top.',
-      target: 'nav',
-      position: 'bottom',
-    },
-  ],
-  '/dashboard': [
-    {
-      id: 'dashboard-welcome',
-      title: 'Your Personal Dashboard',
-      description: 'Track your progress, view achievements, and discover new courses all in one place.',
-      target: 'header',
-      position: 'bottom',
-    },
-    {
-      id: 'dashboard-stats',
-      title: 'Learning Statistics',
-      description: 'These cards show your current progress and achievements at a glance.',
-      target: '.grid-cols-1.sm\\:grid-cols-2.lg\\:grid-cols-4',
-      position: 'bottom',
-    },
-    {
-      id: 'dashboard-courses',
-      title: 'Your Courses',
-      description: 'Access all your enrolled courses here and continue where you left off.',
-      target: '.space-y-6:has(h2)',
-      position: 'right',
-    },
-    {
-      id: 'dashboard-activity',
-      title: 'Recent Activity',
-      description: 'Track your recent accomplishments and upcoming events in these panels.',
-      target: '.space-y-6:has(>div>div>div.h-5.w-5.text-primary)',
-      position: 'left',
-    },
-  ],
-  '/courses': [
-    {
-      id: 'courses-catalog',
-      title: 'Course Catalog',
-      description: 'Browse our full collection of courses and filter by category, difficulty, or duration.',
-      target: '.course-catalog',
-      position: 'top',
-    },
-    {
-      id: 'courses-search',
-      title: 'Search & Filter',
-      description: 'Quickly find courses that match your interests and skill level.',
-      target: '.search-filters',
-      position: 'bottom',
-    },
-    {
-      id: 'courses-enrollment',
-      title: 'Enrollment',
-      description: 'Click the "Enroll" button to start learning. You can track your progress from your dashboard.',
-      target: '.enroll-button',
-      position: 'left',
-    },
-  ],
-};
-
+// Define the structure of a tour step
 interface TourStep {
   id: string;
   title: string;
@@ -95,247 +15,312 @@ interface TourStep {
   position: 'top' | 'right' | 'bottom' | 'left';
 }
 
+// Define common props for the component
 interface OnboardingTourProps {
   forceTour?: boolean;
 }
 
-const OnboardingTour: React.FC<OnboardingTourProps> = ({ forceTour = false }) => {
-  const [location] = useLocation();
-  const [hasCompletedTour, setHasCompletedTour] = useLocalStorage('rxai-completed-tour', false);
-  const [activeStep, setActiveStep] = useState<number>(0);
-  const [isVisible, setIsVisible] = useState<boolean>(false);
-  const [targetElement, setTargetElement] = useState<DOMRect | null>(null);
-  const [steps, setSteps] = useState<TourStep[]>([]);
-
-  // Check if tour should be shown for the current page
-  useEffect(() => {
-    const routeKey = Object.keys(tourStepsByRoute).find(route => 
-      route === location || (route === '/' && location === '')
-    ) || '';
-    
-    if (routeKey && (forceTour || !hasCompletedTour)) {
-      setSteps(tourStepsByRoute[routeKey]);
-      setActiveStep(0);
-      
-      // Slight delay to ensure page has rendered
-      const timer = setTimeout(() => {
-        setIsVisible(true);
-      }, 1000);
-      
-      return () => clearTimeout(timer);
-    } else {
-      setIsVisible(false);
+export default function OnboardingTour({ forceTour = false }: OnboardingTourProps) {
+  // Tour steps data - could be moved to a config file
+  const tourSteps: TourStep[] = [
+    {
+      id: 'dashboard-intro',
+      title: 'Welcome to RXAI Platform',
+      description: 'This guided tour will help you get familiar with our platform\'s key features. We\'ll show you how to navigate and make the most of your experience.',
+      target: 'body', // Start with full-screen intro
+      position: 'bottom'
+    },
+    {
+      id: 'dashboard-navigation',
+      title: 'Smart Navigation',
+      description: 'The sidebar gives you quick access to all areas of the platform. You can collapse it for more workspace when needed.',
+      target: '.main-sidebar',
+      position: 'right'
+    },
+    {
+      id: 'command-palette',
+      title: 'Command Palette',
+      description: 'Press ⌘K (Mac) or Ctrl+K (Windows) to quickly access any feature, page, or action without clicking around.',
+      target: '.command-palette-button',
+      position: 'bottom'
+    },
+    {
+      id: 'dashboard-cards',
+      title: 'Smart Dashboard',
+      description: 'Your personalized dashboard displays your progress, recommended courses, and activity. Cards automatically update as you use the platform.',
+      target: '.dashboard-grid',
+      position: 'top'
+    },
+    {
+      id: 'theme-switcher',
+      title: 'Customize Your Experience',
+      description: 'Change theme, colors, and accessibility settings to make the platform work for you.',
+      target: '.theme-toggle',
+      position: 'bottom'
+    },
+    {
+      id: 'search-feature',
+      title: 'Powerful Search',
+      description: 'Quickly find content, courses, or tools with our AI-powered search feature.',
+      target: '.search-input',
+      position: 'bottom'
+    },
+    {
+      id: 'notifications',
+      title: 'Stay Updated',
+      description: 'We\'ll notify you about new courses, updates to your subscriptions, and platform improvements.',
+      target: '.notifications-button',
+      position: 'left'
+    },
+    {
+      id: 'help-center',
+      title: 'Get Help Anytime',
+      description: 'Our help center and live chat support are available 24/7 if you need assistance.',
+      target: '.help-button',
+      position: 'left'
     }
-  }, [location, forceTour, hasCompletedTour]);
+  ];
 
-  // Find and track the target element position
+  // Get from local storage or set default values
+  const [currentStepIndex, setCurrentStepIndex] = useLocalStorage<number>('onboarding-step-index', 0);
+  const [showTour, setShowTour] = useLocalStorage<boolean>('show-onboarding-tour', true);
+  const [hasCompletedTour, setHasCompletedTour] = useLocalStorage<boolean>('completed-onboarding-tour', false);
+  
+  // Additional state
+  const [isElementVisible, setIsElementVisible] = useState(false);
+  const [elementPosition, setElementPosition] = useState({ top: 0, left: 0, width: 0, height: 0 });
+  const highlightedElementRef = useRef<Element | null>(null);
+  const { toast } = useToast();
+
+  // Show the tour if forced or if the user hasn't completed it
   useEffect(() => {
-    if (!isVisible || steps.length === 0 || activeStep >= steps.length) return;
+    if (forceTour) {
+      setShowTour(true);
+    } else if (hasCompletedTour && !forceTour) {
+      setShowTour(false);
+    }
+  }, [forceTour, hasCompletedTour, setShowTour]);
+
+  // Find the target element and calculate its position
+  useEffect(() => {
+    if (!showTour) return;
+
+    const currentStep = tourSteps[currentStepIndex];
     
-    const currentStep = steps[activeStep];
-    const targetEl = document.querySelector(currentStep.target);
+    // For the intro step, we don't need to highlight any element
+    if (currentStep.target === 'body') {
+      setIsElementVisible(true);
+      setElementPosition({
+        top: window.innerHeight / 2,
+        left: window.innerWidth / 2,
+        width: 0,
+        height: 0
+      });
+      return;
+    }
+
+    // Find the target element
+    const targetElement = document.querySelector(currentStep.target);
     
-    if (targetEl) {
-      const updateTargetPosition = () => {
-        setTargetElement(targetEl.getBoundingClientRect());
-      };
+    if (targetElement) {
+      highlightedElementRef.current = targetElement;
       
-      updateTargetPosition();
+      // Add highlight class to the target element
+      targetElement.classList.add('tour-highlight');
       
-      // Update position on resize
-      window.addEventListener('resize', updateTargetPosition);
+      // Calculate element position
+      const rect = targetElement.getBoundingClientRect();
+      setElementPosition({
+        top: rect.top + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+        height: rect.height
+      });
       
-      return () => {
-        window.removeEventListener('resize', updateTargetPosition);
-      };
+      setIsElementVisible(true);
+      
+      // Scroll element into view
+      targetElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
     } else {
       // If element not found, move to next step
-      goToNextStep();
+      setIsElementVisible(false);
+      console.warn(`Target element "${currentStep.target}" not found for tour step ${currentStepIndex}`);
     }
-  }, [steps, activeStep, isVisible]);
 
-  // Calculate tour card position based on target element and specified position
-  const calculatePosition = (): React.CSSProperties => {
-    if (!targetElement) return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
-    
-    const currentStep = steps[activeStep];
-    const margin = 16; // Space between target and tour card
-    
-    let top, left;
-    
-    switch (currentStep.position) {
-      case 'top':
-        top = targetElement.top - margin;
-        left = targetElement.left + (targetElement.width / 2);
-        return { 
-          bottom: `calc(100vh - ${top}px)`, 
-          left: `${left}px`, 
-          transform: 'translateX(-50%)',
-        };
-      case 'right':
-        top = targetElement.top + (targetElement.height / 2);
-        left = targetElement.right + margin;
-        return { 
-          top: `${top}px`, 
-          left: `${left}px`, 
-          transform: 'translateY(-50%)',
-        };
-      case 'bottom':
-        top = targetElement.bottom + margin;
-        left = targetElement.left + (targetElement.width / 2);
-        return { 
-          top: `${top}px`, 
-          left: `${left}px`, 
-          transform: 'translateX(-50%)',
-        };
-      case 'left':
-        top = targetElement.top + (targetElement.height / 2);
-        left = targetElement.left - margin;
-        return { 
-          top: `${top}px`, 
-          right: `calc(100vw - ${left}px)`, 
-          transform: 'translateY(-50%)',
-        };
-      default:
-        return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
-    }
-  };
+    // Cleanup function to remove highlight class
+    return () => {
+      if (highlightedElementRef.current) {
+        highlightedElementRef.current.classList.remove('tour-highlight');
+        highlightedElementRef.current = null;
+      }
+    };
+  }, [showTour, currentStepIndex, tourSteps]);
 
-  const completeTour = () => {
-    setIsVisible(false);
-    setHasCompletedTour(true);
-  };
-
-  const goToNextStep = () => {
-    if (activeStep < steps.length - 1) {
-      setActiveStep(activeStep + 1);
+  // Handle next step
+  const handleNextStep = () => {
+    if (currentStepIndex < tourSteps.length - 1) {
+      setCurrentStepIndex(currentStepIndex + 1);
     } else {
       completeTour();
     }
   };
 
-  const goToPrevStep = () => {
-    if (activeStep > 0) {
-      setActiveStep(activeStep - 1);
+  // Handle previous step
+  const handlePrevStep = () => {
+    if (currentStepIndex > 0) {
+      setCurrentStepIndex(currentStepIndex - 1);
     }
   };
 
+  // Handle completing the tour
+  const completeTour = () => {
+    setShowTour(false);
+    setHasCompletedTour(true);
+    
+    // Remove highlight from any element
+    if (highlightedElementRef.current) {
+      highlightedElementRef.current.classList.remove('tour-highlight');
+    }
+    
+    toast({
+      title: "Tour completed!",
+      description: "You can restart the tour anytime from the help menu.",
+      variant: "default"
+    });
+  };
+
+  // Skip the tour
   const skipTour = () => {
-    completeTour();
+    setShowTour(false);
+    setHasCompletedTour(true);
+    
+    // Remove highlight from any element
+    if (highlightedElementRef.current) {
+      highlightedElementRef.current.classList.remove('tour-highlight');
+    }
+    
+    toast({
+      title: "Tour skipped",
+      description: "You can restart the tour anytime from the help menu.",
+      variant: "default"
+    });
   };
 
-  if (!isVisible || steps.length === 0 || activeStep >= steps.length) return null;
+  // If tour is not showing, don't render anything
+  if (!showTour) return null;
 
-  const currentStep = steps[activeStep];
-  const position = calculatePosition();
-  
-  // Add highlight effect to target element
-  useEffect(() => {
-    if (targetElement) {
-      const targetEl = document.querySelector(currentStep.target);
-      if (targetEl) {
-        // Add temporary highlight class
-        targetEl.classList.add('tour-highlight');
-        // Clean up by removing highlight when tour moves or ends
-        return () => {
-          targetEl.classList.remove('tour-highlight');
-        };
-      }
+  const currentStep = tourSteps[currentStepIndex];
+  const isLastStep = currentStepIndex === tourSteps.length - 1;
+  const isFirstStep = currentStepIndex === 0;
+
+  // Calculate tooltip position based on element position and specified position
+  const getTooltipPosition = () => {
+    const padding = 20; // Space between element and tooltip
+    const tooltipWidth = 320; // Estimated tooltip width
+    const tooltipHeight = 200; // Estimated tooltip height
+    
+    if (currentStep.target === 'body') {
+      return {
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)'
+      };
     }
-  }, [targetElement, currentStep]);
+
+    switch (currentStep.position) {
+      case 'top':
+        return {
+          top: `${elementPosition.top - tooltipHeight - padding}px`,
+          left: `${elementPosition.left + elementPosition.width / 2 - tooltipWidth / 2}px`
+        };
+      case 'right':
+        return {
+          top: `${elementPosition.top + elementPosition.height / 2 - tooltipHeight / 2}px`,
+          left: `${elementPosition.left + elementPosition.width + padding}px`
+        };
+      case 'bottom':
+        return {
+          top: `${elementPosition.top + elementPosition.height + padding}px`,
+          left: `${elementPosition.left + elementPosition.width / 2 - tooltipWidth / 2}px`
+        };
+      case 'left':
+        return {
+          top: `${elementPosition.top + elementPosition.height / 2 - tooltipHeight / 2}px`,
+          left: `${elementPosition.left - tooltipWidth - padding}px`
+        };
+      default:
+        return {
+          top: `${elementPosition.top + elementPosition.height + padding}px`,
+          left: `${elementPosition.left}px`
+        };
+    }
+  };
 
   return (
-    <>
-      {/* Background overlay */}
-      <div 
-        className="fixed inset-0 bg-black/40 z-[999]" 
-        onClick={skipTour}
-      />
-      
-      {/* Tour card */}
-      <FadeIn>
-        <div 
-          className="fixed z-[1000] w-[320px] max-w-[90vw]"
-          style={position}
+    <AnimatePresence>
+      {showTour && isElementVisible && (
+        <motion.div
+          className="fixed inset-0 z-[1000] pointer-events-none"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
         >
-          <Card className="shadow-xl border-primary/20">
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-lg flex items-center gap-2">
+          <div 
+            className="pointer-events-auto absolute" 
+            style={getTooltipPosition()}
+          >
+            <Card className="w-[320px] shadow-lg border-primary/10">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-semibold flex items-center justify-between">
                   {currentStep.title}
-                </CardTitle>
-                <ButtonPress>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
                     onClick={skipTour}
+                    className="h-6 w-6"
                   >
                     <X className="h-4 w-4" />
                   </Button>
-                </ButtonPress>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                {currentStep.description}
-              </p>
-            </CardContent>
-            <CardFooter className="flex justify-between pt-2">
-              <div className="flex items-center gap-1">
-                {steps.map((_, i) => (
-                  <div 
-                    key={i}
-                    className={cn(
-                      "h-1.5 rounded-full transition-all duration-300",
-                      i === activeStep 
-                        ? "w-5 bg-primary" 
-                        : i < activeStep 
-                          ? "w-1.5 bg-primary/60" 
-                          : "w-1.5 bg-gray-300 dark:bg-gray-600"
-                    )}
-                  />
-                ))}
-              </div>
-              <div className="flex items-center gap-2">
-                {activeStep > 0 && (
-                  <ButtonPress>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={goToPrevStep}
-                      className="h-8"
-                    >
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">{currentStep.description}</p>
+              </CardContent>
+              <CardFooter className="flex justify-between pt-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">
+                    {currentStepIndex + 1} of {tourSteps.length}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {!isFirstStep && (
+                    <Button variant="outline" size="sm" onClick={handlePrevStep}>
+                      <ArrowLeft className="h-4 w-4 mr-1" />
                       Back
                     </Button>
-                  </ButtonPress>
-                )}
-                <ButtonPress>
-                  <Button
-                    size="sm"
-                    onClick={goToNextStep}
-                    className="h-8 flex items-center gap-1"
-                  >
-                    {activeStep === steps.length - 1 ? (
+                  )}
+                  <Button variant="default" size="sm" onClick={handleNextStep}>
+                    {isLastStep ? (
                       <>
+                        <Check className="h-4 w-4 mr-1" />
                         Finish
-                        <CheckCircle className="h-4 w-4" />
                       </>
                     ) : (
                       <>
                         Next
-                        <ArrowRight className="h-4 w-4" />
+                        <ArrowRight className="h-4 w-4 ml-1" />
                       </>
                     )}
                   </Button>
-                </ButtonPress>
-              </div>
-            </CardFooter>
-          </Card>
-        </div>
-      </FadeIn>
-    </>
+                </div>
+              </CardFooter>
+            </Card>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
-};
-
-export default OnboardingTour;
+}
