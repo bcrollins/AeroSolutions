@@ -16,36 +16,7 @@ import ArticleReactionBar from '@/components/articles/ArticleReactionBar';
 import AIArticleInsights from '@/components/articles/AIArticleInsights';
 import { useToast } from "@/hooks/use-toast";
 
-// Add custom keyframes animations
-const CustomAnimations = () => (
-  <style>
-    {`
-      @keyframes shimmer {
-        0% {
-          transform: translateX(-100%);
-        }
-        100% {
-          transform: translateX(100%);
-        }
-      }
-      
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translateY(10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      
-      .animate-shimmer {
-        animation: shimmer 2.5s infinite;
-      }
-    `}
-  </style>
-);
+// Removed custom animations as requested
 
 // Type definitions
 interface ArticlePost {
@@ -468,8 +439,7 @@ const NewsHubPage: React.FC = () => {
   // Return JSX for News Hub Page
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
-      {/* Add custom keyframe animations */}
-      <CustomAnimations />
+      {/* Custom animations have been removed */}
       
       <Helmet>
         <title>News Hub | RXAI - Artificial Intelligence Articles</title>
@@ -1172,7 +1142,7 @@ const NewsHubPage: React.FC = () => {
                       
                       {/* Actions row */}
                       <div className="flex justify-between items-center border-t border-gray-100 dark:border-gray-800
-                        group-hover:bg-gray-50/50 dark:group-hover:bg-gray-800/30 transition-colors duration-300 rounded-b-lg pt-3">
+                        rounded-b-lg pt-3">
                         <ArticleReactionBar 
                           articleId={post.id}
                           compact={true}
@@ -1184,12 +1154,10 @@ const NewsHubPage: React.FC = () => {
                           <Button 
                             variant="ghost" 
                             size="sm" 
-                            className="text-primary hover:text-primary/80 hover:bg-primary/10 group/button transition-all duration-300
-                              group-hover:shadow-sm"
-                            onClick={() => playSound('navigation')}
+                            className="text-primary hover:text-primary/80 hover:bg-primary/10"
                           >
                             Read more
-                            <ChevronRight className="h-4 w-4 ml-1 transition-transform duration-300 group-hover/button:translate-x-0.5" />
+                            <ChevronRight className="h-4 w-4 ml-1" />
                           </Button>
                         </Link>
                       </div>
