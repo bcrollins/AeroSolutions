@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
-import { Search, BrainCircuit, ChevronRight, Clock, X, BookOpen, Newspaper } from 'lucide-react';
+import { Search, BrainCircuit, ChevronRight, Clock, X, BookOpen, Newspaper, Cpu, Briefcase } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
@@ -582,12 +582,12 @@ const NewsHubPage: React.FC = () => {
               const isNew = isNewArticle(post.publishedAt, post.createdAt);
               
               return (
-                <Card key={post.id} className="overflow-hidden transition-all duration-300 hover:shadow-lg dark:hover:shadow-gray-800/30 group">
-                  <div className="relative h-48 bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                <Card key={post.id} className="overflow-hidden transition-all duration-300 hover:shadow-lg dark:hover:shadow-gray-800/30 group border border-transparent hover:border-primary/20 dark:hover:border-primary/30">
+                  <div className="relative h-48 bg-gradient-to-br from-gray-100 to-white dark:from-gray-800 dark:to-gray-900 overflow-hidden">
                     <img 
                       src={displayImage}
                       alt={post.title}
-                      className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-105"
+                      className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-105 filter group-hover:brightness-110"
                       onError={(e) => {
                         // Fallback if image fails to load
                         e.currentTarget.src = getFallbackImage(post.id);
@@ -597,8 +597,29 @@ const NewsHubPage: React.FC = () => {
                     {/* Category label */}
                     {post.category && (
                       <div className="absolute top-3 left-3">
-                        <Badge variant="secondary" className="bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300">
-                          {post.category}
+                        <Badge 
+                          variant="secondary" 
+                          className="bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 shadow-sm
+                          hover:scale-105 transition-transform duration-200"
+                        >
+                          {post.category === 'AI' || post.category.includes('AI') ? (
+                            <span className="flex items-center">
+                              <BrainCircuit className="h-3 w-3 mr-1" />
+                              {post.category}
+                            </span>
+                          ) : post.category === 'Technology' || post.category === 'Tech' ? (
+                            <span className="flex items-center">
+                              <Cpu className="h-3 w-3 mr-1" />
+                              {post.category}
+                            </span>
+                          ) : post.category === 'Business' ? (
+                            <span className="flex items-center">
+                              <Briefcase className="h-3 w-3 mr-1" />
+                              {post.category}
+                            </span>
+                          ) : (
+                            post.category
+                          )}
                         </Badge>
                       </div>
                     )}
@@ -606,7 +627,12 @@ const NewsHubPage: React.FC = () => {
                     {/* New badge */}
                     {isNew && (
                       <div className="absolute top-3 right-3">
-                        <Badge variant="default" className="bg-blue-600 hover:bg-blue-700">New</Badge>
+                        <Badge 
+                          variant="default" 
+                          className="font-semibold shadow-md backdrop-blur-sm bg-primary/90 hover:bg-primary/100 transition-colors"
+                        >
+                          <span className="animate-pulse-slow">New</span>
+                        </Badge>
                       </div>
                     )}
                   </div>
