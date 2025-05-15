@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import EnrolledCourses from '@/components/dashboard/EnrolledCourses';
 import UserBadges from '@/components/dashboard/UserBadges';
 import CourseRecommendations from '@/components/dashboard/CourseRecommendations';
-import { BarChart, Award, BookmarkCheck, Clock, Calendar, Lightning, Star, ArrowRight, Activity } from 'lucide-react';
+import { BarChart, Award, BookmarkCheck, Clock, Calendar, Zap, Star, ArrowRight, Activity } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
@@ -142,7 +142,7 @@ const Dashboard = () => {
               <CardDescription>Learning Streak</CardDescription>
               <CardTitle className="text-2xl flex items-center justify-between">
                 <span>{Math.floor(Math.random() * 7) + 3} days</span>
-                <Lightning className="h-5 w-5 text-purple-500" />
+                <Zap className="h-5 w-5 text-purple-500" />
               </CardTitle>
             </CardHeader>
             <CardContent className="py-0">

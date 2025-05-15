@@ -646,6 +646,27 @@ textarea {
   box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.3);
 }
 
+/* Onboarding Tour Styles */
+.tour-highlight {
+  position: relative;
+  z-index: 1000;
+  box-shadow: 0 0 0 4px var(--color-primary), 0 0 0 8000px rgba(0, 0, 0, 0.4);
+  border-radius: 4px;
+  animation: pulse-highlight 2s infinite;
+}
+
+@keyframes pulse-highlight {
+  0% {
+    box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.4), 0 0 0 8000px rgba(0, 0, 0, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(0, 102, 204, 0.6), 0 0 0 8000px rgba(0, 0, 0, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.4), 0 0 0 8000px rgba(0, 0, 0, 0.4);
+  }
+}
+
 .apple-button:disabled, .btn-primary:disabled {
   background: var(--color-gray-300);
   color: var(--color-gray-500);
