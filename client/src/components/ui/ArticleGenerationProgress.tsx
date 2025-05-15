@@ -60,7 +60,7 @@ const ArticleGenerationProgress: React.FC<ArticleGenerationProgressProps> = ({
   return (
     <div 
       className={`rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 
-        bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm shadow-md hover:shadow-lg transition-all duration-300 ${className}`}
+        bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm shadow-md hover:shadow-lg transition-all duration-300 relative ${className}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
