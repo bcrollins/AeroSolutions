@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="400" viewBox="0 0 800 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gradient background -->
+  <rect width="800" height="400" fill="url(#redGradient)"/>
+  
+  <!-- Abstract security pattern -->
+  <g opacity="0.15">
+    <!-- Shield grid pattern -->
+    <path d="M100 80L150 50L200 80L200 140L150 170L100 140L100 80Z" stroke="white" stroke-width="1.5" fill="none"/>
+    <path d="M300 80L350 50L400 80L400 140L350 170L300 140L300 80Z" stroke="white" stroke-width="1.5" fill="none"/>
+    <path d="M500 80L550 50L600 80L600 140L550 170L500 140L500 80Z" stroke="white" stroke-width="1.5" fill="none"/>
+    <path d="M700 80L750 50L800 80L800 140L750 170L700 140L700 80Z" stroke="white" stroke-width="1.5" fill="none"/>
+    
+    <path d="M0 180L50 150L100 180L100 240L50 270L0 240L0 180Z" stroke="white" stroke-width="1.5" fill="none"/>
+    <path d="M200 180L250 150L300 180L300 240L250 270L200 240L200 180Z" stroke="white" stroke-width="1.5" fill="none"/>
+    <path d="M400 180L450 150L500 180L500 240L450 270L400 240L400 180Z" stroke="white" stroke-width="1.5" fill="none"/>
+    <path d="M600 180L650 150L700 180L700 240L650 270L600 240L600 180Z" stroke="white" stroke-width="1.5" fill="none"/>
+    
+    <path d="M100 280L150 250L200 280L200 340L150 370L100 340L100 280Z" stroke="white" stroke-width="1.5" fill="none"/>
+    <path d="M300 280L350 250L400 280L400 340L350 370L300 340L300 280Z" stroke="white" stroke-width="1.5" fill="none"/>
+    <path d="M500 280L550 250L600 280L600 340L550 370L500 340L500 280Z" stroke="white" stroke-width="1.5" fill="none"/>
+    <path d="M700 280L750 250L800 280L800 340L750 370L700 340L700 280Z" stroke="white" stroke-width="1.5" fill="none"/>
+  </g>
+  
+  <!-- Central security icon -->
+  <g transform="translate(400, 180)">
+    <circle cx="0" cy="0" r="80" fill="url(#lightRedGradient)" opacity="0.7"/>
+    <!-- Lock icon -->
+    <g transform="translate(-25, -30)">
+      <path d="M0 30H50V60H0V30Z" fill="white"/>
+      <path d="M10 30V15C10 6.71573 16.7157 0 25 0C33.2843 0 40 6.71573 40 15V30" stroke="white" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="25" cy="45" r="5" fill="url(#redGradient)"/>
+      <rect x="23" y="45" width="4" height="10" fill="url(#redGradient)"/>
+    </g>
+  </g>
+  
+  <!-- Category label -->
+  <rect x="50" y="30" width="130" height="30" rx="15" fill="#000000" fill-opacity="0.6"/>
+  <text x="115" y="50" font-family="Arial, sans-serif" font-size="14" fill="white" text-anchor="middle" dominant-baseline="middle">AI Governance</text>
+  
+  <!-- Binary code pattern at bottom -->
+  <g transform="translate(50, 330)" opacity="0.5">
+    <text font-family="monospace" font-size="10" fill="white">01001010 01000001 01001001 00100000 01010011 01100101 01100011 01110101 01110010 01101001 01110100 01111001</text>
+  </g>
+  
+  <!-- Decorative elements -->
+  <circle cx="700" cy="60" r="30" fill="url(#lightRedGradient)" opacity="0.4"/>
+  <circle cx="730" cy="100" r="20" fill="url(#lightRedGradient)" opacity="0.3"/>
+  <circle cx="670" cy="90" r="25" fill="url(#lightRedGradient)" opacity="0.2"/>
+  
+  <!-- Gradients -->
+  <defs>
+    <linearGradient id="redGradient" x1="0" y1="0" x2="800" y2="400" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7F1D1D"/>
+      <stop offset="1" stop-color="#991B1B"/>
+    </linearGradient>
+    <linearGradient id="lightRedGradient" x1="-80" y1="-80" x2="80" y2="80" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#EF4444"/>
+      <stop offset="1" stop-color="#DC2626"/>
+    </linearGradient>
+  </defs>
+</svg>

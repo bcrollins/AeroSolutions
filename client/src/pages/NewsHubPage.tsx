@@ -437,15 +437,37 @@ const NewsHubPage: React.FC = () => {
     return match ? match[1] : null;
   };
   
-  // Function to get a random placeholder image based on article ID
-  const getFallbackImage = (id: number): string => {
+  // Function to get a themed placeholder image based on article ID and category
+  const getFallbackImage = (id: number, category?: string | null): string => {
+    // Use different placeholder images based on category if available
+    if (category) {
+      const lowerCategory = category.toLowerCase();
+      
+      if (lowerCategory.includes('business') || lowerCategory.includes('finance') || lowerCategory.includes('enterprise')) {
+        return '/img/placeholders/ai-tech-2.svg';
+      }
+      
+      if (lowerCategory.includes('green') || lowerCategory.includes('sustain') || lowerCategory.includes('environment')) {
+        return '/img/placeholders/ai-tech-3.svg';
+      }
+      
+      if (lowerCategory.includes('customer') || lowerCategory.includes('experience') || lowerCategory.includes('service')) {
+        return '/img/placeholders/ai-tech-4.svg';
+      }
+      
+      if (lowerCategory.includes('security') || lowerCategory.includes('governance') || lowerCategory.includes('compliance')) {
+        return '/img/placeholders/ai-tech-5.svg';
+      }
+    }
+    
+    // Fallback: use a placeholder based on ID
     const imageIndex = id % 5;
     const fallbackImages = [
-      '/img/article-placeholder-1.jpg',
-      '/img/article-placeholder-2.jpg',
-      '/img/article-placeholder-3.jpg',
-      '/img/article-placeholder-4.jpg',
-      '/img/article-placeholder-5.jpg',
+      '/img/placeholders/ai-tech-1.svg',
+      '/img/placeholders/ai-tech-2.svg',
+      '/img/placeholders/ai-tech-3.svg',
+      '/img/placeholders/ai-tech-4.svg',
+      '/img/placeholders/ai-tech-5.svg',
     ];
     
     return fallbackImages[imageIndex];
@@ -873,25 +895,35 @@ const NewsHubPage: React.FC = () => {
       
       {/* Error state */}
       {!isLoading && error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/30 rounded-lg p-6 text-center">
-          <div className="mb-4 text-red-500 dark:text-red-400">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+        <div className="bg-red-50 dark:bg-gray-900/90 border border-red-100 dark:border-red-800/30 rounded-xl p-6 text-center max-w-2xl mx-auto">
+          <div className="mb-6 relative">
+            <div className="w-32 h-32 mx-auto mb-2 opacity-80">
+              <img src="/img/placeholders/ai-tech-5.svg" alt="Error illustration" className="w-full h-full object-cover rounded-lg" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="bg-red-500 dark:bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
           </div>
-          <h3 className="text-lg font-medium text-red-800 dark:text-red-300 mb-2">
+          <h3 className="text-xl font-bold text-red-800 dark:text-red-300 mb-3">
             Unable to load articles
           </h3>
-          <p className="text-red-600 dark:text-red-400 mb-4">
-            {error instanceof Error ? error.message : 'An unknown error occurred'}
+          <p className="text-red-600 dark:text-red-400 mb-5 max-w-md mx-auto">
+            {error instanceof Error ? error.message : 'Failed to fetch articles from any available endpoint'}
           </p>
           <Button
             onClick={() => {
               window.location.reload();
               playSound('click');
             }}
-            className="bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-800/30 dark:hover:bg-red-800/50 dark:text-red-300"
+            className="bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-800/30 dark:hover:bg-red-800/50 dark:text-red-300 px-6 py-2 rounded-lg transition-all duration-200 transform hover:scale-105"
           >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
             Try again
           </Button>
         </div>
@@ -959,11 +991,8 @@ const NewsHubPage: React.FC = () => {
               // Calculate reading time
               const readingTime = post.readTimeMinutes || getReadingTime(post.content);
               
-              // Get image URL - try post.imageUrl first, then look in content, then use placeholder
-              let displayImage = post.imageUrl || extractImageFromContent(post.content);
-              if (!displayImage) {
-                displayImage = getFallbackImage(post.id);
-              }
+              // Always use our custom themed placeholder images
+              const displayImage = getFallbackImage(post.id, post.category);
               
               // Check if article is new
               const isNew = isNewArticle(post.publishedAt, post.createdAt);

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="400" viewBox="0 0 800 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gradient background -->
+  <rect width="800" height="400" fill="url(#orangeGradient)"/>
+  
+  <!-- Abstract pattern -->
+  <g opacity="0.2">
+    <!-- Wave pattern -->
+    <path d="M0 100C66.6667 70 133.333 70 200 100C266.667 130 333.333 130 400 100C466.667 70 533.333 70 600 100C666.667 130 733.333 130 800 100" stroke="white" stroke-width="2"/>
+    <path d="M0 150C66.6667 120 133.333 120 200 150C266.667 180 333.333 180 400 150C466.667 120 533.333 120 600 150C666.667 180 733.333 180 800 150" stroke="white" stroke-width="2"/>
+    <path d="M0 200C66.6667 170 133.333 170 200 200C266.667 230 333.333 230 400 200C466.667 170 533.333 170 600 200C666.667 230 733.333 230 800 200" stroke="white" stroke-width="2"/>
+    <path d="M0 250C66.6667 220 133.333 220 200 250C266.667 280 333.333 280 400 250C466.667 220 533.333 220 600 250C666.667 280 733.333 280 800 250" stroke="white" stroke-width="2"/>
+    <path d="M0 300C66.6667 270 133.333 270 200 300C266.667 330 333.333 330 400 300C466.667 270 533.333 270 600 300C666.667 330 733.333 330 800 300" stroke="white" stroke-width="2"/>
+  </g>
+  
+  <!-- Central feature -->
+  <g transform="translate(400, 180)">
+    <circle cx="0" cy="0" r="75" fill="url(#lightOrangeGradient)" opacity="0.7"/>
+    <!-- Chat/Communication icon -->
+    <g transform="translate(-35, -35) scale(0.7)">
+      <rect x="0" y="0" width="100" height="80" rx="10" fill="white"/>
+      <path d="M50 80L35 100L35 80" fill="white"/>
+      <circle cx="25" cy="40" r="5" fill="url(#orangeGradient)"/>
+      <circle cx="50" cy="40" r="5" fill="url(#orangeGradient)"/>
+      <circle cx="75" cy="40" r="5" fill="url(#orangeGradient)"/>
+    </g>
+  </g>
+  
+  <!-- Category label -->
+  <rect x="50" y="30" width="180" height="30" rx="15" fill="#000000" fill-opacity="0.6"/>
+  <text x="140" y="50" font-family="Arial, sans-serif" font-size="14" fill="white" text-anchor="middle" dominant-baseline="middle">Customer Experience & AI</text>
+  
+  <!-- Decorative elements -->
+  <circle cx="680" cy="70" r="35" fill="url(#lightOrangeGradient)" opacity="0.4"/>
+  <circle cx="720" cy="100" r="25" fill="url(#lightOrangeGradient)" opacity="0.3"/>
+  <circle cx="650" cy="120" r="30" fill="url(#lightOrangeGradient)" opacity="0.2"/>
+  
+  <!-- Radial connections -->
+  <g opacity="0.3" transform="translate(400, 180)">
+    <line x1="0" y1="0" x2="150" y2="-100" stroke="white" stroke-width="1"/>
+    <line x1="0" y1="0" x2="180" y2="-50" stroke="white" stroke-width="1"/>
+    <line x1="0" y1="0" x2="200" y2="0" stroke="white" stroke-width="1"/>
+    <line x1="0" y1="0" x2="180" y2="50" stroke="white" stroke-width="1"/>
+    <line x1="0" y1="0" x2="150" y2="100" stroke="white" stroke-width="1"/>
+    <line x1="0" y1="0" x2="100" y2="150" stroke="white" stroke-width="1"/>
+    <line x1="0" y1="0" x2="0" y2="170" stroke="white" stroke-width="1"/>
+    <line x1="0" y1="0" x2="-100" y2="150" stroke="white" stroke-width="1"/>
+    <line x1="0" y1="0" x2="-150" y2="100" stroke="white" stroke-width="1"/>
+    <line x1="0" y1="0" x2="-180" y2="50" stroke="white" stroke-width="1"/>
+    <line x1="0" y1="0" x2="-200" y2="0" stroke="white" stroke-width="1"/>
+    <line x1="0" y1="0" x2="-180" y2="-50" stroke="white" stroke-width="1"/>
+    <line x1="0" y1="0" x2="-150" y2="-100" stroke="white" stroke-width="1"/>
+    <line x1="0" y1="0" x2="-100" y2="-150" stroke="white" stroke-width="1"/>
+    <line x1="0" y1="0" x2="0" y2="-170" stroke="white" stroke-width="1"/>
+    <line x1="0" y1="0" x2="100" y2="-150" stroke="white" stroke-width="1"/>
+    
+    <circle cx="150" cy="-100" r="4" fill="white"/>
+    <circle cx="180" cy="-50" r="4" fill="white"/>
+    <circle cx="200" cy="0" r="4" fill="white"/>
+    <circle cx="180" cy="50" r="4" fill="white"/>
+    <circle cx="150" cy="100" r="4" fill="white"/>
+    <circle cx="100" cy="150" r="4" fill="white"/>
+    <circle cx="0" cy="170" r="4" fill="white"/>
+    <circle cx="-100" cy="150" r="4" fill="white"/>
+    <circle cx="-150" cy="100" r="4" fill="white"/>
+    <circle cx="-180" cy="50" r="4" fill="white"/>
+    <circle cx="-200" cy="0" r="4" fill="white"/>
+    <circle cx="-180" cy="-50" r="4" fill="white"/>
+    <circle cx="-150" cy="-100" r="4" fill="white"/>
+    <circle cx="-100" cy="-150" r="4" fill="white"/>
+    <circle cx="0" cy="-170" r="4" fill="white"/>
+    <circle cx="100" cy="-150" r="4" fill="white"/>
+  </g>
+  
+  <!-- Gradients -->
+  <defs>
+    <linearGradient id="orangeGradient" x1="0" y1="0" x2="800" y2="400" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7C2D12"/>
+      <stop offset="1" stop-color="#9A3412"/>
+    </linearGradient>
+    <linearGradient id="lightOrangeGradient" x1="-75" y1="-75" x2="75" y2="75" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F97316"/>
+      <stop offset="1" stop-color="#EA580C"/>
+    </linearGradient>
+  </defs>
+</svg>

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="400" viewBox="0 0 800 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Dark gradient background -->
+  <rect width="800" height="400" fill="url(#darkGradient)"/>
+  
+  <!-- Abstract neural network patterns -->
+  <g opacity="0.2">
+    <circle cx="150" cy="100" r="5" fill="#4F46E5"/>
+    <circle cx="250" cy="150" r="5" fill="#4F46E5"/>
+    <circle cx="350" cy="100" r="5" fill="#4F46E5"/>
+    <circle cx="450" cy="150" r="5" fill="#4F46E5"/>
+    <circle cx="550" cy="100" r="5" fill="#4F46E5"/>
+    <circle cx="650" cy="150" r="5" fill="#4F46E5"/>
+    
+    <circle cx="200" cy="200" r="5" fill="#4F46E5"/>
+    <circle cx="300" cy="250" r="5" fill="#4F46E5"/>
+    <circle cx="400" cy="200" r="5" fill="#4F46E5"/>
+    <circle cx="500" cy="250" r="5" fill="#4F46E5"/>
+    <circle cx="600" cy="200" r="5" fill="#4F46E5"/>
+    
+    <circle cx="150" cy="300" r="5" fill="#4F46E5"/>
+    <circle cx="250" cy="350" r="5" fill="#4F46E5"/>
+    <circle cx="350" cy="300" r="5" fill="#4F46E5"/>
+    <circle cx="450" cy="350" r="5" fill="#4F46E5"/>
+    <circle cx="550" cy="300" r="5" fill="#4F46E5"/>
+    <circle cx="650" cy="350" r="5" fill="#4F46E5"/>
+    
+    <!-- Connection lines -->
+    <line x1="150" y1="100" x2="250" y2="150" stroke="#4F46E5" stroke-width="1"/>
+    <line x1="250" y1="150" x2="350" y2="100" stroke="#4F46E5" stroke-width="1"/>
+    <line x1="350" y1="100" x2="450" y2="150" stroke="#4F46E5" stroke-width="1"/>
+    <line x1="450" y1="150" x2="550" y2="100" stroke="#4F46E5" stroke-width="1"/>
+    <line x1="550" y1="100" x2="650" y2="150" stroke="#4F46E5" stroke-width="1"/>
+    
+    <line x1="150" y1="100" x2="200" y2="200" stroke="#4F46E5" stroke-width="1"/>
+    <line x1="250" y1="150" x2="300" y2="250" stroke="#4F46E5" stroke-width="1"/>
+    <line x1="350" y1="100" x2="400" y2="200" stroke="#4F46E5" stroke-width="1"/>
+    <line x1="450" y1="150" x2="500" y2="250" stroke="#4F46E5" stroke-width="1"/>
+    <line x1="550" y1="100" x2="600" y2="200" stroke="#4F46E5" stroke-width="1"/>
+    
+    <line x1="200" y1="200" x2="150" y2="300" stroke="#4F46E5" stroke-width="1"/>
+    <line x1="300" y1="250" x2="250" y2="350" stroke="#4F46E5" stroke-width="1"/>
+    <line x1="400" y1="200" x2="350" y2="300" stroke="#4F46E5" stroke-width="1"/>
+    <line x1="500" y1="250" x2="450" y2="350" stroke="#4F46E5" stroke-width="1"/>
+    <line x1="600" y1="200" x2="550" y2="300" stroke="#4F46E5" stroke-width="1"/>
+    
+    <line x1="200" y1="200" x2="300" y2="250" stroke="#4F46E5" stroke-width="1"/>
+    <line x1="300" y1="250" x2="400" y2="200" stroke="#4F46E5" stroke-width="1"/>
+    <line x1="400" y1="200" x2="500" y2="250" stroke="#4F46E5" stroke-width="1"/>
+    <line x1="500" y1="250" x2="600" y2="200" stroke="#4F46E5" stroke-width="1"/>
+    
+    <line x1="150" y1="300" x2="250" y2="350" stroke="#4F46E5" stroke-width="1"/>
+    <line x1="250" y1="350" x2="350" y2="300" stroke="#4F46E5" stroke-width="1"/>
+    <line x1="350" y1="300" x2="450" y2="350" stroke="#4F46E5" stroke-width="1"/>
+    <line x1="450" y1="350" x2="550" y2="300" stroke="#4F46E5" stroke-width="1"/>
+    <line x1="550" y1="300" x2="650" y2="350" stroke="#4F46E5" stroke-width="1"/>
+  </g>
+  
+  <!-- Brain icon -->
+  <g transform="translate(350, 150)">
+    <path d="M50 0C22.4 0 0 22.4 0 50C0 77.6 22.4 100 50 100C77.6 100 100 77.6 100 50C100 22.4 77.6 0 50 0ZM70 75C70 77.75 67.75 80 65 80H35C32.25 80 30 77.75 30 75V55H25C22.25 55 20 52.75 20 50C20 47.25 22.25 45 25 45H30V40H25C22.25 40 20 37.75 20 35C20 32.25 22.25 30 25 30H35C37.75 30 40 32.25 40 35V45H60V35C60 32.25 62.25 30 65 30H75C77.75 30 80 32.25 80 35C80 37.75 77.75 40 75 40H70V45H75C77.75 45 80 47.25 80 50C80 52.75 77.75 55 75 55H70V75Z" fill="url(#purpleGradient)"/>
+  </g>
+  
+  <!-- Category label -->
+  <rect x="50" y="30" width="120" height="30" rx="15" fill="#000000" fill-opacity="0.6"/>
+  <text x="110" y="50" font-family="Arial, sans-serif" font-size="14" fill="white" text-anchor="middle" dominant-baseline="middle">AI & Technology</text>
+  
+  <!-- Patterns and decoration -->
+  <circle cx="700" cy="50" r="20" fill="url(#purpleGradient)" opacity="0.7"/>
+  <circle cx="720" cy="80" r="10" fill="url(#purpleGradient)" opacity="0.5"/>
+  <circle cx="680" cy="70" r="15" fill="url(#purpleGradient)" opacity="0.3"/>
+  
+  <!-- Circuit board pattern in bottom -->
+  <path d="M0 350H800" stroke="#4F46E5" stroke-width="1" stroke-opacity="0.3"/>
+  <path d="M100 350V380H150V350" stroke="#4F46E5" stroke-width="1" stroke-opacity="0.3"/>
+  <path d="M300 350V380H350V350" stroke="#4F46E5" stroke-width="1" stroke-opacity="0.3"/>
+  <path d="M500 350V380H550V350" stroke="#4F46E5" stroke-width="1" stroke-opacity="0.3"/>
+  <path d="M700 350V380H750V350" stroke="#4F46E5" stroke-width="1" stroke-opacity="0.3"/>
+  
+  <!-- Gradients -->
+  <defs>
+    <linearGradient id="darkGradient" x1="0" y1="0" x2="800" y2="400" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0F172A"/>
+      <stop offset="1" stop-color="#1E293B"/>
+    </linearGradient>
+    <linearGradient id="purpleGradient" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#4F46E5"/>
+    </linearGradient>
+  </defs>
+</svg>

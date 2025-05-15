@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="400" viewBox="0 0 800 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gradient background -->
+  <rect width="800" height="400" fill="url(#greenGradient)"/>
+  
+  <!-- Abstract technology pattern -->
+  <g opacity="0.2">
+    <!-- Hex grid pattern -->
+    <path d="M50 50L100 80L100 140L50 170L0 140L0 80L50 50Z" fill="white"/>
+    <path d="M150 50L200 80L200 140L150 170L100 140L100 80L150 50Z" fill="white"/>
+    <path d="M250 50L300 80L300 140L250 170L200 140L200 80L250 50Z" fill="white"/>
+    <path d="M350 50L400 80L400 140L350 170L300 140L300 80L350 50Z" fill="white"/>
+    <path d="M450 50L500 80L500 140L450 170L400 140L400 80L450 50Z" fill="white"/>
+    <path d="M550 50L600 80L600 140L550 170L500 140L500 80L550 50Z" fill="white"/>
+    <path d="M650 50L700 80L700 140L650 170L600 140L600 80L650 50Z" fill="white"/>
+    <path d="M750 50L800 80L800 140L750 170L700 140L700 80L750 50Z" fill="white"/>
+    
+    <path d="M100 150L150 180L150 240L100 270L50 240L50 180L100 150Z" fill="white"/>
+    <path d="M200 150L250 180L250 240L200 270L150 240L150 180L200 150Z" fill="white"/>
+    <path d="M300 150L350 180L350 240L300 270L250 240L250 180L300 150Z" fill="white"/>
+    <path d="M400 150L450 180L450 240L400 270L350 240L350 180L400 150Z" fill="white"/>
+    <path d="M500 150L550 180L550 240L500 270L450 240L450 180L500 150Z" fill="white"/>
+    <path d="M600 150L650 180L650 240L600 270L550 240L550 180L600 150Z" fill="white"/>
+    <path d="M700 150L750 180L750 240L700 270L650 240L650 180L700 150Z" fill="white"/>
+    
+    <path d="M50 250L100 280L100 340L50 370L0 340L0 280L50 250Z" fill="white"/>
+    <path d="M150 250L200 280L200 340L150 370L100 340L100 280L150 250Z" fill="white"/>
+    <path d="M250 250L300 280L300 340L250 370L200 340L200 280L250 250Z" fill="white"/>
+    <path d="M350 250L400 280L400 340L350 370L300 340L300 280L350 250Z" fill="white"/>
+    <path d="M450 250L500 280L500 340L450 370L400 340L400 280L450 250Z" fill="white"/>
+    <path d="M550 250L600 280L600 340L550 370L500 340L500 280L550 250Z" fill="white"/>
+    <path d="M650 250L700 280L700 340L650 370L600 340L600 280L650 250Z" fill="white"/>
+    <path d="M750 250L800 280L800 340L750 370L700 340L700 280L750 250Z" fill="white"/>
+  </g>
+  
+  <!-- Central icon -->
+  <g transform="translate(370, 180)">
+    <circle cx="0" cy="0" r="60" fill="url(#lightGreenGradient)" opacity="0.8"/>
+    <!-- Chip design -->
+    <rect x="-30" y="-30" width="60" height="60" stroke="white" stroke-width="2" fill="none"/>
+    <path d="M-30 -15H30" stroke="white" stroke-width="2"/>
+    <path d="M-30 0H30" stroke="white" stroke-width="2"/>
+    <path d="M-30 15H30" stroke="white" stroke-width="2"/>
+    <path d="M-15 -30V30" stroke="white" stroke-width="2"/>
+    <path d="M0 -30V30" stroke="white" stroke-width="2"/>
+    <path d="M15 -30V30" stroke="white" stroke-width="2"/>
+    <circle cx="-15" cy="-15" r="3" fill="white"/>
+    <circle cx="0" cy="-15" r="3" fill="white"/>
+    <circle cx="15" cy="-15" r="3" fill="white"/>
+    <circle cx="-15" cy="0" r="3" fill="white"/>
+    <circle cx="0" cy="0" r="3" fill="white"/>
+    <circle cx="15" cy="0" r="3" fill="white"/>
+    <circle cx="-15" cy="15" r="3" fill="white"/>
+    <circle cx="0" cy="15" r="3" fill="white"/>
+    <circle cx="15" cy="15" r="3" fill="white"/>
+  </g>
+  
+  <!-- Category label -->
+  <rect x="50" y="30" width="130" height="30" rx="15" fill="#000000" fill-opacity="0.6"/>
+  <text x="115" y="50" font-family="Arial, sans-serif" font-size="14" fill="white" text-anchor="middle" dominant-baseline="middle">Green Technology</text>
+  
+  <!-- Decorative elements -->
+  <circle cx="700" cy="60" r="30" fill="url(#lightGreenGradient)" opacity="0.4"/>
+  <circle cx="740" cy="90" r="20" fill="url(#lightGreenGradient)" opacity="0.3"/>
+  <circle cx="670" cy="110" r="25" fill="url(#lightGreenGradient)" opacity="0.2"/>
+  
+  <!-- Gradients -->
+  <defs>
+    <linearGradient id="greenGradient" x1="0" y1="0" x2="800" y2="400" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#064E3B"/>
+      <stop offset="1" stop-color="#065F46"/>
+    </linearGradient>
+    <linearGradient id="lightGreenGradient" x1="-60" y1="-60" x2="60" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#10B981"/>
+      <stop offset="1" stop-color="#059669"/>
+    </linearGradient>
+  </defs>
+</svg>
