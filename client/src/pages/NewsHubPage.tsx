@@ -269,11 +269,15 @@ const NewsHubPage: React.FC = () => {
     const calculatedTotalPages = Math.ceil(filtered.length / postsPerPage);
     setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
     
+  }, [allPosts, activeTab, searchQuery, postsPerPage]);
+  
+  // Handle page reset when filter results change
+  useEffect(() => {
     // Reset page if we don't have enough results
-    if (page > calculatedTotalPages && calculatedTotalPages > 0) {
+    if (page > totalPages && totalPages > 0) {
       setPage(1);
     }
-  }, [allPosts, activeTab, searchQuery, page, postsPerPage]);
+  }, [totalPages, page]);
   
   // Register keyboard shortcuts
   useEffect(() => {
