@@ -13,6 +13,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import ArticleReactionBar from '@/components/articles/ArticleReactionBar';
+import { useToast } from "@/hooks/use-toast";
 
 // Add custom keyframes animations
 const CustomAnimations = () => (
@@ -87,6 +88,9 @@ const NewsHubPage: React.FC = () => {
   
   // References
   const searchInputRef = useRef<HTMLInputElement>(null);
+  
+  // Hooks
+  const { toast } = useToast();
   
   // Initialize sound effects and keyboard shortcuts
   const { playSound } = useSoundEffects();
@@ -973,7 +977,7 @@ const NewsHubPage: React.FC = () => {
                     animation: `fadeIn 800ms ease-out ${post.id % 10 * 100}ms forwards`,
                     opacity: 0
                   }}
-                  onMouseEnter={() => playSound('hover')}
+                  onMouseEnter={() => playSound('focus')}
                   onClick={() => playSound('click')}
                 >
                   <div className="relative h-48 bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 overflow-hidden">
