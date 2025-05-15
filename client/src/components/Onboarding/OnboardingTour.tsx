@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import SoundButton from '@/components/UI/SoundButton';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card';
 import { X, ArrowRight, ArrowLeft, Check } from 'lucide-react';
 import useLocalStorage from '../../hooks/use-local-storage';
 import { useToast } from '@/hooks/use-toast';
 import useSoundEffects from '../../hooks/use-sound-effects';
+import useKeyboardSound from '../../hooks/use-keyboard-sound';
 
 // Define the structure of a tour step
 interface TourStep {
@@ -120,6 +122,9 @@ export default function OnboardingTour({ forceTour = false }: OnboardingTourProp
       // Show the tour
       setShowTour(true);
       
+      // Play a sound if enabled
+      if (soundEnabled) playSound('notification');
+      
       toast({
         title: "Tour restarted",
         description: "Let's explore the platform features again!",
@@ -211,6 +216,7 @@ export default function OnboardingTour({ forceTour = false }: OnboardingTourProp
 
   // Handle completing the tour
   const completeTour = () => {
+    if (soundEnabled) playSound('complete');
     setShowTour(false);
     setHasCompletedTour(true);
     
@@ -228,6 +234,7 @@ export default function OnboardingTour({ forceTour = false }: OnboardingTourProp
 
   // Skip the tour
   const skipTour = () => {
+    if (soundEnabled) playSound('notification');
     setShowTour(false);
     setHasCompletedTour(true);
     
@@ -310,14 +317,15 @@ export default function OnboardingTour({ forceTour = false }: OnboardingTourProp
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg font-semibold flex items-center justify-between">
                   {currentStep.title}
-                  <Button 
+                  <SoundButton 
                     variant="ghost" 
                     size="icon" 
                     onClick={skipTour}
                     className="h-6 w-6"
+                    soundEffect="notification"
                   >
                     <X className="h-4 w-4" />
-                  </Button>
+                  </SoundButton>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -331,12 +339,22 @@ export default function OnboardingTour({ forceTour = false }: OnboardingTourProp
                 </div>
                 <div className="flex items-center gap-2">
                   {!isFirstStep && (
-                    <Button variant="outline" size="sm" onClick={handlePrevStep}>
+                    <SoundButton 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handlePrevStep}
+                      soundEffect="click"
+                    >
                       <ArrowLeft className="h-4 w-4 mr-1" />
                       Back
-                    </Button>
+                    </SoundButton>
                   )}
-                  <Button variant="default" size="sm" onClick={handleNextStep}>
+                  <SoundButton 
+                    variant="default" 
+                    size="sm" 
+                    onClick={handleNextStep}
+                    soundEffect={isLastStep ? 'complete' : 'click'}
+                  >
                     {isLastStep ? (
                       <>
                         <Check className="h-4 w-4 mr-1" />
@@ -348,7 +366,7 @@ export default function OnboardingTour({ forceTour = false }: OnboardingTourProp
                         <ArrowRight className="h-4 w-4 ml-1" />
                       </>
                     )}
-                  </Button>
+                  </SoundButton>
                 </div>
               </CardFooter>
             </Card>
