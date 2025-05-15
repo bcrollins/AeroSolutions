@@ -285,7 +285,7 @@ const NewsHubPage: React.FC = () => {
   };
   
   // Helper function to check if an article is new (less than 24 hours old)
-  const isNewArticle = (publishedDate: string | Date | null, createdDate: string | Date) => {
+  const isNewArticle = (publishedDate: string | Date | null | undefined, createdDate: string | Date) => {
     try {
       const date = publishedDate 
         ? new Date(publishedDate) 
@@ -333,7 +333,8 @@ const NewsHubPage: React.FC = () => {
     
     try {
       // Use date-fns to get a relative time (e.g. "2 days ago")
-      return formatDistanceToNow(new Date(date), { addSuffix: true });
+      const parsedDate = date ? new Date(date) : new Date();
+      return formatDistanceToNow(parsedDate, { addSuffix: true });
     } catch (e) {
       return 'Recently';
     }

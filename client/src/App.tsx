@@ -21,6 +21,8 @@ import { initAppleEffects } from "@/utils/appleEffects";
 import { initSoundEffects } from "@/utils/soundEffectsUtils";
 // Import OnboardingTour component
 import OnboardingTour from "@/components/Onboarding/OnboardingTour";
+// Import Apple-inspired keyboard shortcuts guide
+import KeyboardShortcutsGuide from "@/components/UI/KeyboardShortcutsGuide";
 
 // Popup Components
 import ClientInputPopup from "@/components/popups/ClientInputPopup";
@@ -587,6 +589,9 @@ export default function App() {
       
       {/* Interactive Onboarding Tour */}
       <OnboardingTour />
+      
+      {/* Apple-inspired keyboard shortcuts guide */}
+      <KeyboardShortcutsGuide />
       
       {/* Global toast notifications */}
       <Toaster />
