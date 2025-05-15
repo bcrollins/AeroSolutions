@@ -970,22 +970,22 @@ const LearnAI: React.FC = () => {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="w-full max-w-6xl mb-16"
           >
-            <div className="bg-[#2a2a2a]/60 rounded-lg p-4 flex flex-wrap justify-around">
+            <div className="bg-white rounded-lg p-4 flex flex-wrap justify-around shadow-sm border border-gray-200">
               <div className="text-center px-4 py-2">
                 <div className="text-3xl font-bold text-[#007bff]">{currentEnrollmentCount.toLocaleString()}</div>
-                <div className="text-sm text-gray-400">Total Students</div>
+                <div className="text-sm text-gray-600">Total Students</div>
               </div>
               <div className="text-center px-4 py-2">
                 <div className="text-3xl font-bold text-[#007bff]">{enrollmentStats.activeToday.toLocaleString()}</div>
-                <div className="text-sm text-gray-400">Learning Today</div>
+                <div className="text-sm text-gray-600">Learning Today</div>
               </div>
               <div className="text-center px-4 py-2">
                 <div className="text-3xl font-bold text-[#007bff]">{enrollmentStats.avgRating}</div>
-                <div className="text-sm text-gray-400">Student Rating</div>
+                <div className="text-sm text-gray-600">Student Rating</div>
               </div>
               <div className="text-center px-4 py-2">
                 <div className="text-3xl font-bold text-[#007bff]">{Math.round(enrollmentStats.completionRate * 100)}%</div>
-                <div className="text-sm text-gray-400">Completion Rate</div>
+                <div className="text-sm text-gray-600">Completion Rate</div>
               </div>
             </div>
           </motion.div>
