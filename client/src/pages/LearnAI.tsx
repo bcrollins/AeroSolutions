@@ -1864,20 +1864,20 @@ const LearnAI: React.FC = () => {
                       </div>
                     </div>
                     
-                    <div className="bg-[#2a2a2a] p-4 rounded-lg">
+                    <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                       <div className="flex justify-between mb-2">
-                        <div className="font-medium">Weekly challenge: Sentiment analysis</div>
-                        <div className="text-xs text-gray-400">1d ago</div>
+                        <div className="font-medium text-gray-800">Weekly challenge: Sentiment analysis</div>
+                        <div className="text-xs text-gray-500">1d ago</div>
                       </div>
-                      <p className="text-sm text-gray-400 mb-2">This week's coding challenge is to build a sentiment analysis model with over 90% accuracy.</p>
+                      <p className="text-sm text-gray-600 mb-2">This week's coding challenge is to build a sentiment analysis model with over 90% accuracy.</p>
                       <div className="flex justify-between text-xs">
-                        <span className="text-[#007bff]">32 submissions</span>
-                        <span className="text-gray-400">Weekly Challenges</span>
+                        <span className="text-[#0066cc] font-medium">32 submissions</span>
+                        <span className="text-gray-500 bg-gray-100 px-2 py-1 rounded-full">Weekly Challenges</span>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="mt-4 pt-4 border-t border-[#444] text-center text-sm text-gray-400">
+                  <div className="mt-4 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
                     Full community access available with paid subscriptions
                   </div>
                 </div>
