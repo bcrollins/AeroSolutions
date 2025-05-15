@@ -251,7 +251,7 @@ export const ThemePreferencesPanel: React.FC<{
             <TabsContent value="advanced" className="space-y-6">
               <div className="space-y-4">
                 <label className="text-sm font-medium flex items-center">
-                  <SquareCorners className="mr-2 h-4 w-4" />
+                  <SquareCode className="mr-2 h-4 w-4" />
                   Corner Radius
                 </label>
                 <div className="grid grid-cols-4 gap-2">

@@ -243,15 +243,10 @@ export const EnhancedCommandPalette: React.FC = () => {
     }
   ];
   
-  // Register commands on mount
+  // Initialize commands
   useEffect(() => {
-    globalCommands.forEach(cmd => registerCommand(cmd));
     commandsRef.current = globalCommands;
-    
-    return () => {
-      globalCommands.forEach(cmd => unregisterCommand(cmd.id));
-    };
-  }, [registerCommand, unregisterCommand]);
+  }, []);
   
   // Load recent commands from localStorage
   useEffect(() => {
