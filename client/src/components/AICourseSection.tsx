@@ -594,22 +594,22 @@ export default function AICourseSection() {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <h3 className="text-3xl font-bold text-white mb-6">Ready to Master AI?</h3>
+          <h3 className="text-3xl font-bold text-white mb-6">Ready to Transform Your AI Career?</h3>
           <p className="text-gray-300 text-lg mb-8">
-            Begin your journey with a 7-day free trial and experience our comprehensive AI curriculum firsthand.
+            Begin your journey today with our 7-day free access and unlock the full potential of our expert-led AI curriculum.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link 
               href="/learnai"
               className="px-8 py-4 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg shadow-lg shadow-blue-500/25 transition-all hover:shadow-blue-500/40 hover:scale-105"
             >
-              Start Free Trial
+              Start AI Training Free
             </Link>
             <Link 
-              href="/subscriptions"
+              href="/learnai#pricing"
               className="px-8 py-4 bg-transparent hover:bg-white/10 text-white border border-white/30 hover:border-white/50 font-bold rounded-lg transition-all hover:scale-105"
             >
-              View Pricing
+              View Course Plans
             </Link>
           </div>
           <p className="text-gray-400 text-sm mt-6">

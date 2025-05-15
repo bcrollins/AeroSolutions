@@ -184,16 +184,9 @@ export default function Header() {
             <div className="flex items-center space-x-3">
               <Link  
                 href="/learnai"  
-                className="header-nav-item apple-btn-secondary font-medium text-sm px-4 py-2 rounded-md transition-apple hover-lift"  
+                className="header-nav-item apple-btn-primary font-medium text-sm px-5 py-2 rounded-md transition-apple hover-lift"  
               >  
-                Learn AI
-              </Link>
-              
-              <Link  
-                href="/subscriptions"  
-                className="header-nav-item apple-btn-primary font-medium text-sm px-4 py-2 rounded-md transition-apple hover-lift"  
-              >  
-                Try Free  
+                Start AI Training Free
               </Link>
               
               {isAuthenticated ? (
@@ -308,17 +301,9 @@ export default function Header() {
                 <Link  
                   href="/learnai"  
                   onClick={toggleMobileMenu}  
-                  className="apple-btn-secondary font-medium text-sm py-3 px-4 rounded-md text-center hover-lift transition-apple"  
+                  className="apple-btn-primary font-medium text-sm py-3 px-4 rounded-md text-center hover-lift transition-apple"  
                 >  
-                  Learn AI
-                </Link>
-
-                <Link  
-                  href="/subscriptions"  
-                  onClick={toggleMobileMenu}  
-                  className="apple-btn-accent font-medium text-sm py-3 px-4 rounded-md text-center hover-lift transition-apple"  
-                >  
-                  Try Free
+                  Start AI Training Free
                 </Link>
                 
                 {isAuthenticated ? (
