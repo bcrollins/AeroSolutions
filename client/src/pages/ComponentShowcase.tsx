@@ -26,12 +26,11 @@ import { DataVisualizer } from '@/components/UI/DataVisualizer';
 import { KeyboardNavigation } from '@/components/UI/KeyboardNavigation';
 import { EnhancedAccordion } from '@/components/UI/EnhancedAccordion';
 import { AccessibilityPanel } from '@/components/UI/AccessibilityPanel';
-import { 
-  MicroAnimations, 
+import MicroAnimations, { 
   SlideIn, 
   FadeIn, 
-  FloatIn, 
-  PulseIn, 
+  Float, 
+  Pulse, 
   ScaleIn 
 } from '@/components/UI/MicroInteractions';
 

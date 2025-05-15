@@ -289,6 +289,50 @@ export const Stagger = ({
   );
 };
 
+// StaggerChildren component - enhanced version of Stagger that supports container className
+export const StaggerChildren = ({ 
+  children, 
+  className = '',
+  containerClassName = '',
+  staggerDelay = 0.05
+}: { 
+  children: ReactNode; 
+  className?: string;
+  containerClassName?: string;
+  staggerDelay?: number;
+}) => (
+  <motion.div
+    className={containerClassName}
+    initial="hidden"
+    animate="visible"
+    variants={{
+      visible: {
+        transition: {
+          staggerChildren: staggerDelay
+        }
+      },
+      hidden: {}
+    }}
+  >
+    {React.Children.map(children, (child) => {
+      if (!React.isValidElement(child)) return child;
+      
+      return (
+        <motion.div
+          className={className}
+          variants={{
+            visible: { opacity: 1, y: 0 },
+            hidden: { opacity: 0, y: 15 }
+          }}
+          transition={{ duration: 0.4 }}
+        >
+          {child}
+        </motion.div>
+      );
+    })}
+  </motion.div>
+);
+
 // Rotate Animation
 interface RotateProps extends MicroInteractionProps {
   degrees?: number;
@@ -490,6 +534,7 @@ const MicroAnimations = {
   Float,
   Pulse,
   Stagger,
+  StaggerChildren,
   Rotate,
   Shimmer,
   Attention,
