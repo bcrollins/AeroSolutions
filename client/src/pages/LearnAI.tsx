@@ -362,6 +362,14 @@ const enrollmentStats = {
   completionRate: 0.91
 };
 
+// Format for displaying large numbers with visual separator
+const formatLargeNumber = (num: number): string => {
+  return num.toLocaleString('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
+};
+
 // Expert endorsements
 const expertEndorsements = [
   {
@@ -976,19 +984,27 @@ const LearnAI: React.FC = () => {
           >
             <div className="bg-white rounded-lg p-6 flex flex-wrap justify-around shadow-sm border border-gray-200">
               <div className="text-center px-5 py-3">
-                <div className="text-3xl font-bold text-[#0066cc] drop-shadow-sm">{currentEnrollmentCount.toLocaleString()}</div>
+                <div className="text-3xl font-bold text-[#0066cc] drop-shadow-sm tracking-tight">
+                  <span className="tabular-nums">{formatLargeNumber(currentEnrollmentCount)}</span>
+                </div>
                 <div className="text-sm font-medium text-gray-700 mt-1">Total Students</div>
               </div>
               <div className="text-center px-5 py-3">
-                <div className="text-3xl font-bold text-[#0066cc] drop-shadow-sm">{enrollmentStats.activeToday.toLocaleString()}</div>
+                <div className="text-3xl font-bold text-[#0066cc] drop-shadow-sm tracking-tight">
+                  <span className="tabular-nums">{formatLargeNumber(enrollmentStats.activeToday)}</span>
+                </div>
                 <div className="text-sm font-medium text-gray-700 mt-1">Learning Today</div>
               </div>
               <div className="text-center px-5 py-3">
-                <div className="text-3xl font-bold text-[#0066cc] drop-shadow-sm">{enrollmentStats.avgRating}</div>
+                <div className="text-3xl font-bold text-[#0066cc] drop-shadow-sm tracking-tight">
+                  <span className="tabular-nums">{enrollmentStats.avgRating}</span>
+                </div>
                 <div className="text-sm font-medium text-gray-700 mt-1">Student Rating</div>
               </div>
               <div className="text-center px-5 py-3">
-                <div className="text-3xl font-bold text-[#0066cc] drop-shadow-sm">{Math.round(enrollmentStats.completionRate * 100)}%</div>
+                <div className="text-3xl font-bold text-[#0066cc] drop-shadow-sm tracking-tight">
+                  <span className="tabular-nums">{Math.round(enrollmentStats.completionRate * 100)}%</span>
+                </div>
                 <div className="text-sm font-medium text-gray-700 mt-1">Completion Rate</div>
               </div>
             </div>
@@ -1070,11 +1086,11 @@ const LearnAI: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                   <div className="space-y-4">
                     <div>
-                      <Label className="mb-2 block">Select AI Career Path</Label>
+                      <Label className="mb-2 block text-gray-700 font-medium">Select AI Career Path</Label>
                       <select 
                         value={selectedCareer}
                         onChange={(e) => setSelectedCareer(e.target.value)}
-                        className="w-full bg-[#333] text-white border-[#444] rounded-md px-3 py-2 focus:border-[#007bff] focus:ring-[#007bff]"
+                        className="w-full bg-white text-gray-800 border-gray-200 rounded-md px-3 py-2 focus:border-[#0066cc] focus:ring-1 focus:ring-[#0066cc] shadow-sm"
                       >
                         {Object.keys(aiCareers).map((career) => (
                           <option key={career} value={career}>
@@ -1085,28 +1101,28 @@ const LearnAI: React.FC = () => {
                     </div>
                     
                     <div>
-                      <Label className="mb-2 block">Years of Experience</Label>
+                      <Label className="mb-2 block text-gray-700 font-medium">Years of Experience</Label>
                       <input 
                         type="range" 
                         min="0" 
                         max="10" 
                         value={experienceYears} 
                         onChange={(e) => setExperienceYears(parseInt(e.target.value))}
-                        className="w-full"
+                        className="w-full accent-[#0066cc]"
                       />
-                      <div className="flex justify-between text-sm text-gray-400">
+                      <div className="flex justify-between text-sm text-gray-600 mt-1">
                         <span>Entry Level</span>
-                        <span>{experienceYears} Years</span>
+                        <span className="font-medium">{experienceYears} Years</span>
                         <span>Senior</span>
                       </div>
                     </div>
                     
                     <div>
-                      <Label className="mb-2 block">Location</Label>
+                      <Label className="mb-2 block text-gray-700 font-medium">Location</Label>
                       <select 
                         value={location}
                         onChange={(e) => setLocation(e.target.value)}
-                        className="w-full bg-white text-gray-800 border-gray-200 rounded-md px-3 py-2 focus:border-[#007bff] focus:ring-[#007bff]"
+                        className="w-full bg-white text-gray-800 border-gray-200 rounded-md px-3 py-2 focus:border-[#0066cc] focus:ring-1 focus:ring-[#0066cc] shadow-sm"
                       >
                         <option value="us-average">US Average</option>
                         <option value="us-coast">US Coastal Cities</option>
@@ -1126,11 +1142,15 @@ const LearnAI: React.FC = () => {
                     <div className="grid grid-cols-2 gap-8">
                       <div>
                         <div className="text-sm text-gray-600 mb-2">Current Average Salary</div>
-                        <div className="text-3xl font-bold">${calculatedSalaryBefore.toLocaleString()}</div>
+                        <div className="text-3xl font-bold text-gray-800 tracking-tight">
+                          <span className="tabular-nums">${formatLargeNumber(calculatedSalaryBefore)}</span>
+                        </div>
                       </div>
                       <div>
-                        <div className="text-sm text-[#007bff] mb-2">Expected Salary After RXAI</div>
-                        <div className="text-3xl font-bold text-[#007bff]">${calculatedSalaryAfter.toLocaleString()}</div>
+                        <div className="text-sm text-[#0066cc] mb-2">Expected Salary After RXAI</div>
+                        <div className="text-3xl font-bold text-[#0066cc] tracking-tight drop-shadow-sm">
+                          <span className="tabular-nums">${formatLargeNumber(calculatedSalaryAfter)}</span>
+                        </div>
                       </div>
                     </div>
                     
