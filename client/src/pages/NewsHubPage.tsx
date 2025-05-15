@@ -1029,49 +1029,26 @@ const NewsHubPage: React.FC = () => {
               return (
                 <Card 
                   key={post.id} 
-                  className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/5
-                   dark:hover:shadow-primary/10 group border border-transparent hover:border-primary/20 
-                   dark:hover:border-primary/30 relative hover:-translate-y-1 hover:translate-x-0.5 bg-white/70 dark:bg-gray-900/70
-                   backdrop-blur-sm rounded-xl"
-                  style={{ 
-                    animation: `fadeIn 800ms ease-out ${post.id % 10 * 100}ms forwards`,
-                    opacity: 0
-                  }}
-                  onMouseEnter={() => playSound('focus')}
-                  onClick={() => playSound('click')}
+                  className="overflow-hidden group border bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm rounded-xl"
                 >
                   <div className="relative h-48 bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 overflow-hidden">
-                    {/* Animated glow effect on hover */}
-                    <div className="absolute -inset-1 bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 
-                      opacity-0 group-hover:opacity-100 -z-10 blur-xl transition-opacity duration-700"></div>
+                    {/* Glow effect removed */}
                     
                     <img 
                       src={displayImage}
                       alt={post.title}
-                      className="w-full h-full object-cover transition-transform duration-500 
-                        group-hover:scale-105 ease-out"
+                      className="w-full h-full object-cover"
                       onError={(e) => {
                         e.currentTarget.src = getFallbackImage(post.id);
                       }}
                     />
                     
-                    {/* Animated highlight gradient on top of image with additional visual effects */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 
-                      group-hover:opacity-100 transition-opacity duration-500"></div>
+                    {/* All animated effects removed */}
                     
-                    {/* Add a subtle overlay pattern for depth */}
-                    <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgMjAgMTAgTSAxMCAwIEwgMTAgMjAiIHN0cm9rZT0iIzMzMzMzMyIgc3Ryb2tlLW9wYWNpdHk9IjAuMDUiIHN0cm9rZS13aWR0aD0iMC41Ii8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIiAvPjwvc3ZnPg==')] 
-                      mix-blend-multiply dark:mix-blend-screen opacity-30"></div>
-                    
-                    {/* Animated shine effect on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/30 to-white/0 opacity-0 
-                      group-hover:opacity-100 -translate-x-full group-hover:translate-x-full transition-all duration-1500 ease-in-out"></div>
-                    
-                    {/* Category label with enhanced animation */}
+                    {/* Category label without animation */}
                     {post.category && (
-                      <div className="absolute top-3 left-3 transition-transform duration-300 group-hover:translate-y-0.5">
-                        <div className="bg-black/50 backdrop-blur-sm text-white text-xs font-medium py-1 px-2.5 rounded border border-white/20 
-                          shadow-lg group-hover:bg-primary/80 transition-all duration-300">
+                      <div className="absolute top-3 left-3">
+                        <div className="bg-black/50 backdrop-blur-sm text-white text-xs font-medium py-1 px-2.5 rounded border border-white/20 shadow-lg">
                           {post.category}
                         </div>
                       </div>
@@ -1079,20 +1056,20 @@ const NewsHubPage: React.FC = () => {
                     
                     {/* Badge group for NEW and AI indicators */}
                     <div className="absolute top-3 right-3 flex flex-col space-y-2 items-end">
-                      {/* New badge */}
+                      {/* New badge without animation */}
                       {isNew && (
-                        <div className="transition-transform duration-300 group-hover:-translate-y-0.5">
+                        <div>
                           <div className="bg-primary text-white text-xs font-bold py-1 px-2 rounded-sm flex items-center">
-                            <span className="mr-1 animate-pulse">●</span> NEW
+                            <span className="mr-1">●</span> NEW
                           </div>
                         </div>
                       )}
                       
-                      {/* AI-generated content badge */}
+                      {/* AI-generated content badge without animation */}
                       {post.aiGeneratedBy && (
-                        <div className="transition-transform duration-300 group-hover:-translate-y-0.5">
+                        <div>
                           <div className="bg-black/40 backdrop-blur-sm text-white text-xs font-medium py-1 px-2 rounded-sm 
-                            border border-white/10 flex items-center gap-1.5 group-hover:bg-purple-600/80 transition-all duration-300">
+                            border border-white/10 flex items-center gap-1.5">
                             <BrainCircuit size={12} />
                             <span>AI Enhanced</span>
                           </div>
@@ -1104,9 +1081,7 @@ const NewsHubPage: React.FC = () => {
                   <CardHeader className="p-5 pb-2">
                     <Link 
                       href={`/articles/${post.id}`} 
-                      className="outline-none group-hover:scale-[1.01] inline-block transition-transform duration-300
-                        focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                      onClick={() => playSound('navigation')}
+                      className="outline-none inline-block focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >
                       <CardTitle className="text-xl font-semibold line-clamp-2 group-hover:text-primary 
                         transition-colors relative inline"
