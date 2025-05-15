@@ -1083,12 +1083,9 @@ const NewsHubPage: React.FC = () => {
                       href={`/articles/${post.id}`} 
                       className="outline-none inline-block focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >
-                      <CardTitle className="text-xl font-semibold line-clamp-2 group-hover:text-primary 
-                        transition-colors relative inline"
-                      >
-                        {/* Underline animation on hover */}
-                        <span className="bg-gradient-to-r from-primary to-primary bg-[length:0%_2px] group-hover:bg-[length:100%_2px] 
-                          bg-no-repeat bg-bottom transition-all duration-500">
+                      <CardTitle className="text-xl font-semibold line-clamp-2 relative inline">
+                        {/* Removed underline animation */}
+                        <span>
                           {post.title}
                         </span>
                         {isNew && (
@@ -1102,14 +1099,12 @@ const NewsHubPage: React.FC = () => {
                     </Link>
                     
                     <CardDescription className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-2 flex-wrap gap-2">
-                      <span className="flex items-center bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full
-                        group-hover:bg-gray-200 dark:group-hover:bg-gray-700 transition-colors duration-300">
-                        <Clock size={14} className="mr-1 text-primary/70 group-hover:text-primary transition-colors" />
+                      <span className="flex items-center bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full">
+                        <Clock size={14} className="mr-1 text-primary/70" />
                         {readingTime} min read
                       </span>
                       
-                      <span className="flex items-center text-gray-500 dark:text-gray-400 group-hover:text-gray-700 
-                        dark:group-hover:text-gray-300 transition-colors"
+                      <span className="flex items-center text-gray-500 dark:text-gray-400"
                       >
                         <svg className="h-3.5 w-3.5 mr-1 text-gray-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                           <path d="M8 7V3M16 7V3M7 11h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -1121,8 +1116,7 @@ const NewsHubPage: React.FC = () => {
                   
                   <CardContent className="p-5 pt-2">
                     <div className="relative">
-                      <p className="text-gray-600 dark:text-gray-300 line-clamp-3 text-sm leading-relaxed group-hover:text-gray-700 
-                        dark:group-hover:text-gray-200 transition-colors duration-300">
+                      <p className="text-gray-600 dark:text-gray-300 line-clamp-3 text-sm leading-relaxed">
                         {post.summary || post.content.replace(/<[^>]*>/g, '').substring(0, 160) + '...'}
                       </p>
                       <div className="absolute bottom-0 right-0 w-full h-8 bg-gradient-to-t from-white dark:from-gray-900 to-transparent pointer-events-none"></div>
@@ -1133,8 +1127,7 @@ const NewsHubPage: React.FC = () => {
                             <Badge 
                               key={idx} 
                               variant="outline" 
-                              className="text-xs bg-transparent hover:bg-primary/5 hover:text-primary dark:hover:bg-primary/10 
-                                dark:hover:border-primary/30 cursor-pointer transition-all group-hover:-translate-y-0.5"
+                              className="text-xs bg-transparent cursor-pointer"
                               onClick={() => {
                                 setSearchQuery(tag);
                                 playSound('click');
