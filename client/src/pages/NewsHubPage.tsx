@@ -85,9 +85,16 @@ const NewsHubPage: React.FC = () => {
   const [postsPerPage] = useState(15); // Show more articles per page
   const [totalPages, setTotalPages] = useState(1);
   const [filteredPosts, setFilteredPosts] = useState<ArticlePost[]>([]);
+  const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<string[]>(() => {
+    const saved = localStorage.getItem('recent-searches');
+    return saved ? JSON.parse(saved) : [];
+  });
   
   // References
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
   
   // Hooks
   const { toast } = useToast();
@@ -329,16 +336,86 @@ const NewsHubPage: React.FC = () => {
     return minutes;
   };
   
+  // Generate search suggestions based on current input and post data
+  const generateSearchSuggestions = (query: string, posts: ArticlePost[]) => {
+    if (!query || query.length < 2) {
+      setSearchSuggestions([]);
+      return;
+    }
+    
+    const allTerms = new Set<string>();
+    
+    // Extract terms from titles
+    posts.forEach(post => {
+      const title = post.title.toLowerCase();
+      if (title.includes(query.toLowerCase())) {
+        allTerms.add(post.title);
+      }
+      
+      // Add terms from tags
+      if (post.tags && Array.isArray(post.tags)) {
+        post.tags.forEach(tag => {
+          if (tag.toLowerCase().includes(query.toLowerCase())) {
+            allTerms.add(tag);
+          }
+        });
+      }
+      
+      // Add terms from categories
+      if (post.category && post.category.toLowerCase().includes(query.toLowerCase())) {
+        allTerms.add(post.category);
+      }
+    });
+    
+    // Also add recent searches that match
+    recentSearches.forEach(search => {
+      if (search.toLowerCase().includes(query.toLowerCase())) {
+        allTerms.add(search);
+      }
+    });
+    
+    // Limit to 5 suggestions
+    const suggestions = Array.from(allTerms).slice(0, 5);
+    setSearchSuggestions(suggestions);
+  };
+  
+  // Save search to recent searches
+  const saveToRecentSearches = (query: string) => {
+    if (!query || query.trim().length < 2) return;
+    
+    setRecentSearches(prev => {
+      // Remove if already exists
+      const filtered = prev.filter(s => s !== query);
+      // Add to front of array
+      const updated = [query, ...filtered].slice(0, 5);
+      // Save to localStorage
+      localStorage.setItem('recent-searches', JSON.stringify(updated));
+      return updated;
+    });
+  };
+  
   // Handle search input changes
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+    const value = e.target.value;
+    setSearchQuery(value);
+    generateSearchSuggestions(value, allPosts);
+    setShowSuggestions(true);
   };
   
   // Clear search
   const handleClearSearch = () => {
     setSearchQuery('');
+    setShowSuggestions(false);
     // Try to focus on search input after clearing
     searchInputRef.current?.focus();
+  };
+  
+  // Select a suggestion
+  const selectSuggestion = (suggestion: string) => {
+    setSearchQuery(suggestion);
+    setShowSuggestions(false);
+    saveToRecentSearches(suggestion);
+    playSound('click');
   };
   
   // Get the proper count text for search results
@@ -503,11 +580,32 @@ const NewsHubPage: React.FC = () => {
                 playSound('focus');
               } else if (e.key === 'Enter') {
                 playSound('navigation');
+                saveToRecentSearches(searchQuery);
+                setShowSuggestions(false);
                 // Focus away from input after search
                 e.currentTarget.blur();
+              } else if (e.key === 'ArrowDown' && searchSuggestions.length > 0) {
+                // Focus the first suggestion
+                const suggestionElements = suggestionsRef.current?.querySelectorAll('button');
+                if (suggestionElements && suggestionElements.length > 0) {
+                  (suggestionElements[0] as HTMLElement).focus();
+                  playSound('focus');
+                }
+              }
+            }}
+            onFocus={() => {
+              if (searchQuery.length >= 2) {
+                setShowSuggestions(true);
+              }
+            }}
+            onBlur={(e) => {
+              // Only hide suggestions if we're not clicking on a suggestion
+              if (!suggestionsRef.current?.contains(e.relatedTarget as Node)) {
+                setTimeout(() => setShowSuggestions(false), 150);
               }
             }}
           />
+          
           {searchQuery && (
             <Button 
               variant="ghost" 
@@ -524,9 +622,92 @@ const NewsHubPage: React.FC = () => {
             </Button>
           )}
           
-          {/* Search suggestions - show when typing */}
-          {searchQuery.length > 0 && (
-            <div className="absolute mt-1 w-full bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-10">
+          {/* Search Suggestions Dropdown */}
+          {showSuggestions && (searchSuggestions.length > 0 || recentSearches.length > 0) && (
+            <div 
+              ref={suggestionsRef}
+              className="absolute top-full left-0 w-full bg-white dark:bg-gray-800 mt-1 rounded-lg shadow-lg 
+                border border-gray-200 dark:border-gray-700 overflow-hidden z-50"
+              style={{ 
+                maxHeight: '300px', 
+                overflowY: 'auto',
+                animation: 'fadeIn 150ms ease-out forwards'
+              }}
+            >
+              {searchSuggestions.length > 0 && (
+                <div className="p-1">
+                  <div className="px-3 py-1.5 text-xs text-gray-500 dark:text-gray-400 font-medium">
+                    Suggestions
+                  </div>
+                  {searchSuggestions.map((suggestion, index) => (
+                    <button
+                      key={`suggestion-${index}`}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700
+                        focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none rounded-md
+                        transition-colors flex items-center gap-2 group"
+                      onClick={() => selectSuggestion(suggestion)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          selectSuggestion(suggestion);
+                        } else if (e.key === 'ArrowDown') {
+                          const next = e.currentTarget.nextElementSibling as HTMLElement;
+                          if (next) {
+                            next.focus();
+                            playSound('focus');
+                          }
+                        } else if (e.key === 'ArrowUp') {
+                          const prev = e.currentTarget.previousElementSibling as HTMLElement;
+                          if (prev && prev.tagName === 'BUTTON') {
+                            prev.focus();
+                            playSound('focus');
+                          } else {
+                            searchInputRef.current?.focus();
+                            playSound('focus');
+                          }
+                        }
+                      }}
+                    >
+                      <Search size={14} className="text-gray-400 group-hover:text-primary transition-colors" />
+                      <span className="flex-1 truncate">{suggestion}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              
+              {recentSearches.length > 0 && !searchQuery && (
+                <div className="p-1 border-t border-gray-100 dark:border-gray-700">
+                  <div className="px-3 py-1.5 text-xs text-gray-500 dark:text-gray-400 font-medium flex justify-between items-center">
+                    <span>Recent Searches</span>
+                    <button 
+                      className="text-xs text-primary hover:text-primary/80 transition-colors"
+                      onClick={() => {
+                        setRecentSearches([]);
+                        localStorage.removeItem('recent-searches');
+                        playSound('click');
+                        setShowSuggestions(false);
+                      }}
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                  {recentSearches.map((search, index) => (
+                    <button
+                      key={`recent-${index}`}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700
+                        focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none rounded-md
+                        transition-colors flex items-center gap-2 group"
+                      onClick={() => selectSuggestion(search)}
+                    >
+                      <Clock size={14} className="text-gray-400 group-hover:text-primary transition-colors" />
+                      <span className="flex-1 truncate">{search}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* End of search bar */}
               <div className="p-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                 Suggested Topics
               </div>
