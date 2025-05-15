@@ -841,13 +841,13 @@ const LearnAI: React.FC = () => {
               transition={{ duration: 0.7 }}
               className="relative rounded-xl overflow-hidden"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-[#1a1a1a] via-[#1a1a1a]/80 to-transparent z-10"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/50 z-10"></div>
               <div className="relative z-20 p-8 md:p-12 flex flex-col md:max-w-[60%]">
                 <motion.h1 
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.1 }}
-                  className="text-4xl md:text-6xl font-bold mb-4"
+                  className="text-4xl md:text-6xl font-bold mb-4 text-gray-900"
                 >
                   Master AI and <span className="text-[#007bff]">Transform Your Future</span>
                 </motion.h1>
@@ -856,7 +856,7 @@ const LearnAI: React.FC = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.2 }}
-                  className="text-lg md:text-xl mb-6 text-gray-300"
+                  className="text-lg md:text-xl mb-6 text-gray-700"
                 >
                   Join {currentEnrollmentCount.toLocaleString()}+ students mastering AI through hands-on projects, 
                   expert mentorship, and a curriculum built by industry leaders.
@@ -867,21 +867,21 @@ const LearnAI: React.FC = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.3 }}
-                  className="bg-[#2a2a2a]/80 p-4 rounded-lg mb-6 inline-block"
+                  className="bg-gray-50 border border-gray-200 p-4 rounded-lg mb-6 inline-block shadow-sm"
                 >
                   <p className="text-sm text-[#007bff] font-medium mb-2">Next cohort starts in:</p>
                   <div className="flex space-x-4">
                     <div className="text-center">
-                      <div className="text-2xl font-bold">{countdownTime.days}</div>
-                      <div className="text-xs text-gray-400">Days</div>
+                      <div className="text-2xl font-bold text-gray-900">{countdownTime.days}</div>
+                      <div className="text-xs text-gray-600">Days</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold">{countdownTime.hours}</div>
-                      <div className="text-xs text-gray-400">Hours</div>
+                      <div className="text-2xl font-bold text-gray-900">{countdownTime.hours}</div>
+                      <div className="text-xs text-gray-600">Hours</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold">{countdownTime.minutes}</div>
-                      <div className="text-xs text-gray-400">Mins</div>
+                      <div className="text-2xl font-bold text-gray-900">{countdownTime.minutes}</div>
+                      <div className="text-xs text-gray-600">Mins</div>
                     </div>
                   </div>
                 </motion.div>
