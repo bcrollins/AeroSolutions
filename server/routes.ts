@@ -10,6 +10,7 @@ import contentGenerationRoutes from "./routes/content-generation";
 import contentRoutes from "./routes/content";
 import aiContentRoutes from "./routes/ai-content";
 import adminRoutes from "./routes/admin";
+import usersRoutes from "./routes/users";
 import userOnboardingRoutes from "./routes/userOnboarding";
 import userDashboardRoutes from "./routes/userDashboard";
 import authRoutes from "./routes/auth";
@@ -49,6 +50,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register Admin routes
   app.use("/api/admin", adminRoutes);
+  
+  // Register User management routes
+  app.use("/api/users", usersRoutes);
   
   // Register User Onboarding routes
   app.use("/api/user/onboarding", userOnboardingRoutes);
