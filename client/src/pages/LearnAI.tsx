@@ -920,7 +920,7 @@ const LearnAI: React.FC = () => {
                     }}
                     className="bg-[#0066cc] hover:bg-[#0055b3] h-12 px-6 text-base text-white shadow-sm rounded-lg transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
                   >
-                    <Play className="w-4 h-4 mr-2" /> Start AI Training Free
+                    <Play className="w-4 h-4 mr-2" /> Claim Your Free Course Access
                   </Button>
                 </motion.div>
                 
