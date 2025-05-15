@@ -1,598 +1,556 @@
-import React, { useEffect, useState, createContext, useContext } from 'react';
+import React, { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { useLocation, useNavigate } from 'wouter';
+import { Command as CommandPrimitive } from 'cmdk';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useLocation } from 'wouter';
-import { Command } from 'cmdk';
+import {
+  Command,
+  CommandDialog,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandSeparator,
+} from '@/components/ui/command';
 import {
   Calculator,
   Calendar,
-  Code,
-  FileText,
-  Laptop,
-  LayoutDashboard,
-  Search,
+  CreditCard,
   Settings,
-  BookOpen,
-  X,
-  ExternalLink,
+  Smile,
+  User,
+  Search,
+  FileText,
+  Book,
   Home,
-  ScrollText,
-  Newspaper,
+  Zap,
+  Video,
   GraduationCap,
-  Lightbulb,
+  MessageSquare,
+  PanelLeft,
+  LayoutDashboard,
+  HelpCircle,
+  LifeBuoy,
+  LogOut,
   FileCode,
-  Bookmark,
-  MessagesSquare,
-  ChevronRight
+  FileQuestion,
+  StickyNote,
+  Newspaper,
+  BookOpen
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-interface CommandItem {
+// Define command action types
+type CommandAction = {
   id: string;
   name: string;
-  shortcut?: string[];
-  keywords?: string[];
-  section?: string;
+  description?: string;
   icon?: React.ReactNode;
-  perform?: () => void;
+  shortcut?: string[];
+  section: 'navigation' | 'actions' | 'tools' | 'help' | 'account' | 'courses';
+  keywords: string[];
+  action: () => void;
   disabled?: boolean;
-  sub?: CommandItem[];
-}
+};
 
-interface CommandPaletteProps {
-  open: boolean;
-  onClose: () => void;
-  commands?: CommandItem[];
-  recentSearches?: string[];
-}
-
-/**
- * Command palette component (Cmd+K) for keyboard-centric navigation
- */
-export default function CommandPalette({
-  open,
-  onClose,
-  commands = [],
-  recentSearches = []
-}: CommandPaletteProps) {
-  const [location, navigate] = useLocation();
-  const [search, setSearch] = useState('');
-  const [pages, setPages] = useState<string[]>([]);
-  const [activePage, setActivePage] = useState<string>('root');
-  
-  // Reset search when opening the command palette
-  useEffect(() => {
-    if (open) {
-      setSearch('');
-      setPages(['root']);
-      setActivePage('root');
-    }
-  }, [open]);
-  
-  // Close with escape key
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-    
-    document.addEventListener('keydown', down);
-    return () => document.removeEventListener('keydown', down);
-  }, [onClose]);
-  
-  // Define default commands
-  const defaultCommands: CommandItem[] = [
-    {
-      id: 'home',
-      name: 'Go to Home',
-      shortcut: ['g', 'h'],
-      keywords: ['home', 'start', 'main', 'landing'],
-      section: 'Pages',
-      icon: <Home className="h-4 w-4" />,
-      perform: () => {
-        navigate('/');
-        onClose();
-      }
-    },
-    {
-      id: 'dashboard',
-      name: 'Go to Dashboard',
-      shortcut: ['g', 'd'],
-      keywords: ['dashboard', 'overview', 'stats'],
-      section: 'Pages',
-      icon: <LayoutDashboard className="h-4 w-4" />,
-      perform: () => {
-        navigate('/dashboard');
-        onClose();
-      }
-    },
-    {
-      id: 'courses',
-      name: 'Browse AI Courses',
-      shortcut: ['g', 'c'],
-      keywords: ['courses', 'learn', 'training', 'education', 'ai'],
-      section: 'Pages',
-      icon: <GraduationCap className="h-4 w-4" />,
-      perform: () => {
-        navigate('/courses');
-        onClose();
-      }
-    },
-    {
-      id: 'articles',
-      name: 'Browse Articles',
-      shortcut: ['g', 'a'],
-      keywords: ['articles', 'blog', 'news', 'posts', 'read'],
-      section: 'Pages',
-      icon: <ScrollText className="h-4 w-4" />,
-      perform: () => {
-        navigate('/articles');
-        onClose();
-      }
-    },
-    {
-      id: 'news',
-      name: 'AI News Hub',
-      shortcut: ['g', 'n'],
-      keywords: ['news', 'latest', 'updates', 'current', 'events'],
-      section: 'Pages',
-      icon: <Newspaper className="h-4 w-4" />,
-      perform: () => {
-        navigate('/news');
-        onClose();
-      }
-    },
-    {
-      id: 'documentation',
-      name: 'Browse Documentation',
-      shortcut: ['g', 'o'],
-      keywords: ['docs', 'help', 'documentation', 'guide', 'tutorial'],
-      section: 'Resources',
-      icon: <FileText className="h-4 w-4" />,
-      perform: () => {
-        navigate('/docs');
-        onClose();
-      }
-    },
-    {
-      id: 'theme',
-      name: 'Change Theme',
-      shortcut: ['ctrl', 't'],
-      keywords: ['theme', 'dark', 'light', 'appearance', 'mode', 'color'],
-      section: 'Preferences',
-      icon: <Laptop className="h-4 w-4" />,
-      sub: [
-        {
-          id: 'theme-light',
-          name: 'Light Mode',
-          perform: () => {
-            document.documentElement.classList.remove('dark');
-            document.documentElement.classList.add('light');
-            localStorage.setItem('rxai-theme', 'light');
-            onClose();
-          }
-        },
-        {
-          id: 'theme-dark',
-          name: 'Dark Mode',
-          perform: () => {
-            document.documentElement.classList.remove('light');
-            document.documentElement.classList.add('dark');
-            localStorage.setItem('rxai-theme', 'dark');
-            onClose();
-          }
-        },
-        {
-          id: 'theme-system',
-          name: 'System Preference',
-          perform: () => {
-            document.documentElement.classList.remove('light', 'dark');
-            localStorage.setItem('rxai-theme', 'system');
-            onClose();
-          }
-        }
-      ]
-    },
-    {
-      id: 'settings',
-      name: 'Settings',
-      shortcut: ['g', 's'],
-      keywords: ['settings', 'preferences', 'options', 'configuration'],
-      section: 'Preferences',
-      icon: <Settings className="h-4 w-4" />,
-      perform: () => {
-        navigate('/settings');
-        onClose();
-      }
-    },
-    {
-      id: 'calendar',
-      name: 'Open Calendar',
-      shortcut: ['g', 'l'],
-      keywords: ['calendar', 'schedule', 'agenda', 'events', 'planner'],
-      section: 'Tools',
-      icon: <Calendar className="h-4 w-4" />,
-      perform: () => {
-        navigate('/calendar');
-        onClose();
-      }
-    },
-    {
-      id: 'calculator',
-      name: 'Open Calculator',
-      shortcut: ['g', 'r'],
-      keywords: ['calculator', 'calc', 'math', 'compute'],
-      section: 'Tools',
-      icon: <Calculator className="h-4 w-4" />,
-      perform: () => {
-        window.open('/calculator', '_blank');
-        onClose();
-      }
-    },
-    {
-      id: 'code',
-      name: 'Code Editor',
-      shortcut: ['g', 'e'],
-      keywords: ['code', 'editor', 'ide', 'programming', 'develop'],
-      section: 'Tools',
-      icon: <Code className="h-4 w-4" />,
-      perform: () => {
-        navigate('/code-editor');
-        onClose();
-      }
-    },
-    {
-      id: 'forum',
-      name: 'Community Forum',
-      shortcut: ['g', 'f'],
-      keywords: ['forum', 'community', 'discussion', 'chat', 'help'],
-      section: 'Community',
-      icon: <MessagesSquare className="h-4 w-4" />,
-      perform: () => {
-        navigate('/forum');
-        onClose();
-      }
-    },
-    {
-      id: 'resources',
-      name: 'Learning Resources',
-      shortcut: ['g', 'r'],
-      keywords: ['resources', 'learn', 'materials', 'library', 'guides'],
-      section: 'Resources',
-      icon: <BookOpen className="h-4 w-4" />,
-      perform: () => {
-        navigate('/resources');
-        onClose();
-      }
-    },
-    {
-      id: 'bookmarks',
-      name: 'Your Bookmarks',
-      shortcut: ['g', 'b'],
-      keywords: ['bookmarks', 'saved', 'favorites', 'marked'],
-      section: 'Personal',
-      icon: <Bookmark className="h-4 w-4" />,
-      perform: () => {
-        navigate('/bookmarks');
-        onClose();
-      }
-    },
-    {
-      id: 'ai-tools',
-      name: 'AI Tools',
-      shortcut: ['g', 't'],
-      keywords: ['ai', 'tools', 'utilities', 'generators', 'assistants'],
-      section: 'Tools',
-      icon: <Lightbulb className="h-4 w-4" />,
-      perform: () => {
-        navigate('/ai-tools');
-        onClose();
-      }
-    },
-    {
-      id: 'code-snippets',
-      name: 'Code Snippets',
-      shortcut: ['g', 'p'],
-      keywords: ['code', 'snippets', 'examples', 'samples', 'templates'],
-      section: 'Resources',
-      icon: <FileCode className="h-4 w-4" />,
-      perform: () => {
-        navigate('/code-snippets');
-        onClose();
-      }
-    }
-  ];
-  
-  // Combine default and custom commands
-  const allCommands = [...defaultCommands, ...commands];
-  
-  // Get active page commands
-  const getActivePageCommands = () => {
-    if (activePage === 'root') {
-      return allCommands;
-    }
-    
-    // Handle subpages
-    const parentCommand = allCommands.find(cmd => cmd.id === activePage);
-    return parentCommand?.sub || [];
-  };
-  
-  // Navigate to a subpage
-  const navigateToPage = (pageId: string) => {
-    setActivePage(pageId);
-    setPages(prev => [...prev, pageId]);
-  };
-  
-  // Go back to previous page
-  const goBack = () => {
-    if (pages.length > 1) {
-      setPages(prev => prev.slice(0, -1));
-      setActivePage(pages[pages.length - 2]);
-    }
-  };
-  
-  // Format key for display
-  const formatKey = (key: string): string => {
-    if (key === 'ctrl') return '⌃';
-    if (key === 'alt') return '⌥';
-    if (key === 'shift') return '⇧';
-    if (key === 'meta' || key === 'cmd') return '⌘';
-    if (key === 'enter') return '↵';
-    if (key === 'space') return '␣';
-    return key.toUpperCase();
-  };
-  
-  return (
-    <AnimatePresence>
-      {open && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
-            onClick={onClose}
-          />
-          
-          {/* Command palette dialog */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ ease: 'easeOut', duration: 0.15 }}
-            className="fixed left-1/2 top-[20%] -translate-x-1/2 z-50 w-full max-w-2xl"
-          >
-            <Command
-              className="rounded-xl border border-gray-200 bg-white shadow-2xl overflow-hidden dark:bg-gray-900 dark:border-gray-700"
-              onKeyDown={(e) => {
-                // Handle back navigation when in subpage
-                if (e.key === 'Backspace' && !search && pages.length > 1) {
-                  e.preventDefault();
-                  goBack();
-                }
-              }}
-            >
-              {/* Command header */}
-              <div className="flex items-center px-4 border-b border-gray-200 dark:border-gray-700">
-                <Search className="h-4 w-4 text-gray-400 mr-2 shrink-0" />
-                <Command.Input
-                  value={search}
-                  onValueChange={setSearch}
-                  placeholder="Type a command or search..."
-                  className="flex-1 h-12 bg-transparent outline-none placeholder:text-gray-400 text-sm"
-                />
-                
-                {/* Breadcrumb navigation for subpages */}
-                {pages.length > 1 && (
-                  <button
-                    onClick={goBack}
-                    className="mr-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-                  >
-                    Back
-                  </button>
-                )}
-                
-                {/* Keyboard shortcut indicator */}
-                <kbd className="hidden sm:flex items-center justify-center h-6 px-2 text-xs font-medium text-gray-500 bg-gray-100 border border-gray-300 rounded-md dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400">
-                  ESC
-                </kbd>
-              </div>
-              
-              {/* Empty state when no results found */}
-              {search && !getActivePageCommands().some(cmd => {
-                const searchLower = search.toLowerCase();
-                const matchesName = cmd.name.toLowerCase().includes(searchLower);
-                const matchesKeywords = cmd.keywords?.some(k => k.toLowerCase().includes(searchLower));
-                return matchesName || matchesKeywords;
-              }) && (
-                <div className="py-14 px-4 text-center sm:px-14">
-                  <FileText className="mx-auto h-6 w-6 text-gray-400" />
-                  <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
-                    No results found for "{search}"
-                  </p>
-                </div>
-              )}
-              
-              {/* Recent searches (shown when search is empty and on root page) */}
-              {!search && activePage === 'root' && recentSearches.length > 0 && (
-                <div className="px-2 py-3">
-                  <div className="text-xs font-medium text-gray-500 dark:text-gray-400 px-3 py-1">
-                    Recent searches
-                  </div>
-                  <div className="mt-1">
-                    {recentSearches.map((item, index) => (
-                      <Command.Item
-                        key={`recent-${index}`}
-                        value={item}
-                        onSelect={() => {
-                          setSearch(item);
-                        }}
-                        className="px-3 py-2 text-sm rounded-md flex items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                      >
-                        <Search className="h-4 w-4 text-gray-500 mr-2" />
-                        <span className="text-gray-700 dark:text-gray-300">{item}</span>
-                      </Command.Item>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              {/* Command groups and items */}
-              <Command.List className="max-h-80 overflow-y-auto p-2">
-                {/* Group commands by section */}
-                {Array.from(new Set(getActivePageCommands()
-                  .filter(cmd => {
-                    if (!search) return true;
-                    
-                    const searchLower = search.toLowerCase();
-                    const matchesName = cmd.name.toLowerCase().includes(searchLower);
-                    const matchesKeywords = cmd.keywords?.some(k => k.toLowerCase().includes(searchLower));
-                    return matchesName || matchesKeywords;
-                  })
-                  .map(cmd => cmd.section)))
-                  .map(section => (
-                    <Command.Group 
-                      key={section || 'default'} 
-                      heading={section}
-                      className="pt-1 pb-2"
-                    >
-                      {getActivePageCommands()
-                        .filter(cmd => {
-                          if (cmd.section !== section) return false;
-                          if (!search) return true;
-                          
-                          const searchLower = search.toLowerCase();
-                          const matchesName = cmd.name.toLowerCase().includes(searchLower);
-                          const matchesKeywords = cmd.keywords?.some(k => k.toLowerCase().includes(searchLower));
-                          return matchesName || matchesKeywords;
-                        })
-                        .map(command => (
-                          <Command.Item
-                            key={command.id}
-                            value={command.name}
-                            disabled={command.disabled}
-                            onSelect={() => {
-                              if (command.sub && command.sub.length > 0) {
-                                navigateToPage(command.id);
-                              } else if (command.perform) {
-                                command.perform();
-                              }
-                            }}
-                            className={`
-                              px-3 py-2 text-sm rounded-md flex items-center justify-between
-                              cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors
-                              ${command.disabled ? 'opacity-50 cursor-not-allowed' : ''}
-                            `}
-                          >
-                            <div className="flex items-center">
-                              {command.icon && (
-                                <span className="mr-2 text-gray-500">
-                                  {command.icon}
-                                </span>
-                              )}
-                              <span className="text-gray-700 dark:text-gray-300">
-                                {command.name}
-                              </span>
-                            </div>
-                            
-                            <div className="flex items-center">
-                              {/* Shortcut key indicator */}
-                              {command.shortcut && (
-                                <div className="flex space-x-1">
-                                  {command.shortcut.map((key, i) => (
-                                    <React.Fragment key={`${command.id}-key-${i}`}>
-                                      <kbd className="flex items-center justify-center h-5 min-w-[1.25rem] px-1 text-[10px] font-medium text-gray-500 bg-gray-100 border border-gray-300 rounded dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400">
-                                        {formatKey(key)}
-                                      </kbd>
-                                      {i < command.shortcut!.length - 1 && (
-                                        <span className="text-gray-400">+</span>
-                                      )}
-                                    </React.Fragment>
-                                  ))}
-                                </div>
-                              )}
-                              
-                              {/* Right icon for submenus */}
-                              {command.sub && command.sub.length > 0 && (
-                                <ChevronRight className="ml-2 h-4 w-4 text-gray-400" />
-                              )}
-                              
-                              {/* External link indicator */}
-                              {command.name.includes('Open') && (
-                                <ExternalLink className="ml-2 h-3 w-3 text-gray-400" />
-                              )}
-                            </div>
-                          </Command.Item>
-                        ))}
-                    </Command.Group>
-                  ))}
-              </Command.List>
-              
-              {/* Footer */}
-              <div className="border-t border-gray-200 py-2 px-4 text-xs text-gray-500 flex justify-between items-center dark:border-gray-700 dark:text-gray-400">
-                <div>
-                  Press <kbd className="font-sans px-1 py-0.5 bg-gray-100 border border-gray-300 rounded-md dark:bg-gray-800 dark:border-gray-600">Tab</kbd> to navigate
-                </div>
-                <button 
-                  onClick={onClose}
-                  className="flex items-center text-xs hover:text-gray-700 dark:hover:text-gray-300"
-                >
-                  <X className="h-3 w-3 mr-1" /> Close
-                </button>
-              </div>
-            </Command>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
-  );
-}
-
-// Create a context for the command palette
-interface CommandPaletteContextType {
+// Context for the command palette
+type CommandPaletteContextType = {
   isOpen: boolean;
-  setIsOpen: (value: boolean | ((prev: boolean) => boolean)) => void;
+  openCommandPalette: () => void;
+  closeCommandPalette: () => void;
+  toggleCommandPalette: () => void;
+  registerCommand: (command: CommandAction) => void;
+  unregisterCommand: (id: string) => void;
+};
+
+const CommandPaletteContext = createContext<CommandPaletteContextType>({
+  isOpen: false,
+  openCommandPalette: () => {},
+  closeCommandPalette: () => {},
+  toggleCommandPalette: () => {},
+  registerCommand: () => {},
+  unregisterCommand: () => {},
+});
+
+export const useCommandPalette = () => useContext(CommandPaletteContext);
+
+interface CommandPaletteProviderProps {
+  children: ReactNode;
+  defaultCommands?: CommandAction[];
 }
 
-const CommandPaletteContext = createContext<CommandPaletteContextType | undefined>(undefined);
-
-/**
- * Command Palette Provider component
- */
-export function CommandPaletteProvider({ children }: { children: React.ReactNode }) {
+export function CommandPaletteProvider({
+  children,
+  defaultCommands = [],
+}: CommandPaletteProviderProps) {
   const [isOpen, setIsOpen] = useState(false);
-  
+  const [commands, setCommands] = useState<CommandAction[]>(defaultCommands);
+  const [, navigate] = useNavigate();
+  const [location] = useLocation();
+
+  // Effect to handle keyboard shortcut
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-      if ((e.key === 'k' && (e.metaKey || e.ctrlKey)) || 
-          (e.key === 'p' && e.ctrlKey)) {
+      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        setIsOpen(prev => !prev);
+        setIsOpen((open) => !open);
       }
     };
-    
+
     document.addEventListener('keydown', down);
     return () => document.removeEventListener('keydown', down);
   }, []);
-  
-  const value = { isOpen, setIsOpen };
-  
+
+  // Define commands based on current app state
+  useEffect(() => {
+    // Navigation commands
+    const navigationCommands: CommandAction[] = [
+      {
+        id: 'home',
+        name: 'Home',
+        icon: <Home className="h-4 w-4" />,
+        shortcut: ['g', 'h'],
+        section: 'navigation',
+        keywords: ['home', 'main', 'start', 'landing'],
+        action: () => {
+          navigate('/');
+          setIsOpen(false);
+        },
+      },
+      {
+        id: 'dashboard',
+        name: 'Dashboard',
+        icon: <LayoutDashboard className="h-4 w-4" />,
+        shortcut: ['g', 'd'],
+        section: 'navigation',
+        keywords: ['dashboard', 'stats', 'overview', 'analytics'],
+        action: () => {
+          navigate('/dashboard');
+          setIsOpen(false);
+        },
+      },
+      {
+        id: 'courses',
+        name: 'Browse Courses',
+        icon: <Book className="h-4 w-4" />,
+        shortcut: ['g', 'c'],
+        section: 'navigation',
+        keywords: ['courses', 'classes', 'learning', 'catalog'],
+        action: () => {
+          navigate('/courses');
+          setIsOpen(false);
+        },
+      },
+      {
+        id: 'articles',
+        name: 'Articles & Resources',
+        icon: <Newspaper className="h-4 w-4" />,
+        shortcut: ['g', 'a'],
+        section: 'navigation',
+        keywords: ['articles', 'blog', 'resources', 'news', 'read'],
+        action: () => {
+          navigate('/articles');
+          setIsOpen(false);
+        },
+      },
+      {
+        id: 'community',
+        name: 'Community Forum',
+        icon: <MessageSquare className="h-4 w-4" />,
+        shortcut: ['g', 'f'],
+        section: 'navigation',
+        keywords: ['community', 'forum', 'chat', 'discuss', 'questions'],
+        action: () => {
+          navigate('/community');
+          setIsOpen(false);
+        },
+      },
+    ];
+
+    // Course-related commands
+    const courseCommands: CommandAction[] = [
+      {
+        id: 'my-courses',
+        name: 'My Courses',
+        icon: <BookOpen className="h-4 w-4" />,
+        section: 'courses',
+        keywords: ['my courses', 'enrolled', 'learning', 'progress'],
+        action: () => {
+          navigate('/dashboard/courses');
+          setIsOpen(false);
+        },
+      },
+      {
+        id: 'continue-learning',
+        name: 'Continue Learning',
+        icon: <GraduationCap className="h-4 w-4" />,
+        section: 'courses',
+        keywords: ['continue', 'resume', 'last', 'course'],
+        action: () => {
+          // This would typically navigate to the last accessed course
+          navigate('/dashboard/courses/continue');
+          setIsOpen(false);
+        },
+      },
+      {
+        id: 'ai-fundamentals',
+        name: 'AI Fundamentals',
+        icon: <Zap className="h-4 w-4" />,
+        section: 'courses',
+        keywords: ['ai', 'fundamentals', 'basics', 'introduction'],
+        action: () => {
+          navigate('/courses/ai-fundamentals');
+          setIsOpen(false);
+        },
+      },
+      {
+        id: 'course-certificates',
+        name: 'My Certificates',
+        icon: <FileText className="h-4 w-4" />,
+        section: 'courses',
+        keywords: ['certificates', 'achievements', 'completion', 'awards'],
+        action: () => {
+          navigate('/dashboard/certificates');
+          setIsOpen(false);
+        },
+      },
+    ];
+
+    // Tools commands
+    const toolCommands: CommandAction[] = [
+      {
+        id: 'search',
+        name: 'Search...',
+        icon: <Search className="h-4 w-4" />,
+        shortcut: ['/'],
+        section: 'tools',
+        keywords: ['search', 'find', 'lookup'],
+        action: () => {
+          setIsOpen(false);
+          // This would typically focus a search input
+          document.getElementById('global-search')?.focus();
+        },
+      },
+      {
+        id: 'notes',
+        name: 'My Notes',
+        icon: <StickyNote className="h-4 w-4" />,
+        section: 'tools',
+        keywords: ['notes', 'annotations', 'save', 'highlights'],
+        action: () => {
+          navigate('/dashboard/notes');
+          setIsOpen(false);
+        },
+      },
+      {
+        id: 'calendar',
+        name: 'Calendar',
+        icon: <Calendar className="h-4 w-4" />,
+        section: 'tools',
+        keywords: ['calendar', 'schedule', 'events', 'dates'],
+        action: () => {
+          navigate('/dashboard/calendar');
+          setIsOpen(false);
+        },
+      },
+    ];
+
+    // Account commands
+    const accountCommands: CommandAction[] = [
+      {
+        id: 'profile',
+        name: 'My Profile',
+        icon: <User className="h-4 w-4" />,
+        section: 'account',
+        keywords: ['profile', 'account', 'me', 'personal'],
+        action: () => {
+          navigate('/dashboard/profile');
+          setIsOpen(false);
+        },
+      },
+      {
+        id: 'subscription',
+        name: 'Subscription',
+        icon: <CreditCard className="h-4 w-4" />,
+        section: 'account',
+        keywords: ['subscription', 'billing', 'plan', 'payment'],
+        action: () => {
+          navigate('/dashboard/subscription');
+          setIsOpen(false);
+        },
+      },
+      {
+        id: 'settings',
+        name: 'Settings',
+        icon: <Settings className="h-4 w-4" />,
+        shortcut: ['g', 's'],
+        section: 'account',
+        keywords: ['settings', 'preferences', 'options', 'config'],
+        action: () => {
+          navigate('/settings');
+          setIsOpen(false);
+        },
+      },
+      {
+        id: 'logout',
+        name: 'Log Out',
+        icon: <LogOut className="h-4 w-4" />,
+        section: 'account',
+        keywords: ['logout', 'sign out', 'exit'],
+        action: () => {
+          // This would typically call a logout function
+          window.location.href = '/api/logout';
+          setIsOpen(false);
+        },
+      },
+    ];
+
+    // Help commands
+    const helpCommands: CommandAction[] = [
+      {
+        id: 'help-center',
+        name: 'Help Center',
+        icon: <HelpCircle className="h-4 w-4" />,
+        section: 'help',
+        keywords: ['help', 'support', 'assistance', 'docs'],
+        action: () => {
+          navigate('/help');
+          setIsOpen(false);
+        },
+      },
+      {
+        id: 'contact-support',
+        name: 'Contact Support',
+        icon: <LifeBuoy className="h-4 w-4" />,
+        section: 'help',
+        keywords: ['contact', 'support', 'assistance', 'ticket'],
+        action: () => {
+          navigate('/support');
+          setIsOpen(false);
+        },
+      },
+      {
+        id: 'shortcuts',
+        name: 'Keyboard Shortcuts',
+        icon: <FileCode className="h-4 w-4" />,
+        shortcut: ['?'],
+        section: 'help',
+        keywords: ['keyboard', 'shortcuts', 'keys', 'hotkeys'],
+        action: () => {
+          // This would typically open a keyboard shortcuts overlay
+          document.dispatchEvent(new KeyboardEvent('keydown', { key: '?' }));
+          setIsOpen(false);
+        },
+      },
+      {
+        id: 'faq',
+        name: 'FAQ',
+        icon: <FileQuestion className="h-4 w-4" />,
+        section: 'help',
+        keywords: ['faq', 'questions', 'answers', 'common'],
+        action: () => {
+          navigate('/faq');
+          setIsOpen(false);
+        },
+      },
+    ];
+
+    // Combine all commands
+    setCommands([
+      ...navigationCommands,
+      ...courseCommands,
+      ...toolCommands, 
+      ...accountCommands,
+      ...helpCommands
+    ]);
+  }, [navigate, location]);
+
+  // Register and unregister custom commands
+  const registerCommand = (command: CommandAction) => {
+    setCommands((prevCommands) => {
+      // Check if command with same ID already exists
+      if (prevCommands.some((cmd) => cmd.id === command.id)) {
+        return prevCommands.map((cmd) =>
+          cmd.id === command.id ? command : cmd
+        );
+      }
+      return [...prevCommands, command];
+    });
+  };
+
+  const unregisterCommand = (id: string) => {
+    setCommands((prevCommands) =>
+      prevCommands.filter((cmd) => cmd.id !== id)
+    );
+  };
+
+  // Provide context value
+  const contextValue: CommandPaletteContextType = {
+    isOpen,
+    openCommandPalette: () => setIsOpen(true),
+    closeCommandPalette: () => setIsOpen(false),
+    toggleCommandPalette: () => setIsOpen((prev) => !prev),
+    registerCommand,
+    unregisterCommand,
+  };
+
   return (
-    <CommandPaletteContext.Provider value={value}>
+    <CommandPaletteContext.Provider value={contextValue}>
       {children}
+      <CommandPaletteModal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        commands={commands}
+      />
     </CommandPaletteContext.Provider>
   );
 }
 
-/**
- * Hook to use the command palette
- */
-export function useCommandPalette() {
-  const context = useContext(CommandPaletteContext);
+interface CommandPaletteModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  commands: CommandAction[];
+}
+
+function CommandPaletteModal({
+  isOpen,
+  onClose,
+  commands,
+}: CommandPaletteModalProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const commandsBySection = React.useMemo(() => {
+    return commands.reduce(
+      (acc, command) => {
+        if (!acc[command.section]) {
+          acc[command.section] = [];
+        }
+        acc[command.section].push(command);
+        return acc;
+      },
+      {} as Record<string, CommandAction[]>
+    );
+  }, [commands]);
+
+  // Get section titles
+  const getSectionTitle = (section: string) => {
+    switch (section) {
+      case 'navigation':
+        return 'Navigation';
+      case 'actions':
+        return 'Actions';
+      case 'tools':
+        return 'Tools';
+      case 'help':
+        return 'Help & Support';
+      case 'account':
+        return 'Account';
+      case 'courses':
+        return 'Courses';
+      default:
+        return section.charAt(0).toUpperCase() + section.slice(1);
+    }
+  };
+
+  return (
+    <CommandDialog open={isOpen} onOpenChange={onClose}>
+      <div className="max-h-[85vh] overflow-hidden rounded-lg border bg-background shadow-xl">
+        <div className="flex flex-col">
+          <CommandInput
+            placeholder="Type a command or search..."
+            value={searchQuery}
+            onValueChange={setSearchQuery}
+            className="border-0 border-b focus:ring-0"
+          />
+          <CommandList className="max-h-[65vh] overflow-y-auto overflow-x-hidden">
+            <CommandEmpty className="py-6 text-center text-sm">
+              No commands found.
+            </CommandEmpty>
+            
+            {Object.entries(commandsBySection).map(([section, sectionCommands]) => (
+              <CommandGroup
+                key={section}
+                heading={getSectionTitle(section)}
+                className="py-2 px-1"
+              >
+                {sectionCommands.map((command) => (
+                  <CommandItem
+                    key={command.id}
+                    onSelect={() => {
+                      command.action();
+                      onClose();
+                    }}
+                    disabled={command.disabled}
+                    className={cn(
+                      "flex items-center gap-2 px-2 py-1.5",
+                      command.disabled && "opacity-40 cursor-not-allowed"
+                    )}
+                  >
+                    {command.icon && (
+                      <span className="flex-shrink-0 text-muted-foreground">
+                        {command.icon}
+                      </span>
+                    )}
+                    <span className="flex-grow truncate">
+                      {command.name}
+                      {command.description && (
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          {command.description}
+                        </span>
+                      )}
+                    </span>
+                    {command.shortcut && (
+                      <div className="flex-shrink-0 flex items-center gap-1">
+                        {command.shortcut.map((key, i) => (
+                          <React.Fragment key={i}>
+                            <kbd className="rounded bg-muted px-1.5 py-0.5 text-xs font-semibold">
+                              {key}
+                            </kbd>
+                            {i < command.shortcut!.length - 1 && (
+                              <span className="text-xs text-muted-foreground">
+                                +
+                              </span>
+                            )}
+                          </React.Fragment>
+                        ))}
+                      </div>
+                    )}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            ))}
+            <div className="py-2 px-4 text-xs text-muted-foreground">
+              <p>
+                Press <kbd className="rounded bg-muted px-1 py-0.5">↑</kbd> and{" "}
+                <kbd className="rounded bg-muted px-1 py-0.5">↓</kbd> to navigate,{" "}
+                <kbd className="rounded bg-muted px-1 py-0.5">Enter</kbd> to select,{" "}
+                <kbd className="rounded bg-muted px-1 py-0.5">Esc</kbd> to close
+              </p>
+            </div>
+          </CommandList>
+        </div>
+      </div>
+    </CommandDialog>
+  );
+}
+
+export function CommandButton({ className }: { className?: string }) {
+  const { openCommandPalette } = useCommandPalette();
   
-  if (context === undefined) {
-    return { isOpen: false, setIsOpen: () => {} };
-  }
-  
-  return context;
+  return (
+    <button
+      onClick={openCommandPalette}
+      className={cn(
+        "inline-flex items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm text-muted-foreground shadow-sm hover:bg-accent hover:text-accent-foreground",
+        className
+      )}
+    >
+      <div className="flex items-center gap-1">
+        <Search className="h-4 w-4" />
+        <span>Search or use command...</span>
+      </div>
+      <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-xs font-medium opacity-100 sm:flex">
+        <span className="text-xs">⌘</span>K
+      </kbd>
+    </button>
+  );
 }
