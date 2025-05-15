@@ -797,7 +797,7 @@ const LearnAI: React.FC = () => {
       {/* Enhancement #12: Automated Chatbot Assistance */}
       <div className={`fixed bottom-5 right-5 z-50 transition-all ${chatbotOpen ? 'scale-100' : 'scale-0'}`}>
         <Card className="w-80 max-h-96 flex flex-col bg-white border border-gray-200 overflow-hidden shadow-md">
-          <div className="bg-[#007bff] p-3 flex justify-between items-center">
+          <div className="bg-[#0066cc] p-3 flex justify-between items-center">
             <div className="flex items-center">
               <Sparkles className="w-5 h-5 text-white mr-2" />
               <h3 className="font-bold text-white">AI Assistant</h3>
@@ -1076,11 +1076,11 @@ const LearnAI: React.FC = () => {
             transition={{ duration: 0.5, delay: 0.6 }}
             className="w-full max-w-6xl mb-16"
           >
-            <Card className="bg-[#2a2a2a] border-none overflow-hidden">
+            <Card className="bg-white border border-gray-200 shadow-sm overflow-hidden">
               <div className="p-8">
                 <div className="flex items-center justify-center mb-6">
-                  <Calculator className="w-6 h-6 text-[#007bff] mr-2" />
-                  <h2 className="text-2xl font-bold">AI Career Salary Calculator</h2>
+                  <Calculator className="w-6 h-6 text-[#0066cc] mr-2" />
+                  <h2 className="text-2xl font-bold text-gray-800">AI Career Salary Calculator</h2>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -1134,9 +1134,9 @@ const LearnAI: React.FC = () => {
                   <div className="md:col-span-2 bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
                     <div className="mb-6">
                       <div className="text-sm text-gray-500 mb-1">Selected Career Path</div>
-                      <h3 className="text-xl font-semibold text-[#007bff]">{currentCareer.role}</h3>
+                      <h3 className="text-xl font-semibold text-[#0066cc]">{currentCareer.role}</h3>
                       <div className="text-sm text-gray-600 mt-2">Top Companies: {currentCareer.companies.join(', ')}</div>
-                      <div className="text-sm text-gray-600">Year-over-Year Demand Growth: <span className="text-green-600">+{currentCareer.demandGrowth}%</span></div>
+                      <div className="text-sm text-gray-600">Year-over-Year Demand Growth: <span className="text-green-600 font-medium">+{currentCareer.demandGrowth}%</span></div>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-8">
@@ -1156,10 +1156,12 @@ const LearnAI: React.FC = () => {
                     
                     <div className="mt-8 pt-4 border-t border-gray-200">
                       <div className="text-center">
-                        <div className="text-sm text-gray-600 mb-2">Potential Salary Increase</div>
-                        <div className="text-2xl font-bold text-green-600">+${(calculatedSalaryAfter - calculatedSalaryBefore).toLocaleString()} per year</div>
+                        <div className="text-sm text-gray-700 font-medium mb-2">Potential Salary Increase</div>
+                        <div className="text-2xl font-bold text-green-600 tracking-tight">
+                          <span className="tabular-nums">+${formatLargeNumber(calculatedSalaryAfter - calculatedSalaryBefore)}</span> per year
+                        </div>
                         <div className="text-sm text-gray-600 mt-2">
-                          That's a {Math.round((calculatedSalaryAfter - calculatedSalaryBefore) / calculatedSalaryBefore * 100)}% increase!
+                          That's a <span className="font-medium">{Math.round((calculatedSalaryAfter - calculatedSalaryBefore) / calculatedSalaryBefore * 100)}%</span> increase!
                         </div>
                       </div>
                     </div>
@@ -1169,7 +1171,7 @@ const LearnAI: React.FC = () => {
                 <div className="mt-8 text-center">
                   <Button 
                     onClick={() => window.location.href = '/ai-courses/catalog'}
-                    className="bg-[#007bff] hover:bg-blue-600"
+                    className="bg-[#0066cc] hover:bg-blue-700 shadow-sm text-base font-medium px-6 py-2"
                   >
                     Start Your Career Transformation
                   </Button>
