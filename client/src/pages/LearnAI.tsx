@@ -910,7 +910,7 @@ const LearnAI: React.FC = () => {
                       type="email" 
                       placeholder="Enter your email"
                       id="quick-demo-email"
-                      className="bg-white border border-gray-200 focus:ring-[#007bff] focus:border-[#007bff] text-gray-900 h-12 shadow-sm"
+                      className="bg-white border border-gray-200 focus:ring-[#0066cc] focus:border-[#0066cc] text-gray-900 h-12 shadow-sm rounded-lg"
                     />
                   </div>
                   <Button 
@@ -918,7 +918,7 @@ const LearnAI: React.FC = () => {
                       const email = (document.getElementById('quick-demo-email') as HTMLInputElement).value;
                       handleQuickDemoSignup(email);
                     }}
-                    className="bg-[#007bff] hover:bg-blue-600 h-12 px-6 text-base text-white shadow-sm"
+                    className="bg-[#0066cc] hover:bg-[#0055b3] h-12 px-6 text-base text-white shadow-sm rounded-lg transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
                   >
                     <Play className="w-4 h-4 mr-2" /> Start AI Training Free
                   </Button>
@@ -928,7 +928,7 @@ const LearnAI: React.FC = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5, delay: 0.5 }}
-                  className="mt-4 text-sm text-gray-400"
+                  className="mt-4 text-sm text-gray-500"
                 >
                   No credit card required. Get instant access to 5 free lessons.
                 </motion.div>
@@ -942,7 +942,7 @@ const LearnAI: React.FC = () => {
                 <div className="h-full flex flex-col justify-center items-center p-6 relative">
                   <div className="bg-gray-50 rounded-lg p-4 w-full max-w-sm mx-auto shadow-sm border border-gray-200">
                     <div className="flex items-center mb-4">
-                      <div className="w-8 h-8 rounded-full bg-[#007bff] flex items-center justify-center mr-3">
+                      <div className="w-8 h-8 rounded-full bg-[#0066cc] flex items-center justify-center mr-3 shadow-sm">
                         <Zap className="w-4 h-4 text-white" />
                       </div>
                       <h3 className="font-semibold text-gray-900">RXAI Image Classifier</h3>
@@ -2270,19 +2270,19 @@ const LearnAI: React.FC = () => {
                 name="Sarah Johnson"
                 role="Data Scientist at TechCorp"
                 text="The RXAI courses completely transformed my career. I went from a data analyst to a senior data scientist within months of completing their Advanced ML specialization."
-                imageUrl="https://placehold.co/100x100/2a2a2a/007bff?text=SJ"
+                imageUrl="https://placehold.co/100x100/f0f0f0/0066cc?text=SJ"
               />
               <Testimonial 
                 name="Michael Chen"
                 role="AI Engineer"
                 text="What sets RXAI apart is the practical, hands-on approach. I built a portfolio of real-world projects that impressed employers and landed my dream job."
-                imageUrl="https://placehold.co/100x100/2a2a2a/007bff?text=MC"
+                imageUrl="https://placehold.co/100x100/f0f0f0/0066cc?text=MC"
               />
               <Testimonial 
                 name="Priya Sharma"
                 role="ML Team Lead"
                 text="As someone with no prior programming experience, I was amazed at how accessible RXAI made complex AI concepts. Their beginner track gave me the foundation I needed."
-                imageUrl="https://placehold.co/100x100/2a2a2a/007bff?text=PS"
+                imageUrl="https://placehold.co/100x100/f0f0f0/0066cc?text=PS"
               />
             </div>
             {!showTestimonials && (
