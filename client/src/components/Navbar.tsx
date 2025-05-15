@@ -469,6 +469,25 @@ const Navbar: React.FC = () => {
                   </Link>
                 ))}
                 
+                {/* Mobile AI Products Menu */}
+                <div className="mt-4 mb-1 px-3">
+                  <h3 className="text-sm font-medium text-muted-foreground">AI Products</h3>
+                </div>
+                {aiProductsLinks.map((item) => (
+                  <Link 
+                    key={item.path} 
+                    href={item.path}
+                    className={`block rounded-md px-3 py-2 text-base font-medium ${
+                      location === item.path 
+                        ? 'bg-accent text-accent-foreground' 
+                        : 'text-foreground hover:bg-accent hover:text-accent-foreground'
+                    }`}
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+                
                 <button
                   className="w-full text-left block rounded-md px-3 py-2 text-base font-medium bg-light-gray text-slate-blue hover:bg-slate-100 mt-2"
                   onClick={() => {
