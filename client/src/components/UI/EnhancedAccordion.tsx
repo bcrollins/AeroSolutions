@@ -134,7 +134,7 @@ export function EnhancedAccordionItem({
 /**
  * Enhanced accordion with animations and customization options
  */
-export function EnhancedAccordion(props: EnhancedAccordionProps) {
+function EnhancedAccordionComponent(props: EnhancedAccordionProps) {
   const {
     type,
     collapsible = true,
@@ -258,3 +258,10 @@ export function EnhancedAccordion(props: EnhancedAccordionProps) {
     </Accordion>
   );
 }
+
+// Export the EnhancedAccordion with sub-components
+export const EnhancedAccordion = Object.assign(EnhancedAccordionComponent, {
+  Item: AccordionItem,
+  Trigger: AccordionTrigger,
+  Content: AccordionContent
+});
