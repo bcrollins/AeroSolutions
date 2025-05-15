@@ -25,7 +25,7 @@ interface RecentCoursesWidgetProps {
  * RecentCoursesWidget - Displays recently accessed courses
  */
 const RecentCoursesWidget: React.FC<RecentCoursesWidgetProps> = ({ widget }) => {
-  const [, navigate] = useNavigate();
+  const [, navigate] = useLocation();
   const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Fetch recent courses data

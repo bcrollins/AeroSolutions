@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { CheckCircle, ChevronRight, X } from 'lucide-react';
 import { useOnboarding } from '@/contexts/OnboardingContext';
-import { useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 
 interface WelcomeOnboardingProps {
   onComplete?: () => void;
@@ -29,7 +29,7 @@ const WelcomeOnboarding: React.FC<WelcomeOnboardingProps> = ({
 }) => {
   const { toast } = useToast();
   const { completeFlow } = useOnboarding();
-  const [, navigate] = useNavigate();
+  const [, navigate] = useLocation();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [animationDirection, setAnimationDirection] = useState<'right' | 'left'>('right');
   

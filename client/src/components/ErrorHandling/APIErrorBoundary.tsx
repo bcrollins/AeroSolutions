@@ -1,115 +1,103 @@
 import React from 'react';
-import { useQuery, UseQueryResult } from '@tanstack/react-query';
-import ErrorDisplay from './ErrorDisplay';
-import { Skeleton } from '@/components/ui/skeleton';
-import { NetworkError, AuthenticationError, AuthorizationError } from '@/lib/errorHandler';
+import { Button } from '@/components/ui/button';
+import { AlertCircle, RefreshCw } from 'lucide-react';
+import { formatErrorMessage, getErrorType, getSuggestedActions } from '@/lib/errorHandler';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { UseQueryResult } from '@tanstack/react-query';
 
-interface APIErrorBoundaryProps<TData> {
-  query: UseQueryResult<TData>;
-  children: (data: TData) => React.ReactNode;
+interface APIErrorBoundaryProps<T> {
+  query: UseQueryResult<T>;
+  children: (data: T) => React.ReactNode;
   loadingFallback?: React.ReactNode;
-  errorFallback?: (error: Error, retry: () => void) => React.ReactNode;
-  emptyFallback?: React.ReactNode;
-  showSkeleton?: boolean;
-  skeletonClassName?: string;
-  skeletonCount?: number;
-  filterData?: (data: TData) => boolean;
-  errorDisplayProps?: Partial<React.ComponentProps<typeof ErrorDisplay>>;
-  redirectOnAuthError?: boolean;
 }
 
 /**
- * APIErrorBoundary - A specialized error boundary for handling API queries with loading,
- * error and empty states. Works with React Query.
- * 
- * @example
- * <APIErrorBoundary query={useQuery({ queryKey: ['/api/users'] })}>
- *   {(data) => (
- *     <ul>
- *       {data.map(user => <li key={user.id}>{user.name}</li>)}
- *     </ul>
- *   )}
- * </APIErrorBoundary>
+ * APIErrorBoundary - Handles errors from API calls using react-query
  */
-function APIErrorBoundary<TData>({
+function APIErrorBoundary<T>({
   query,
   children,
-  loadingFallback,
-  errorFallback,
-  emptyFallback,
-  showSkeleton = true,
-  skeletonClassName = '',
-  skeletonCount = 3,
-  filterData,
-  errorDisplayProps = {},
-  redirectOnAuthError = true,
-}: APIErrorBoundaryProps<TData>) {
-  const {
-    isLoading,
-    isError,
-    error,
-    data,
-    refetch,
-  } = query;
+  loadingFallback = <DefaultLoadingState />,
+}: APIErrorBoundaryProps<T>) {
+  // Extract query state
+  const { isLoading, isError, error, data, refetch } = query;
 
-  // Handle authentication errors by redirecting to login
-  React.useEffect(() => {
-    if (redirectOnAuthError && error instanceof AuthenticationError) {
-      window.location.href = '/api/login';
-    }
-  }, [error, redirectOnAuthError]);
-
-  // When loading data
+  // Show loading state
   if (isLoading) {
-    if (loadingFallback) {
-      return <>{loadingFallback}</>;
-    }
-    
-    if (showSkeleton) {
-      return (
-        <div className={skeletonClassName}>
-          {Array.from({ length: skeletonCount }).map((_, i) => (
-            <div key={i} className="mb-4">
-              <Skeleton className="h-6 w-3/4 mb-2" />
-              <Skeleton className="h-4 w-full mb-1" />
-              <Skeleton className="h-4 w-5/6" />
-            </div>
-          ))}
-        </div>
-      );
-    }
-    
-    return null;
+    return <>{loadingFallback}</>;
   }
 
-  // When error occurs
+  // Show error state
   if (isError) {
-    if (errorFallback) {
-      return <>{errorFallback(error as Error, refetch)}</>;
-    }
-    
     return (
-      <ErrorDisplay
-        error={error}
-        onRetry={() => refetch()}
-        variant="card"
-        size="md"
-        {...errorDisplayProps}
-      />
+      <APIErrorState error={error as Error} onRetry={() => refetch()} />
     );
   }
 
-  // When no data or empty data
-  if (!data || (Array.isArray(data) && data.length === 0) || (filterData && !filterData(data))) {
-    if (emptyFallback) {
-      return <>{emptyFallback}</>;
-    }
-    
-    return null;
-  }
-
-  // Success case - render children with data
-  return <>{children(data)}</>;
+  // Render children with data
+  return <>{data ? children(data) : null}</>;
 }
+
+// Default loading state
+const DefaultLoadingState = () => (
+  <div className="w-full py-8 flex justify-center">
+    <div className="flex flex-col items-center space-y-4">
+      <div className="h-10 w-10 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+      <p className="text-sm text-muted-foreground">Loading...</p>
+    </div>
+  </div>
+);
+
+// Error display component
+interface APIErrorStateProps {
+  error: Error;
+  onRetry: () => void;
+}
+
+const APIErrorState: React.FC<APIErrorStateProps> = ({ error, onRetry }) => {
+  const errorMessage = formatErrorMessage(error);
+  const errorType = getErrorType(error);
+  const suggestedActions = getSuggestedActions(errorType);
+
+  return (
+    <Card className="w-full border-destructive/20">
+      <CardHeader className="pb-2">
+        <div className="flex items-start">
+          <AlertCircle className="h-5 w-5 mr-2 text-destructive" />
+          <div>
+            <CardTitle className="text-base">Error Loading Data</CardTitle>
+            <CardDescription className="text-destructive-foreground">
+              {errorMessage}
+            </CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+      
+      {suggestedActions.length > 0 && (
+        <CardContent className="pt-0">
+          <div className="text-sm space-y-1 text-muted-foreground">
+            <p className="font-medium">Suggested actions:</p>
+            <ul className="list-disc pl-5 text-xs space-y-1">
+              {suggestedActions.map((action, index) => (
+                <li key={index}>{action}</li>
+              ))}
+            </ul>
+          </div>
+        </CardContent>
+      )}
+      
+      <CardFooter className="flex justify-end pt-2">
+        <Button 
+          size="sm" 
+          onClick={onRetry}
+          className="h-8"
+        >
+          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+          Try Again
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+};
 
 export default APIErrorBoundary;
