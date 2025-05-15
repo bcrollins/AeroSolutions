@@ -53,16 +53,19 @@ const NewsHubPage: React.FC = () => {
     queryKey: ['/api/posts'],
     retry: 3,
     retryDelay: 1000,
+    staleTime: 60000, // 1 minute
+    refetchOnWindowFocus: true, // Refresh data when user returns to the tab
   });
 
   // Make sure we have an array of posts
   const allPosts: ArticlePost[] = Array.isArray(postsData) ? postsData : [];
   
   useEffect(() => {
-    if (allPosts.length > 0) {
+    if (postsData) {
+      console.log('Posts data:', postsData);
       console.log(`Successfully loaded ${allPosts.length} articles`);
     }
-  }, [allPosts.length]);
+  }, [postsData, allPosts.length]);
 
   // Filter posts based on active tab
   const filteredPosts = React.useMemo(() => {
