@@ -75,7 +75,7 @@ router.post('/semantic', async (req, res) => {
     
     const content = await openaiApi.generateJson({
       prompt,
-      model: 'gpt-4o',
+      model: 'grok-2-1212',
       temperature: 0.3
     });
     
@@ -145,7 +145,7 @@ router.post('/natural-language-query', async (req, res) => {
     
     const answer = await openaiApi.generateText({
       prompt,
-      model: 'gpt-4o',
+      model: 'grok-2-1212',
       temperature: 0.7
     });
     
@@ -203,7 +203,7 @@ router.post('/entity-recognition', async (req, res) => {
     
     const analysis = await openaiApi.generateJson({
       prompt,
-      model: 'gpt-4o',
+      model: 'grok-2-1212',
       temperature: 0.3
     });
     
