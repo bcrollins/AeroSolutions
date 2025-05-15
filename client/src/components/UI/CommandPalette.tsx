@@ -75,6 +75,8 @@ interface CommandPaletteProps {
   contentClassName?: string;
   footerText?: string;
   highlightTerms?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 /**
@@ -109,8 +111,19 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   contentClassName = '',
   footerText = '',
   highlightTerms = true,
+  open,
+  onOpenChange,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpenInternal, setIsOpenInternal] = useState(false);
+  const isControlled = open !== undefined;
+  const isOpenState = isControlled ? open : isOpenInternal;
+  const setIsOpenState = useCallback((value: boolean) => {
+    if (isControlled && onOpenChange) {
+      onOpenChange(value);
+    } else {
+      setIsOpenInternal(value);
+    }
+  }, [isControlled, onOpenChange]);
   const [search, setSearch] = useState('');
   const [recentActions, setRecentActions] = useState<CommandAction[]>([]);
   const [filteredActions, setFilteredActions] = useState<CommandAction[]>([]);
@@ -229,18 +242,18 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       
       if (isHotkey) {
         e.preventDefault();
-        setIsOpen(true);
+        setIsOpenState(true);
       }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [hotkeys]);
+  }, [hotkeys, setIsOpenState]);
   
   // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isOpen) return;
+      if (!isOpenState) return;
       
       const visibleActions = filteredActions.filter(a => !a.disabled);
       
@@ -261,7 +274,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           break;
         case 'Escape':
           e.preventDefault();
-          setIsOpen(false);
+          setIsOpenState(false);
           break;
       }
       
@@ -279,24 +292,24 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, activeIndex, filteredActions]);
+  }, [isOpenState, activeIndex, filteredActions, setIsOpenState]);
   
   // Focus input on open
   useEffect(() => {
-    if (isOpen && autoFocus && inputRef.current) {
+    if (isOpenState && autoFocus && inputRef.current) {
       setTimeout(() => {
         inputRef.current?.focus();
       }, 50);
     }
-  }, [isOpen, autoFocus]);
+  }, [isOpenState, autoFocus]);
   
   // Execute a command action
   const executeAction = useCallback((action: CommandAction) => {
     if (action.disabled) return;
     
-    action.action(() => setIsOpen(false));
+    action.action(() => setIsOpenState(false));
     saveRecentAction(action);
-  }, [saveRecentAction]);
+  }, [saveRecentAction, setIsOpenState]);
   
   // Highlight matching text
   const highlightMatch = useCallback((text: string, query: string): React.ReactNode => {
@@ -316,7 +329,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   
   // Close the command palette
   const handleClose = () => {
-    setIsOpen(false);
+    setIsOpenState(false);
     setSearch('');
   };
   
@@ -491,12 +504,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Dialog open={isOpenState} onOpenChange={setIsOpenState}>
         <DialogContent 
           className={cn(
             "p-0 max-w-2xl gap-0 shadow-xl border-border/50 backdrop-blur-sm", 
             contentClassName
           )}
+          showClose={false}
         >
           <Command 
             className={cn("rounded-lg", className)}
@@ -776,7 +790,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       {/* Command palette trigger button */}
       <div className="fixed bottom-4 right-4 md:bottom-8 md:right-8 z-10">
         <button
-          onClick={() => setIsOpen(true)}
+          onClick={() => setIsOpenState(true)}
           className="bg-background border border-border/40 shadow-lg rounded-full p-3 hover:bg-accent transition-colors duration-200"
           aria-label="Open command palette"
         >
