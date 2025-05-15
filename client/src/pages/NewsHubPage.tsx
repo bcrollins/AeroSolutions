@@ -860,33 +860,51 @@ const NewsHubPage: React.FC = () => {
       {isLoading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, idx) => (
-            <Card key={idx} className="overflow-hidden border border-gray-100 dark:border-gray-800">
+            <Card key={idx} className="overflow-hidden border border-gray-100 dark:border-gray-800 h-full flex flex-col transition-all hover:shadow-md">
               <div className="h-48 bg-gray-100 dark:bg-gray-800 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 dark:via-gray-500/10 to-transparent animate-shimmer"></div>
+                {/* Use our themed placeholder SVGs */}
+                <img
+                  src={`/img/placeholders/ai-tech-${(idx % 5) + 1}.svg`}
+                  alt="Loading"
+                  className="w-full h-full object-cover opacity-40 dark:opacity-30"
+                />
+                
+                {/* Enhanced shimmer effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 dark:via-white/10 to-transparent animate-shimmer"></div>
+                
+                {/* Category pill skeleton */}
+                <div className="absolute top-4 left-4">
+                  <Skeleton className="h-6 w-28 rounded-full" />
+                </div>
               </div>
               
               <CardHeader className="p-5 pb-2">
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Skeleton className="h-6 w-full" />
-                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-6 w-4/5" />
                   <div className="flex items-center gap-2 mt-2">
                     <Skeleton className="h-4 w-24 rounded-full" />
+                    <div className="w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-600"></div>
                     <Skeleton className="h-4 w-32 rounded-full" />
                   </div>
                 </div>
               </CardHeader>
               
-              <CardContent className="p-5 pt-2">
-                <div className="space-y-2">
+              <CardContent className="p-5 pt-2 flex-grow">
+                <div className="space-y-2.5">
                   <Skeleton className="h-4 w-full" />
                   <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-2/3" />
+                  <Skeleton className="h-4 w-11/12" />
+                  <Skeleton className="h-4 w-4/5" />
                 </div>
               </CardContent>
               
-              <CardFooter className="p-3 flex justify-between border-t border-gray-100 dark:border-gray-800">
-                <Skeleton className="h-8 w-20" />
-                <Skeleton className="h-8 w-24" />
+              <CardFooter className="p-4 flex justify-between border-t border-gray-100 dark:border-gray-800">
+                <Skeleton className="h-7 w-24 rounded-md" />
+                <div className="flex space-x-3">
+                  <Skeleton className="h-7 w-16 rounded-md" />
+                  <Skeleton className="h-7 w-16 rounded-md" />
+                </div>
               </CardFooter>
             </Card>
           ))}
@@ -931,22 +949,29 @@ const NewsHubPage: React.FC = () => {
       
       {/* Empty state when no posts match filters */}
       {!isLoading && !error && filteredPosts.length === 0 && (
-        <div className="bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 rounded-lg p-8 text-center">
-          <div className="mb-4 text-gray-400">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-            </svg>
+        <div className="bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 rounded-xl p-8 text-center max-w-2xl mx-auto backdrop-blur-sm">
+          <div className="mb-6 relative">
+            <div className="w-40 h-40 mx-auto">
+              <img 
+                src={searchQuery ? "/img/placeholders/ai-tech-1.svg" : `/img/placeholders/ai-tech-${(activeTab === 'all' ? 1 : activeTab === 'ai' ? 1 : activeTab === 'business' ? 2 : activeTab === 'tech' ? 3 : 4)}.svg`} 
+                alt="No articles found" 
+                className="w-full h-full object-cover rounded-lg opacity-60 dark:opacity-40"
+              />
+            </div>
           </div>
-          <h3 className="text-xl font-medium text-gray-700 dark:text-gray-300 mb-2">
+          
+          <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">
             No articles found
           </h3>
-          <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
+          
+          <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
             {searchQuery ? (
-              <>No articles match your search criteria. Try adjusting your search or filters.</>
+              <>No articles match your search criteria "<span className="font-medium text-primary">{searchQuery}</span>". Try adjusting your search or filters.</>
             ) : (
               <>We don't have any articles in this category yet. Check back soon for updates.</>
             )}
           </p>
+          
           <div className="flex flex-wrap justify-center gap-3">
             {searchQuery && (
               <Button
@@ -955,27 +980,41 @@ const NewsHubPage: React.FC = () => {
                   playSound('navigation');
                 }}
                 variant="outline"
+                className="border-primary/30 text-primary hover:bg-primary/5 hover:text-primary/90 transition-all"
               >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
                 Clear search
               </Button>
             )}
+            
             {activeTab !== 'all' && (
               <Button
                 onClick={() => {
                   setActiveTab('all');
                   playSound('navigation');
                 }}
+                className="bg-primary hover:bg-primary/90 transition-all"
               >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                </svg>
                 View all articles
               </Button>
             )}
+            
             <Button
               onClick={() => {
                 window.location.reload();
                 playSound('click');
               }}
               variant="ghost"
+              className="hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-all"
             >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
               Refresh
             </Button>
           </div>
