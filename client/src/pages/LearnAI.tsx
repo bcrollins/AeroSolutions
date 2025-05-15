@@ -1464,24 +1464,24 @@ const LearnAI: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-6">
                     <div>
-                      <Label className="mb-2 block">Your Current Annual Salary</Label>
+                      <Label className="mb-2 block text-gray-700 font-medium">Your Current Annual Salary</Label>
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
                         <Input 
                           type="number" 
                           value={currentSalary}
                           onChange={(e) => setCurrentSalary(Math.max(0, parseInt(e.target.value) || 0))}
-                          className="pl-7 bg-[#333] text-white border-[#444] focus:border-[#007bff] focus:ring-[#007bff]"
+                          className="pl-7 bg-white text-gray-800 border-gray-300 focus:border-[#0066cc] focus:ring-[#0066cc]/20 rounded-md shadow-sm"
                         />
                       </div>
                     </div>
                     
                     <div>
-                      <Label className="mb-2 block">Your Career Goals</Label>
+                      <Label className="mb-2 block text-gray-700 font-medium">Your Career Goals</Label>
                       <select 
                         value={careerGoals}
                         onChange={(e) => setCareerGoals(e.target.value)}
-                        className="w-full bg-white text-gray-800 border-gray-200 rounded-md px-3 py-2 focus:border-[#007bff] focus:ring-[#007bff]"
+                        className="w-full bg-white text-gray-800 border-gray-300 rounded-md px-3 py-2 shadow-sm focus:border-[#0066cc] focus:ring-[#0066cc]/20 transition-colors duration-200"
                       >
                         <option value="promotion">Promotion in Current Role</option>
                         <option value="new-career">Complete Career Change</option>
@@ -1543,7 +1543,7 @@ const LearnAI: React.FC = () => {
                 <div className="mt-8 text-center">
                   <Button 
                     onClick={() => window.location.href = '/subscriptions'}
-                    className="bg-[#007bff] hover:bg-blue-600 px-8"
+                    className="bg-[#0066cc] hover:bg-blue-700 px-8 py-2.5 shadow-sm font-medium text-base transition-all duration-300 hover:scale-[1.02] hover:shadow-md"
                   >
                     Invest in Your Future
                   </Button>
@@ -1559,9 +1559,9 @@ const LearnAI: React.FC = () => {
             transition={{ duration: 0.5, delay: 1.2 }}
             className="w-full max-w-6xl mb-16"
           >
-            <Card className="bg-[#2a2a2a] border-[#444] overflow-hidden">
+            <Card className="bg-white border border-gray-200 shadow-sm overflow-hidden">
               <div className="p-8">
-                <h2 className="text-2xl font-bold mb-6 text-center">AI Job Market Insights</h2>
+                <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800 tracking-tight">AI Job Market Insights</h2>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="bg-[#333] p-6 rounded-lg">
