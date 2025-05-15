@@ -101,7 +101,7 @@ export default function OriginalHero() {
               animate="visible"
               custom={0}
             >
-              <span className="text-[#3B82F6] text-sm font-medium tracking-wider uppercase font-inter">Premium Subscription Services</span>
+              <span className="text-[#3B82F6] text-sm font-medium tracking-wider uppercase font-inter">Premier AI Education Platform</span>
             </motion.div>
             
             <motion.h1 
@@ -111,7 +111,7 @@ export default function OriginalHero() {
               animate="visible"
               custom={1}
             >
-              AI Courses, <span className="text-[#3B82F6]">Digital Tools</span> & Web Development
+              <span className="text-[#3B82F6]">AI Courses</span> & Digital Tools for Modern Creators
             </motion.h1>
             
             <motion.p 
@@ -121,7 +121,7 @@ export default function OriginalHero() {
               animate="visible"
               custom={2}
             >
-              Accelerate your skills and workflow with premium subscription plans for AI education, professional design tools, and complete web development services.
+              Master the future of artificial intelligence with our comprehensive AI courses. Learn cutting-edge techniques from industry experts and gain hands-on experience with our professional toolsets.
             </motion.p>
             
             <motion.p 
@@ -131,7 +131,7 @@ export default function OriginalHero() {
               animate="visible"
               custom={3}
             >
-              <span className="font-semibold">ROLLINSX</span> offers flexible monthly and annual subscriptions with a 16% discount on yearly plans. Access our complete ecosystem of AI training courses, professional-grade design tools, and comprehensive web development resources designed for today's digital creators.
+              <span className="font-semibold">RXAI</span> offers flexible monthly and annual subscriptions with a 16% discount on yearly plans. Subscribers gain exclusive access to our premium AI course library, powerful AI-driven tools, and a supportive community of AI practitioners and educators.
             </motion.p>
             
             <motion.div 
