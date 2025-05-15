@@ -71,7 +71,8 @@ const AIArticleInsights: React.FC<AIInsightProps> = ({
     };
     
     simulateApiCall();
-  }, [articleId, articleTitle]);
+    // Only depend on articleId to prevent unnecessary re-renders
+  }, [articleId]);
   
   // Generate fresh AI insights on demand
   const handleGenerateInsights = async () => {

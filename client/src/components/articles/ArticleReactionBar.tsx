@@ -19,7 +19,9 @@ const ArticleReactionBar: React.FC<ArticleReactionBarProps> = ({
   articleId, 
   compact = false,
   variant = 'full',
-  className = '' 
+  className = '',
+  likeCount = 0,
+  viewCount = 0
 }) => {
   // If variant is compact, set compact to true for backward compatibility
   const isCompact = compact || variant === 'compact';
@@ -128,23 +130,19 @@ const ArticleReactionBar: React.FC<ArticleReactionBarProps> = ({
       <div className={containerClasses}>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div>
-              <Button 
-                variant="ghost" 
-                size={buttonSize}
-                className={`rounded-full group ${liked ? 'text-blue-600 dark:text-blue-500' : ''}`}
-                onClick={handleLike}
-                aria-label="Like article"
-              >
-                <div>
-                  <ThumbsUp 
-                    size={iconSize} 
-                    className={`${liked ? 'fill-blue-600 dark:fill-blue-500' : 'group-hover:text-blue-600 dark:group-hover:text-blue-500'}`} 
-                  />
-                </div>
-                {!isCompact && <span className="ml-2 text-sm font-medium">Like</span>}
-              </Button>
-            </div>
+            <Button 
+              variant="ghost" 
+              size={buttonSize}
+              className={`rounded-full group ${liked ? 'text-blue-600 dark:text-blue-500' : ''}`}
+              onClick={handleLike}
+              aria-label="Like article"
+            >
+              <ThumbsUp 
+                size={iconSize} 
+                className={`${liked ? 'fill-blue-600 dark:fill-blue-500' : 'group-hover:text-blue-600 dark:group-hover:text-blue-500'}`} 
+              />
+              {!isCompact && <span className="ml-2 text-sm font-medium">Like</span>}
+            </Button>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="bg-gray-800 text-white dark:bg-gray-700 rounded-xl text-xs py-1 px-2 shadow-lg">
             <p>Like this article</p>
@@ -153,23 +151,19 @@ const ArticleReactionBar: React.FC<ArticleReactionBarProps> = ({
         
         <Tooltip>
           <TooltipTrigger asChild>
-            <div>
-              <Button 
-                variant="ghost" 
-                size={buttonSize}
-                className={`rounded-full group ${disliked ? 'text-red-600 dark:text-red-500' : ''}`}
-                onClick={handleDislike}
-                aria-label="Dislike article"
-              >
-                <div>
-                  <ThumbsDown 
-                    size={iconSize} 
-                    className={`${disliked ? 'fill-red-600 dark:fill-red-500' : 'group-hover:text-red-600 dark:group-hover:text-red-500'}`} 
-                  />
-                </div>
-                {!isCompact && <span className="ml-2 text-sm font-medium">Dislike</span>}
-              </Button>
-            </div>
+            <Button 
+              variant="ghost" 
+              size={buttonSize}
+              className={`rounded-full group ${disliked ? 'text-red-600 dark:text-red-500' : ''}`}
+              onClick={handleDislike}
+              aria-label="Dislike article"
+            >
+              <ThumbsDown 
+                size={iconSize} 
+                className={`${disliked ? 'fill-red-600 dark:fill-red-500' : 'group-hover:text-red-600 dark:group-hover:text-red-500'}`} 
+              />
+              {!isCompact && <span className="ml-2 text-sm font-medium">Dislike</span>}
+            </Button>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="bg-gray-800 text-white dark:bg-gray-700 rounded-xl text-xs py-1 px-2 shadow-lg">
             <p>Dislike this article</p>
@@ -178,26 +172,20 @@ const ArticleReactionBar: React.FC<ArticleReactionBarProps> = ({
         
         <Tooltip>
           <TooltipTrigger asChild>
-            <div>
-              <Button 
-                variant="ghost" 
-                size={buttonSize}
-                className={`rounded-full group ${saved ? 'text-amber-600 dark:text-amber-500' : ''}`}
-                onClick={handleSave}
-                aria-label={saved ? "Unsave article" : "Save article"}
-              >
-                {saved ? (
-                  <div>
-                    <Check size={iconSize} className="text-amber-600 dark:text-amber-500" />
-                  </div>
-                ) : (
-                  <div>
-                    <Bookmark size={iconSize} className="group-hover:text-amber-600 dark:group-hover:text-amber-500" />
-                  </div>
-                )}
-                {!isCompact && <span className="ml-2 text-sm font-medium">{saved ? "Saved" : "Save"}</span>}
-              </Button>
-            </div>
+            <Button 
+              variant="ghost" 
+              size={buttonSize}
+              className={`rounded-full group ${saved ? 'text-amber-600 dark:text-amber-500' : ''}`}
+              onClick={handleSave}
+              aria-label={saved ? "Unsave article" : "Save article"}
+            >
+              {saved ? (
+                <Check size={iconSize} className="text-amber-600 dark:text-amber-500" />
+              ) : (
+                <Bookmark size={iconSize} className="group-hover:text-amber-600 dark:group-hover:text-amber-500" />
+              )}
+              {!isCompact && <span className="ml-2 text-sm font-medium">{saved ? "Saved" : "Save"}</span>}
+            </Button>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="bg-gray-800 text-white dark:bg-gray-700 rounded-xl text-xs py-1 px-2 shadow-lg">
             <p>{saved ? "Remove from saved" : "Save for later"}</p>
@@ -206,23 +194,19 @@ const ArticleReactionBar: React.FC<ArticleReactionBarProps> = ({
         
         <Tooltip>
           <TooltipTrigger asChild>
-            <div>
-              <Button 
-                variant="ghost" 
-                size={buttonSize}
-                className="rounded-full group"
-                onClick={handleShare}
-                aria-label="Share article"
-              >
-                <div>
-                  <Share2 
-                    size={iconSize} 
-                    className="group-hover:text-green-600 dark:group-hover:text-green-500" 
-                  />
-                </div>
-                {!isCompact && <span className="ml-2 text-sm font-medium">Share</span>}
-              </Button>
-            </div>
+            <Button 
+              variant="ghost" 
+              size={buttonSize}
+              className="rounded-full group"
+              onClick={handleShare}
+              aria-label="Share article"
+            >
+              <Share2 
+                size={iconSize} 
+                className="group-hover:text-green-600 dark:group-hover:text-green-500" 
+              />
+              {!isCompact && <span className="ml-2 text-sm font-medium">Share</span>}
+            </Button>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="bg-gray-800 text-white dark:bg-gray-700 rounded-xl text-xs py-1 px-2 shadow-lg">
             <p>Share this article</p>

@@ -1147,6 +1147,8 @@ const NewsHubPage: React.FC = () => {
                           compact={true}
                           variant="compact"
                           className="text-gray-600 dark:text-gray-400"
+                          likeCount={post.likeCount || 0}
+                          viewCount={post.viewCount || 0}
                         />
                         
                         <Link href={`/articles/${post.id}`}>
