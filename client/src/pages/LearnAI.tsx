@@ -162,17 +162,17 @@ const Testimonial: React.FC<{
   imageUrl: string;
 }> = ({ name, role, text, imageUrl }) => {
   return (
-    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+    <div className="bg-white rounded-xl p-6 shadow-[0_10px_20px_rgba(0,0,0,0.05)] border border-gray-100 transition-all duration-300 hover:shadow-[0_15px_30px_rgba(0,0,0,0.08)] hover:translate-y-[-2px]">
       <div className="flex items-center mb-4">
-        <div className="w-12 h-12 rounded-full overflow-hidden mr-4 border border-gray-100 shadow-sm">
+        <div className="w-12 h-12 rounded-full overflow-hidden mr-4 border-2 border-[#0066cc]/10 shadow-sm">
           <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
         </div>
         <div>
-          <h4 className="font-bold text-gray-800">{name}</h4>
-          <p className="text-sm text-gray-500">{role}</p>
+          <h4 className="font-semibold text-gray-800 tracking-tight">{name}</h4>
+          <p className="text-sm text-[#0066cc]/80 font-medium">{role}</p>
         </div>
       </div>
-      <p className="text-gray-600 italic">"{text}"</p>
+      <p className="text-gray-600 text-sm leading-relaxed">"{text}"</p>
     </div>
   );
 };
@@ -2014,7 +2014,7 @@ const LearnAI: React.FC = () => {
                         <Button 
                           onClick={nextEnrollmentStep}
                           disabled={!enrollmentForm.goal || !enrollmentForm.experience}
-                          className="bg-[#007bff] hover:bg-blue-600"
+                          className="bg-[#0066cc] hover:bg-[#0055b3] transition-colors"
                         >
                           Continue <ChevronRight className="w-4 h-4 ml-1" />
                         </Button>
@@ -2026,7 +2026,7 @@ const LearnAI: React.FC = () => {
                     <div className="space-y-6">
                       <h3 className="text-xl font-semibold mb-4">You're all set!</h3>
                       
-                      <Card className="bg-[#333] border-none p-6">
+                      <Card className="bg-white border border-gray-100 p-6 shadow-sm">
                         <div className="space-y-4">
                           <div className="flex justify-center mb-4">
                             <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
@@ -2043,7 +2043,7 @@ const LearnAI: React.FC = () => {
                           
                           <div className="bg-[#2a2a2a] p-4 rounded-lg">
                             <div className="flex items-center mb-2">
-                              <Star className="w-4 h-4 text-[#007bff] mr-2" />
+                              <Star className="w-4 h-4 text-[#0066cc] mr-2" />
                               <span className="font-medium">Recommended Path:</span>
                             </div>
                             <div className="pl-6">
@@ -2062,7 +2062,7 @@ const LearnAI: React.FC = () => {
                       <div className="flex flex-col gap-3">
                         <Button 
                           onClick={() => window.location.href = `/ai-courses/plan?goal=${enrollmentForm.goal}&experience=${enrollmentForm.experience}`}
-                          className="bg-[#007bff] hover:bg-blue-600"
+                          className="bg-[#0066cc] hover:bg-[#0055b3] transition-colors"
                         >
                           View My Learning Plan
                         </Button>
