@@ -475,7 +475,7 @@ const NewsHubPage: React.FC = () => {
         {/* Reading List Quick Access */}
         <button 
           className="bg-white dark:bg-gray-800 text-primary shadow-lg rounded-full p-3 flex items-center justify-center 
-            transition-all duration-300 hover:bg-primary hover:text-white transform hover:scale-110 
+            /* removed transitions */ hover:bg-primary hover:text-white transform hover:scale-110 
             border border-primary/20"
           onMouseEnter={() => playSound('focus')}
           onClick={() => {
@@ -495,7 +495,7 @@ const NewsHubPage: React.FC = () => {
         {/* Quick Filter Button */}
         <button 
           className="bg-primary text-white shadow-lg rounded-full p-4 flex items-center justify-center 
-            transition-all duration-300 hover:bg-primary/90 transform hover:scale-110"
+            /* removed transitions */ hover:bg-primary/90 transform hover:scale-110"
           onMouseEnter={() => playSound('focus')}
           onClick={() => {
             playSound('navigation');
@@ -516,15 +516,15 @@ const NewsHubPage: React.FC = () => {
       {/* Search and Filters */}
       <div className="mb-8 flex flex-col md:flex-row gap-4 items-start">
         <div className="relative w-full md:w-96 group">
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-primary">
-            <Search size={18} className="transition-transform group-focus-within:scale-110" />
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-primary">
+            <Search size={18} className="group-focus-within:scale-110" />
           </div>
           <Input
             ref={searchInputRef}
             type="text"
             placeholder="Search articles..."
             className="pl-10 h-11 rounded-lg border-gray-200 dark:border-gray-700 shadow-sm
-              focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all duration-300"
+              focus:border-primary focus:ring-1 focus:ring-primary/30 /* removed transitions */"
             value={searchQuery}
             onChange={handleSearchChange}
             onKeyDown={(e) => {
@@ -564,7 +564,7 @@ const NewsHubPage: React.FC = () => {
               variant="ghost" 
               size="icon" 
               className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 opacity-70 hover:opacity-100
-                hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
+                hover:bg-gray-100 dark:hover:bg-gray-800 /* removed transitions */"
               onClick={() => {
                 handleClearSearch();
                 playSound('focus');
@@ -597,7 +597,7 @@ const NewsHubPage: React.FC = () => {
                       key={`suggestion-${index}`}
                       className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700
                         focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none rounded-md
-                        transition-colors flex items-center gap-2 group"
+                        flex items-center gap-2 group"
                       onClick={() => selectSuggestion(suggestion)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
@@ -648,7 +648,7 @@ const NewsHubPage: React.FC = () => {
                       key={`recent-${index}`}
                       className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700
                         focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none rounded-md
-                        transition-colors flex items-center gap-2 group"
+                        flex items-center gap-2 group"
                       onClick={() => selectSuggestion(search)}
                     >
                       <Clock size={14} className="text-gray-400 group-hover:text-primary transition-colors" />
@@ -672,7 +672,7 @@ const NewsHubPage: React.FC = () => {
               className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm
                 rounded-md py-2 px-4 font-medium text-gray-700 dark:text-gray-300
                 data-[state=active]:text-primary dark:data-[state=active]:text-primary
-                transition-all duration-200 hover:bg-white/40 dark:hover:bg-gray-700/40"
+                /* removed transitions */ hover:bg-white/40 dark:hover:bg-gray-700/40"
             >
               <span className="flex items-center">
                 <svg className="h-4 w-4 mr-1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -680,7 +680,7 @@ const NewsHubPage: React.FC = () => {
                 </svg>
                 All
               </span>
-              <div className="absolute -bottom-1.5 left-0 right-0 h-1 bg-primary/80 rounded-full transform scale-x-0 data-[state=active]:scale-x-100 transition-transform duration-300"></div>
+              <div className="absolute -bottom-1.5 left-0 right-0 h-1 bg-primary/80 rounded-full opacity-0 data-[state=active]:opacity-100"></div>
             </TabsTrigger>
             
             <TabsTrigger 
@@ -692,13 +692,13 @@ const NewsHubPage: React.FC = () => {
               className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm
                 rounded-md py-2 px-4 font-medium text-gray-700 dark:text-gray-300
                 data-[state=active]:text-primary dark:data-[state=active]:text-primary
-                transition-all duration-200 hover:bg-white/40 dark:hover:bg-gray-700/40"
+                /* removed transitions */ hover:bg-white/40 dark:hover:bg-gray-700/40"
             >
               <span className="flex items-center">
                 <BrainCircuit size={16} className="mr-1.5" />
                 AI
               </span>
-              <div className="absolute -bottom-1.5 left-0 right-0 h-1 bg-primary/80 rounded-full transform scale-x-0 data-[state=active]:scale-x-100 transition-transform duration-300"></div>
+              <div className="absolute -bottom-1.5 left-0 right-0 h-1 bg-primary/80 rounded-full opacity-0 data-[state=active]:opacity-100"></div>
             </TabsTrigger>
             
             <TabsTrigger 
@@ -710,13 +710,13 @@ const NewsHubPage: React.FC = () => {
               className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm
                 rounded-md py-2 px-4 font-medium text-gray-700 dark:text-gray-300
                 data-[state=active]:text-primary dark:data-[state=active]:text-primary
-                transition-all duration-200 hover:bg-white/40 dark:hover:bg-gray-700/40"
+                /* removed transitions */ hover:bg-white/40 dark:hover:bg-gray-700/40"
             >
               <span className="flex items-center">
                 <Briefcase size={16} className="mr-1.5" />
                 Business
               </span>
-              <div className="absolute -bottom-1.5 left-0 right-0 h-1 bg-primary/80 rounded-full transform scale-x-0 data-[state=active]:scale-x-100 transition-transform duration-300"></div>
+              <div className="absolute -bottom-1.5 left-0 right-0 h-1 bg-primary/80 rounded-full opacity-0 data-[state=active]:opacity-100"></div>
             </TabsTrigger>
             
             <TabsTrigger 
@@ -728,13 +728,13 @@ const NewsHubPage: React.FC = () => {
               className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm
                 rounded-md py-2 px-4 font-medium text-gray-700 dark:text-gray-300
                 data-[state=active]:text-primary dark:data-[state=active]:text-primary
-                transition-all duration-200 hover:bg-white/40 dark:hover:bg-gray-700/40"
+                /* removed transitions */ hover:bg-white/40 dark:hover:bg-gray-700/40"
             >
               <span className="flex items-center">
                 <Cpu size={16} className="mr-1.5" />
                 Tech
               </span>
-              <div className="absolute -bottom-1.5 left-0 right-0 h-1 bg-primary/80 rounded-full transform scale-x-0 data-[state=active]:scale-x-100 transition-transform duration-300"></div>
+              <div className="absolute -bottom-1.5 left-0 right-0 h-1 bg-primary/80 rounded-full opacity-0 data-[state=active]:opacity-100"></div>
             </TabsTrigger>
             
             <TabsTrigger 
@@ -746,13 +746,13 @@ const NewsHubPage: React.FC = () => {
               className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm
                 rounded-md py-2 px-4 font-medium text-gray-700 dark:text-gray-300
                 data-[state=active]:text-primary dark:data-[state=active]:text-primary
-                transition-all duration-200 hover:bg-white/40 dark:hover:bg-gray-700/40"
+                /* removed transitions */ hover:bg-white/40 dark:hover:bg-gray-700/40"
             >
               <span className="flex items-center">
                 <BookOpen size={16} className="mr-1.5" />
                 Tutorials
               </span>
-              <div className="absolute -bottom-1.5 left-0 right-0 h-1 bg-primary/80 rounded-full transform scale-x-0 data-[state=active]:scale-x-100 transition-transform duration-300"></div>
+              <div className="absolute -bottom-1.5 left-0 right-0 h-1 bg-primary/80 rounded-full opacity-0 data-[state=active]:opacity-100"></div>
             </TabsTrigger>
             
             <TabsTrigger 
@@ -764,13 +764,13 @@ const NewsHubPage: React.FC = () => {
               className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm
                 rounded-md py-2 px-4 font-medium text-gray-700 dark:text-gray-300
                 data-[state=active]:text-primary dark:data-[state=active]:text-primary
-                transition-all duration-200 hover:bg-white/40 dark:hover:bg-gray-700/40"
+                /* removed transitions */ hover:bg-white/40 dark:hover:bg-gray-700/40"
             >
               <span className="flex items-center">
                 <Newspaper size={16} className="mr-1.5" />
                 News
               </span>
-              <div className="absolute -bottom-1.5 left-0 right-0 h-1 bg-primary/80 rounded-full transform scale-x-0 data-[state=active]:scale-x-100 transition-transform duration-300"></div>
+              <div className="absolute -bottom-1.5 left-0 right-0 h-1 bg-primary/80 rounded-full opacity-0 data-[state=active]:opacity-100"></div>
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -820,7 +820,7 @@ const NewsHubPage: React.FC = () => {
       {isLoading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, idx) => (
-            <Card key={idx} className="overflow-hidden border border-gray-100 dark:border-gray-800 h-full flex flex-col transition-all hover:shadow-md">
+            <Card key={idx} className="overflow-hidden border border-gray-100 dark:border-gray-800 h-full flex flex-col hover:shadow-md">
               <div className="h-48 bg-gray-100 dark:bg-gray-800 relative overflow-hidden">
                 {/* Use consistent placeholder SVG */}
                 <img
@@ -829,8 +829,7 @@ const NewsHubPage: React.FC = () => {
                   className="w-full h-full object-cover opacity-40 dark:opacity-30"
                 />
                 
-                {/* Enhanced shimmer effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 dark:via-white/10 to-transparent animate-shimmer"></div>
+                {/* Removed shimmer effect */}
                 
                 {/* Category pill skeleton */}
                 <div className="absolute top-4 left-4">
@@ -897,7 +896,7 @@ const NewsHubPage: React.FC = () => {
               window.location.reload();
               playSound('click');
             }}
-            className="bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-800/30 dark:hover:bg-red-800/50 dark:text-red-300 px-6 py-2 rounded-lg transition-all duration-200 transform hover:scale-105"
+            className="bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-800/30 dark:hover:bg-red-800/50 dark:text-red-300 px-6 py-2 rounded-lg /* removed transitions */ transform hover:scale-105"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -1209,15 +1208,15 @@ const NewsHubPage: React.FC = () => {
                           key={pageNumber}
                           variant={page === pageNumber ? "default" : "ghost"}
                           size="icon"
-                          className={`mx-0.5 rounded-md h-9 w-9 transition-transform hover:scale-110 ${
+                          className={`mx-0.5 rounded-md h-9 w-9 ${
                             page === pageNumber 
-                              ? 'bg-primary text-white dark:text-white transform scale-110 shadow-md' 
+                              ? 'bg-primary text-white dark:text-white shadow-md' 
                               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                           }`}
                           onClick={() => {
                             setPage(pageNumber);
                             playSound('click');
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                            window.scrollTo(0, 0);
                           }}
                           aria-label={`Page ${pageNumber}`}
                         >
