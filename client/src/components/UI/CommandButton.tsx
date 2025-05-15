@@ -11,14 +11,14 @@ interface CommandButtonProps {
  * A button component that opens the command palette when clicked
  */
 export const CommandButton: React.FC<CommandButtonProps> = ({ className }) => {
-  const { setOpen } = useCommandPalette();
+  const { setIsOpen } = useCommandPalette();
   
   return (
     <Button
       variant="outline"
       size="sm"
       className={className}
-      onClick={() => setOpen(true)}
+      onClick={() => setIsOpen(true)}
     >
       <Command className="h-4 w-4 mr-1" />
       <span className="hidden sm:inline-block">Command</span>

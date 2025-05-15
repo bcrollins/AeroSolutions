@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card';
 import { X, ArrowRight, ArrowLeft, Check } from 'lucide-react';
 import useLocalStorage from '../../hooks/use-local-storage';
 import { useToast } from '@/hooks/use-toast';
