@@ -104,59 +104,141 @@ const NewsHubPage: React.FC = () => {
     }
   }, [allPosts]);
 
-  // Filter posts based on active tab
+  // Filter posts based on active tab - improved with better handling of type checking
   const filteredPosts = React.useMemo(() => {
-    if (!allPosts || allPosts.length === 0) return [];
+    // Debug the posts data
+    console.log(`Processing posts: ${allPosts.length} total available`);
+    
+    if (!allPosts || allPosts.length === 0) {
+      console.log('No posts available to filter');
+      return [];
+    }
 
     let filtered = [...allPosts];
     
     // Filter by tab selection
     if (activeTab !== 'all') {
       if (activeTab === 'ai') {
-        filtered = filtered.filter(post => 
-          (post.tags && Array.isArray(post.tags) && post.tags.some((tag: string) => tag.toLowerCase().includes('ai'))) || 
-          (post.category && post.category.toLowerCase().includes('ai'))
-        );
+        filtered = filtered.filter(post => {
+          // Safely check if post.tags is an array
+          const hasTags = Array.isArray(post.tags) && 
+            post.tags.some(tag => typeof tag === 'string' && tag.toLowerCase().includes('ai'));
+          
+          // Safely check category
+          const hasCategory = post.category && 
+            typeof post.category === 'string' && 
+            post.category.toLowerCase().includes('ai');
+            
+          // Safely check title
+          const hasTitle = post.title && 
+            typeof post.title === 'string' && 
+            post.title.toLowerCase().includes('ai');
+            
+          return hasTags || hasCategory || hasTitle;
+        });
       } else if (activeTab === 'business') {
-        filtered = filtered.filter(post => 
-          (post.tags && Array.isArray(post.tags) && post.tags.some((tag: string) => tag.toLowerCase().includes('business'))) || 
-          (post.category && post.category.toLowerCase().includes('business'))
-        );
+        filtered = filtered.filter(post => {
+          const hasTags = Array.isArray(post.tags) && 
+            post.tags.some(tag => typeof tag === 'string' && tag.toLowerCase().includes('business'));
+          
+          const hasCategory = post.category && 
+            typeof post.category === 'string' && 
+            post.category.toLowerCase().includes('business');
+            
+          return hasTags || hasCategory;
+        });
       } else if (activeTab === 'tech') {
-        filtered = filtered.filter(post => 
-          (post.tags && Array.isArray(post.tags) && post.tags.some((tag: string) => tag.toLowerCase().includes('tech'))) || 
-          (post.category && post.category.toLowerCase().includes('tech'))
-        );
+        filtered = filtered.filter(post => {
+          const hasTags = Array.isArray(post.tags) && 
+            post.tags.some(tag => typeof tag === 'string' && tag.toLowerCase().includes('tech'));
+          
+          const hasCategory = post.category && 
+            typeof post.category === 'string' && 
+            (post.category.toLowerCase().includes('tech') || post.category.toLowerCase().includes('technology'));
+            
+          return hasTags || hasCategory;
+        });
       } else if (activeTab === 'tutorials') {
-        filtered = filtered.filter(post => 
-          (post.tags && Array.isArray(post.tags) && post.tags.some((tag: string) => tag.toLowerCase().includes('tutorial') || tag.toLowerCase().includes('guide') || tag.toLowerCase().includes('how-to'))) || 
-          (post.category && (post.category.toLowerCase().includes('tutorial') || post.category.toLowerCase().includes('learning'))) ||
-          (post.title && post.title.toLowerCase().includes('how to'))
-        );
+        filtered = filtered.filter(post => {
+          const hasTags = Array.isArray(post.tags) && 
+            post.tags.some(tag => 
+              typeof tag === 'string' && 
+              (tag.toLowerCase().includes('tutorial') || 
+              tag.toLowerCase().includes('guide') || 
+              tag.toLowerCase().includes('how-to'))
+            );
+          
+          const hasCategory = post.category && 
+            typeof post.category === 'string' && 
+            (post.category.toLowerCase().includes('tutorial') || 
+            post.category.toLowerCase().includes('learning'));
+            
+          const hasTitle = post.title && 
+            typeof post.title === 'string' && 
+            post.title.toLowerCase().includes('how to');
+            
+          return hasTags || hasCategory || hasTitle;
+        });
       } else if (activeTab === 'news') {
-        filtered = filtered.filter(post => 
-          (post.tags && Array.isArray(post.tags) && post.tags.some((tag: string) => tag.toLowerCase().includes('news') || tag.toLowerCase().includes('update') || tag.toLowerCase().includes('announcement'))) || 
-          (post.category && post.category.toLowerCase().includes('news')) ||
-          (post.postType && post.postType.toLowerCase() === 'news')
-        );
+        filtered = filtered.filter(post => {
+          const hasTags = Array.isArray(post.tags) && 
+            post.tags.some(tag => 
+              typeof tag === 'string' && 
+              (tag.toLowerCase().includes('news') || 
+              tag.toLowerCase().includes('update') || 
+              tag.toLowerCase().includes('announcement'))
+            );
+          
+          const hasCategory = post.category && 
+            typeof post.category === 'string' && 
+            post.category.toLowerCase().includes('news');
+            
+          const hasPostType = post.postType && 
+            typeof post.postType === 'string' && 
+            post.postType.toLowerCase() === 'news';
+            
+          return hasTags || hasCategory || hasPostType;
+        });
       }
     }
 
-    // Filter by search query
+    // For debugging
+    console.log(`After tab filtering: ${filtered.length} posts remaining`);
+
+    // Filter by search query with improved type safety
     if (searchQuery.trim() !== '') {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(post => 
-        post.title.toLowerCase().includes(query) ||
-        (post.summary && post.summary.toLowerCase().includes(query)) ||
-        (post.content && post.content.toLowerCase().includes(query))
-      );
+      filtered = filtered.filter(post => {
+        const titleMatch = post.title && 
+          typeof post.title === 'string' && 
+          post.title.toLowerCase().includes(query);
+          
+        const summaryMatch = post.summary && 
+          typeof post.summary === 'string' && 
+          post.summary.toLowerCase().includes(query);
+          
+        const contentMatch = post.content && 
+          typeof post.content === 'string' && 
+          post.content.toLowerCase().includes(query);
+          
+        return titleMatch || summaryMatch || contentMatch;
+      });
+      
+      console.log(`After search filtering: ${filtered.length} posts remaining`);
     }
 
-    // Sort by date
+    // Sort by date with better error handling
     return filtered.sort((a, b) => {
-      const dateA = a.publishedAt ? new Date(a.publishedAt) : new Date(a.createdAt);
-      const dateB = b.publishedAt ? new Date(b.publishedAt) : new Date(b.createdAt);
-      return dateB.getTime() - dateA.getTime();
+      try {
+        const dateA = a.publishedAt ? new Date(a.publishedAt) : 
+                     (a.createdAt ? new Date(a.createdAt) : new Date());
+        const dateB = b.publishedAt ? new Date(b.publishedAt) : 
+                     (b.createdAt ? new Date(b.createdAt) : new Date());
+        return dateB.getTime() - dateA.getTime();
+      } catch (e) {
+        console.error("Error sorting posts by date:", e);
+        return 0; // Keep original order if there's an error
+      }
     });
   }, [allPosts, activeTab, searchQuery]);
 
