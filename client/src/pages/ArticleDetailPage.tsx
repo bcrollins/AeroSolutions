@@ -858,7 +858,12 @@ const RelatedArticles = ({ ids }: { ids: number[] }) => {
 };
 
 const ArticleDetailPage: React.FC = () => {
-  const [, params] = useRoute('/articles/:slug');
+  // Handle both /articles/:slug and /news/:slug routes
+  const [matchArticles, paramsArticles] = useRoute('/articles/:slug');
+  const [matchNews, paramsNews] = useRoute('/news/:slug');
+  
+  // Use whichever params object is defined
+  const params = paramsArticles || paramsNews;
   const [article, setArticle] = useState<ArticleType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

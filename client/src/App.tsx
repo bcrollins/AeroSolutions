@@ -283,11 +283,12 @@ export default function App() {
         </Route>
 
         <Route path="/articles/:slug">
-          {({ params }) => {
+          {(params) => {
             // Redirect to /news/:slug
+            const slug = params.slug;
             useEffect(() => {
-              setLocation(`/news/${params.slug}`);
-            }, [params.slug]);
+              setLocation(`/news/${slug}`);
+            }, [slug]);
             return null;
           }}
         </Route>
