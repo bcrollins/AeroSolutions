@@ -1189,26 +1189,30 @@ const LearnAI: React.FC = () => {
             ref={pricingRef}
           >
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-3">Simple, Transparent Pricing</h2>
-              <p className="text-gray-400 max-w-2xl mx-auto">
+              <h2 className="text-3xl font-semibold mb-3 tracking-tight text-gray-800">Simple, Transparent Pricing</h2>
+              <p className="text-gray-600 max-w-2xl mx-auto">
                 Choose the plan that fits your learning goals. All plans include lifetime access to course materials.
               </p>
               
               <div className="flex justify-center mt-6">
-                <div className="bg-[#2a2a2a] p-1 rounded-full inline-flex">
+                <div className="bg-gray-50 p-1 rounded-full inline-flex border border-gray-100 shadow-sm">
                   <Button 
                     variant={activePricingTab === 'monthly' ? 'default' : 'ghost'}
-                    className={activePricingTab === 'monthly' ? 'bg-[#007bff] text-white' : 'text-gray-400'}
+                    className={activePricingTab === 'monthly' 
+                      ? 'bg-white text-gray-900 shadow-sm border border-gray-100' 
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'}
                     onClick={() => setActivePricingTab('monthly')}
                   >
                     Monthly
                   </Button>
                   <Button 
                     variant={activePricingTab === 'annual' ? 'default' : 'ghost'}
-                    className={activePricingTab === 'annual' ? 'bg-[#007bff] text-white' : 'text-gray-400'}
+                    className={activePricingTab === 'annual' 
+                      ? 'bg-white text-gray-900 shadow-sm border border-gray-100' 
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'}
                     onClick={() => setActivePricingTab('annual')}
                   >
-                    Annual <span className="ml-1 text-xs bg-green-500 text-white px-1.5 py-0.5 rounded-full">SAVE 20%</span>
+                    Annual <span className="ml-1 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full border border-green-200">SAVE 20%</span>
                   </Button>
                 </div>
               </div>
@@ -1219,24 +1223,26 @@ const LearnAI: React.FC = () => {
                 <div key={plan.id} className="relative">
                   {plan.popular && (
                     <div className="absolute -top-4 inset-x-0 flex justify-center">
-                      <span className="bg-[#007bff] text-white text-xs font-bold px-3 py-1 rounded-full">
+                      <span className="bg-[#0066cc] text-white text-xs font-medium px-4 py-1 rounded-full shadow-sm border border-[#0066cc]/80">
                         MOST POPULAR
                       </span>
                     </div>
                   )}
                   
-                  <Card className={`h-full flex flex-col ${plan.popular ? 'border-[#007bff]/50 shadow-lg shadow-[#007bff]/10' : 'border-[#444]'} bg-[#2a2a2a]`}>
-                    <div className="p-6 flex-1">
-                      <h3 className="text-xl font-bold mb-1">{plan.name}</h3>
-                      <p className="text-sm text-gray-400 mb-4">{plan.description}</p>
+                  <Card className={`h-full flex flex-col ${plan.popular 
+                    ? 'border-[#0066cc]/20 shadow-lg shadow-[#0066cc]/5 bg-white' 
+                    : 'border-gray-100 bg-white shadow-[0_10px_25px_rgba(0,0,0,0.03)]'} hover:shadow-lg hover:-translate-y-1 transition-all duration-300 rounded-xl`}>
+                    <div className="p-8 flex-1">
+                      <h3 className="text-xl font-semibold mb-1 tracking-tight text-gray-800">{plan.name}</h3>
+                      <p className="text-sm text-gray-500 mb-5">{plan.description}</p>
                       
                       <div className="mb-6">
-                        <div className="text-3xl font-bold">
+                        <div className="text-3xl font-semibold text-gray-900 tabular-nums tracking-tight">
                           ${activePricingTab === 'monthly' ? plan.price : plan.annualPrice ? Math.round(plan.annualPrice / 12) : 0}
-                          <span className="text-sm font-normal text-gray-400">/mo</span>
+                          <span className="text-sm font-normal text-gray-500">/mo</span>
                         </div>
                         {activePricingTab === 'annual' && plan.annualPrice && (
-                          <div className="text-sm text-gray-400">
+                          <div className="text-sm text-gray-500 mt-1">
                             ${plan.annualPrice} billed annually
                           </div>
                         )}
@@ -1245,16 +1251,20 @@ const LearnAI: React.FC = () => {
                       <ul className="space-y-3 mb-8">
                         {plan.features.map((feature, idx) => (
                           <li key={idx} className="flex items-start">
-                            <Check className="w-5 h-5 text-[#007bff] mr-2 flex-shrink-0" />
-                            <span className="text-sm">{feature}</span>
+                            <div className="w-5 h-5 rounded-full bg-[#0066cc]/10 flex items-center justify-center mr-2 flex-shrink-0 mt-0.5">
+                              <Check className="w-3 h-3 text-[#0066cc]" />
+                            </div>
+                            <span className="text-sm text-gray-700">{feature}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
                     
-                    <div className="p-6 pt-0">
+                    <div className="px-8 pb-8 pt-0">
                       <Button 
-                        className={`w-full ${plan.popular ? 'bg-[#007bff] hover:bg-blue-600' : 'bg-[#444] hover:bg-[#555]'}`}
+                        className={`w-full shadow-sm ${plan.popular 
+                          ? 'bg-[#0066cc] hover:bg-[#0055b3] text-white' 
+                          : 'bg-gray-50 hover:bg-gray-100 text-gray-800 border border-gray-200'} rounded-lg h-10`}
                         onClick={() => window.location.href = `/subscriptions/checkout?plan=${plan.id}&billing=${activePricingTab}`}
                       >
                         {plan.cta}
@@ -1265,8 +1275,8 @@ const LearnAI: React.FC = () => {
               ))}
             </div>
             
-            <div className="mt-8 text-center text-sm text-gray-400">
-              Need a custom plan for your organization? <a href="/enterprise" className="text-[#007bff] hover:underline">Contact our enterprise team</a>.
+            <div className="mt-8 text-center text-sm text-gray-600">
+              Need a custom plan for your organization? <a href="/enterprise" className="text-[#0066cc] hover:underline hover:text-[#0055b3] transition-colors">Contact our enterprise team</a>.
             </div>
           </motion.div>
           
