@@ -390,6 +390,16 @@ export default function App() {
           )}
         </Route>
         
+        {/* Redirect from learn-ai to learnai */}
+        <Route path="/learn-ai">
+          {() => {
+            useEffect(() => {
+              setLocation('/learnai');
+            }, []);
+            return null;
+          }}
+        </Route>
+        
         {/* Course Dashboard for subscribers */}
         <Route path="/courses/dashboard">
           {() => (
