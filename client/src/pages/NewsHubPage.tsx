@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
+import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import ArticleReactionBar from '@/components/articles/ArticleReactionBar';
 
 // Type definitions
@@ -50,17 +51,67 @@ const NewsHubPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [postsPerPage] = useState(15); // Show more articles per page
   
-  // Initialize sound effects
+  // Initialize sound effects and keyboard shortcuts
   const { playSound } = useSoundEffects();
+  const { registerShortcut } = useKeyboardShortcuts();
+  
+  // Register keyboard shortcuts for the news hub
+  // Need to add searchInputRef for keyboard shortcuts
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [totalPages, setTotalPages] = useState(1);
+
+  useEffect(() => {
+    // Focus search with / key
+    registerShortcut('/', () => {
+      if (searchInputRef.current) {
+        searchInputRef.current.focus();
+        playSound('click');
+      }
+    });
+    
+    // Clear search with Escape key
+    registerShortcut('Escape', () => {
+      if (searchQuery) {
+        setSearchQuery('');
+        playSound('notification');
+      }
+    });
+    
+    // Register 1-6 keys for tab navigation
+    registerShortcut('1', () => setActiveTab('all'));
+    registerShortcut('2', () => setActiveTab('ai'));
+    registerShortcut('3', () => setActiveTab('business'));
+    registerShortcut('4', () => setActiveTab('tech'));
+    registerShortcut('5', () => setActiveTab('tutorials'));
+    registerShortcut('6', () => setActiveTab('news'));
+    
+    // Navigate pagination with arrow keys
+    registerShortcut('ArrowLeft', () => {
+      if (page > 1) {
+        setPage(prev => prev - 1);
+        playSound('click');
+      }
+    });
+    
+    registerShortcut('ArrowRight', () => {
+      if (page < totalPages) {
+        setPage(prev => prev + 1);
+        playSound('click');
+      }
+    });
+    
+  }, [registerShortcut, searchQuery, page, totalPages, playSound, setActiveTab]);
 
   // Fetch posts from our API - get all 50 articles with newest first
+  // Enhanced with better error handling and performance optimizations
   const { data: postsData, isLoading, error } = useQuery({
     queryKey: ['/api/posts?limit=50&sort=newest'],
     retry: 3,
-    retryDelay: 1000,
-    staleTime: 10000, // 10 seconds - refresh more frequently to get new articles
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000), // Exponential backoff for better network resilience
+    staleTime: 5000, // 5 seconds - refresh more frequently to get new articles
     refetchOnWindowFocus: true, // Refresh data when user returns to the tab
-    refetchInterval: 15000, // Refresh every 15 seconds to get newly generated articles
+    refetchInterval: 10000, // Refresh every 10 seconds to get newly generated articles
+    refetchOnMount: true, // Always refetch when component mounts
   });
   
   // Debug article data separately to avoid TypeScript errors

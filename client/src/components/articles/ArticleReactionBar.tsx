@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ThumbsUp, ThumbsDown, Bookmark, Share2, Check } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { Button } from '@/components/ui/button';
@@ -122,89 +122,171 @@ const ArticleReactionBar: React.FC<ArticleReactionBarProps> = ({
   const buttonSize = isCompact ? "sm" : "default";
   const iconSize = isCompact ? 16 : 20;
   
+  // Apple-inspired animation variants
+  const buttonVariants = {
+    initial: { opacity: 0.8, y: 5 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
+    tap: { scale: 0.95, transition: { duration: 0.1 } },
+    hover: { scale: 1.05, transition: { duration: 0.2 } }
+  };
+  
+  const iconVariants = {
+    initial: { rotate: 0 },
+    like: { rotate: [0, -15, 0], transition: { duration: 0.4 } },
+    save: { scale: [1, 1.2, 1], transition: { duration: 0.4 } },
+    share: { rotate: [0, 15, 0], transition: { duration: 0.4 } }
+  };
+
   return (
     <TooltipProvider>
       <div className={containerClasses}>
         <Tooltip>
           <TooltipTrigger asChild>
-            <motion.div whileTap={{ scale: 0.9 }}>
+            <motion.div 
+              whileTap={buttonVariants.tap}
+              whileHover={buttonVariants.hover}
+              initial={buttonVariants.initial}
+              animate={buttonVariants.animate}
+            >
               <Button 
                 variant="ghost" 
                 size={buttonSize}
-                className={`rounded-full group ${liked ? 'text-blue-500 dark:text-blue-400' : ''}`}
+                className={`rounded-full group ${liked ? 'text-blue-600 dark:text-blue-500' : ''} transition-colors duration-300`}
                 onClick={handleLike}
                 aria-label="Like article"
               >
-                <ThumbsUp size={iconSize} className={`${liked ? 'fill-blue-500 dark:fill-blue-400' : 'group-hover:text-blue-500 dark:group-hover:text-blue-400'}`} />
-                {!isCompact && <span className="ml-2">Like</span>}
+                <motion.div
+                  animate={liked ? "like" : "initial"}
+                  variants={iconVariants}
+                >
+                  <ThumbsUp 
+                    size={iconSize} 
+                    className={`${liked ? 'fill-blue-600 dark:fill-blue-500' : 'group-hover:text-blue-600 dark:group-hover:text-blue-500'} transition-all duration-300`} 
+                  />
+                </motion.div>
+                {!isCompact && <span className="ml-2 text-sm font-medium">Like</span>}
               </Button>
             </motion.div>
           </TooltipTrigger>
-          <TooltipContent side="bottom" className="bg-gray-800 text-white dark:bg-gray-700">
+          <TooltipContent side="bottom" className="bg-gray-800 text-white dark:bg-gray-700 rounded-xl text-xs py-1 px-2 shadow-lg">
             <p>Like this article</p>
           </TooltipContent>
         </Tooltip>
         
         <Tooltip>
           <TooltipTrigger asChild>
-            <motion.div whileTap={{ scale: 0.9 }}>
+            <motion.div 
+              whileTap={buttonVariants.tap}
+              whileHover={buttonVariants.hover}
+              initial={buttonVariants.initial}
+              animate={buttonVariants.animate}
+              transition={{ delay: 0.05 }}
+            >
               <Button 
                 variant="ghost" 
                 size={buttonSize}
-                className={`rounded-full group ${disliked ? 'text-red-500 dark:text-red-400' : ''}`}
+                className={`rounded-full group ${disliked ? 'text-red-600 dark:text-red-500' : ''} transition-colors duration-300`}
                 onClick={handleDislike}
                 aria-label="Dislike article"
               >
-                <ThumbsDown size={iconSize} className={`${disliked ? 'fill-red-500 dark:fill-red-400' : 'group-hover:text-red-500 dark:group-hover:text-red-400'}`} />
-                {!isCompact && <span className="ml-2">Dislike</span>}
+                <motion.div
+                  animate={disliked ? "like" : "initial"}
+                  variants={iconVariants}
+                >
+                  <ThumbsDown 
+                    size={iconSize} 
+                    className={`${disliked ? 'fill-red-600 dark:fill-red-500' : 'group-hover:text-red-600 dark:group-hover:text-red-500'} transition-all duration-300`} 
+                  />
+                </motion.div>
+                {!isCompact && <span className="ml-2 text-sm font-medium">Dislike</span>}
               </Button>
             </motion.div>
           </TooltipTrigger>
-          <TooltipContent side="bottom" className="bg-gray-800 text-white dark:bg-gray-700">
+          <TooltipContent side="bottom" className="bg-gray-800 text-white dark:bg-gray-700 rounded-xl text-xs py-1 px-2 shadow-lg">
             <p>Dislike this article</p>
           </TooltipContent>
         </Tooltip>
         
         <Tooltip>
           <TooltipTrigger asChild>
-            <motion.div whileTap={{ scale: 0.9 }}>
+            <motion.div 
+              whileTap={buttonVariants.tap}
+              whileHover={buttonVariants.hover}
+              initial={buttonVariants.initial}
+              animate={buttonVariants.animate}
+              transition={{ delay: 0.1 }}
+            >
               <Button 
                 variant="ghost" 
                 size={buttonSize}
-                className={`rounded-full group ${saved ? 'text-amber-500 dark:text-amber-400' : ''}`}
+                className={`rounded-full group ${saved ? 'text-amber-600 dark:text-amber-500' : ''} transition-colors duration-300`}
                 onClick={handleSave}
                 aria-label={saved ? "Unsave article" : "Save article"}
               >
-                {saved ? (
-                  <Check size={iconSize} className="text-amber-500 dark:text-amber-400" />
-                ) : (
-                  <Bookmark size={iconSize} className="group-hover:text-amber-500 dark:group-hover:text-amber-400" />
-                )}
-                {!isCompact && <span className="ml-2">{saved ? "Saved" : "Save"}</span>}
+                <AnimatePresence mode="wait">
+                  {saved ? (
+                    <motion.div
+                      key="check"
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Check size={iconSize} className="text-amber-600 dark:text-amber-500" />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="bookmark"
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      variants={iconVariants}
+                      whileHover="save"
+                    >
+                      <Bookmark size={iconSize} className="group-hover:text-amber-600 dark:group-hover:text-amber-500 transition-colors duration-300" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                {!isCompact && <span className="ml-2 text-sm font-medium">{saved ? "Saved" : "Save"}</span>}
               </Button>
             </motion.div>
           </TooltipTrigger>
-          <TooltipContent side="bottom" className="bg-gray-800 text-white dark:bg-gray-700">
+          <TooltipContent side="bottom" className="bg-gray-800 text-white dark:bg-gray-700 rounded-xl text-xs py-1 px-2 shadow-lg">
             <p>{saved ? "Remove from saved" : "Save for later"}</p>
           </TooltipContent>
         </Tooltip>
         
         <Tooltip>
           <TooltipTrigger asChild>
-            <motion.div whileTap={{ scale: 0.9 }}>
+            <motion.div 
+              whileTap={buttonVariants.tap}
+              whileHover={buttonVariants.hover}
+              initial={buttonVariants.initial}
+              animate={buttonVariants.animate}
+              transition={{ delay: 0.15 }}
+            >
               <Button 
                 variant="ghost" 
                 size={buttonSize}
-                className="rounded-full group"
+                className="rounded-full group transition-colors duration-300"
                 onClick={handleShare}
                 aria-label="Share article"
               >
-                <Share2 size={iconSize} className="group-hover:text-green-500 dark:group-hover:text-green-400" />
-                {!isCompact && <span className="ml-2">Share</span>}
+                <motion.div
+                  variants={iconVariants}
+                  whileHover="share"
+                >
+                  <Share2 
+                    size={iconSize} 
+                    className="group-hover:text-green-600 dark:group-hover:text-green-500 transition-colors duration-300" 
+                  />
+                </motion.div>
+                {!isCompact && <span className="ml-2 text-sm font-medium">Share</span>}
               </Button>
             </motion.div>
           </TooltipTrigger>
-          <TooltipContent side="bottom" className="bg-gray-800 text-white dark:bg-gray-700">
+          <TooltipContent side="bottom" className="bg-gray-800 text-white dark:bg-gray-700 rounded-xl text-xs py-1 px-2 shadow-lg">
             <p>Share this article</p>
           </TooltipContent>
         </Tooltip>
