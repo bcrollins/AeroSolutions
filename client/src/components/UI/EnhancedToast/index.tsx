@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Toast, ToastProps } from '@/components/ui/toast';
+import { Toast as ShadcnToast, ToastProps } from '@/components/ui/toast';
 import { ToastAction } from '@/components/ui/toast';
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -7,13 +7,17 @@ import { X, Check, AlertTriangle, Info, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import './styles.css';
 
-export interface EnhancedToastProps extends Omit<ToastProps, 'variant'> {
+export interface EnhancedToastProps {
+  id?: string;
   type?: 'success' | 'error' | 'warning' | 'info';
   autoClose?: boolean;
   autoCloseDelay?: number;
   title?: React.ReactNode;
   description?: React.ReactNode;
   action?: React.ReactNode;
+  className?: string;
+  open?: boolean;
+  variant?: "default" | "destructive";
 };
 
 /**

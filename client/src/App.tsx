@@ -97,6 +97,7 @@ import LearnAI from "@/pages/LearnAI";
 import CoursesDashboard from "@/pages/CoursesDashboard";
 import MicroInteractionsDemo from "@/pages/MicroInteractionsDemo";
 import ComponentShowcase from "@/pages/ComponentShowcase";
+import DataVizDemo from "@/pages/DataVizDemo";
 
 export default function App() {
   const { t, i18n } = useTranslation();
@@ -450,6 +451,22 @@ export default function App() {
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
               <ComponentShowcase />
+            </>
+          )}
+        </Route>
+
+        <Route path="/data-viz-demo">
+          {() => (
+            <>
+              <Helmet>
+                <title>Data Visualization Demo | RXAI Design System</title>
+                <meta name="description" content="Experience RXAI's advanced data visualization capabilities featuring interactive charts, customizable displays, and real-time data rendering." />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href="https://rollinsx.dev/data-viz-demo" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <DataVizDemo />
             </>
           )}
         </Route>

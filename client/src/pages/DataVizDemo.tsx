@@ -23,32 +23,28 @@ const DataVizDemo: React.FC = () => {
   const showDemoToast = (type: 'success' | 'error' | 'warning' | 'info') => {
     switch (type) {
       case 'success':
-        toast.success(
-          'Operation Completed',
-          'Your data has been successfully processed.',
-          <Button variant="outline" size="sm">View Details</Button>
-        );
+        toast.success('Operation Completed', {
+          description: 'Your data has been successfully processed.',
+          action: <Button variant="outline" size="sm">View Details</Button>
+        });
         break;
       case 'error':
-        toast.error(
-          'Error Occurred',
-          'There was a problem processing your request. Please try again.',
-          <Button variant="outline" size="sm">Retry</Button>
-        );
+        toast.error('Error Occurred', {
+          description: 'There was a problem processing your request. Please try again.',
+          action: <Button variant="outline" size="sm">Retry</Button>
+        });
         break;
       case 'warning':
-        toast.warning(
-          'Limited Access',
-          'You have limited permissions for this feature.',
-          <Button variant="outline" size="sm">Upgrade</Button>
-        );
+        toast.warning('Limited Access', {
+          description: 'You have limited permissions for this feature.',
+          action: <Button variant="outline" size="sm">Upgrade</Button>
+        });
         break;
       case 'info':
-        toast.info(
-          'New Feature Available',
-          'Check out our new AI-powered analytics tools.',
-          <Button variant="outline" size="sm">Learn More</Button>
-        );
+        toast.info('New Feature Available', {
+          description: 'Check out our new AI-powered analytics tools.',
+          action: <Button variant="outline" size="sm">Learn More</Button>
+        });
         break;
     }
   };
