@@ -63,11 +63,12 @@ const generalLimiter = createLimiter({
   message: 'Too many API requests, please try again in a minute'
 });
 
-// More restricted limiter for expensive OpenAI API calls (5 per minute)
+// More restricted limiter for expensive AI API calls (5 per minute)
+// Note: openaiLimiter kept for backward compatibility, but all routes now use xAI
 const openaiLimiter = createLimiter({
   windowMs: 60 * 1000,
   maxRequests: 5,
-  message: 'OpenAI API rate limit exceeded. Please try again in a minute.'
+  message: 'AI API rate limit exceeded. Please try again in a minute.'
 });
 
 // XAI API rate limiter (5 per minute)
