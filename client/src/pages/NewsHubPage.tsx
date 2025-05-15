@@ -190,12 +190,20 @@ const NewsHubPage: React.FC = () => {
         
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-600">
+            <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-600 tracking-tight leading-tight">
               RXAI News & Articles
             </h1>
-            <p className="text-muted-foreground mt-2 max-w-2xl">
+            <p className="text-gray-500 mt-3 max-w-2xl text-lg leading-relaxed">
               Your comprehensive resource for articles on artificial intelligence, business applications, and the latest in technology innovations.
             </p>
+            <div className="flex items-center gap-3 mt-4">
+              <span className="text-xs text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
+                <span className="font-semibold">50</span> Professional Articles
+              </span>
+              <span className="text-xs text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-100">
+                <span className="font-semibold">Updated Daily</span>
+              </span>
+            </div>
           </div>
           
           {/* Articles Generation Status */}
@@ -247,10 +255,10 @@ const NewsHubPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center mb-6">
           <div className="relative md:col-span-5">
             <div className="relative group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-500 transition-colors" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-colors duration-300" />
               <Input 
                 placeholder="Search articles..." 
-                className="pl-10 h-11 border-blue-100 focus:border-blue-300 focus:ring-blue-300 shadow-sm rounded-lg group-hover:border-blue-200 transition-all"
+                className="pl-11 h-12 bg-gray-50/80 backdrop-blur-sm border-transparent focus:border-blue-300 focus:ring-blue-300 shadow-sm rounded-xl group-hover:bg-white transition-all duration-300"
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -286,40 +294,40 @@ const NewsHubPage: React.FC = () => {
                 playSound('click');
               }}
             >
-              <TabsList className="w-full grid grid-cols-6 bg-blue-50/50 rounded-xl p-1 h-11">
+              <TabsList className="w-full grid grid-cols-6 bg-gray-50/80 backdrop-blur-sm rounded-2xl p-1.5 h-12">
                 <TabsTrigger 
                   value="all" 
-                  className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+                  className="rounded-xl data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md text-gray-500 transition-all duration-300"
                 >
                   All Topics
                 </TabsTrigger>
                 <TabsTrigger 
                   value="ai" 
-                  className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+                  className="rounded-xl data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md text-gray-500 transition-all duration-300"
                 >
                   AI
                 </TabsTrigger>
                 <TabsTrigger 
                   value="business" 
-                  className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+                  className="rounded-xl data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md text-gray-500 transition-all duration-300"
                 >
                   Business
                 </TabsTrigger>
                 <TabsTrigger 
                   value="tech" 
-                  className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+                  className="rounded-xl data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md text-gray-500 transition-all duration-300"
                 >
                   Technology
                 </TabsTrigger>
                 <TabsTrigger 
                   value="tutorials" 
-                  className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+                  className="rounded-xl data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md text-gray-500 transition-all duration-300"
                 >
                   Tutorials
                 </TabsTrigger>
                 <TabsTrigger 
                   value="news" 
-                  className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+                  className="rounded-xl data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md text-gray-500 transition-all duration-300"
                 >
                   News
                 </TabsTrigger>
@@ -414,7 +422,7 @@ const NewsHubPage: React.FC = () => {
           </Button>
         </div>
       ) : filteredPosts.length === 0 ? (
-        <div className="text-center py-16 bg-blue-50 rounded-lg border border-blue-100">
+        <div className="text-center py-16 bg-gradient-to-b from-blue-50 to-white rounded-2xl border border-blue-100/60 shadow-sm backdrop-blur-sm">
           {allPosts.length === 0 ? (
             // No articles are loaded yet but they're being generated
             <div className="flex flex-col items-center">
