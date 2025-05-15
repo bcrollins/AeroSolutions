@@ -1278,15 +1278,16 @@ const LearnAI: React.FC = () => {
             className="w-full max-w-6xl mb-16"
             ref={curriculumRef}
           >
-            <h2 className="text-2xl font-bold mb-8 text-center">Preview Our Curriculum</h2>
+            <h2 className="text-2xl font-semibold mb-8 text-center tracking-tight text-gray-800">Preview Our Curriculum</h2>
             
             <Tabs defaultValue="fundamentals">
-              <TabsList className="w-full justify-center mb-8">
+              <TabsList className="w-full justify-center mb-8 bg-gray-50 p-1 rounded-xl border border-gray-100">
                 {curriculumModules.map(module => (
                   <TabsTrigger 
                     key={module.id} 
                     value={module.id}
                     onClick={() => setActiveCurriculumModule(module.id)}
+                    className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm data-[state=active]:border-gray-200 px-6 py-2 rounded-lg transition-all duration-200"
                   >
                     {module.title}
                   </TabsTrigger>
@@ -1295,20 +1296,20 @@ const LearnAI: React.FC = () => {
               
               {curriculumModules.map(module => (
                 <TabsContent key={module.id} value={module.id} className="mt-0">
-                  <Card className="bg-white border border-gray-200 shadow-sm overflow-hidden">
-                    <div className="p-6">
-                      <h3 className="text-xl font-bold mb-4 text-gray-800">{module.title}</h3>
+                  <Card className="bg-white border border-gray-100 shadow-[0_10px_15px_rgba(0,0,0,0.04)] rounded-xl overflow-hidden">
+                    <div className="p-8">
+                      <h3 className="text-xl font-semibold mb-6 text-gray-800 tracking-tight">{module.title}</h3>
                       
-                      <ul className="space-y-3">
+                      <ul className="space-y-4">
                         {module.lessons.map(lesson => (
-                          <li key={lesson.id} className="bg-gray-50 border border-gray-100 rounded-lg p-4 shadow-sm">
+                          <li key={lesson.id} className="bg-gray-50 border border-gray-100 hover:border-gray-200 rounded-xl p-4 transition-all duration-300 hover:shadow-sm hover:bg-white group">
                             <div className="flex justify-between items-start">
                               <div className="flex items-start">
-                                <div className={`mr-3 px-2 py-1 text-xs rounded font-medium ${lesson.free ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-[#0066cc]'}`}>
+                                <div className={`mr-3 px-2.5 py-1 text-xs rounded-full font-medium ${lesson.free ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-[#0066cc]/10 text-[#0066cc] border border-[#0066cc]/20'}`}>
                                   {lesson.free ? 'FREE' : 'PREMIUM'}
                                 </div>
                                 <div>
-                                  <h4 className="font-medium text-gray-800">{lesson.title}</h4>
+                                  <h4 className="font-medium text-gray-800 tracking-tight">{lesson.title}</h4>
                                   <p className="text-sm text-gray-500 mt-1">{lesson.duration}</p>
                                 </div>
                               </div>
@@ -1317,7 +1318,7 @@ const LearnAI: React.FC = () => {
                                 <Button 
                                   variant="ghost" 
                                   size="sm"
-                                  className="text-[#0066cc] hover:bg-blue-50 border border-transparent hover:border-blue-100 font-medium"
+                                  className="text-[#0066cc] hover:bg-[#0066cc]/5 border border-transparent hover:border-[#0066cc]/20 font-medium transition-all duration-300 rounded-lg"
                                   onClick={() => window.location.href = `/ai-courses/preview/${module.id}/${lesson.id}`}
                                 >
                                   <Play className="w-4 h-4 mr-1" /> Watch Free
@@ -1326,7 +1327,7 @@ const LearnAI: React.FC = () => {
                                 <Button 
                                   variant="ghost" 
                                   size="sm"
-                                  className="text-gray-600 hover:text-gray-800 hover:bg-gray-100 border border-transparent hover:border-gray-200 font-medium"
+                                  className="text-gray-600 hover:text-gray-800 hover:bg-gray-100 border border-transparent hover:border-gray-200 font-medium transition-all duration-300 rounded-lg"
                                   onClick={() => window.location.href = '/subscriptions'}
                                 >
                                   <Lock className="w-4 h-4 mr-1" /> Unlock
