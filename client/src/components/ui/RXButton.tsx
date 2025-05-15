@@ -1,145 +1,101 @@
-import React from 'react';
+import React, { ButtonHTMLAttributes, forwardRef } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
-import design from '@/styles/design-system';
+import { Loader2 } from 'lucide-react';
 
-/**
- * Advanced Apple-inspired button component that implements the RXAI design system
- */
 const buttonVariants = cva(
-  "inline-flex items-center justify-center rounded-lg font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none",
+  "inline-flex items-center justify-center rounded-md text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none",
   {
     variants: {
       variant: {
-        primary: "bg-primary text-white hover:bg-primary-hover active:bg-primary-active focus-visible:ring-primary/50",
-        secondary: "bg-primary-50 text-primary hover:bg-primary-100 active:bg-primary-200 border border-primary-200 focus-visible:ring-primary/30",
-        outline: "border border-gray-300 bg-transparent hover:bg-gray-50 active:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-800 dark:active:bg-gray-700",
-        ghost: "bg-transparent hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-800 dark:active:bg-gray-700",
-        link: "bg-transparent underline-offset-4 hover:underline text-primary hover:text-primary-hover p-0 h-auto",
+        // Apple-inspired variants
+        primary: "bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 shadow-md hover:shadow-lg dark:bg-blue-500 dark:hover:bg-blue-600 dark:active:bg-blue-700",
+        secondary: "bg-gray-200 text-gray-900 hover:bg-gray-300 active:bg-gray-400 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600 dark:active:bg-gray-500",
+        accent: "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 active:from-blue-700 active:to-blue-800 shadow-md hover:shadow-lg",
+        outline: "border border-gray-300 bg-transparent text-gray-900 hover:bg-gray-100 active:bg-gray-200 dark:border-gray-700 dark:text-gray-100 dark:hover:bg-gray-800 dark:active:bg-gray-700",
+        ghost: "bg-transparent text-gray-900 hover:bg-gray-100 active:bg-gray-200 dark:text-gray-100 dark:hover:bg-gray-800 dark:active:bg-gray-700",
+        link: "bg-transparent text-blue-600 underline-offset-4 hover:underline hover:bg-transparent dark:text-blue-400",
+        glass: "backdrop-blur-md bg-white/20 border border-white/10 text-white shadow-lg hover:bg-white/30 active:bg-white/40 dark:bg-black/20 dark:border-white/5 dark:hover:bg-black/30 dark:active:bg-black/40",
+        destructive: "bg-red-500 text-white hover:bg-red-600 active:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 dark:active:bg-red-800",
       },
       size: {
-        xs: "text-xs px-2.5 py-1.5 h-7",
-        sm: "text-sm px-3 py-2 h-9",
-        md: "text-sm px-4 py-2 h-10",
-        lg: "px-4 py-2.5 h-11",
-        xl: "text-base px-5 py-3 h-12",
-      },
-      rounded: {
-        default: "rounded-lg",
-        full: "rounded-full",
-        none: "rounded-none",
-      },
-      width: {
-        auto: "",
-        full: "w-full",
-      },
-      withIcon: {
-        true: "inline-flex items-center gap-2",
-        false: "",
+        xs: "h-7 px-2 rounded-md text-xs",
+        sm: "h-8 px-3 rounded-md text-sm",
+        md: "h-10 px-4 rounded-md text-sm",
+        lg: "h-11 px-6 rounded-md text-base",
+        xl: "h-12 px-8 rounded-md text-lg",
+        icon: "h-10 w-10 rounded-full",
       },
       animation: {
         none: "",
-        lift: "hover:-translate-y-1 active:translate-y-0",
-        scale: "hover:scale-105 active:scale-100",
-        pulse: "hover:animate-pulse",
+        subtle: "transition-all duration-200",
+        lift: "transition-all duration-300 hover:-translate-y-1",
+        scale: "transition-all duration-300 hover:scale-105",
+        pulse: "transition-all hover:animate-pulse",
+      },
+      width: {
+        auto: "w-auto",
+        full: "w-full",
+      },
+      fontWeight: {
+        regular: "font-normal",
+        medium: "font-medium",
+        semibold: "font-semibold",
+        bold: "font-bold",
       },
     },
     defaultVariants: {
       variant: "primary",
       size: "md",
-      rounded: "default",
+      animation: "subtle",
       width: "auto",
-      withIcon: false,
-      animation: "lift",
+      fontWeight: "medium",
     },
   }
 );
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+export interface RXButtonProps
+  extends ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
-  asChild?: boolean;
-  loading?: boolean;
-  icon?: React.ReactNode;
-  iconPosition?: "left" | "right";
+  isLoading?: boolean;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
+  loadingText?: string;
 }
 
-const RXButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
+const RXButton = forwardRef<HTMLButtonElement, RXButtonProps>(
   ({ 
     className, 
     variant, 
     size, 
-    rounded,
-    width,
-    withIcon, 
     animation,
-    asChild = false,
-    loading = false,
-    icon,
-    iconPosition = "left",
-    disabled,
+    width,
+    fontWeight,
+    isLoading = false,
+    leftIcon,
+    rightIcon,
+    loadingText,
     children,
-    style,
     ...props 
   }, ref) => {
-    // Determine if we have an icon
-    const hasIcon = !!icon || loading;
-
-    // Loading spinner
-    const loadingSpinner = (
-      <svg 
-        className="animate-spin -ml-1 mr-2 h-4 w-4" 
-        xmlns="http://www.w3.org/2000/svg" 
-        fill="none" 
-        viewBox="0 0 24 24"
-      >
-        <circle 
-          className="opacity-25" 
-          cx="12" 
-          cy="12" 
-          r="10" 
-          stroke="currentColor" 
-          strokeWidth="4"
-        ></circle>
-        <path 
-          className="opacity-75" 
-          fill="currentColor" 
-          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-        ></path>
-      </svg>
-    );
-
-    // Create button styles with design system tokens
-    const baseStyles = {
-      transition: `all ${design.animations.durations.normal} ${design.animations.easings.default}`,
-      fontFamily: design.typography.fonts.base,
-    };
-
     return (
       <button
-        className={cn(
-          buttonVariants({ 
-            variant, 
-            size, 
-            rounded,
-            width,
-            withIcon: hasIcon,
-            animation,
-            className 
-          })
-        )}
+        className={cn(buttonVariants({ variant, size, animation, width, fontWeight, className }))}
         ref={ref}
-        disabled={disabled || loading}
-        style={{ ...baseStyles, ...style }}
+        disabled={isLoading || props.disabled}
         {...props}
       >
-        {loading && loadingSpinner}
-        {!loading && icon && iconPosition === "left" && (
-          <span className="mr-2">{icon}</span>
-        )}
-        {children}
-        {!loading && icon && iconPosition === "right" && (
-          <span className="ml-2">{icon}</span>
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            {loadingText || children}
+          </>
+        ) : (
+          <>
+            {leftIcon && <span className="mr-2">{leftIcon}</span>}
+            {children}
+            {rightIcon && <span className="ml-2">{rightIcon}</span>}
+          </>
         )}
       </button>
     );

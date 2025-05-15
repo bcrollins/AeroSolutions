@@ -1,69 +1,71 @@
-import { useState, useEffect } from 'react';
-import { Sun, Moon } from 'lucide-react';
-import design from '@/styles/design-system';
+import { useEffect, useState } from 'react';
+import { Moon, Sun } from 'lucide-react';
 
 type Theme = 'light' | 'dark' | 'system';
 
 const ThemeToggle = () => {
-  const [theme, setTheme] = useState<Theme>('light');
-  
+  const [theme, setTheme] = useState<Theme>(() => {
+    // Initialize from localStorage if available
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('rxai-theme') as Theme;
+      return savedTheme || 'system';
+    }
+    return 'system';
+  });
+
+  // Update body class and localStorage when theme changes
   useEffect(() => {
-    // Check for theme in localStorage or default to system
-    const savedTheme = localStorage.getItem('rxai-theme') as Theme | null;
-    const initialTheme = savedTheme || 'system';
-    setTheme(initialTheme);
-    applyTheme(initialTheme);
+    const root = document.documentElement;
     
-    // Listen for system changes
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = () => {
+    localStorage.setItem('rxai-theme', theme);
+    
+    if (theme === 'system') {
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      root.classList.toggle('dark', systemTheme === 'dark');
+    } else {
+      root.classList.toggle('dark', theme === 'dark');
+    }
+    
+    // Listen for system theme changes if in system mode
+    const handleSystemThemeChange = (e: MediaQueryListEvent) => {
       if (theme === 'system') {
-        applyTheme('system');
+        root.classList.toggle('dark', e.matches);
       }
     };
     
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
-  
-  const applyTheme = (newTheme: Theme) => {
-    const root = document.documentElement;
-    const isDark = 
-      newTheme === 'dark' || 
-      (newTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    mediaQuery.addEventListener('change', handleSystemThemeChange);
     
-    if (isDark) {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-    
-    localStorage.setItem('rxai-theme', newTheme);
-  };
-  
+    return () => {
+      mediaQuery.removeEventListener('change', handleSystemThemeChange);
+    };
+  }, [theme]);
+
+  // Toggle between light and dark mode
   const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    applyTheme(newTheme);
+    setTheme((prevTheme) => {
+      if (prevTheme === 'light') return 'dark';
+      if (prevTheme === 'dark') return 'system';
+      return 'light';
+    });
   };
-  
+
+  // Determine which icon to show based on the active theme
+  const getIcon = () => {
+    if (theme === 'system') {
+      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      return systemDark ? <Moon className="h-[1.2rem] w-[1.2rem]" /> : <Sun className="h-[1.2rem] w-[1.2rem]" />;
+    }
+    return theme === 'dark' ? <Moon className="h-[1.2rem] w-[1.2rem]" /> : <Sun className="h-[1.2rem] w-[1.2rem]" />;
+  };
+
   return (
-    <button 
+    <button
       onClick={toggleTheme}
-      className="flex items-center gap-2 rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
-      aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-      style={{
-        transition: `all ${design.animations.durations.normal} ${design.animations.easings.default}`
-      }}
+      className="rounded-md p-2 bg-transparent text-gray-200 hover:bg-white/10 transition-colors"
+      aria-label="Toggle theme"
     >
-      {theme === 'light' ? (
-        <Moon size={20} className="text-gray-600" />
-      ) : (
-        <Sun size={20} className="text-yellow-400" />
-      )}
-      <span className="text-sm font-medium hidden md:inline">
-        {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
-      </span>
+      {getIcon()}
     </button>
   );
 };

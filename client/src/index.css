@@ -5,6 +5,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('./styles/utility-classes.css');
+
 @keyframes fall {
   0% {
     transform: translateY(-100px) rotate(0deg);
@@ -100,6 +102,94 @@
 .text-blue { color: var(--color-blue); }
 .text-gray-400 { color: var(--color-gray-400); }
 .text-gray-600 { color: var(--color-gray-600); }
+
+/* Accessibility Classes */
+/* High Contrast Mode */
+.high-contrast {
+  --color-primary: #0088ff;
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f0f0f0;
+  --color-bg-tertiary: #e0e0e0;
+  --color-text-primary: #000000;
+  --color-text-secondary: #0f0f0f;
+  --color-text-tertiary: #1f1f1f;
+  --color-border-primary: #000000;
+  --color-border-secondary: #333333;
+}
+
+.high-contrast.dark {
+  --color-primary: #00ccff;
+  --color-bg-primary: #000000;
+  --color-bg-secondary: #0f0f0f;
+  --color-bg-tertiary: #1f1f1f;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #f0f0f0;
+  --color-text-tertiary: #e0e0e0;
+  --color-border-primary: #ffffff;
+  --color-border-secondary: #dddddd;
+}
+
+.high-contrast a {
+  text-decoration: underline;
+}
+
+.high-contrast button, 
+.high-contrast .btn, 
+.high-contrast a.btn {
+  border: 2px solid currentColor;
+}
+
+/* Large Text Mode */
+.large-text {
+  font-size: 1.2rem;
+  line-height: 1.5;
+}
+
+.large-text h1 {
+  font-size: 2.4rem;
+}
+
+.large-text h2 {
+  font-size: 2rem;
+}
+
+.large-text h3 {
+  font-size: 1.8rem;
+}
+
+.large-text button,
+.large-text .btn,
+.large-text input,
+.large-text select,
+.large-text textarea {
+  font-size: 1.2rem;
+  padding: 0.75rem 1.25rem;
+}
+
+/* Reduced Motion */
+.reduced-motion * {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Screen Reader Optimizations */
+.screen-reader-optimized .visually-hidden {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+}
+
+.screen-reader-optimized:focus {
+  outline: 3px solid var(--color-primary) !important;
+  outline-offset: 2px;
+}
 
 @layer base {
   :root {
