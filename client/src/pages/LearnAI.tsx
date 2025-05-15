@@ -788,7 +788,7 @@ const LearnAI: React.FC = () => {
       
       {/* Enhancement #12: Automated Chatbot Assistance */}
       <div className={`fixed bottom-5 right-5 z-50 transition-all ${chatbotOpen ? 'scale-100' : 'scale-0'}`}>
-        <Card className="w-80 max-h-96 flex flex-col bg-[#2a2a2a] border-[#007bff]/30 overflow-hidden shadow-lg">
+        <Card className="w-80 max-h-96 flex flex-col bg-white border border-gray-200 overflow-hidden shadow-md">
           <div className="bg-[#007bff] p-3 flex justify-between items-center">
             <div className="flex items-center">
               <Sparkles className="w-5 h-5 text-white mr-2" />
@@ -798,22 +798,22 @@ const LearnAI: React.FC = () => {
               <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11.7816 4.03157C12.0062 3.80702 12.0062 3.44295 11.7816 3.2184C11.5571 2.99385 11.193 2.99385 10.9685 3.2184L7.50005 6.68682L4.03164 3.2184C3.80708 2.99385 3.44301 2.99385 3.21846 3.2184C2.99391 3.44295 2.99391 3.80702 3.21846 4.03157L6.68688 7.49999L3.21846 10.9684C2.99391 11.193 2.99391 11.557 3.21846 11.7816C3.44301 12.0061 3.80708 12.0061 4.03164 11.7816L7.50005 8.31316L10.9685 11.7816C11.193 12.0061 11.5571 12.0061 11.7816 11.7816C12.0062 11.557 12.0062 11.193 11.7816 10.9684L8.31322 7.49999L11.7816 4.03157Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg>
             </Button>
           </div>
-          <div className="flex-1 overflow-y-auto p-3 space-y-3 max-h-72">
+          <div className="flex-1 overflow-y-auto p-3 space-y-3 max-h-72 bg-gray-50">
             {chatMessages.map((message, index) => (
               <div key={index} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`rounded-lg p-2 max-w-[85%] ${message.type === 'user' ? 'bg-[#007bff] text-white' : 'bg-[#333] text-white'}`}>
+                <div className={`rounded-lg p-2 max-w-[85%] ${message.type === 'user' ? 'bg-[#007bff] text-white' : 'bg-white border border-gray-200 text-gray-800 shadow-sm'}`}>
                   {message.text}
                 </div>
               </div>
             ))}
           </div>
-          <form onSubmit={handleChatSubmit} className="border-t border-[#444] p-2 flex">
+          <form onSubmit={handleChatSubmit} className="border-t border-gray-200 p-2 flex">
             <Input 
               type="text" 
               placeholder="Ask a question..." 
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
-              className="flex-1 bg-[#333] border-[#444] focus:border-[#007bff] text-white"
+              className="flex-1 bg-white border border-gray-200 focus:border-[#007bff] text-gray-800"
             />
             <Button type="submit" size="sm" className="ml-2 bg-[#007bff]">
               <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1.20308 1.04312C1.00328 0.954998 0.772341 0.989939 0.601954 1.13468C0.431567 1.27942 0.341824 1.51485 0.364101 1.75111L0.997601 7.00111C1.01507 7.1897 1.11449 7.36175 1.26737 7.47371L8.20094 12.4435C8.36139 12.5634 8.57361 12.5982 8.76487 12.5367C8.95613 12.4752 9.10333 12.3244 9.15484 12.1332L9.84939 9.93616L13.9526 5.83255C14.2086 5.57653 14.2086 5.17026 13.9526 4.91424C13.6965 4.65821 13.2903 4.65821 13.0342 4.91424L9.3902 8.55832L7.27668 7.00111L13.1669 2.9511C13.3777 2.80513 13.4593 2.54176 13.3678 2.31127C13.2763 2.08078 13.0299 1.94559 12.7822 1.9881L1.28216 3.68918C1.03261 3.73168 0.843343 3.91259 0.800111 4.16324L0.0646143 7.94386C0.0210442 8.19658 0.137134 8.44699 0.356968 8.58695L1.26737 9.20042C1.48721 9.34038 1.76655 9.32375 1.96886 9.15479L5.99698 5.83253C6.253 5.57651 6.253 5.17024 5.99698 4.91421C5.74096 4.65819 5.33469 4.65819 5.07867 4.91421L1.65808 7.70979L1.34833 7.48349L1.89337 4.69293L12.0724 3.18138L6.95483 6.70017C6.72676 6.85906 6.60673 7.13452 6.64855 7.40957L7.56534 13.4098C7.6154 13.7397 7.91573 13.9754 8.25102 13.9754H8.35159C8.70971 13.9582 8.9991 13.6748 9.02276 13.3159L9.6381 9.67175L12.3703 7.0009C12.6263 6.74487 12.6263 6.33861 12.3703 6.08258C12.1142 5.82656 11.708 5.82656 11.4519 6.08258L8.93856 8.59587L8.52803 11.237L7.84718 7.00553L1.20308 1.04312Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg>
@@ -925,19 +925,19 @@ const LearnAI: React.FC = () => {
               {/* Enhancement #1: Dynamic Interactive AI Demo */}
               <div 
                 ref={aiDemoRef}
-                className="absolute right-0 bottom-0 top-0 w-full md:w-[45%] bg-[#2a2a2a] rounded-l-xl hidden md:block"
+                className="absolute right-0 bottom-0 top-0 w-full md:w-[45%] bg-white rounded-l-xl hidden md:block shadow-md border border-gray-200"
               >
                 <div className="h-full flex flex-col justify-center items-center p-6 relative">
-                  <div className="bg-[#1a1a1a] rounded-lg p-4 w-full max-w-sm mx-auto shadow-xl">
+                  <div className="bg-gray-50 rounded-lg p-4 w-full max-w-sm mx-auto shadow-sm border border-gray-200">
                     <div className="flex items-center mb-4">
                       <div className="w-8 h-8 rounded-full bg-[#007bff] flex items-center justify-center mr-3">
                         <Zap className="w-4 h-4 text-white" />
                       </div>
-                      <h3 className="font-semibold">RXAI Image Classifier</h3>
+                      <h3 className="font-semibold text-gray-900">RXAI Image Classifier</h3>
                     </div>
-                    <div className="bg-[#333] rounded-lg p-4 mb-4 h-48 flex items-center justify-center">
+                    <div className="bg-white rounded-lg p-4 mb-4 h-48 flex items-center justify-center border border-gray-200">
                       <div className="text-center">
-                        <p className="text-gray-400 mb-2">Try our live AI demo</p>
+                        <p className="text-gray-600 mb-2">Try our live AI demo</p>
                         <Button 
                           variant="outline" 
                           className="border-[#007bff] text-[#007bff] hover:bg-[#007bff] hover:text-white"
@@ -1643,13 +1643,13 @@ const LearnAI: React.FC = () => {
                       </div>
                     </Card>
                     
-                    <Card className="bg-[#333] border-none">
+                    <Card className="bg-white border border-gray-200 shadow-sm">
                       <div className="p-4">
-                        <p className="text-sm italic mb-3">"The quality of RXAI's curriculum is evident in their graduates. They have a deep understanding of real-world AI applications that sets them apart."</p>
+                        <p className="text-sm italic text-gray-700 mb-3">"The quality of RXAI's curriculum is evident in their graduates. They have a deep understanding of real-world AI applications that sets them apart."</p>
                         <div className="flex items-center">
                           <div className="text-sm">
-                            <div className="font-semibold">Sarah Chen</div>
-                            <div className="text-gray-400">Technical Recruiter, Microsoft</div>
+                            <div className="font-semibold text-gray-900">Sarah Chen</div>
+                            <div className="text-gray-500">Technical Recruiter, Microsoft</div>
                           </div>
                         </div>
                       </div>
