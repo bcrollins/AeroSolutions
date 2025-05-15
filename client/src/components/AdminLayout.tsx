@@ -1,170 +1,234 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'wouter';
-import { 
-  Users, 
-  Shield, 
-  BarChart3, 
-  Settings, 
-  Flag, 
-  LogOut, 
-  Menu, 
-  X, 
-  Home,
-  CreditCard,
-  LineChart
+import { Helmet } from 'react-helmet';
+import {
+  Users,
+  LayoutDashboard,
+  Settings,
+  FileText,
+  BarChart4,
+  MessageSquare,
+  Globe,
+  Database,
+  Shield,
+  LogOut,
+  ChevronDown,
+  Menu,
+  X,
 } from 'lucide-react';
-import { useAdmin } from '@/hooks/useAdmin';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
-  title: string;
+  title?: string;
 }
 
-const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
-  const { user, logout } = useAdmin();
+const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title = 'Admin Dashboard' }) => {
   const [location] = useLocation();
-  const [open, setOpen] = useState(false);
-
-  const navigation = [
-    { name: 'Dashboard', href: '/admin', icon: Home, current: location === '/admin' },
-    { name: 'Users', href: '/admin/users', icon: Users, current: location === '/admin/users' },
-    { name: 'Content Moderation', href: '/admin/content', icon: Flag, current: location === '/admin/content' },
-    { name: 'Subscriptions', href: '/admin/subscriptions', icon: CreditCard, current: location === '/admin/subscriptions' },
-    { name: 'Subscription Analytics', href: '/admin/subscription-analytics', icon: LineChart, current: location === '/admin/subscription-analytics' },
-    { name: 'Analytics', href: '/admin/analytics', icon: BarChart3, current: location === '/admin/analytics' },
-    { name: 'Settings', href: '/admin/settings', icon: Settings, current: location === '/admin/settings' },
+  const { user } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  
+  const menuItems = [
+    {
+      title: 'Dashboard',
+      icon: <LayoutDashboard className="h-5 w-5" />,
+      href: '/admin',
+      active: location === '/admin',
+    },
+    {
+      title: 'Users',
+      icon: <Users className="h-5 w-5" />,
+      href: '/admin/users',
+      active: location === '/admin/users',
+    },
+    {
+      title: 'Content',
+      icon: <FileText className="h-5 w-5" />,
+      href: '/admin/content',
+      active: location === '/admin/content',
+    },
+    {
+      title: 'Analytics',
+      icon: <BarChart4 className="h-5 w-5" />,
+      href: '/admin/analytics',
+      active: location === '/admin/analytics',
+    },
+    {
+      title: 'Forum',
+      icon: <MessageSquare className="h-5 w-5" />,
+      href: '/admin/forum',
+      active: location === '/admin/forum',
+    },
+    {
+      title: 'SEO',
+      icon: <Globe className="h-5 w-5" />,
+      href: '/admin/seo',
+      active: location === '/admin/seo',
+    },
+    {
+      title: 'Database',
+      icon: <Database className="h-5 w-5" />,
+      href: '/admin/database',
+      active: location === '/admin/database',
+    },
+    {
+      title: 'Settings',
+      icon: <Settings className="h-5 w-5" />,
+      href: '/admin/settings',
+      active: location === '/admin/settings',
+    },
   ];
-
-  const handleLogout = () => {
-    logout();
-  };
-
+  
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Mobile menu */}
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetTrigger asChild className="lg:hidden">
-          <Button variant="ghost" size="icon" className="absolute top-4 left-4 z-50">
-            <Menu className="h-6 w-6" />
-            <span className="sr-only">Toggle menu</span>
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="p-0 w-[280px]">
-          <div className="flex flex-col h-full">
-            <div className="p-4 border-b bg-primary text-primary-foreground flex items-center">
-              <Shield className="h-6 w-6 mr-2" />
-              <span className="font-semibold">ROLLINSX Admin</span>
-            </div>
-            <ScrollArea className="flex-1">
-              <div className="p-4 space-y-1">
-                {navigation.map((item) => (
-                  <Link key={item.name} href={item.href}>
-                    <Button
-                      variant={item.current ? "default" : "ghost"}
-                      size="sm"
-                      className="w-full justify-start"
-                      onClick={() => setOpen(false)}
-                    >
-                      <item.icon className="h-5 w-5 mr-2" />
-                      {item.name}
-                    </Button>
-                  </Link>
-                ))}
-              </div>
-            </ScrollArea>
-            <div className="p-4 border-t">
-              <Button 
-                variant="outline" 
-                className="w-full justify-start" 
-                onClick={handleLogout}
-              >
-                <LogOut className="h-5 w-5 mr-2" />
-                Logout
-              </Button>
-            </div>
+    <>
+      <Helmet>
+        <title>{title} | RXAI Admin</title>
+        <meta name="robots" content="noindex,nofollow" />
+      </Helmet>
+      
+      <div className="flex h-screen overflow-hidden">
+        {/* Sidebar for desktop */}
+        <div className={cn(
+          "bg-secondary/50 w-64 hidden md:flex flex-col fixed inset-y-0 z-50",
+          "border-r border-border/50 transition-all duration-300"
+        )}>
+          <div className="flex items-center justify-between h-16 px-4 border-b border-border/50">
+            <Link href="/">
+              <a className="flex items-center space-x-2">
+                <Shield className="h-6 w-6 text-primary" />
+                <span className="font-bold">RXAI Admin</span>
+              </a>
+            </Link>
           </div>
-        </SheetContent>
-      </Sheet>
-
-      {/* Desktop sidebar */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
-        <div className="flex h-full flex-col border-r bg-white dark:bg-gray-800">
-          <div className="h-16 flex items-center border-b px-6">
-            <Shield className="h-6 w-6 text-primary mr-2" />
-            <span className="text-xl font-semibold">ROLLINSX Admin</span>
-          </div>
-          <div className="flex flex-1 flex-col overflow-y-auto">
-            <nav className="flex-1 space-y-1 px-4 py-4">
-              {navigation.map((item) => (
-                <Link key={item.name} href={item.href}>
-                  <Button
-                    variant={item.current ? "default" : "ghost"}
-                    size="sm"
-                    className="w-full justify-start mb-1"
-                  >
-                    <item.icon className="h-5 w-5 mr-2" />
-                    {item.name}
-                  </Button>
+          
+          <div className="flex-1 overflow-y-auto py-4 px-3">
+            <nav className="space-y-1">
+              {menuItems.map((item) => (
+                <Link key={item.href} href={item.href}>
+                  <a className={cn(
+                    "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                    item.active 
+                      ? "bg-primary/10 text-primary" 
+                      : "text-foreground/70 hover:text-foreground hover:bg-secondary"
+                  )}>
+                    {item.icon}
+                    <span className="ml-3">{item.title}</span>
+                  </a>
                 </Link>
               ))}
             </nav>
           </div>
-          <div className="p-4 border-t">
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="w-full justify-start" 
-              onClick={handleLogout}
-            >
-              <LogOut className="h-5 w-5 mr-2" />
-              Logout
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="lg:pl-64 flex flex-col min-h-screen">
-        <header className="bg-white dark:bg-gray-800 shadow-sm z-10">
-          <div className="flex h-16 items-center justify-between px-6">
-            <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 hidden lg:block">
-              {title}
-            </h1>
-            <div className="ml-auto flex items-center">
+          
+          <div className="p-4 border-t border-border/50">
+            <div className="flex items-center">
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center mr-2">
+                <Shield className="h-4 w-4 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{user?.email || 'Admin User'}</p>
+                <p className="text-xs text-muted-foreground truncate">Administrator</p>
+              </div>
+              
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="gap-2">
-                    <span>{user?.firstName || user?.email}</span>
+                  <Button variant="ghost" size="icon">
+                    <ChevronDown className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Admin Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Logout
+                  <DropdownMenuItem asChild>
+                    <a href="/api/logout">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      <span>Sign out</span>
+                    </a>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           </div>
-        </header>
-        <main className="flex-1 py-6 px-6">
-          {children}
-        </main>
+        </div>
+        
+        {/* Mobile sidebar */}
+        <div className={cn(
+          "fixed inset-0 z-50 bg-background/80 backdrop-blur-sm md:hidden",
+          sidebarOpen ? "block" : "hidden"
+        )}>
+          <div className="fixed inset-y-0 left-0 z-50 w-full max-w-xs bg-background shadow-lg">
+            <div className="flex items-center justify-between h-16 px-6 border-b">
+              <Link href="/">
+                <a className="flex items-center space-x-2">
+                  <Shield className="h-6 w-6 text-primary" />
+                  <span className="font-bold">RXAI Admin</span>
+                </a>
+              </Link>
+              <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)}>
+                <X className="h-5 w-5" />
+                <span className="sr-only">Close sidebar</span>
+              </Button>
+            </div>
+            
+            <nav className="mt-5 px-4 space-y-1">
+              {menuItems.map((item) => (
+                <Link key={item.href} href={item.href}>
+                  <a 
+                    className={cn(
+                      "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                      item.active 
+                        ? "bg-primary/10 text-primary" 
+                        : "text-foreground/70 hover:text-foreground hover:bg-secondary"
+                    )}
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    {item.icon}
+                    <span className="ml-3">{item.title}</span>
+                  </a>
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </div>
+        
+        {/* Main content */}
+        <div className="flex flex-col flex-1 w-full md:pl-64">
+          {/* Top navbar */}
+          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border/50">
+            <div className="flex items-center justify-between h-16 px-4">
+              <div className="flex items-center md:hidden">
+                <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Open sidebar</span>
+                </Button>
+              </div>
+              
+              <div className="flex-1 text-xl font-semibold px-4 md:px-0 md:ml-0 truncate">
+                {title}
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Link href="/">
+                  <a className="text-sm text-muted-foreground hover:text-foreground">
+                    View Site
+                  </a>
+                </Link>
+              </div>
+            </div>
+          </div>
+          
+          {/* Page content */}
+          <main className="flex-1 overflow-y-auto p-6">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

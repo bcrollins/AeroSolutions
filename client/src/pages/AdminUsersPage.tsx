@@ -17,15 +17,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination';
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -117,20 +108,22 @@ const AdminUsersPage: React.FC = () => {
     }
   });
   
-  // Helper function to render pagination controls
+  // Helper function to render pagination controls with simple buttons
   const renderPagination = (pagination: UsersPagination) => {
     const { page, pages } = pagination;
     
     return (
-      <Pagination>
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious 
-              onClick={() => setPage(Math.max(1, page - 1))}
-              className={page <= 1 ? 'pointer-events-none opacity-50' : ''}
-            />
-          </PaginationItem>
-          
+      <div className="flex items-center space-x-2">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => setPage(Math.max(1, page - 1))}
+          disabled={page <= 1}
+        >
+          Previous
+        </Button>
+        
+        <div className="flex items-center space-x-1">
           {Array.from({ length: Math.min(5, pages) }, (_, i) => {
             const pageNumber = page <= 3 
               ? i + 1 
@@ -141,39 +134,41 @@ const AdminUsersPage: React.FC = () => {
             if (pageNumber <= 0 || pageNumber > pages) return null;
             
             return (
-              <PaginationItem key={pageNumber}>
-                <PaginationLink
-                  isActive={page === pageNumber}
-                  onClick={() => setPage(pageNumber)}
-                >
-                  {pageNumber}
-                </PaginationLink>
-              </PaginationItem>
+              <Button 
+                key={pageNumber}
+                variant={page === pageNumber ? "default" : "outline"} 
+                size="sm"
+                onClick={() => setPage(pageNumber)}
+              >
+                {pageNumber}
+              </Button>
             );
           })}
           
           {pages > 5 && page < pages - 2 && (
-            <PaginationItem>
-              <PaginationEllipsis />
-            </PaginationItem>
+            <span className="px-2">...</span>
           )}
           
           {pages > 5 && page < pages - 1 && (
-            <PaginationItem>
-              <PaginationLink onClick={() => setPage(pages)}>
-                {pages}
-              </PaginationLink>
-            </PaginationItem>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setPage(pages)}
+            >
+              {pages}
+            </Button>
           )}
-          
-          <PaginationItem>
-            <PaginationNext 
-              onClick={() => setPage(Math.min(pages, page + 1))}
-              className={page >= pages ? 'pointer-events-none opacity-50' : ''}
-            />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+        </div>
+        
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => setPage(Math.min(pages, page + 1))}
+          disabled={page >= pages}
+        >
+          Next
+        </Button>
+      </div>
     );
   };
   
@@ -281,7 +276,7 @@ const AdminUsersPage: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         {user.verified ? (
-                          <Badge variant="success" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+                          <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
                             <CheckCircle className="h-3 w-3 mr-1" /> Verified
                           </Badge>
                         ) : (

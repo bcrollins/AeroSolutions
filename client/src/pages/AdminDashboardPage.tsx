@@ -1,382 +1,337 @@
 import React from 'react';
-import { Helmet } from 'react-helmet';
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'wouter';
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
-import { 
-  Users, 
-  CreditCard, 
-  Activity, 
-  BarChart2, 
-  TrendingUp,
+  ArrowUpRight,
+  Users,
+  BookOpen,
+  MessageSquare,
+  BarChart4,
+  ShoppingCart,
+  BadgeCheck,
+  FileText,
   AlertTriangle,
-  CheckCircle,
-  Clock 
+  TrendingUp,
+  TrendingDown,
+  Award,
+  GraduationCap,
 } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { apiRequest } from '@/lib/queryClient';
-import AnalyticsDashboard from '@/components/analytics/AnalyticsDashboard';
-
-interface AnalyticsData {
-  userMetrics: {
-    totalUsers: number;
-    activeSubscriptions: number;
-  };
-  contentMetrics: any[];
-  recentOrders: any[];
-  aiUsageMetrics: any;
-}
 
 const AdminDashboardPage: React.FC = () => {
-  const { data: analyticsData, isLoading } = useQuery<AnalyticsData>({
-    queryKey: ['admin', 'analytics'],
+  // Fetch dashboard stats
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['admin', 'dashboard-stats'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/admin/analytics', null, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('adminToken')}`
-        }
-      });
+      const response = await apiRequest('GET', '/api/admin/dashboard-stats');
       return response.json();
-    }
+    },
   });
 
-  const { data: configData } = useQuery({
-    queryKey: ['admin', 'api-config'],
-    queryFn: async () => {
-      const response = await apiRequest('GET', '/api/admin/api-config', null, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('adminToken')}`
-        }
-      });
-      return response.json();
-    }
-  });
+  const stats = data?.data || {
+    users: { total: 0, newToday: 0, percentChange: 0 },
+    courses: { total: 0, active: 0, percentChange: 0 },
+    articles: { total: 0, views: 0, percentChange: 0 },
+    forum: { threads: 0, posts: 0, percentChange: 0 },
+    subscriptions: { total: 0, active: 0, percentChange: 0 },
+    certificates: { issued: 0, percentChange: 0 },
+    revenue: { monthly: '$0', annual: '$0', percentChange: 0 },
+  };
 
-  const dateFormatter = new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
+  // Format numbers with commas
+  const formatNumber = (num: number) => {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  };
+
+  const renderTrend = (percentChange: number) => {
+    if (percentChange > 0) {
+      return (
+        <div className="flex items-center text-green-500">
+          <TrendingUp className="h-4 w-4 mr-1" />
+          <span>+{percentChange}%</span>
+        </div>
+      );
+    } else if (percentChange < 0) {
+      return (
+        <div className="flex items-center text-red-500">
+          <TrendingDown className="h-4 w-4 mr-1" />
+          <span>{percentChange}%</span>
+        </div>
+      );
+    }
+    return <span className="text-muted-foreground">0%</span>;
+  };
 
   return (
-    <AdminLayout title="Dashboard">
-      <Helmet>
-        <title>Admin Dashboard | ROLLINSX</title>
-        <meta name="robots" content="noindex,nofollow" />
-      </Helmet>
+    <AdminLayout title="Admin Dashboard">
+      {/* Welcome Message */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-foreground mb-2">Welcome to RXAI Admin</h1>
+        <p className="text-muted-foreground">
+          Monitor your platform's performance, manage users, and ensure everything is running smoothly.
+        </p>
+      </div>
 
-      <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="mb-4">
-          <TabsTrigger value="general">Overview</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="api-status">API Status</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="general" className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {isLoading ? (
+        <div className="w-full h-64 flex items-center justify-center">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        </div>
+      ) : error ? (
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="flex items-center text-destructive">
+              <AlertTriangle className="h-5 w-5 mr-2" />
+              <p>Error loading dashboard data. Please try again later.</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          {/* Stats Overview */}
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Total Users
-                </CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total Users</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{analyticsData?.userMetrics.totalUsers ?? 0}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  <span className="text-green-500">+12%</span>{' '}
-                  from last month
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Active Subscriptions
-                </CardTitle>
-                <CreditCard className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{analyticsData?.userMetrics.activeSubscriptions ?? 0}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  <span className="text-green-500">+7%</span>{' '}
-                  from last month
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">
-                  AI Requests Today
-                </CardTitle>
-                <Activity className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{analyticsData?.aiUsageMetrics?.dailyRequests ?? 0}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  <span className="text-green-500">+18%</span>{' '}
-                  from last month
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Content Views
-                </CardTitle>
-                <BarChart2 className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {analyticsData?.contentMetrics?.reduce((acc, metric) => acc + (metric.views || 0), 0) ?? 0}
+                <div className="flex items-center justify-between">
+                  <div className="text-2xl font-bold">{formatNumber(stats.users.total)}</div>
+                  <Users className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  <span className="text-green-500">+4%</span>{' '}
-                  from last month
+                  {formatNumber(stats.users.newToday)} new today {renderTrend(stats.users.percentChange)}
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Active Courses</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div className="text-2xl font-bold">{formatNumber(stats.courses.active)}</div>
+                  <BookOpen className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {formatNumber(stats.courses.total)} total courses {renderTrend(stats.courses.percentChange)}
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Forum Activity</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div className="text-2xl font-bold">{formatNumber(stats.forum.posts)}</div>
+                  <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {formatNumber(stats.forum.threads)} threads {renderTrend(stats.forum.percentChange)}
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Monthly Revenue</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div className="text-2xl font-bold">{stats.revenue.monthly}</div>
+                  <BarChart4 className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {stats.revenue.annual} annual {renderTrend(stats.revenue.percentChange)}
                 </p>
               </CardContent>
             </Card>
           </div>
 
-          <Tabs defaultValue="overview" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="recent-orders">Recent Orders</TabsTrigger>
-              <TabsTrigger value="ai-usage">AI Usage</TabsTrigger>
-            </TabsList>
-            <TabsContent value="overview" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Platform Activity</CardTitle>
-                  <CardDescription>
-                    Overview of platform activities in the last 30 days
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pl-2">
-                  {isLoading ? (
-                    <div className="flex justify-center py-8">
-                      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-                    </div>
-                  ) : (
-                    <div className="h-[300px] w-full flex items-center justify-center">
-                      <p className="text-muted-foreground">
-                        Activity visualization charts will appear here
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="recent-orders" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Orders</CardTitle>
-                  <CardDescription>
-                    Recent marketplace orders from users
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pl-2">
-                  {isLoading ? (
-                    <div className="flex justify-center py-8">
-                      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-                    </div>
-                  ) : analyticsData?.recentOrders && analyticsData.recentOrders.length > 0 ? (
-                    <div className="space-y-2">
-                      {analyticsData.recentOrders.map((order, index) => (
-                        <div key={index} className="flex items-center justify-between border-b pb-2">
-                          <div>
-                            <p className="font-medium">{order.itemName}</p>
-                            <div className="flex items-center text-sm text-muted-foreground">
-                              <Clock className="h-3 w-3 mr-1" />
-                              <span>
-                                {order.createdAt ? dateFormatter.format(new Date(order.createdAt)) : 'N/A'}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-medium">${order.totalPrice}</p>
-                            <p className={`text-xs ${
-                              order.status === 'completed' 
-                                ? 'text-green-500' 
-                                : order.status === 'cancelled' 
-                                  ? 'text-red-500' 
-                                  : 'text-yellow-500'
-                            }`}>
-                              {order.status.toUpperCase()}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      No recent orders found
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="ai-usage" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>AI Usage Statistics</CardTitle>
-                  <CardDescription>
-                    Breakdown of AI feature usage across the platform
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pl-2">
-                  {isLoading ? (
-                    <div className="flex justify-center py-8">
-                      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-                    </div>
-                  ) : analyticsData?.aiUsageMetrics ? (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <Card>
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium">Total Requests</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="text-2xl font-bold">
-                              {analyticsData.aiUsageMetrics.totalRequests || 0}
-                            </div>
-                          </CardContent>
-                        </Card>
-                        <Card>
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium">Monthly Cost</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="text-2xl font-bold">
-                              ${analyticsData.aiUsageMetrics.monthlyCost?.toFixed(2) || '0.00'}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </div>
-                      
-                      <div className="h-[200px] w-full flex items-center justify-center">
-                        <p className="text-muted-foreground">
-                          AI usage charts will appear here
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      No AI usage data available
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </TabsContent>
-
-        <TabsContent value="analytics">
-          <AnalyticsDashboard />
-        </TabsContent>
-        
-        <TabsContent value="api-status">
-          <div className="space-y-6">
+          {/* Second Row Stats */}
+          <div className="grid gap-6 md:grid-cols-3 mb-8">
             <Card>
-              <CardHeader>
-                <CardTitle>API Credentials Status</CardTitle>
-                <CardDescription>
-                  Status of external API credentials and integrations
-                </CardDescription>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Active Subscriptions</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Card className={configData?.openai_api_key ? "border-green-500 border-2" : "border-red-500 border-2"}>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium">OpenAI API Key</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center">
-                        {configData?.openai_api_key ? (
-                          <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                        ) : (
-                          <AlertTriangle className="h-4 w-4 text-red-500 mr-2" />
-                        )}
-                        <span className={configData?.openai_api_key ? "text-green-500" : "text-red-500"}>
-                          {configData?.openai_api_key ? "Configured" : "Not Configured"}
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className={configData?.xai_api_key ? "border-green-500 border-2" : "border-red-500 border-2"}>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium">XAI API Key</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center">
-                        {configData?.xai_api_key ? (
-                          <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                        ) : (
-                          <AlertTriangle className="h-4 w-4 text-red-500 mr-2" />
-                        )}
-                        <span className={configData?.xai_api_key ? "text-green-500" : "text-red-500"}>
-                          {configData?.xai_api_key ? "Configured" : "Not Configured"}
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className={configData?.stripe_secret_key ? "border-green-500 border-2" : "border-red-500 border-2"}>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium">Stripe Secret Key</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center">
-                        {configData?.stripe_secret_key ? (
-                          <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                        ) : (
-                          <AlertTriangle className="h-4 w-4 text-red-500 mr-2" />
-                        )}
-                        <span className={configData?.stripe_secret_key ? "text-green-500" : "text-red-500"}>
-                          {configData?.stripe_secret_key ? "Configured" : "Not Configured"}
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className={configData?.stripe_publishable_key ? "border-green-500 border-2" : "border-red-500 border-2"}>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium">Stripe Publishable Key</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center">
-                        {configData?.stripe_publishable_key ? (
-                          <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                        ) : (
-                          <AlertTriangle className="h-4 w-4 text-red-500 mr-2" />
-                        )}
-                        <span className={configData?.stripe_publishable_key ? "text-green-500" : "text-red-500"}>
-                          {configData?.stripe_publishable_key ? "Configured" : "Not Configured"}
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
+                <div className="flex items-center justify-between">
+                  <div className="text-2xl font-bold">{formatNumber(stats.subscriptions.active)}</div>
+                  <ShoppingCart className="h-4 w-4 text-muted-foreground" />
                 </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {formatNumber(stats.subscriptions.total)} total subscriptions
+                </p>
               </CardContent>
+              <CardFooter className="pt-0">
+                <Button variant="outline" size="sm" className="w-full" asChild>
+                  <Link href="/admin/subscriptions">
+                    <div className="flex items-center justify-center">
+                      View Details
+                      <ArrowUpRight className="ml-2 h-4 w-4" />
+                    </div>
+                  </Link>
+                </Button>
+              </CardFooter>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Certificates Issued</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div className="text-2xl font-bold">{formatNumber(stats.certificates.issued)}</div>
+                  <BadgeCheck className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {renderTrend(stats.certificates.percentChange)} from last month
+                </p>
+              </CardContent>
+              <CardFooter className="pt-0">
+                <Button variant="outline" size="sm" className="w-full" asChild>
+                  <Link href="/admin/certificates">
+                    <div className="flex items-center justify-center">
+                      View Details
+                      <ArrowUpRight className="ml-2 h-4 w-4" />
+                    </div>
+                  </Link>
+                </Button>
+              </CardFooter>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Article Performance</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div className="text-2xl font-bold">{formatNumber(stats.articles.views)}</div>
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {formatNumber(stats.articles.total)} total articles {renderTrend(stats.articles.percentChange)}
+                </p>
+              </CardContent>
+              <CardFooter className="pt-0">
+                <Button variant="outline" size="sm" className="w-full" asChild>
+                  <Link href="/admin/content">
+                    <div className="flex items-center justify-center">
+                      View Details
+                      <ArrowUpRight className="ml-2 h-4 w-4" />
+                    </div>
+                  </Link>
+                </Button>
+              </CardFooter>
             </Card>
           </div>
-        </TabsContent>
-      </Tabs>
+
+          {/* Quick Actions */}
+          <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+            <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center" asChild>
+              <Link href="/admin/users">
+                <Users className="h-5 w-5 mb-2" />
+                <span>Manage Users</span>
+              </Link>
+            </Button>
+            
+            <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center" asChild>
+              <Link href="/admin/content">
+                <FileText className="h-5 w-5 mb-2" />
+                <span>Edit Content</span>
+              </Link>
+            </Button>
+            
+            <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center" asChild>
+              <Link href="/admin/courses">
+                <GraduationCap className="h-5 w-5 mb-2" />
+                <span>Manage Courses</span>
+              </Link>
+            </Button>
+            
+            <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center" asChild>
+              <Link href="/admin/analytics">
+                <BarChart4 className="h-5 w-5 mb-2" />
+                <span>View Analytics</span>
+              </Link>
+            </Button>
+          </div>
+
+          {/* Recent Activity */}
+          <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Platform Activity</CardTitle>
+              <CardDescription>Recent user actions and system events</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-start">
+                  <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3">
+                    <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="font-medium">New user registration</p>
+                    <p className="text-sm text-muted-foreground">John Smith has created an account</p>
+                    <p className="text-xs text-muted-foreground">10 minutes ago</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start">
+                  <div className="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center mr-3">
+                    <ShoppingCart className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div>
+                    <p className="font-medium">New subscription</p>
+                    <p className="text-sm text-muted-foreground">Anna Johnson purchased the Pro plan</p>
+                    <p className="text-xs text-muted-foreground">35 minutes ago</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start">
+                  <div className="h-8 w-8 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center mr-3">
+                    <MessageSquare className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="font-medium">New forum thread</p>
+                    <p className="text-sm text-muted-foreground">Michael Brown started a discussion "AI Ethics in 2025"</p>
+                    <p className="text-xs text-muted-foreground">2 hours ago</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start">
+                  <div className="h-8 w-8 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center mr-3">
+                    <Award className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Certificate earned</p>
+                    <p className="text-sm text-muted-foreground">Emily Wilson completed the AI Fundamentals course</p>
+                    <p className="text-xs text-muted-foreground">4 hours ago</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button variant="outline" size="sm" className="w-full">
+                View All Activity
+              </Button>
+            </CardFooter>
+          </Card>
+        </>
+      )}
     </AdminLayout>
   );
 };

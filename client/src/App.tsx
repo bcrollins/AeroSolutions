@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route, useLocation, Link, Redirect } from "wouter";
 import { Helmet } from "react-helmet";
 import { useTranslation } from 'react-i18next';
 import ContentProtection from "@/components/ContentProtection";
@@ -11,6 +11,8 @@ import { initGA } from "@/lib/analytics";
 import { useAnalytics } from "@/hooks/use-analytics";
 import { useAuth } from "@/hooks/useAuth";
 import WebSocketListener from "@/components/forum/WebSocketListener";
+import { Button } from "@/components/ui/button";
+import { Shield } from "lucide-react";
 
 // Popup Components
 import ClientInputPopup from "@/components/popups/ClientInputPopup";
