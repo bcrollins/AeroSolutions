@@ -1699,13 +1699,13 @@ const LearnAI: React.FC = () => {
             </p>
             
             {!quizCompleted ? (
-              <Card className="bg-[#333] border-none p-6">
+              <Card className="bg-white border border-gray-200 shadow-sm p-6">
                 <div className="mb-6">
-                  <div className="flex justify-between text-sm mb-1">
+                  <div className="flex justify-between text-sm mb-1 text-gray-700">
                     <span>Question {currentQuestion + 1} of {quizQuestions.length}</span>
                     <span>{Math.round(progressPercentage)}% Complete</span>
                   </div>
-                  <Progress value={progressPercentage} className="h-2 bg-gray-700" />
+                  <Progress value={progressPercentage} className="h-2 bg-gray-100" />
                 </div>
                 
                 <h3 className="text-xl font-medium mb-6">{currentQuestionData.question}</h3>
