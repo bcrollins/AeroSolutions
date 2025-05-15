@@ -5,7 +5,7 @@ import DashboardWidget from '../DashboardWidget';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Play, Clock, Award } from 'lucide-react';
-import { useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 import APIErrorBoundary from '@/components/ErrorHandling/APIErrorBoundary';
 
 interface Course {
