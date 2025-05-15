@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import { Link } from 'wouter';
@@ -6,10 +6,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
-import { Search, BrainCircuit, ChevronRight, Clock } from 'lucide-react';
+import { Search, BrainCircuit, ChevronRight, Clock, X, BookOpen, Newspaper } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
+import { useSoundEffects } from '@/hooks/use-sound-effects';
 
 // Type definitions
 interface ArticlePost {
@@ -165,103 +166,249 @@ const NewsHubPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Search and Filters */}
+      {/* Enhanced Search and Filters */}
       <div className="mb-8">
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-6">
-          <div className="relative w-full md:w-96">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search articles..." 
-              className="pl-10"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center mb-6">
+          <div className="relative md:col-span-5">
+            <div className="relative group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-500 transition-colors" />
+              <Input 
+                placeholder="Search articles..." 
+                className="pl-10 h-11 border-blue-100 focus:border-blue-300 focus:ring-blue-300 shadow-sm rounded-lg group-hover:border-blue-200 transition-all"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button 
+                  className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 flex items-center justify-center transition-colors"
+                  onClick={() => setSearchQuery('')}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </div>
           </div>
           
-          <Tabs defaultValue="all" className="w-full md:w-auto" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList>
-              <TabsTrigger value="all">All Topics</TabsTrigger>
-              <TabsTrigger value="ai">AI</TabsTrigger>
-              <TabsTrigger value="business">Business</TabsTrigger>
-              <TabsTrigger value="tech">Technology</TabsTrigger>
-              <TabsTrigger value="tutorials">Tutorials</TabsTrigger>
-              <TabsTrigger value="news">News</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="md:col-span-7 w-full">
+            <Tabs 
+              defaultValue="all" 
+              className="w-full" 
+              value={activeTab} 
+              onValueChange={setActiveTab}
+            >
+              <TabsList className="w-full grid grid-cols-6 bg-blue-50/50 rounded-xl p-1 h-11">
+                <TabsTrigger 
+                  value="all" 
+                  className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+                >
+                  All Topics
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="ai" 
+                  className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+                >
+                  AI
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="business" 
+                  className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+                >
+                  Business
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="tech" 
+                  className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+                >
+                  Technology
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="tutorials" 
+                  className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+                >
+                  Tutorials
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="news" 
+                  className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+                >
+                  News
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
         </div>
         
-        {/* Results header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-medium">
-            {filteredPosts.length === 0 && !isLoading ? 'No articles found' : (
-              searchQuery ? 
-                `${filteredPosts.length} results for "${searchQuery}"` : 
-                `Showing ${filteredPosts.length} articles`
+        {/* Results header with animation */}
+        <div className="flex items-center justify-between mb-6 py-2 border-b border-blue-100">
+          <h2 className="text-xl font-medium text-blue-800">
+            {isLoading ? (
+              <Skeleton className="h-7 w-48" />
+            ) : filteredPosts.length === 0 ? (
+              'No articles found'
+            ) : (
+              <span className="flex items-center">
+                {searchQuery ? (
+                  <>
+                    <span className="text-blue-600 font-semibold">{filteredPosts.length}</span>
+                    <span className="mx-1">results for</span>
+                    <span className="text-blue-600 font-semibold">"{searchQuery}"</span>
+                  </>
+                ) : (
+                  <>
+                    Showing <span className="text-blue-600 font-semibold mx-1">{filteredPosts.length}</span> articles
+                  </>
+                )}
+              </span>
             )}
           </h2>
+          
+          {/* Additional sort options could be added here */}
         </div>
       </div>
       
       {/* Content area */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array(6).fill(0).map((_, i) => (
-            <Card key={i} className="overflow-hidden">
-              <Skeleton className="h-48 w-full" />
-              <CardHeader>
-                <Skeleton className="h-6 w-3/4 mb-2" />
-                <Skeleton className="h-4 w-1/2" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-4 w-full mb-2" />
-                <Skeleton className="h-4 w-full mb-2" />
-              </CardContent>
-              <CardFooter>
-                <Skeleton className="h-8 w-full" />
-              </CardFooter>
+        <div className="space-y-8">
+          {/* Loading state for featured articles */}
+          <div className="mb-8">
+            <Skeleton className="h-8 w-48 mb-4" />
+            <Card className="overflow-hidden">
+              <div className="grid grid-cols-1 md:grid-cols-2 h-80">
+                <div className="p-6">
+                  <Skeleton className="h-6 w-32 mb-4" />
+                  <Skeleton className="h-8 w-full mb-3" />
+                  <Skeleton className="h-8 w-3/4 mb-6" />
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-4 w-2/3 mb-6" />
+                  <Skeleton className="h-4 w-32 mt-4" />
+                </div>
+                <Skeleton className="h-full w-full" />
+              </div>
             </Card>
-          ))}
+          </div>
+          
+          {/* Loading state for regular articles */}
+          <div>
+            <Skeleton className="h-8 w-48 mb-4" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array(6).fill(0).map((_, i) => (
+                <Card key={i} className="overflow-hidden">
+                  <Skeleton className="h-48 w-full" />
+                  <div className="p-5">
+                    <Skeleton className="h-4 w-24 mb-2" />
+                    <Skeleton className="h-6 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-full mb-2" />
+                    <Skeleton className="h-4 w-full mb-4" />
+                    <Skeleton className="h-4 w-full mt-4" />
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
         </div>
       ) : error ? (
-        <div className="text-center py-16 bg-muted/30 rounded-lg">
-          <h3 className="text-xl font-medium mb-2 text-primary">
+        <div className="text-center py-16 bg-blue-50 rounded-lg border border-blue-100">
+          <h3 className="text-xl font-medium mb-2 text-blue-600">
             Error loading articles
           </h3>
           <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
             There was an error loading the articles. Please try again later.
           </p>
-          <Button onClick={() => window.location.reload()}>Refresh Page</Button>
+          <Button 
+            onClick={() => window.location.reload()}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            Refresh Page
+          </Button>
         </div>
       ) : filteredPosts.length === 0 ? (
-        <div className="text-center py-16 bg-muted/30 rounded-lg">
-          <h3 className="text-xl font-medium mb-2">No articles found</h3>
+        <div className="text-center py-16 bg-blue-50 rounded-lg border border-blue-100">
+          <h3 className="text-xl font-medium mb-2 text-blue-600">No articles found</h3>
           <p className="text-muted-foreground mb-4">
             {searchQuery ? 
               `We couldn't find any articles matching "${searchQuery}".` : 
               "No articles match the selected filters."
             }
           </p>
-          <Button onClick={() => {
-            setSearchQuery('');
-            setActiveTab('all');
-          }}>Clear Filters</Button>
+          <Button 
+            onClick={() => {
+              setSearchQuery('');
+              setActiveTab('all');
+            }}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            Clear Filters
+          </Button>
         </div>
       ) : (
-        <>
-          {/* Article Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {currentPagePosts.map(post => (
-              <ArticleCard key={post.id} post={post} />
-            ))}
-          </div>
+        <div className="space-y-12">
+          {/* Featured Articles Section - only show if not searching */}
+          {!searchQuery && activeTab === 'all' && (
+            <section>
+              <h2 className="text-2xl font-bold mb-6 text-blue-600 flex items-center">
+                <span className="relative">
+                  Featured Articles
+                  <span className="absolute bottom-0 left-0 w-full h-1 bg-blue-600/30 rounded"></span>
+                </span>
+              </h2>
+              
+              <div className="grid grid-cols-1 gap-8">
+                {filteredPosts
+                  .filter(post => post.featuredPost)
+                  .slice(0, 1)
+                  .map(post => (
+                    <ArticleCard key={post.id} post={post} featured={true} />
+                  ))}
+                  
+                {filteredPosts.filter(post => post.featuredPost).length === 0 && (
+                  // If no featured posts, use the most recent post
+                  filteredPosts.slice(0, 1).map(post => (
+                    <ArticleCard key={post.id} post={post} featured={true} />
+                  ))
+                )}
+              </div>
+            </section>
+          )}
           
-          {/* Simple Pagination */}
+          {/* Latest Articles Section */}
+          <section>
+            <h2 className="text-2xl font-bold mb-6 text-blue-600 flex items-center">
+              <span className="relative">
+                {activeTab === 'all' ? 'Latest Articles' : (
+                  activeTab === 'ai' ? 'AI Articles' :
+                  activeTab === 'business' ? 'Business Articles' :
+                  activeTab === 'tech' ? 'Technology Articles' :
+                  activeTab === 'tutorials' ? 'Tutorials' : 'Latest News'
+                )}
+                <span className="absolute bottom-0 left-0 w-full h-1 bg-blue-600/30 rounded"></span>
+              </span>
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {/* Skip the first post if it's featured and we're showing all posts */}
+              {currentPagePosts
+                .filter((post, index) => !(
+                  index === 0 && 
+                  !searchQuery && 
+                  activeTab === 'all' && 
+                  (post.featuredPost || filteredPosts.filter(p => p.featuredPost).length === 0)
+                ))
+                .map(post => (
+                  <ArticleCard key={post.id} post={post} />
+                ))}
+            </div>
+          </section>
+          
+          {/* Improved Pagination */}
           {totalPages > 1 && (
             <div className="flex justify-center gap-2 mt-8">
               <Button 
                 variant="outline" 
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
+                className="border-blue-200 text-blue-600 hover:bg-blue-50"
               >
                 Previous
               </Button>
@@ -286,7 +433,10 @@ const NewsHubPage: React.FC = () => {
                       variant={page === pageNum ? "default" : "outline"}
                       size="sm"
                       onClick={() => setPage(pageNum)}
-                      className="w-10"
+                      className={page === pageNum ? 
+                        "w-10 bg-blue-600 hover:bg-blue-700" : 
+                        "w-10 border-blue-200 text-blue-600 hover:bg-blue-50"
+                      }
                     >
                       {pageNum}
                     </Button>
@@ -298,28 +448,88 @@ const NewsHubPage: React.FC = () => {
                 variant="outline" 
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
+                className="border-blue-200 text-blue-600 hover:bg-blue-50"
               >
                 Next
               </Button>
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );
 };
 
 // Article Card Component
-const ArticleCard = ({ post }: { post: ArticlePost }) => {
+const ArticleCard = ({ post, featured = false }: { post: ArticlePost, featured?: boolean }) => {
   // Generate safe values
-  const safeTitle = post.title || "ROLLINSX Article";
+  const safeTitle = post.title || "RXAI Article";
   const safeSlug = post.slug || `article-${post.id}`;
   const safeDate = post.publishedAt || post.createdAt || new Date().toISOString();
   const readTime = post.readTimeMinutes || Math.ceil((post.content?.length || 0) / 1500) || 5;
   
+  // Use a different layout for featured articles
+  if (featured) {
+    return (
+      <Card className="overflow-hidden h-full transition-all duration-300 hover:shadow-lg group">
+        <div className="grid grid-cols-1 md:grid-cols-2 h-full">
+          <div className="h-full md:order-2">
+            {post.imageUrl ? (
+              <img 
+                src={post.imageUrl} 
+                alt={safeTitle} 
+                className="h-full w-full object-cover" 
+              />
+            ) : (
+              <div className="h-full w-full bg-gradient-to-br from-blue-600/20 to-indigo-600/20 flex items-center justify-center">
+                <BrainCircuit className="h-16 w-16 text-blue-500/30" />
+              </div>
+            )}
+          </div>
+          
+          <div className="p-6 flex flex-col justify-between md:order-1">
+            {post.category && (
+              <div className="mb-3">
+                <Badge variant="outline" className="text-xs rounded-full px-3 py-0.5 bg-blue-500/10 text-blue-600 border-blue-500/20 font-medium">
+                  {post.category}
+                </Badge>
+                {post.featuredPost && (
+                  <Badge variant="outline" className="ml-2 text-xs rounded-full px-3 py-0.5 bg-amber-500/10 text-amber-600 border-amber-500/20 font-medium">
+                    Featured
+                  </Badge>
+                )}
+              </div>
+            )}
+            
+            <div>
+              <Link href={`/news/${safeSlug}`}>
+                <h3 className="text-xl md:text-2xl font-bold mb-3 line-clamp-3 group-hover:text-blue-600 transition-colors">
+                  {safeTitle}
+                </h3>
+              </Link>
+              
+              <p className="text-muted-foreground text-sm md:text-base mb-4 line-clamp-3">
+                {post.summary || post.content?.substring(0, 160) + '...' || 'Read the full article for more information.'}
+              </p>
+            </div>
+            
+            <div className="flex items-center justify-between text-xs md:text-sm text-muted-foreground pt-3 border-t">
+              <div className="flex items-center">
+                <Clock className="h-3.5 w-3.5 mr-1" />
+                <span>{readTime} min read</span>
+              </div>
+              <span>{new Date(safeDate).toLocaleDateString()}</span>
+            </div>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+  
+  // Regular article card
   return (
-    <Card className="overflow-hidden h-full transition-all duration-300 hover:shadow-lg">
-      <div className="h-48 w-full">
+    <Card className="overflow-hidden h-full transition-all duration-300 hover:shadow-lg group border border-transparent hover:border-blue-100">
+      <div className="h-48 w-full relative">
         {post.imageUrl ? (
           <img 
             src={post.imageUrl} 
@@ -327,8 +537,15 @@ const ArticleCard = ({ post }: { post: ArticlePost }) => {
             className="h-full w-full object-cover" 
           />
         ) : (
-          <div className="h-full w-full bg-gradient-to-br from-blue-900/30 to-indigo-900/30 flex items-center justify-center">
-            <BrainCircuit className="h-10 w-10 text-primary/40" />
+          <div className="h-full w-full bg-gradient-to-br from-blue-600/10 to-indigo-600/10 flex items-center justify-center">
+            <BrainCircuit className="h-10 w-10 text-blue-500/30" />
+          </div>
+        )}
+        
+        {/* New element: if article is less than 3 days old */}
+        {(new Date().getTime() - new Date(safeDate).getTime()) / (1000 * 60 * 60 * 24) < 3 && (
+          <div className="absolute top-3 right-3">
+            <Badge className="bg-blue-500 hover:bg-blue-600 text-white font-medium">New</Badge>
           </div>
         )}
       </div>
@@ -336,14 +553,14 @@ const ArticleCard = ({ post }: { post: ArticlePost }) => {
       <div className="p-5">
         {post.category && (
           <div className="mb-2">
-            <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
+            <Badge variant="outline" className="text-xs rounded-full px-3 py-0.5 bg-blue-500/10 text-blue-600 border-blue-500/20 font-medium">
               {post.category}
             </Badge>
           </div>
         )}
         
         <Link href={`/news/${safeSlug}`}>
-          <h3 className="text-lg font-bold mb-2 line-clamp-2 hover:text-primary transition-colors">
+          <h3 className="text-lg font-bold mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
             {safeTitle}
           </h3>
         </Link>
@@ -354,7 +571,7 @@ const ArticleCard = ({ post }: { post: ArticlePost }) => {
         
         <div className="flex items-center justify-between text-xs text-muted-foreground mt-auto pt-2 border-t">
           <div className="flex items-center">
-            <Clock className="h-3 w-3 mr-1" />
+            <Clock className="h-3.5 w-3.5 mr-1" />
             <span>{readTime} min read</span>
           </div>
           <span>{new Date(safeDate).toLocaleDateString()}</span>
