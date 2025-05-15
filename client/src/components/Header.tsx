@@ -318,7 +318,7 @@ export default function Header() {
                 <Link  
                   href="/learnai"  
                   onClick={toggleMobileMenu}  
-                  className="font-medium text-sm border border-electric-cyan-400 text-white py-3 px-4 rounded-md hover:bg-electric-cyan-400/20 transition-colors duration-200 text-center"  
+                  className="apple-btn-secondary font-medium text-sm py-3 px-4 rounded-md text-center hover-lift transition-apple"  
                 >  
                   Learn AI
                 </Link>
@@ -326,7 +326,7 @@ export default function Header() {
                 <Link  
                   href="/subscriptions"  
                   onClick={toggleMobileMenu}  
-                  className="font-medium text-sm bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 px-4 rounded-md hover:from-purple-700 hover:to-indigo-700 transition-colors duration-200 text-center"  
+                  className="apple-btn-accent font-medium text-sm py-3 px-4 rounded-md text-center hover-lift transition-apple"  
                 >  
                   Try Free
                 </Link>
@@ -335,7 +335,7 @@ export default function Header() {
                   <Link  
                     href="/member-dashboard"  
                     onClick={toggleMobileMenu}  
-                    className="font-medium text-sm bg-electric-cyan-600 text-white py-3 px-4 rounded-md hover:bg-electric-cyan-700 transition-colors duration-200 flex items-center justify-center gap-2"  
+                    className="apple-btn-primary font-medium text-sm py-3 px-4 rounded-md hover-lift transition-apple flex items-center justify-center gap-2"  
                   >  
                     <LayoutDashboard className="w-5 h-5" />
                     Member Dashboard
@@ -344,7 +344,7 @@ export default function Header() {
                   <Link  
                     href="/login"  
                     onClick={toggleMobileMenu}  
-                    className="font-medium text-sm bg-electric-cyan-600 text-white py-3 px-4 rounded-md hover:bg-electric-cyan-700 transition-colors duration-200 flex items-center justify-center gap-2"  
+                    className="apple-btn-primary font-medium text-sm py-3 px-4 rounded-md hover-lift transition-apple flex items-center justify-center gap-2"  
                   >  
                     <ShieldCheck className="w-5 h-5" />
                     Login  

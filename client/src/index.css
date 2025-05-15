@@ -291,6 +291,81 @@
   background: rgba(255, 255, 255, 0.05);
 }
 
+/* Apple-style glass effect */
+.glass-effect {
+  background: rgba(10, 10, 12, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+/* Apple-style navigation items */
+.apple-nav-item {
+  color: rgba(255, 255, 255, 0.8);
+  position: relative;
+  transition: color 0.3s cubic-bezier(0.42, 0, 0.58, 1);
+}
+
+.apple-nav-item:hover, .apple-nav-item.active {
+  color: white;
+}
+
+.apple-nav-item::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.6);
+  transition: width 0.3s cubic-bezier(0.42, 0, 0.58, 1);
+}
+
+.apple-nav-item:hover::after, .apple-nav-item.active::after {
+  width: 100%;
+}
+
+/* Apple-style transitions */
+.transition-apple {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Apple-style hover lift effect */
+.hover-lift {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+/* Apple-style subtle shadow */
+.subtle-shadow {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Apple-style scrollbar */
+.apple-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.apple-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+.apple-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.apple-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
 /* Apple-style inputs */
 .apple-input {
   background: rgba(255, 255, 255, 0.05);
