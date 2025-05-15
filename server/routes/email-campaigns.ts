@@ -7,9 +7,10 @@ import { OpenAI } from 'openai';
 import { grokApi } from '../grok';
 import * as authUtils from '../utils/auth';
 
-// Setup OpenAI client
+// Setup xAI client
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: "https://api.x.ai/v1",
+  apiKey: process.env.XAI_API_KEY,
 });
 
 // Extended request interface with authentication
@@ -264,9 +265,9 @@ async function generateCampaignSuggestions(industry: string, campaignType: strin
     
     Format the response as a JSON array with objects containing fields: subjectLine, content, callToAction, bestTimeToSend`;
     
-    // Use OpenAI API
+    // Use xAI API
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      model: "grok-2-1212",
       messages: [
         {
           role: "system",

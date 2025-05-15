@@ -1,17 +1,19 @@
 /**
- * OpenAI Model
+ * XAI Model
  * 
- * This module provides a client for interacting with the OpenAI API.
+ * This module provides a client for interacting with the xAI API.
  * It handles authentication, request formatting, and response parsing.
+ * Note: This was renamed from OpenAI to XAI to meet platform requirements.
  */
 
 const OpenAI = require('openai');
 const logger = require('../config/logger');
 const db = require('../config/database');
 
-// Initialize OpenAI client with API key from environment variables
+// Initialize xAI client with API key from environment variables
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  baseURL: "https://api.x.ai/v1",
+  apiKey: process.env.XAI_API_KEY
 });
 
 /**
