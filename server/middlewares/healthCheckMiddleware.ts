@@ -42,27 +42,33 @@ export function getHealthStatus() {
 export function healthCheckMiddleware(req: Request, res: Response, next: NextFunction) {
   // CRITICAL: Root path handling for deployment health checks
   // Replit Deployments perform health checks at the root path
-  if (req.path === '/' || req.path === '') {
+  
+  // Normalize the path to handle various root path formats
+  const normalizedPath = req.path === '' ? '/' : req.path;
+  
+  if (normalizedPath === '/') {
     // Always respond to HEAD requests at root with 200 OK
     if (req.method === 'HEAD') {
       res.status(200).end();
       return;
     }
     
-    // If it's a GET request that wants JSON, respond with health status
-    if (req.method === 'GET' && 
-        (req.get('Accept') === 'application/json' || 
-        (req.accepts('json') && !req.accepts('html')))) {
-      res.status(200).json(getHealthStatus());
-      return;
+    // For GET requests to root path
+    if (req.method === 'GET') {
+      // If it explicitly wants JSON or doesn't prefer HTML, respond with health status
+      if (req.get('Accept') === 'application/json' || 
+          (req.accepts('json') && !req.accepts('html'))) {
+        res.status(200).json(getHealthStatus());
+        return;
+      }
+      
+      // For GET requests that accept HTML, continue to next middleware
+      // which will eventually serve the frontend app
     }
-    
-    // For GET requests to root that accept HTML, continue to next middleware
-    // which will eventually serve the frontend app
   }
   
-  // Special handling for specific health check endpoints
-  if (req.path === '/health' || req.path === '/deployment-health') {
+  // Special handling for explicit health check endpoints
+  if (normalizedPath === '/health' || normalizedPath === '/deployment-health') {
     res.status(200).json(getHealthStatus());
     return;
   }

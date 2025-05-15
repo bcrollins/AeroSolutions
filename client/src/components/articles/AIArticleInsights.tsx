@@ -3,9 +3,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Sparkles, Brain, TrendingUp, BookOpen, Zap, BarChart3 } from 'lucide-react';
+import { Sparkles, Brain, TrendingUp, BookOpen, Zap, BarChart3, CheckCircle2 } from 'lucide-react';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { useToast } from '@/hooks/use-toast';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 
 // Types
 interface AIInsightProps {
@@ -15,24 +17,15 @@ interface AIInsightProps {
   tags?: string[];
 }
 
-// Simulated responses while waiting for actual API data
-const dummySummary = "This article explores key developments in artificial intelligence and its implications for business strategy, covering technological advancements, practical applications, and future trends.";
-
-const dummyTopics = ["AI Ethics", "Machine Learning", "Business Strategy", "Digital Transformation"];
-
-const dummyInsights = [
-  "The article emphasizes a shift from traditional to AI-augmented decision making",
-  "Companies integrating AI strategies are seeing 35% higher efficiency rates",
-  "Ethical considerations remain a critical challenge for implementation"
-];
-
-const dummyRecommendations = [
-  "Machine Learning Applications in Finance",
-  "The Future of AI in Healthcare",
-  "Ethical Considerations for AI Development",
-  "Neural Networks Explained for Business Leaders",
-  "How AI is Transforming Customer Experience"
-];
+interface ArticleAnalysis {
+  summary: string;
+  keyPoints: string[];
+  readingLevel: string;
+  audienceMatch: string;
+  recommendations: string[];
+  contentQuality: number;
+  relevanceScore: number;
+}
 
 /**
  * AI-powered component that provides article insights, summaries, and recommendations
@@ -43,52 +36,95 @@ const AIArticleInsights: React.FC<AIInsightProps> = ({
   articleContent,
   tags = [] 
 }) => {
+  // QueryClient for cache management
+  const queryClient = useQueryClient();
+  
   // State variables
-  const [summary, setSummary] = useState<string>(dummySummary);
-  const [topics, setTopics] = useState<string[]>(dummyTopics);
-  const [insights, setInsights] = useState<string[]>(dummyInsights);
-  const [recommendations, setRecommendations] = useState<string[]>(dummyRecommendations);
   const [activeTab, setActiveTab] = useState('summary');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [hasGeneratedContent, setHasGeneratedContent] = useState(false);
+  const [loadingState, setLoadingState] = useState<'initial' | 'loading' | 'success' | 'error'>('initial');
   
   // Hooks
   const { playSound } = useSoundEffects();
   const { toast } = useToast();
   
-  // Generate AI insights on mount and when article changes
-  useEffect(() => {
-    // To be replaced with actual API calls to the OpenAI service
-    const simulateApiCall = async () => {
-      // In a real implementation, this would call our backend API
-      // which would then use the OpenAI service we've created
-      console.log(`Generating insights for article: ${articleId}`);
+  // Fetch insights data
+  const { 
+    data: analysis,
+    isLoading,
+    isError,
+    isFetching,
+    refetch
+  } = useQuery({
+    queryKey: ['/api/articles/insights', articleId],
+    queryFn: async () => {
+      // In a real implementation, this would use the API
+      // const response = await apiRequest(`/api/articles/${articleId}/insights`);
       
-      // For now, we're using the dummy data defined above
-      setTimeout(() => {
-        setHasGeneratedContent(true);
-      }, 500);
-    };
-    
-    simulateApiCall();
-    // Only depend on articleId to prevent unnecessary re-renders
-  }, [articleId]);
+      // For now, we'll simulate an API response with a delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Return simulated data
+      return {
+        summary: `This article titled "${articleTitle}" explores the latest developments in AI technology and its applications in various industries. It discusses key concepts, practical implementations, and future trends.`,
+        keyPoints: [
+          "AI technologies are transforming multiple sectors including healthcare, finance, and manufacturing",
+          "Implementation challenges include data quality, algorithm bias, and integration with existing systems",
+          "Organizations adopting AI solutions are seeing significant improvements in efficiency and decision-making"
+        ],
+        readingLevel: "Intermediate",
+        audienceMatch: "Business professionals and technology enthusiasts",
+        recommendations: [
+          "Advanced AI Implementation Strategies",
+          "Data Privacy in the Age of AI",
+          "Machine Learning for Business Leaders",
+          "Ethical Considerations in AI Development",
+          "The Future of Human-AI Collaboration"
+        ],
+        contentQuality: 8,
+        relevanceScore: 9
+      } as ArticleAnalysis;
+    },
+    enabled: !!articleId && !!articleContent,
+    staleTime: 1000 * 60 * 30, // 30 minutes
+    retry: 1
+  });
+  
+  // When data is loaded or changes, set the loading state
+  useEffect(() => {
+    if (isLoading || isFetching) {
+      setLoadingState('loading');
+    } else if (isError) {
+      setLoadingState('error');
+    } else if (analysis) {
+      setLoadingState('success');
+      playSound('success');
+    }
+  }, [isLoading, isFetching, isError, analysis, playSound]);
+  
+  // Helper functions to safely access analysis data
+  const getSummary = () => analysis?.summary || 'Summary not available.';
+  const getKeyPoints = () => analysis?.keyPoints || [];
+  const getRecommendations = () => analysis?.recommendations || [];
+  
+  // Extract topics from tags with fallback
+  const getTopics = () => {
+    if (tags && tags.length > 0) {
+      return tags;
+    }
+    return ['AI', 'Technology', 'Education'];
+  };
   
   // Generate fresh AI insights on demand
   const handleGenerateInsights = async () => {
-    setIsGenerating(true);
+    setLoadingState('loading');
     playSound('click');
     
     try {
-      // This would be an actual API call in production
-      // const response = await fetch(`/api/articles/${articleId}/insights`);
-      // const data = await response.json();
+      // Force a fresh fetch from the API
+      await refetch();
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Refresh all insights with "new" data
-      setHasGeneratedContent(true);
+      // Invalidate the cache for this article's insights to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/articles/insights', articleId] });
       
       toast({
         title: "Insights generated!",
@@ -96,13 +132,12 @@ const AIArticleInsights: React.FC<AIInsightProps> = ({
       });
     } catch (error) {
       console.error("Error generating insights:", error);
+      setLoadingState('error');
       toast({
         title: "Generation failed",
         description: "Unable to generate insights. Please try again.",
         variant: "destructive",
       });
-    } finally {
-      setIsGenerating(false);
     }
   };
   
@@ -114,20 +149,20 @@ const AIArticleInsights: React.FC<AIInsightProps> = ({
           <div className="flex items-center gap-2">
             <span className="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-full bg-primary/10 p-1">
               <Sparkles className="h-full w-full text-primary" />
-              <span className="absolute inset-0 rounded-full bg-primary animate-ping opacity-20"></span>
+              <span className="absolute inset-0 rounded-full bg-primary opacity-20"></span>
             </span>
             <CardTitle className="text-lg">AI-Powered Insights</CardTitle>
           </div>
           <Button 
             size="sm" 
             variant="outline"
-            disabled={isGenerating}
+            disabled={loadingState === 'loading'}
             className="h-8 gap-1 text-xs border-primary/20 hover:bg-primary/5 text-primary hover:text-primary/80"
             onClick={handleGenerateInsights}
           >
-            {isGenerating ? (
+            {loadingState === 'loading' ? (
               <>
-                <span className="animate-spin mr-1">⟳</span> 
+                <span className="mr-1">⟳</span> 
                 Generating...
               </>
             ) : (
@@ -184,17 +219,17 @@ const AIArticleInsights: React.FC<AIInsightProps> = ({
           <TabsContent value="summary" className="mt-0">
             <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-md">
               <p className="text-sm text-gray-700 dark:text-gray-300">
-                {hasGeneratedContent ? summary : (
+                {loadingState === 'success' ? getSummary() : (
                   <span className="flex items-center gap-2">
-                    <span className="animate-pulse">⟳</span> 
+                    <span>⟳</span> 
                     Generating summary...
                   </span>
                 )}
               </p>
               
-              {hasGeneratedContent && (
+              {loadingState === 'success' && (
                 <div className="mt-3 flex flex-wrap gap-1">
-                  {topics.map((topic, idx) => (
+                  {getTopics().map((topic: string, idx: number) => (
                     <Badge 
                       key={idx} 
                       variant="outline" 
@@ -210,9 +245,9 @@ const AIArticleInsights: React.FC<AIInsightProps> = ({
           
           <TabsContent value="insights" className="mt-0">
             <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-md">
-              {hasGeneratedContent ? (
+              {loadingState === 'success' ? (
                 <ul className="text-sm space-y-2">
-                  {insights.map((insight, idx) => (
+                  {getKeyPoints().map((insight: string, idx: number) => (
                     <li key={idx} className="flex items-start gap-2">
                       <BarChart3 size={16} className="mt-0.5 text-primary flex-shrink-0" />
                       <span className="text-gray-700 dark:text-gray-300">{insight}</span>
@@ -221,7 +256,7 @@ const AIArticleInsights: React.FC<AIInsightProps> = ({
                 </ul>
               ) : (
                 <span className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                  <span className="animate-pulse">⟳</span> 
+                  <span>⟳</span> 
                   Analyzing article content...
                 </span>
               )}
@@ -230,13 +265,13 @@ const AIArticleInsights: React.FC<AIInsightProps> = ({
           
           <TabsContent value="recommendations" className="mt-0">
             <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-md">
-              {hasGeneratedContent ? (
+              {loadingState === 'success' ? (
                 <div className="space-y-2">
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                     Recommended articles based on your interests:
                   </p>
                   <ul className="text-sm space-y-2">
-                    {recommendations.map((rec, idx) => (
+                    {getRecommendations().map((rec: string, idx: number) => (
                       <li key={idx} className="group transition-all">
                         <Button 
                           variant="ghost" 
@@ -259,7 +294,7 @@ const AIArticleInsights: React.FC<AIInsightProps> = ({
                 </div>
               ) : (
                 <span className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                  <span className="animate-pulse">⟳</span> 
+                  <span>⟳</span> 
                   Generating personalized recommendations...
                 </span>
               )}
