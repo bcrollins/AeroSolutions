@@ -439,7 +439,7 @@ const videoTestimonials = [
     name: 'Robert Martinez',
     role: 'AI Engineer at TechCorp',
     videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-    thumbnailUrl: 'https://placehold.co/400x225/2a2a2a/007bff?text=Robert+Martinez+Video',
+    thumbnailUrl: 'https://placehold.co/400x225/f5f5f7/0066cc?text=Robert+Martinez+Video',
     quote: 'The hands-on projects helped me build a portfolio that impressed employers.'
   },
   {
@@ -447,7 +447,7 @@ const videoTestimonials = [
     name: 'Lisa Johnson',
     role: 'ML Team Lead at InnovateTech',
     videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-    thumbnailUrl: 'https://placehold.co/400x225/2a2a2a/007bff?text=Lisa+Johnson+Video',
+    thumbnailUrl: 'https://placehold.co/400x225/f5f5f7/0066cc?text=Lisa+Johnson+Video',
     quote: 'I transitioned from a non-technical role to ML Team Lead within 9 months.'
   }
 ];
@@ -1038,28 +1038,28 @@ const LearnAI: React.FC = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {successMetrics.map((metric, index) => (
-                <Card key={index} className="bg-[#2a2a2a] border-none overflow-hidden">
+                <Card key={index} className="bg-white border border-gray-200 shadow-sm overflow-hidden">
                   <div className="p-6">
                     <div className="flex items-center mb-4">
-                      <div className="w-10 h-10 rounded-full bg-[#007bff]/20 flex items-center justify-center mr-3">
+                      <div className="w-10 h-10 rounded-full bg-[#0066cc]/10 flex items-center justify-center mr-3 shadow-sm">
                         {metric.icon}
                       </div>
-                      <h3 className="font-semibold">{metric.metric}</h3>
+                      <h3 className="font-semibold text-gray-800">{metric.metric}</h3>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-[#333] p-3 rounded-lg">
-                        <div className="text-sm text-gray-400 mb-1">Before</div>
-                        <div className="text-lg font-semibold">{metric.before}</div>
+                      <div className="bg-gray-100 p-3 rounded-lg border border-gray-200">
+                        <div className="text-sm text-gray-500 mb-1">Before</div>
+                        <div className="text-lg font-semibold text-gray-700">{metric.before}</div>
                       </div>
-                      <div className="bg-[#007bff]/20 p-3 rounded-lg">
-                        <div className="text-sm text-[#007bff] mb-1">After</div>
-                        <div className="text-lg font-semibold">{metric.after}</div>
+                      <div className="bg-[#0066cc]/10 p-3 rounded-lg border border-[#0066cc]/20">
+                        <div className="text-sm text-[#0066cc] mb-1">After</div>
+                        <div className="text-lg font-semibold text-gray-800">{metric.after}</div>
                       </div>
                     </div>
                     
                     <div className="mt-4 text-center">
-                      <span className="inline-block bg-[#007bff]/20 text-[#007bff] px-2 py-1 rounded-full text-sm">
+                      <span className="inline-block bg-[#0066cc]/10 text-[#0066cc] px-2 py-1 rounded-full text-sm font-medium border border-[#0066cc]/20">
                         +{metric.increase}
                       </span>
                     </div>
