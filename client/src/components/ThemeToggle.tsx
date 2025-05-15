@@ -1,41 +1,71 @@
-import { Moon, Sun, Monitor } from "lucide-react";
-import { useTheme } from "@/contexts/ThemeContext";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useTranslation } from "react-i18next";
+import { useState, useEffect } from 'react';
+import { Sun, Moon } from 'lucide-react';
+import design from '@/styles/design-system';
 
-export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
-  const { t } = useTranslation();
+type Theme = 'light' | 'dark' | 'system';
 
+const ThemeToggle = () => {
+  const [theme, setTheme] = useState<Theme>('light');
+  
+  useEffect(() => {
+    // Check for theme in localStorage or default to system
+    const savedTheme = localStorage.getItem('rxai-theme') as Theme | null;
+    const initialTheme = savedTheme || 'system';
+    setTheme(initialTheme);
+    applyTheme(initialTheme);
+    
+    // Listen for system changes
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = () => {
+      if (theme === 'system') {
+        applyTheme('system');
+      }
+    };
+    
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+  
+  const applyTheme = (newTheme: Theme) => {
+    const root = document.documentElement;
+    const isDark = 
+      newTheme === 'dark' || 
+      (newTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    
+    if (isDark) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    
+    localStorage.setItem('rxai-theme', newTheme);
+  };
+  
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    applyTheme(newTheme);
+  };
+  
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full">
-          <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-golden-amber" />
-          <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-sky-blue" />
-          <span className="sr-only">{t('toggle_theme')}</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")} className={theme === 'light' ? 'bg-light-gray-tint' : ''}>
-          <Sun className="mr-2 h-4 w-4 text-golden-amber" />
-          <span>{t('light')}</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")} className={theme === 'dark' ? 'bg-light-gray-tint' : ''}>
-          <Moon className="mr-2 h-4 w-4 text-sky-blue" />
-          <span>{t('dark')}</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")} className={theme === 'system' ? 'bg-light-gray-tint' : ''}>
-          <Monitor className="mr-2 h-4 w-4" />
-          <span>{t('system')}</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <button 
+      onClick={toggleTheme}
+      className="flex items-center gap-2 rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+      aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+      style={{
+        transition: `all ${design.animations.durations.normal} ${design.animations.easings.default}`
+      }}
+    >
+      {theme === 'light' ? (
+        <Moon size={20} className="text-gray-600" />
+      ) : (
+        <Sun size={20} className="text-yellow-400" />
+      )}
+      <span className="text-sm font-medium hidden md:inline">
+        {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+      </span>
+    </button>
   );
-}
+};
+
+export default ThemeToggle;

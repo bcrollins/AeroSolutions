@@ -55,6 +55,36 @@
   --color-error: #ef4444;
   --color-warning: #f59e0b;
   --color-info: #3b82f6;
+  
+  /* Semantic Colors - Light Mode */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f9fafb;
+  --color-bg-tertiary: #f3f4f6;
+  --color-text-primary: #1f2937;
+  --color-text-secondary: #4b5563;
+  --color-text-tertiary: #6b7280;
+  --color-border-primary: #e5e7eb;
+  --color-border-secondary: #d1d5db;
+}
+
+/* Dark Mode Overrides */
+.dark {
+  /* Primary - Adjust for better visibility on dark backgrounds */
+  --color-primary: #4d94ff;
+  --color-primary-light: #80b3ff;
+  --color-primary-dark: #3385ff;
+  --color-primary-hover: #3385ff;
+  --color-primary-active: #1a75ff;
+  
+  /* Semantic Colors - Dark Mode */
+  --color-bg-primary: #111827;    /* Gray 900 */
+  --color-bg-secondary: #1f2937;  /* Gray 800 */
+  --color-bg-tertiary: #374151;   /* Gray 700 */
+  --color-text-primary: #f9fafb;  /* Gray 50 */
+  --color-text-secondary: #e5e7eb; /* Gray 200 */
+  --color-text-tertiary: #9ca3af;  /* Gray 400 */
+  --color-border-primary: #374151; /* Gray 700 */
+  --color-border-secondary: #4b5563; /* Gray 600 */
 }
 
 /* Add explicit classes for direct use */

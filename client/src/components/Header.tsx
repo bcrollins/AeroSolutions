@@ -3,7 +3,7 @@ import { Link, useLocation } from 'wouter';
 import { Menu, X, ChevronDown, UserCircle, ShieldCheck, LayoutDashboard } from 'lucide-react';  
 import ClientPreviewModal from "./ClientPreviewModal";
 import Logo from "./Logo";
-import { ThemeToggle } from "./ThemeToggle";
+import ThemeToggle from "./ThemeToggle";
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import { initMagneticButtons } from '@/utils/appleEffects';

@@ -105,6 +105,7 @@ export const spacing = {
   px: '1px',
   0.5: '0.125rem', // 2px
   1: '0.25rem',    // 4px
+  1.5: '0.375rem', // 6px 
   2: '0.5rem',     // 8px
   3: '0.75rem',    // 12px
   4: '1rem',       // 16px
@@ -254,7 +255,7 @@ export const buttonStyles = {
   
   sizes: {
     xs: {
-      padding: `${spacing[1.5]} ${spacing[3]}`,
+      padding: `0.375rem 0.75rem`,
       fontSize: typography.sizes.xs,
     },
     sm: {
