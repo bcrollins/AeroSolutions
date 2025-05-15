@@ -10,7 +10,7 @@ import {
   CommandSeparator,
   CommandShortcut
 } from '@/components/ui/command';
-import { SearchIcon, Settings, User, LayoutDashboard, Book, FileText, HelpCircle, Github, LogOut } from 'lucide-react';
+import { Settings, User, LayoutDashboard, Book, FileText, HelpCircle, Github, LogOut } from 'lucide-react';
 import { restartOnboardingTour } from '../Onboarding/OnboardingTour';
 import useSoundEffects from '../../hooks/use-sound-effects';
 import useKeyboardSound from '../../hooks/use-keyboard-sound';

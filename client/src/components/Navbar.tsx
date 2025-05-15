@@ -28,6 +28,7 @@ import { motion } from 'framer-motion';
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [commandOpen, setCommandOpen] = useState(false);
   const [location] = useLocation();
   const { t } = useTranslation();
   const [clientPreviewOpen, setClientPreviewOpen] = useState(false);
@@ -331,7 +332,7 @@ const Navbar: React.FC = () => {
             </NavigationMenu>
             
             <div className="flex items-center gap-3">
-              <CommandButton className="hidden md:flex mr-2" />
+              <CommandButton className="hidden md:flex mr-2" setOpen={setCommandOpen} />
               <LanguageSwitcher />
               
               {isLoggedIn && <NotificationPopover />}
@@ -496,7 +497,10 @@ const Navbar: React.FC = () => {
                   </Link>
                 ))}
                 
-                <CommandButton className="w-full text-left block rounded-md px-3 py-2 text-base font-medium mb-2" />
+                <CommandButton 
+                  className="w-full text-left block rounded-md px-3 py-2 text-base font-medium mb-2" 
+                  setOpen={setCommandOpen} 
+                />
                 
                 <button
                   className="w-full text-left block rounded-md px-3 py-2 text-base font-medium bg-light-gray text-slate-blue hover:bg-slate-100 mt-2"
