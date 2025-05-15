@@ -1034,27 +1034,27 @@ const LearnAI: React.FC = () => {
             transition={{ duration: 0.5, delay: 0.5 }}
             className="w-full max-w-6xl mb-16"
           >
-            <h2 className="text-2xl font-bold mb-8 text-center">Your Transformation with RXAI</h2>
+            <h2 className="text-2xl font-semibold mb-8 text-center tracking-tight text-gray-800">Your Transformation with RXAI</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {successMetrics.map((metric, index) => (
-                <Card key={index} className="bg-white border border-gray-200 shadow-sm overflow-hidden">
+                <Card key={index} className="bg-white border border-gray-100 shadow-[0_10px_20px_rgba(0,0,0,0.05)] rounded-xl overflow-hidden hover:shadow-[0_15px_30px_rgba(0,0,0,0.08)] hover:translate-y-[-2px] transition-all duration-300">
                   <div className="p-6">
-                    <div className="flex items-center mb-4">
-                      <div className="w-10 h-10 rounded-full bg-[#0066cc]/10 flex items-center justify-center mr-3 shadow-sm">
+                    <div className="flex items-center mb-5">
+                      <div className="w-10 h-10 rounded-full bg-[#0066cc]/10 flex items-center justify-center mr-3 shadow-sm border border-[#0066cc]/5">
                         {metric.icon}
                       </div>
-                      <h3 className="font-semibold text-gray-800">{metric.metric}</h3>
+                      <h3 className="font-semibold text-gray-800 tracking-tight">{metric.metric}</h3>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-gray-100 p-3 rounded-lg border border-gray-200">
-                        <div className="text-sm text-gray-500 mb-1">Before</div>
-                        <div className="text-lg font-semibold text-gray-700">{metric.before}</div>
+                      <div className="bg-gray-50 p-3 rounded-lg border border-gray-100 transition-all duration-300 hover:border-gray-200">
+                        <div className="text-sm text-gray-500 mb-1 font-medium">Before</div>
+                        <div className="text-lg font-semibold text-gray-700 tabular-nums tracking-tight">{metric.before}</div>
                       </div>
-                      <div className="bg-[#0066cc]/10 p-3 rounded-lg border border-[#0066cc]/20">
-                        <div className="text-sm text-[#0066cc] mb-1">After</div>
-                        <div className="text-lg font-semibold text-gray-800">{metric.after}</div>
+                      <div className="bg-[#0066cc]/5 p-3 rounded-lg border border-[#0066cc]/10 transition-all duration-300 hover:border-[#0066cc]/20">
+                        <div className="text-sm text-[#0066cc] mb-1 font-medium">After</div>
+                        <div className="text-lg font-semibold text-gray-800 tabular-nums tracking-tight">{metric.after}</div>
                       </div>
                     </div>
                     
