@@ -142,19 +142,19 @@ export default function OriginalHero() {
               custom={4}
             >
               <Link 
-                href="/subscriptionspage" 
+                href="/learnai" 
                 className="bg-[#3B82F6] hover:bg-[#3B82F6]/90 text-[#1E3A8A] font-bold py-4 px-8 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_5px_15px_rgba(59,130,246,0.35)] font-inter"
+                aria-label="Browse AI courses and start learning"
+              >
+                Learn AI Today
+              </Link>
+              <Link 
+                href="/subscriptionspage" 
+                className="bg-transparent hover:bg-white/10 text-white font-semibold py-4 px-8 rounded-lg border border-[#3B82F6]/30 transition-all duration-300 hover:scale-105 hover:border-[#3B82F6]/60 font-inter"
                 aria-label="View all subscription plans"
               >
                 View Plans
               </Link>
-              <a 
-                href="#platforms" 
-                className="bg-transparent hover:bg-white/10 text-white font-semibold py-4 px-8 rounded-lg border border-[#3B82F6]/30 transition-all duration-300 hover:scale-105 hover:border-[#3B82F6]/60 font-inter"
-                aria-label="Try free for 7 days"
-              >
-                Try Free
-              </a>
             </motion.div>
           </div>
           
