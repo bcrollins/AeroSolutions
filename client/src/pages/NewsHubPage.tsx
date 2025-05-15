@@ -917,7 +917,13 @@ const NewsHubPage: React.FC = () => {
                   className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/5
                    dark:hover:shadow-primary/10 group border border-transparent hover:border-primary/20 
                    dark:hover:border-primary/30 relative hover:-translate-y-1 hover:translate-x-0.5 bg-white/70 dark:bg-gray-900/70
-                   backdrop-blur-sm"
+                   backdrop-blur-sm rounded-xl"
+                  style={{ 
+                    animation: `fadeIn 800ms ease-out ${post.id % 10 * 100}ms forwards`,
+                    opacity: 0
+                  }}
+                  onMouseEnter={() => playSound('hover')}
+                  onClick={() => playSound('click')}
                 >
                   <div className="relative h-48 bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 overflow-hidden">
                     {/* Animated glow effect on hover */}
@@ -935,9 +941,17 @@ const NewsHubPage: React.FC = () => {
                       }}
                     />
                     
-                    {/* Animated highlight gradient on top of image */}
+                    {/* Animated highlight gradient on top of image with additional visual effects */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 
                       group-hover:opacity-100 transition-opacity duration-500"></div>
+                    
+                    {/* Add a subtle overlay pattern for depth */}
+                    <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgMjAgMTAgTSAxMCAwIEwgMTAgMjAiIHN0cm9rZT0iIzMzMzMzMyIgc3Ryb2tlLW9wYWNpdHk9IjAuMDUiIHN0cm9rZS13aWR0aD0iMC41Ii8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIiAvPjwvc3ZnPg==')] 
+                      mix-blend-multiply dark:mix-blend-screen opacity-30"></div>
+                    
+                    {/* Animated shine effect on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/30 to-white/0 opacity-0 
+                      group-hover:opacity-100 -translate-x-full group-hover:translate-x-full transition-all duration-1500 ease-in-out"></div>
                     
                     {/* Category label with enhanced animation */}
                     {post.category && (
@@ -1034,24 +1048,26 @@ const NewsHubPage: React.FC = () => {
                   
                   <CardContent className="p-5 pt-2">
                     <div className="relative">
-                      <p className="text-gray-600 dark:text-gray-300 line-clamp-3 text-sm leading-relaxed">
+                      <p className="text-gray-600 dark:text-gray-300 line-clamp-3 text-sm leading-relaxed group-hover:text-gray-700 
+                        dark:group-hover:text-gray-200 transition-colors duration-300">
                         {post.summary || post.content.replace(/<[^>]*>/g, '').substring(0, 160) + '...'}
                       </p>
                       <div className="absolute bottom-0 right-0 w-full h-8 bg-gradient-to-t from-white dark:from-gray-900 to-transparent pointer-events-none"></div>
                       
                       {post.tags && post.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                        <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
                           {post.tags.slice(0, 3).map((tag, idx) => (
                             <Badge 
                               key={idx} 
                               variant="outline" 
-                              className="text-xs bg-transparent hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
+                              className="text-xs bg-transparent hover:bg-primary/5 hover:text-primary dark:hover:bg-primary/10 
+                                dark:hover:border-primary/30 cursor-pointer transition-all group-hover:-translate-y-0.5"
                               onClick={() => {
                                 setSearchQuery(tag);
                                 playSound('click');
                               }}
                             >
-                              #{tag}
+                              <span className="text-primary/70">#</span>{tag}
                             </Badge>
                           ))}
                         </div>
