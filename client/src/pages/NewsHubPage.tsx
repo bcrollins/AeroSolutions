@@ -48,6 +48,9 @@ const NewsHubPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [page, setPage] = useState(1);
   const [postsPerPage] = useState(12);
+  
+  // Initialize sound effects
+  const { playSound } = useSoundEffects();
 
   // Fetch posts from our API
   const { data: postsData, isLoading, error } = useQuery({
@@ -176,12 +179,23 @@ const NewsHubPage: React.FC = () => {
                 placeholder="Search articles..." 
                 className="pl-10 h-11 border-blue-100 focus:border-blue-300 focus:ring-blue-300 shadow-sm rounded-lg group-hover:border-blue-200 transition-all"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  if (e.target.value.length % 3 === 0 && e.target.value.length > 0) {
+                    // Play sound every 3 characters typed for subtle feedback
+                    playSound('hover');
+                  }
+                }}
+                onFocus={() => playSound('click')}
               />
               {searchQuery && (
                 <button 
                   className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 flex items-center justify-center transition-colors"
-                  onClick={() => setSearchQuery('')}
+                  onClick={() => {
+                    setSearchQuery('');
+                    playSound('notification');
+                  }}
+                  aria-label="Clear search"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -194,7 +208,10 @@ const NewsHubPage: React.FC = () => {
               defaultValue="all" 
               className="w-full" 
               value={activeTab} 
-              onValueChange={setActiveTab}
+              onValueChange={(value) => {
+                setActiveTab(value);
+                playSound('click');
+              }}
             >
               <TabsList className="w-full grid grid-cols-6 bg-blue-50/50 rounded-xl p-1 h-11">
                 <TabsTrigger 
@@ -406,7 +423,10 @@ const NewsHubPage: React.FC = () => {
             <div className="flex justify-center gap-2 mt-8">
               <Button 
                 variant="outline" 
-                onClick={() => setPage(p => Math.max(1, p - 1))}
+                onClick={() => {
+                  setPage(p => Math.max(1, p - 1));
+                  playSound('click');
+                }}
                 disabled={page === 1}
                 className="border-blue-200 text-blue-600 hover:bg-blue-50"
               >
@@ -432,7 +452,10 @@ const NewsHubPage: React.FC = () => {
                       key={pageNum}
                       variant={page === pageNum ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setPage(pageNum)}
+                      onClick={() => {
+                        setPage(pageNum);
+                        playSound('click');
+                      }}
                       className={page === pageNum ? 
                         "w-10 bg-blue-600 hover:bg-blue-700" : 
                         "w-10 border-blue-200 text-blue-600 hover:bg-blue-50"
@@ -446,7 +469,10 @@ const NewsHubPage: React.FC = () => {
               
               <Button 
                 variant="outline" 
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                onClick={() => {
+                  setPage(p => Math.min(totalPages, p + 1));
+                  playSound('click');
+                }}
                 disabled={page === totalPages}
                 className="border-blue-200 text-blue-600 hover:bg-blue-50"
               >
@@ -462,6 +488,9 @@ const NewsHubPage: React.FC = () => {
 
 // Article Card Component
 const ArticleCard = ({ post, featured = false }: { post: ArticlePost, featured?: boolean }) => {
+  // Access sound effects
+  const { playSound } = useSoundEffects();
+  
   // Generate safe values
   const safeTitle = post.title || "RXAI Article";
   const safeSlug = post.slug || `article-${post.id}`;
@@ -471,7 +500,10 @@ const ArticleCard = ({ post, featured = false }: { post: ArticlePost, featured?:
   // Use a different layout for featured articles
   if (featured) {
     return (
-      <Card className="overflow-hidden h-full transition-all duration-300 hover:shadow-lg group">
+      <Card 
+        className="overflow-hidden h-full transition-all duration-300 hover:shadow-lg group"
+        onMouseEnter={() => playSound('hover')}
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 h-full">
           <div className="h-full md:order-2">
             {post.imageUrl ? (
@@ -528,7 +560,10 @@ const ArticleCard = ({ post, featured = false }: { post: ArticlePost, featured?:
   
   // Regular article card
   return (
-    <Card className="overflow-hidden h-full transition-all duration-300 hover:shadow-lg group border border-transparent hover:border-blue-100">
+    <Card 
+      className="overflow-hidden h-full transition-all duration-300 hover:shadow-lg group border border-transparent hover:border-blue-100"
+      onMouseEnter={() => playSound('hover')}
+    >
       <div className="h-48 w-full relative">
         {post.imageUrl ? (
           <img 
