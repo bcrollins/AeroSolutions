@@ -198,10 +198,10 @@ export function EnhancedAccordion(props: EnhancedAccordionProps) {
                 
                 if (itemChild.type === AccordionTrigger) {
                   // Replace trigger with animated version
-                  return React.cloneElement(itemChild, {
-                    ...itemProps,
+                  // Create a properly typed props object
+                  const triggerProps = {
                     className: cn(
-                      itemProps.className,
+                      itemProps.className as string,
                       'group flex flex-1 justify-between py-4 px-4 transition-all hover:underline [&[data-state=open]>svg]:rotate-180'
                     ),
                     children: (
@@ -217,15 +217,17 @@ export function EnhancedAccordion(props: EnhancedAccordionProps) {
                         </motion.div>
                       </>
                     )
-                  });
+                  };
+                  
+                  return React.cloneElement(itemChild, triggerProps);
                 }
                 
                 if (itemChild.type === AccordionContent) {
                   // Replace content with animated version
-                  return React.cloneElement(itemChild, {
-                    ...itemProps,
+                  // Create a properly typed props object
+                  const contentProps = {
                     className: cn(
-                      itemProps.className, 
+                      itemProps.className as string, 
                       'overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down'
                     ),
                     children: (
@@ -242,7 +244,9 @@ export function EnhancedAccordion(props: EnhancedAccordionProps) {
                         )}
                       </AnimatePresence>
                     )
-                  });
+                  };
+                  
+                  return React.cloneElement(itemChild, contentProps);
                 }
                 
                 return itemChild;

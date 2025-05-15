@@ -1,122 +1,159 @@
-import React, { ReactNode } from 'react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  HoverCard, 
-  HoverCardContent, 
-  HoverCardTrigger 
-} from '@/components/ui/hover-card';
-import { motion } from 'framer-motion';
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 interface EnhancedTooltipProps {
-  children: ReactNode;
-  title?: string;
-  description?: string;
-  image?: string;
+  children: React.ReactNode;
+  content: React.ReactNode;
+  description?: React.ReactNode;
   side?: 'top' | 'right' | 'bottom' | 'left';
   align?: 'start' | 'center' | 'end';
-  delay?: number;
-  className?: string;
-  contentClassName?: string;
-  showIcon?: boolean;
-  icon?: ReactNode;
-  customContent?: ReactNode;
+  delayDuration?: number;
+  skipDelayDuration?: number;
+  asChild?: boolean;
+  interactive?: boolean;
+  variant?: 'default' | 'info' | 'success' | 'warning' | 'error';
+  size?: 'default' | 'large' | 'tight' | 'fit';
+  animationDuration?: number;
+  image?: string;
+  maxWidth?: number;
+  showArrow?: boolean;
+  persistent?: boolean; // Keep showing after click
 }
 
 /**
- * Enhanced tooltip component with animations and rich content support
+ * Enhanced tooltip component with animations, illustrations, and interactive options
  */
-export default function EnhancedTooltip({
+export function EnhancedTooltip({
   children,
-  title,
+  content,
   description,
-  image,
   side = 'top',
   align = 'center',
-  delay = 0,
-  className = '',
-  contentClassName = '',
-  showIcon = false,
-  icon,
-  customContent
+  delayDuration = 300,
+  skipDelayDuration = 500,
+  asChild = false,
+  interactive = false,
+  variant = 'default',
+  size = 'default', 
+  animationDuration = 0.2,
+  image,
+  maxWidth = 320,
+  showArrow = true,
+  persistent = false
 }: EnhancedTooltipProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  // Set appropriate variant styles
+  const getVariantStyles = () => {
+    switch (variant) {
+      case 'info':
+        return 'bg-blue-50 text-blue-900 border-blue-200 dark:bg-blue-950/70 dark:border-blue-900 dark:text-blue-300';
+      case 'success':
+        return 'bg-green-50 text-green-900 border-green-200 dark:bg-green-950/70 dark:border-green-900 dark:text-green-300';
+      case 'warning':
+        return 'bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-950/70 dark:border-amber-900 dark:text-amber-300';
+      case 'error':
+        return 'bg-red-50 text-red-900 border-red-200 dark:bg-red-950/70 dark:border-red-900 dark:text-red-300';
+      default:
+        return '';
+    }
+  };
+  
+  // Set appropriate size styles
+  const getSizeStyles = () => {
+    switch (size) {
+      case 'large':
+        return 'py-3 px-4 text-sm';
+      case 'tight':
+        return 'py-1 px-2 text-xs';
+      case 'fit':
+        return 'py-1.5 px-2.5 text-xs';
+      default:
+        return 'py-2 px-3 text-sm';
+    }
+  };
+  
+  // Handle click for persistent tooltips
+  const handleClick = () => {
+    if (persistent) {
+      setIsOpen(prev => !prev);
+    }
+  };
+  
   return (
-    <HoverCard openDelay={delay} closeDelay={100}>
-      <HoverCardTrigger asChild className={className}>
-        <span className="inline-block">
+    <TooltipProvider 
+      delayDuration={delayDuration} 
+      skipDelayDuration={skipDelayDuration}
+    >
+      <Tooltip open={persistent ? isOpen : undefined}>
+        <TooltipTrigger
+          asChild={asChild}
+          onClick={handleClick}
+          className={asChild ? undefined : 'cursor-help'}
+        >
           {children}
-          {showIcon && (
-            <span className="ml-1 inline-flex text-gray-400 hover:text-gray-500">
-              {icon || <InformationIcon className="h-4 w-4" />}
-            </span>
+        </TooltipTrigger>
+        
+        <TooltipContent
+          side={side}
+          align={align}
+          className={cn(
+            "border shadow-md",
+            getVariantStyles(),
+            getSizeStyles(),
+            interactive ? "cursor-auto select-text" : "",
+            !showArrow && "tooltip-no-arrow"
           )}
-        </span>
-      </HoverCardTrigger>
-      
-      <HoverCardContent 
-        side={side} 
-        align={align}
-        className={`w-80 p-0 overflow-hidden shadow-xl border border-gray-200 
-                   bg-white/95 backdrop-blur-sm dark:bg-gray-900/95 dark:border-gray-700 
-                   rounded-xl ${contentClassName}`}
-        sideOffset={5}
-      >
-        {customContent ? (
-          customContent
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            {image && (
-              <div className="relative w-full h-32 overflow-hidden rounded-t-lg">
-                <img 
-                  src={image} 
-                  alt={title || "Tooltip image"} 
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                {title && image && (
-                  <div className="absolute bottom-0 left-0 w-full p-3">
-                    <h4 className="text-white font-semibold text-lg">{title}</h4>
+          style={{ maxWidth }}
+          sideOffset={5}
+        >
+          <AnimatePresence>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: animationDuration }}
+            >
+              {/* Main content */}
+              <div className="flex flex-col gap-1">
+                {typeof content === 'string' ? (
+                  <div className="font-medium">{content}</div>
+                ) : (
+                  content
+                )}
+                
+                {/* Optional description */}
+                {description && (
+                  <div className={cn(
+                    "text-foreground/80 font-normal",
+                    size === 'large' ? 'text-sm' : 'text-xs'
+                  )}>
+                    {description}
+                  </div>
+                )}
+                
+                {/* Optional image */}
+                {image && (
+                  <div className="mt-2 rounded-md overflow-hidden">
+                    <img
+                      src={image}
+                      alt="Tooltip illustration"
+                      className="max-w-full h-auto object-cover"
+                    />
                   </div>
                 )}
               </div>
-            )}
-            
-            <div className="p-4">
-              {!image && title && (
-                <h4 className="font-semibold text-base text-gray-900 dark:text-white mb-1">{title}</h4>
-              )}
-              
-              {description && (
-                <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                  {description}
-                </p>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </HoverCardContent>
-    </HoverCard>
-  );
-}
-
-// Simple information icon component
-function InformationIcon({ className = "h-4 w-4" }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-      className={className}
-    >
-      <circle cx="12" cy="12" r="10" />
-      <line x1="12" y1="16" x2="12" y2="12" />
-      <line x1="12" y1="8" x2="12.01" y2="8" />
-    </svg>
+            </motion.div>
+          </AnimatePresence>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }

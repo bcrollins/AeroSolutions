@@ -56,8 +56,8 @@ const EnhancedInput = forwardRef<HTMLInputElement, EnhancedInputProps>(({
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [inputValue, setInputValue] = useState(value || '');
-  // Create a mutable ref object that won't trigger TypeScript errors
-  const inputRef = { current: null as HTMLInputElement | null };
+  // Use a mutable object to store input reference
+  const inputRefObj = { current: null as HTMLInputElement | null };
   
   // Forward the ref
   const handleRef = (el: HTMLInputElement) => {
@@ -71,10 +71,10 @@ const EnhancedInput = forwardRef<HTMLInputElement, EnhancedInputProps>(({
       (ref as { current: HTMLInputElement | null }).current = el;
     }
     
-    // Update our internal ref without TypeScript error
+    // Update our internal ref 
     if (el) {
-      // Using a safe non-readonly ref
-      inputRef.current = el;
+      // Store reference in our mutable object
+      inputRefObj.current = el;
     }
   };
   
@@ -101,15 +101,15 @@ const EnhancedInput = forwardRef<HTMLInputElement, EnhancedInputProps>(({
   const handleClear = () => {
     setInputValue('');
     
-    if (inputRef.current) {
-      inputRef.current.value = '';
+    if (inputRefObj.current) {
+      inputRefObj.current.value = '';
       
       // Create and dispatch change event
       const event = new Event('change', { bubbles: true });
-      inputRef.current.dispatchEvent(event);
+      inputRefObj.current.dispatchEvent(event);
       
       // Focus input after clearing
-      inputRef.current.focus();
+      inputRefObj.current.focus();
     }
     
     if (onClear) {
