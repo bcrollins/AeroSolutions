@@ -1,90 +1,89 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
 type Theme = 'light' | 'dark' | 'system';
 
 interface ThemeContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
-  isDarkMode: boolean;
 }
 
-// Create context with default values
-const ThemeContext = createContext<ThemeContextType>({
-  theme: 'light',
-  setTheme: () => null,
-  isDarkMode: false,
-});
-
-// Custom hook for using the theme context
-export const useTheme = () => useContext(ThemeContext);
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 interface ThemeProviderProps {
-  children: React.ReactNode;
+  children: ReactNode;
   defaultTheme?: Theme;
+  storageKey?: string;
 }
 
-export const ThemeProvider: React.FC<ThemeProviderProps> = ({
+export function ThemeProvider({
   children,
-  defaultTheme = 'light',
-}) => {
-  // Get stored theme from localStorage or use default
-  const [theme, setTheme] = useState<Theme>(() => {
-    const storedTheme = localStorage.getItem('rollinsx-theme') as Theme | null;
-    return storedTheme || defaultTheme;
-  });
-  
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+  defaultTheme = 'system',
+  storageKey = 'rxai-theme',
+  ...props
+}: ThemeProviderProps) {
+  const [theme, setTheme] = useState<Theme>(
+    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
+  );
 
-  // Update theme class and attribute
   useEffect(() => {
     const root = window.document.documentElement;
     
-    // Remove all existing theme classes
+    // Remove all theme classes
     root.classList.remove('light', 'dark');
-
-    // Handle 'system' option
-    if (theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      root.classList.add(systemTheme);
-      setIsDarkMode(systemTheme === 'dark');
-    } else {
-      // Add the chosen theme class
-      root.classList.add(theme);
-      setIsDarkMode(theme === 'dark');
-    }
     
-    // Save to localStorage
-    localStorage.setItem('rollinsx-theme', theme);
+    // Get system preference
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    
+    // Apply the active theme
+    const activeTheme = theme === 'system' ? systemTheme : theme;
+    root.classList.add(activeTheme);
+    
+    // Add data-theme attribute for components that use it
+    root.setAttribute('data-theme', activeTheme);
   }, [theme]);
 
-  // Listen for system theme changes when using 'system' setting
+  // Store theme preference in localStorage
   useEffect(() => {
-    if (theme !== 'system') return;
-    
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    
-    const handleChange = () => {
-      const root = window.document.documentElement;
-      const systemTheme = mediaQuery.matches ? 'dark' : 'light';
+    localStorage.setItem(storageKey, theme);
+  }, [theme, storageKey]);
+
+  // Listen for system theme change
+  useEffect(() => {
+    if (theme === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       
-      root.classList.remove('light', 'dark');
-      root.classList.add(systemTheme);
-      setIsDarkMode(systemTheme === 'dark');
-    };
-    
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+      const handleChange = () => {
+        const root = window.document.documentElement;
+        const systemTheme = mediaQuery.matches ? 'dark' : 'light';
+        
+        root.classList.remove('light', 'dark');
+        root.classList.add(systemTheme);
+        root.setAttribute('data-theme', systemTheme);
+      };
+      
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    }
   }, [theme]);
 
   const value = {
     theme,
-    setTheme,
-    isDarkMode,
+    setTheme: (newTheme: Theme) => setTheme(newTheme),
   };
 
   return (
-    <ThemeContext.Provider value={value}>
+    <ThemeContext.Provider {...props} value={value}>
       {children}
     </ThemeContext.Provider>
   );
-};
+}
+
+export function useTheme() {
+  const context = useContext(ThemeContext);
+  
+  if (context === undefined) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  
+  return context;
+}

@@ -1,181 +1,370 @@
-import React, { useState, useEffect } from 'react';
-import { Input } from '@/components/ui/input';
+import React, { useState, forwardRef, InputHTMLAttributes, ReactNode, useRef, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Label } from '@/components/ui/label';
-import { CheckCircle, AlertCircle, HelpCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
+import { AlertCircle, Check, Eye, EyeOff, X } from 'lucide-react';
 
-interface EnhancedInputProps {
+interface EnhancedInputProps extends InputHTMLAttributes<HTMLInputElement> {
   id: string;
-  label: string;
-  placeholder?: string;
-  type?: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
+  label?: string;
   error?: string;
-  success?: boolean;
   hint?: string;
-  required?: boolean;
-  autoComplete?: string;
-  className?: string;
-  maxLength?: number;
-  showCharCount?: boolean;
-  validateOnChange?: boolean;
-  validate?: (value: string) => { valid: boolean; message?: string } | undefined;
+  leftIcon?: ReactNode;
+  rightIcon?: ReactNode;
+  showSuccessIcon?: boolean;
+  showErrorIcon?: boolean;
+  showClearButton?: boolean;
+  onClear?: () => void;
+  isPassword?: boolean;
+  labelClassName?: string;
+  inputClassName?: string;
+  containerClassName?: string;
+  strength?: 'weak' | 'medium' | 'strong' | null;
+  animateLabel?: boolean;
+  onTextChange?: (value: string) => void;
 }
 
 /**
- * Enhanced input component with real-time validation feedback and animations
+ * Enhanced input component with animations, icons, and validation states
  */
-export default function EnhancedInput({
+const EnhancedInput = forwardRef<HTMLInputElement, EnhancedInputProps>(({
   id,
   label,
-  placeholder,
-  type = 'text',
+  error,
+  hint,
+  leftIcon,
+  rightIcon,
+  showSuccessIcon = false,
+  showErrorIcon = true,
+  showClearButton = false,
+  onClear,
+  isPassword = false,
+  labelClassName = '',
+  inputClassName = '',
+  containerClassName = '',
+  strength = null,
+  animateLabel = true,
+  disabled,
+  required,
+  className,
   value,
   onChange,
-  onBlur,
-  error,
-  success,
-  hint,
-  required = false,
-  autoComplete,
-  className = '',
-  maxLength,
-  showCharCount = false,
-  validateOnChange = false,
-  validate
-}: EnhancedInputProps) {
-  const [focused, setFocused] = useState(false);
-  const [touched, setTouched] = useState(false);
-  const [localError, setLocalError] = useState<string | undefined>(undefined);
-  const [isValid, setIsValid] = useState<boolean | undefined>(undefined);
+  onTextChange,
+  ...props
+}, ref) => {
+  const [isFocused, setIsFocused] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [inputValue, setInputValue] = useState(value || '');
+  const inputRef = useRef<HTMLInputElement>(null);
   
-  // Handle validation
-  useEffect(() => {
-    if (validate && (touched || validateOnChange)) {
-      const result = validate(value);
-      if (result) {
-        setIsValid(result.valid);
-        setLocalError(result.valid ? undefined : result.message);
-      }
+  // Forward the ref
+  const handleRef = (el: HTMLInputElement) => {
+    // Handle function ref
+    if (typeof ref === 'function') {
+      ref(el);
+    } 
+    // Handle object ref
+    else if (ref) {
+      (ref as React.MutableRefObject<HTMLInputElement | null>).current = el;
     }
-  }, [value, validate, touched, validateOnChange]);
-  
-  // Reset validation state when error prop changes
-  useEffect(() => {
-    if (error !== undefined) {
-      setLocalError(error);
-      setIsValid(!error);
+    
+    // Update our internal ref
+    if (el) {
+      inputRef.current = el;
     }
-  }, [error]);
-  
-  // Update validation state when success prop changes
-  useEffect(() => {
-    if (success !== undefined) {
-      setIsValid(success);
-    }
-  }, [success]);
-  
-  const handleInputFocus = () => {
-    setFocused(true);
   };
   
-  const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    setFocused(false);
-    setTouched(true);
-    if (onBlur) onBlur(e);
+  // Update internal state when value prop changes
+  useEffect(() => {
+    setInputValue(value || '');
+  }, [value]);
+  
+  // Handle input changes
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setInputValue(newValue);
+    
+    if (onChange) {
+      onChange(e);
+    }
+    
+    if (onTextChange) {
+      onTextChange(newValue);
+    }
   };
   
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e);
+  // Handle input clearing
+  const handleClear = () => {
+    setInputValue('');
+    
+    if (inputRef.current) {
+      inputRef.current.value = '';
+      
+      // Create and dispatch change event
+      const event = new Event('change', { bubbles: true });
+      inputRef.current.dispatchEvent(event);
+      
+      // Focus input after clearing
+      inputRef.current.focus();
+    }
+    
+    if (onClear) {
+      onClear();
+    }
+    
+    if (onTextChange) {
+      onTextChange('');
+    }
   };
   
-  // Determine the state for styling
-  const inputState = localError ? 'error' : isValid ? 'success' : 'default';
+  // Toggle password visibility
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+  
+  // Determine validation state
+  const hasValue = inputValue !== '';
+  const isValid = hasValue && !error;
+  const isInvalid = hasValue && !!error;
+  
+  // Determine input type
+  const inputType = isPassword 
+    ? (showPassword ? 'text' : 'password')
+    : props.type || 'text';
+  
+  // Calculate classes for different states
+  const labelClass = cn(
+    'text-sm font-medium mb-1.5 block transition-all duration-200',
+    isFocused ? 'text-primary' : 'text-foreground',
+    error ? 'text-destructive' : '',
+    disabled ? 'opacity-60' : '',
+    labelClassName
+  );
+  
+  const inputContainerClass = cn(
+    'flex items-center relative rounded-md overflow-hidden',
+    disabled ? 'opacity-60 cursor-not-allowed' : '',
+    containerClassName
+  );
+  
+  const inputClass = cn(
+    'flex-1 pr-8',
+    leftIcon ? 'pl-9' : '',
+    (isValid && showSuccessIcon) || (isInvalid && showErrorIcon) || showClearButton || isPassword 
+      ? 'pr-10' 
+      : '',
+    isFocused ? 'ring-4 ring-primary/10 border-primary' : '',
+    error ? 'border-destructive focus:ring-destructive/10' : '',
+    inputClassName
+  );
+  
+  // Prepare password toggle icon
+  const passwordToggleIcon = showPassword 
+    ? <EyeOff className="h-4 w-4 text-gray-500" /> 
+    : <Eye className="h-4 w-4 text-gray-500" />;
+  
+  // Prepare right section elements
+  const renderRightSection = () => {
+    // Password toggle takes precedence
+    if (isPassword) {
+      return (
+        <button
+          type="button"
+          className="absolute right-3 p-1 text-gray-400 hover:text-gray-600 focus:outline-none"
+          onClick={togglePasswordVisibility}
+          tabIndex={-1}
+          aria-label={showPassword ? 'Hide password' : 'Show password'}
+          disabled={disabled}
+        >
+          {passwordToggleIcon}
+        </button>
+      );
+    }
+    
+    // Clear button
+    if (showClearButton && hasValue) {
+      return (
+        <button
+          type="button"
+          className="absolute right-3 p-1 text-gray-400 hover:text-gray-600 focus:outline-none"
+          onClick={handleClear}
+          tabIndex={-1}
+          aria-label="Clear input"
+          disabled={disabled}
+        >
+          <X className="h-4 w-4" />
+        </button>
+      );
+    }
+    
+    // Success icon
+    if (isValid && showSuccessIcon) {
+      return (
+        <span className="absolute right-3 text-green-500">
+          <Check className="h-4 w-4" />
+        </span>
+      );
+    }
+    
+    // Error icon
+    if (isInvalid && showErrorIcon) {
+      return (
+        <span className="absolute right-3 text-destructive">
+          <AlertCircle className="h-4 w-4" />
+        </span>
+      );
+    }
+    
+    // Custom right icon
+    if (rightIcon) {
+      return (
+        <span className="absolute right-3">
+          {rightIcon}
+        </span>
+      );
+    }
+    
+    return null;
+  };
+  
+  // Password strength indicator
+  const renderStrengthIndicator = () => {
+    if (!isPassword || !strength || !hasValue) return null;
+    
+    const strengthColors = {
+      weak: 'bg-red-500',
+      medium: 'bg-yellow-500',
+      strong: 'bg-green-500'
+    };
+    
+    const strengthLabels = {
+      weak: 'Weak',
+      medium: 'Medium',
+      strong: 'Strong'
+    };
+    
+    return (
+      <div className="mt-1 flex items-center">
+        <div className="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ 
+              width: strength === 'weak' ? '33%' : strength === 'medium' ? '66%' : '100%' 
+            }}
+            transition={{ duration: 0.3 }}
+            className={`h-full ${strengthColors[strength]}`}
+          />
+        </div>
+        <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+          {strengthLabels[strength]}
+        </span>
+      </div>
+    );
+  };
+  
+  // Floating label animation variants
+  const floatingLabelVariants = {
+    focused: {
+      y: -22,
+      x: 0,
+      scale: 0.85,
+      color: error ? 'var(--destructive)' : 'var(--primary)',
+    },
+    blurred: {
+      y: 0,
+      x: 0,
+      scale: 1,
+      color: 'var(--muted-foreground)',
+    }
+  };
   
   return (
     <div className={`mb-4 ${className}`}>
-      <div className="flex justify-between items-baseline mb-1.5">
+      {/* Regular or animated label */}
+      {label && !animateLabel && (
         <Label 
           htmlFor={id} 
-          className={`text-sm font-medium transition-colors duration-200 ${
-            focused ? 'text-primary' : ''
-          }`}
+          className={labelClass}
         >
-          {label} {required && <span className="text-red-500">*</span>}
+          {label} {required && <span className="text-destructive ml-1">*</span>}
         </Label>
-        
-        {showCharCount && maxLength && (
-          <span className={`text-xs ${value.length > maxLength ? 'text-red-500' : 'text-gray-500'}`}>
-            {value.length}/{maxLength}
-          </span>
+      )}
+      
+      {/* Input container */}
+      <div className={inputContainerClass}>
+        {/* Left icon */}
+        {leftIcon && (
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+            {leftIcon}
+          </div>
         )}
-      </div>
-      
-      <div className="relative">
-        <Input
-          id={id}
-          type={type}
-          placeholder={placeholder}
-          value={value}
-          onChange={handleInputChange}
-          onFocus={handleInputFocus}
-          onBlur={handleInputBlur}
-          autoComplete={autoComplete}
-          maxLength={maxLength}
-          className={`transition-all duration-200 ${
-            inputState === 'error' 
-              ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' 
-              : inputState === 'success' 
-              ? 'border-green-300 focus:border-green-500 focus:ring-green-500/20' 
-              : ''
-          } ${focused ? 'shadow-sm scale-[1.01] bg-white' : ''}`}
-          aria-invalid={inputState === 'error'}
-          aria-describedby={`${id}-feedback`}
-          required={required}
-        />
         
-        <AnimatePresence>
-          {(isValid || localError) && (
-            <motion.div 
-              className="absolute right-3 top-1/2 transform -translate-y-1/2"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.2 }}
+        {/* Input element */}
+        <div className="relative w-full">
+          {/* Animated floating label */}
+          {label && animateLabel && (
+            <motion.label
+              htmlFor={id}
+              initial={hasValue || isFocused ? 'focused' : 'blurred'}
+              animate={hasValue || isFocused ? 'focused' : 'blurred'}
+              variants={floatingLabelVariants}
+              className={`absolute left-3 origin-left transition-none pointer-events-none ${
+                hasValue || isFocused ? 'text-xs' : 'text-base'
+              }`}
             >
-              {isValid && !localError ? (
-                <CheckCircle className="h-4 w-4 text-green-500" />
-              ) : (
-                <AlertCircle className="h-4 w-4 text-red-500" />
-              )}
-            </motion.div>
+              {label} {required && <span className="text-destructive">*</span>}
+            </motion.label>
           )}
-        </AnimatePresence>
+          
+          <Input
+            id={id}
+            ref={handleRef}
+            type={inputType}
+            value={inputValue}
+            onChange={handleChange}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            className={inputClass}
+            disabled={disabled}
+            required={required}
+            aria-invalid={!!error}
+            aria-describedby={error ? `${id}-error` : hint ? `${id}-hint` : undefined}
+            {...props}
+          />
+        </div>
+        
+        {/* Right section (icons, buttons) */}
+        {renderRightSection()}
       </div>
       
+      {/* Password strength indicator */}
+      {renderStrengthIndicator()}
+      
+      {/* Error or hint message */}
       <AnimatePresence>
-        {(localError || hint) && (
+        {(error || hint) && (
           <motion.div
-            id={`${id}-feedback`}
-            className={`flex items-start mt-1 text-xs ${
-              localError ? 'text-red-500' : 'text-gray-500'
+            id={error ? `${id}-error` : `${id}-hint`}
+            className={`flex items-start mt-1.5 text-xs ${
+              error ? 'text-destructive' : 'text-muted-foreground'
             }`}
             initial={{ opacity: 0, height: 0, y: -5 }}
             animate={{ opacity: 1, height: 'auto', y: 0 }}
             exit={{ opacity: 0, height: 0, y: -5 }}
             transition={{ duration: 0.2 }}
           >
-            {localError ? (
-              <AlertCircle className="h-3.5 w-3.5 mr-1 mt-0.5 flex-shrink-0" />
-            ) : hint ? (
-              <HelpCircle className="h-3.5 w-3.5 mr-1 mt-0.5 flex-shrink-0" />
-            ) : null}
-            <span>{localError || hint}</span>
+            {error && showErrorIcon && (
+              <AlertCircle className="h-3.5 w-3.5 mr-1.5 mt-0.5 flex-shrink-0" />
+            )}
+            <span>{error || hint}</span>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
   );
-}
+});
+
+EnhancedInput.displayName = 'EnhancedInput';
+
+export default EnhancedInput;
