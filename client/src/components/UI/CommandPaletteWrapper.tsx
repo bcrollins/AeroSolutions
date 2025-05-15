@@ -1,5 +1,5 @@
 import React from 'react';
-import CommandPalette from './CommandPalette';
+import { CommandPalette } from './CommandPalette';
 import { useCommandPalette } from '@/hooks/use-command-palette';
 
 /**
