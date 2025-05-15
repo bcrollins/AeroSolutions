@@ -162,6 +162,54 @@ const NewsHubPage: React.FC = () => {
   useEffect(() => {
     setPage(1);
   }, [activeTab, searchQuery]);
+  
+  // Reference to search input
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Focus search with / key
+      if (e.key === '/' && document.activeElement !== searchInputRef.current) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        playSound('hover');
+      }
+      
+      // Navigate tabs with number keys
+      if (!isNaN(parseInt(e.key)) && parseInt(e.key) >= 1 && parseInt(e.key) <= 6) {
+        e.preventDefault();
+        const tabIndex = parseInt(e.key) - 1;
+        const tabValues = ['all', 'ai', 'business', 'tech', 'tutorials', 'news'];
+        if (tabIndex < tabValues.length) {
+          setActiveTab(tabValues[tabIndex]);
+          playSound('click');
+        }
+      }
+      
+      // Navigate pages with arrow keys or j/k
+      if (['ArrowLeft', 'k'].includes(e.key) && page > 1) {
+        setPage(prev => prev - 1);
+        playSound('click');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      
+      if (['ArrowRight', 'j'].includes(e.key) && page < totalPages) {
+        setPage(prev => prev + 1);
+        playSound('click');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      
+      // Escape key clears search
+      if (e.key === 'Escape' && searchQuery) {
+        setSearchQuery('');
+        playSound('click');
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [page, totalPages, activeTab, searchQuery, playSound]);
 
   return (
     <div className="container py-12 max-w-7xl">
@@ -190,19 +238,76 @@ const NewsHubPage: React.FC = () => {
         
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-600 tracking-tight leading-tight">
-              RXAI News & Articles
-            </h1>
-            <p className="text-gray-500 mt-3 max-w-2xl text-lg leading-relaxed">
-              Your comprehensive resource for articles on artificial intelligence, business applications, and the latest in technology innovations.
-            </p>
-            <div className="flex items-center gap-3 mt-4">
-              <span className="text-xs text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
-                <span className="font-semibold">50</span> Professional Articles
-              </span>
-              <span className="text-xs text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-100">
-                <span className="font-semibold">Updated Daily</span>
-              </span>
+            <div className="flex justify-between items-start">
+              <div>
+                <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-600 tracking-tight leading-tight">
+                  RXAI News & Articles
+                </h1>
+                <p className="text-gray-500 mt-3 max-w-2xl text-lg leading-relaxed">
+                  Your comprehensive resource for articles on artificial intelligence, business applications, and the latest in technology innovations.
+                </p>
+                <div className="flex items-center gap-3 mt-4">
+                  <span className="text-xs text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
+                    <span className="font-semibold">50</span> Professional Articles
+                  </span>
+                  <span className="text-xs text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-100">
+                    <span className="font-semibold">Updated Daily</span>
+                  </span>
+                </div>
+              </div>
+              
+              {/* Keyboard shortcuts guide */}
+              <div className="hidden md:block relative group">
+                <button 
+                  className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-blue-600 transition-colors p-2 rounded-lg hover:bg-gray-50"
+                  onClick={() => playSound('click')}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-keyboard">
+                    <rect width="20" height="12" x="2" y="4" rx="2" ry="2" />
+                    <path d="M6 8h.001" />
+                    <path d="M10 8h.001" />
+                    <path d="M14 8h.001" />
+                    <path d="M18 8h.001" />
+                    <path d="M8 12h.001" />
+                    <path d="M12 12h.001" />
+                    <path d="M16 12h.001" />
+                    <path d="M7 16h10" />
+                  </svg>
+                  Keyboard Shortcuts
+                </button>
+                
+                <div className="absolute right-0 top-full mt-2 hidden group-hover:block bg-white rounded-xl shadow-lg p-4 border border-gray-100 w-64 z-50">
+                  <div className="text-sm font-semibold mb-3 text-gray-800">Keyboard Shortcuts</div>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Focus search</span>
+                      <span className="bg-gray-100 px-2 py-1 rounded font-mono">/</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Clear search</span>
+                      <span className="bg-gray-100 px-2 py-1 rounded font-mono">Esc</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Switch tabs</span>
+                      <span className="bg-gray-100 px-2 py-1 rounded font-mono">1-6</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Next page</span>
+                      <div className="flex gap-1">
+                        <span className="bg-gray-100 px-2 py-1 rounded font-mono">→</span>
+                        <span className="bg-gray-100 px-2 py-1 rounded font-mono">j</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Previous page</span>
+                      <div className="flex gap-1">
+                        <span className="bg-gray-100 px-2 py-1 rounded font-mono">←</span>
+                        <span className="bg-gray-100 px-2 py-1 rounded font-mono">k</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           
@@ -257,7 +362,8 @@ const NewsHubPage: React.FC = () => {
             <div className="relative group">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-colors duration-300" />
               <Input 
-                placeholder="Search articles..." 
+                ref={searchInputRef}
+                placeholder="Search articles... (Press '/' to focus)" 
                 className="pl-11 h-12 bg-gray-50/80 backdrop-blur-sm border-transparent focus:border-blue-300 focus:ring-blue-300 shadow-sm rounded-xl group-hover:bg-white transition-all duration-300"
                 value={searchQuery}
                 onChange={(e) => {
