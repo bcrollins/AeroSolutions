@@ -84,8 +84,17 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}) {
         // Prevent default browser behavior for this key
         e.preventDefault();
         
-        // Play a subtle click sound for better feedback
-        playSound('click');
+        // Play a subtle sound effect based on the key type
+        // Different sounds for different actions (navigation, search, etc.)
+        if (key === 'escape') {
+          playSound('notification');
+        } else if (key === 'arrowleft' || key === 'arrowright') {
+          playSound('click'); // Use click sound for navigation
+        } else if (key === '/') {
+          playSound('click'); // Use click sound for focus
+        } else {
+          playSound('click');
+        }
         
         // Execute the callback
         keyMap[key](e);

@@ -1,53 +1,57 @@
 import React from 'react';
-import { Switch } from '@/components/ui/switch';
-import useSoundEffects, { SoundEffectType } from '@/hooks/use-sound-effects';
-
-interface SoundToggleProps {
-  checked?: boolean;
-  defaultChecked?: boolean;
-  onToggle?: (checked: boolean) => void;
-  soundOnChecked?: SoundEffectType;
-  soundOnUnchecked?: SoundEffectType;
-  disabled?: boolean;
-  id?: string;
-  className?: string;
-}
+import { Volume2, VolumeX } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useSoundEffects } from '@/hooks/use-sound-effects';
+import { motion } from 'framer-motion';
 
 /**
- * A toggle/switch component that plays sound effects when toggled
+ * Apple-inspired sound toggle button
+ * 
+ * This component allows users to toggle sound effects on/off
+ * with an Apple-like design aesthetic and subtle animations.
  */
-const SoundToggle: React.FC<SoundToggleProps> = ({
-  checked,
-  defaultChecked,
-  onToggle,
-  soundOnChecked = 'success',
-  soundOnUnchecked = 'click',
-  disabled,
-  id,
-  className
-}) => {
-  const { playSound, soundEnabled } = useSoundEffects();
+const SoundToggle: React.FC = () => {
+  const { isMuted, toggleMute, playSound } = useSoundEffects();
   
-  const handleToggle = (isChecked: boolean) => {
-    // Play different sounds based on the toggle state
-    if (soundEnabled) {
-      playSound(isChecked ? soundOnChecked : soundOnUnchecked);
-    }
+  const handleToggle = () => {
+    toggleMute();
     
-    if (onToggle) {
-      onToggle(isChecked);
+    // Play notification sound when unmuting
+    if (isMuted) {
+      // We need to wait for the mute state to change
+      setTimeout(() => playSound('notification'), 10);
     }
   };
   
   return (
-    <Switch
-      checked={checked}
-      defaultChecked={defaultChecked}
-      onCheckedChange={handleToggle}
-      disabled={disabled}
-      id={id}
-      className={className}
-    />
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleToggle}
+              className="h-9 w-9 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+              aria-label={isMuted ? "Enable sound effects" : "Disable sound effects"}
+            >
+              {isMuted ? (
+                <VolumeX size={18} />
+              ) : (
+                <Volume2 size={18} />
+              )}
+            </Button>
+          </motion.div>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" className="bg-gray-800 text-white dark:bg-gray-700 rounded-xl text-xs py-1 px-2 shadow-lg">
+          <p>{isMuted ? "Enable sound effects" : "Disable sound effects"}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };
 
