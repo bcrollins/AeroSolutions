@@ -1,57 +1,59 @@
 import React from 'react';
+import { FallbackProps } from 'react-error-boundary';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, RefreshCw, ArrowLeft } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatErrorMessage, getErrorType, getSuggestedActions } from '@/lib/errorHandler';
 
-interface ErrorFallbackProps {
-  error: Error;
-  resetErrorBoundary: () => void;
-}
-
-const ErrorFallback: React.FC<ErrorFallbackProps> = ({ 
-  error, 
-  resetErrorBoundary 
+/**
+ * ErrorFallback - Default error component for error boundary
+ * Displays error information and provides retry options
+ */
+const ErrorFallback: React.FC<FallbackProps> = ({
+  error,
+  resetErrorBoundary,
 }) => {
+  const errorMessage = formatErrorMessage(error);
+  const errorType = getErrorType(error);
+  const suggestedActions = getSuggestedActions(errorType);
+  
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background p-4">
-      <div className="w-full max-w-md p-6 border rounded-lg shadow-sm bg-card">
-        <div className="flex justify-center mb-4">
-          <div className="h-16 w-16 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
-            <AlertTriangle className="h-10 w-10 text-red-600 dark:text-red-400" />
+    <Card className="w-full border-destructive/20 shadow-lg">
+      <CardHeader className="pb-3">
+        <div className="flex items-start">
+          <AlertCircle className="h-6 w-6 mr-3 text-destructive" />
+          <div>
+            <CardTitle className="text-lg">Something went wrong</CardTitle>
+            <CardDescription className="text-destructive-foreground">
+              {errorMessage}
+            </CardDescription>
           </div>
         </div>
-        
-        <h2 className="text-xl font-bold text-center mb-2">Something went wrong</h2>
-        
-        <p className="text-muted-foreground text-center mb-4">
-          We apologize for the inconvenience. An unexpected error has occurred.
-        </p>
-        
-        <div className="bg-muted p-3 rounded-md mb-4 max-h-32 overflow-auto">
-          <p className="text-sm font-mono whitespace-pre-wrap break-words">
-            {error.message || 'Unknown error'}
-          </p>
-        </div>
-        
-        <div className="flex gap-2 justify-center">
-          <Button
-            variant="outline"
-            onClick={() => window.history.back()}
-            className="flex items-center"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Go Back
-          </Button>
-          
-          <Button 
-            onClick={resetErrorBoundary}
-            className="flex items-center"
-          >
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Try Again
-          </Button>
-        </div>
-      </div>
-    </div>
+      </CardHeader>
+      
+      {suggestedActions.length > 0 && (
+        <CardContent className="pt-0">
+          <div className="text-sm space-y-2 text-muted-foreground">
+            <p className="font-medium">Suggested actions:</p>
+            <ul className="list-disc pl-5 space-y-1">
+              {suggestedActions.map((action, index) => (
+                <li key={index}>{action}</li>
+              ))}
+            </ul>
+          </div>
+        </CardContent>
+      )}
+      
+      <CardFooter className="flex justify-end pt-3">
+        <Button 
+          onClick={resetErrorBoundary}
+          className="h-9"
+        >
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Try Again
+        </Button>
+      </CardFooter>
+    </Card>
   );
 };
 

@@ -1,21 +1,15 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Loader2, MoreHorizontal, RefreshCw, X, Maximize2, Minimize2 } from 'lucide-react';
 import { 
-  MoreHorizontal, 
-  Trash, 
-  Edit, 
-  Maximize, 
-  Minimize, 
-  Eye, 
-  EyeOff, 
-  ArrowUp, 
-  ArrowDown, 
-  RotateCcw, 
-  Settings 
-} from 'lucide-react';
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import { motion } from 'framer-motion';
 import { Widget, useDashboard } from '@/contexts/DashboardContext';
 import { cn } from '@/lib/utils';
 
@@ -24,203 +18,144 @@ interface DashboardWidgetProps {
   className?: string;
   children: React.ReactNode;
   isLoading?: boolean;
-  onEdit?: () => void;
-  onConfigure?: () => void;
   onRefresh?: () => void;
 }
 
 /**
- * Base component for all dashboard widgets
- * Handles common widget functionality like resizing, moving, etc.
+ * DashboardWidget - Container component for dashboard widgets
  */
 const DashboardWidget: React.FC<DashboardWidgetProps> = ({
   widget,
   className,
   children,
   isLoading = false,
-  onEdit,
-  onConfigure,
   onRefresh,
 }) => {
-  const { isEditing, updateWidget, removeWidget } = useDashboard();
-  const [isHovered, setIsHovered] = useState(false);
-
-  // Map widget size to Tailwind classes
-  const getSizeClasses = () => {
-    switch (widget.size) {
-      case 'small':
-        return 'col-span-1 row-span-1';
-      case 'medium':
-        return 'col-span-1 row-span-2';
-      case 'large':
-        return 'col-span-2 row-span-2';
-      case 'full':
-        return 'col-span-3 row-span-2';
-      default:
-        return 'col-span-1 row-span-1';
-    }
+  const { removeWidget, updateWidget } = useDashboard();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // Handle refresh
+  const handleRefresh = async () => {
+    if (!onRefresh || isRefreshing) return;
+    
+    setIsRefreshing(true);
+    await onRefresh();
+    setIsRefreshing(false);
   };
-
-  // Toggle widget size
-  const toggleSize = () => {
-    const sizeMap: Record<Widget['size'], Widget['size']> = {
-      'small': 'medium',
-      'medium': 'large',
-      'large': 'full',
-      'full': 'small',
-    };
-    updateWidget(widget.id, { size: sizeMap[widget.size] });
+  
+  // Handle widget size change
+  const handleSizeChange = (size: 'small' | 'medium' | 'large' | 'full') => {
+    updateWidget(widget.id, { size });
   };
-
-  // Toggle widget visibility
-  const toggleVisibility = () => {
-    updateWidget(widget.id, { visible: !widget.visible });
+  
+  // Handle widget removal
+  const handleRemove = () => {
+    removeWidget(widget.id);
   };
-
-  // Move widget up in order
-  const moveUp = () => {
-    if (widget.position > 0) {
-      updateWidget(widget.id, { position: widget.position - 1 });
-    }
+  
+  // Animations for loading state
+  const contentAnimation = {
+    initial: { opacity: 0.6 },
+    animate: { opacity: isRefreshing ? 0.6 : 1 },
+    transition: { duration: 0.2 },
   };
-
-  // Move widget down in order
-  const moveDown = () => {
-    updateWidget(widget.id, { position: widget.position + 1 });
-  };
-
-  // Delete widget
-  const handleDelete = () => {
-    if (confirm('Are you sure you want to remove this widget?')) {
-      removeWidget(widget.id);
-    }
-  };
-
+  
   return (
     <Card 
       className={cn(
-        'overflow-hidden transition-all duration-300 ease-in-out h-full',
-        getSizeClasses(),
-        !widget.visible && 'opacity-50',
-        isHovered && isEditing && 'ring-2 ring-primary',
+        'flex flex-col overflow-hidden',
+        widget.size === 'small' ? 'h-52' : 
+        widget.size === 'medium' ? 'h-80' : 
+        widget.size === 'large' ? 'h-96' : 
+        'h-full',
         className
       )}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
-      <CardHeader className="p-3 flex flex-row items-center space-y-0 gap-2 select-none">
-        <CardTitle className="text-base flex-1 truncate">{widget.title}</CardTitle>
+      <CardHeader className="px-4 py-3 flex flex-row items-center space-y-0 gap-4">
+        <CardTitle className="text-base font-medium flex-1 truncate">
+          {widget.title}
+        </CardTitle>
         
-        {isEditing && (
-          <div className="flex items-center gap-1">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-7 w-7" 
-              onClick={toggleVisibility}
-              title={widget.visible ? 'Hide widget' : 'Show widget'}
+        <div className="flex items-center gap-1">
+          {onRefresh && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
             >
-              {widget.visible ? 
-                <EyeOff className="h-4 w-4" /> : 
-                <Eye className="h-4 w-4" />
-              }
+              {isRefreshing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              <span className="sr-only">Refresh</span>
             </Button>
-            
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-7 w-7" 
-              onClick={toggleSize}
-              title="Change size"
-            >
-              {widget.size === 'small' || widget.size === 'medium' ? 
-                <Maximize className="h-4 w-4" /> : 
-                <Minimize className="h-4 w-4" />
-              }
-            </Button>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40">
-                {onEdit && (
-                  <DropdownMenuItem onClick={onEdit}>
-                    <Edit className="h-4 w-4 mr-2" /> Edit
-                  </DropdownMenuItem>
-                )}
-                {onConfigure && (
-                  <DropdownMenuItem onClick={onConfigure}>
-                    <Settings className="h-4 w-4 mr-2" /> Configure
-                  </DropdownMenuItem>
-                )}
-                {onRefresh && (
-                  <DropdownMenuItem onClick={onRefresh}>
-                    <RotateCcw className="h-4 w-4 mr-2" /> Refresh
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem onClick={moveUp}>
-                  <ArrowUp className="h-4 w-4 mr-2" /> Move Up
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={moveDown}>
-                  <ArrowDown className="h-4 w-4 mr-2" /> Move Down
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  className="text-destructive" 
-                  onClick={handleDelete}
-                >
-                  <Trash className="h-4 w-4 mr-2" /> Remove
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        )}
-        
-        {!isEditing && (onEdit || onConfigure || onRefresh) && (
+          )}
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7">
+              <Button variant="ghost" size="icon" className="h-8 w-8">
                 <MoreHorizontal className="h-4 w-4" />
+                <span className="sr-only">More options</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              {onEdit && (
-                <DropdownMenuItem onClick={onEdit}>
-                  <Edit className="h-4 w-4 mr-2" /> Edit
-                </DropdownMenuItem>
-              )}
-              {onConfigure && (
-                <DropdownMenuItem onClick={onConfigure}>
-                  <Settings className="h-4 w-4 mr-2" /> Configure
-                </DropdownMenuItem>
-              )}
-              {onRefresh && (
-                <DropdownMenuItem onClick={onRefresh}>
-                  <RotateCcw className="h-4 w-4 mr-2" /> Refresh
-                </DropdownMenuItem>
-              )}
+            <DropdownMenuContent align="end" className="w-[180px]">
+              <DropdownMenuItem
+                onClick={() => handleSizeChange('small')}
+                disabled={widget.size === 'small'}
+              >
+                <Minimize2 className="h-4 w-4 mr-2" />
+                Small Size
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleSizeChange('medium')}
+                disabled={widget.size === 'medium'}
+              >
+                <Minimize2 className="h-4 w-4 mr-2" />
+                Medium Size
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleSizeChange('large')}
+                disabled={widget.size === 'large'}
+              >
+                <Maximize2 className="h-4 w-4 mr-2" />
+                Large Size
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleSizeChange('full')}
+                disabled={widget.size === 'full'}
+              >
+                <Maximize2 className="h-4 w-4 mr-2" />
+                Full Size
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuItem 
+                onClick={handleRemove}
+                className="text-destructive focus:text-destructive"
+              >
+                <X className="h-4 w-4 mr-2" />
+                Remove Widget
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        )}
+        </div>
       </CardHeader>
       
-      <CardContent 
-        className={cn(
-          'p-3 pt-0 h-[calc(100%-3rem)] overflow-auto',
-          isLoading && 'opacity-60'
-        )}
-      >
-        {isLoading ? (
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-4 w-1/2" />
-          </div>
-        ) : (
-          children
-        )}
+      <CardContent className="px-4 py-3 flex-1 overflow-auto">
+        <motion.div 
+          {...contentAnimation}
+          className="h-full"
+        >
+          {isLoading ? (
+            <div className="h-full flex items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : children}
+        </motion.div>
       </CardContent>
     </Card>
   );

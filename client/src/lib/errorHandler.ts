@@ -12,6 +12,96 @@ interface ErrorReportingOptions {
   context?: ErrorContext;
 }
 
+// Custom error classes for different error types
+export class APIError extends Error {
+  status?: number;
+  response?: any;
+  
+  constructor(message: string, status?: number, response?: any) {
+    super(message);
+    this.name = 'APIError';
+    this.status = status;
+    this.response = response;
+  }
+}
+
+export class AuthenticationError extends APIError {
+  constructor(message: string = 'Authentication required') {
+    super(message, 401);
+    this.name = 'AuthenticationError';
+  }
+}
+
+export class AuthorizationError extends APIError {
+  constructor(message: string = 'You do not have permission to perform this action') {
+    super(message, 403);
+    this.name = 'AuthorizationError';
+  }
+}
+
+export class NetworkError extends Error {
+  constructor(message: string = 'Network connection error') {
+    super(message);
+    this.name = 'NetworkError';
+  }
+}
+
+export class ValidationError extends Error {
+  errors: Record<string, string[]>;
+  
+  constructor(message: string = 'Validation failed', errors: Record<string, string[]> = {}) {
+    super(message);
+    this.name = 'ValidationError';
+    this.errors = errors;
+  }
+}
+
+/**
+ * Log an error to the console and monitoring service
+ */
+export function logError(error: Error, context: ErrorContext = {}): void {
+  console.error('Error logged:', error.message, context);
+  captureError(error, context);
+}
+
+/**
+ * Get a user-friendly error message
+ */
+export function getUserFriendlyErrorMessage(error: Error | any): string {
+  return formatErrorMessage(error);
+}
+
+/**
+ * Process an API response and handle common error cases
+ */
+export function handleAPIResponse<T>(response: any): T {
+  if (!response) {
+    throw new APIError('No response received from API');
+  }
+  
+  if (response.status && response.status >= 400) {
+    if (response.status === 401) {
+      throw new AuthenticationError(response.data?.message || 'Authentication required');
+    }
+    
+    if (response.status === 403) {
+      throw new AuthorizationError(response.data?.message || 'Access denied');
+    }
+    
+    if (response.status === 422 && response.data?.errors) {
+      throw new ValidationError('Validation failed', response.data.errors);
+    }
+    
+    throw new APIError(
+      response.data?.message || 'An error occurred while processing your request',
+      response.status,
+      response.data
+    );
+  }
+  
+  return response.data;
+}
+
 /**
  * Captures and processes errors in the application
  * 

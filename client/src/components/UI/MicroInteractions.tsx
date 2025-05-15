@@ -1,546 +1,334 @@
-import React, { ReactNode } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, useAnimation, AnimatePresence } from 'framer-motion';
+import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface MicroInteractionProps {
-  children: ReactNode;
-  className?: string;
-  delay?: number;
-  duration?: number;
-  repeat?: number | boolean;
-  as?: React.ElementType;
-}
+// Common animation variants
+const fadeIn = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.3 } },
+  exit: { opacity: 0, transition: { duration: 0.2 } }
+};
 
-// HoverScale Animation
-interface HoverScaleProps extends Omit<MicroInteractionProps, 'delay'> {
-  scale?: number;
-}
+const slideUp = {
+  hidden: { y: 20, opacity: 0 },
+  visible: { y: 0, opacity: 1, transition: { duration: 0.4 } },
+  exit: { y: -20, opacity: 0, transition: { duration: 0.3 } }
+};
 
-export const HoverScale = ({ 
+/**
+ * ButtonPress - Adds a subtle press animation to buttons
+ */
+export const ButtonPress: React.FC<React.ComponentProps<typeof motion.div>> = ({ 
   children, 
-  className = '', 
-  scale = 1.05,
-  duration = 0.2,
-  as = motion.div 
-}: HoverScaleProps) => {
-  const Component = as;
-  
+  className,
+  ...props 
+}) => {
   return (
-    <Component
-      className={cn(className)}
-      whileHover={{ 
-        scale,
-        transition: { duration }
-      }}
+    <motion.div
+      className={cn("inline-block", className)}
+      whileTap={{ scale: 0.97 }}
+      {...props}
     >
       {children}
-    </Component>
+    </motion.div>
   );
 };
 
-// Button Press Animation
-interface ButtonPressProps extends Omit<MicroInteractionProps, 'delay' | 'duration'> {
-  scale?: number;
-  duration?: number;
-}
-
-export const ButtonPress = ({ 
+/**
+ * HoverScale - Adds a subtle scale effect on hover
+ */
+export const HoverScale: React.FC<React.ComponentProps<typeof motion.div> & { scale?: number }> = ({ 
   children, 
-  className = '', 
-  scale = 0.95,
-  duration = 0.1,
-  as = motion.div 
-}: ButtonPressProps) => {
-  const Component = as;
-  
+  className,
+  scale = 1.03,
+  ...props 
+}) => {
   return (
-    <Component
-      className={cn(className)}
-      whileTap={{ 
-        scale,
-        transition: { duration }
-      }}
+    <motion.div
+      className={cn("inline-block", className)}
+      whileHover={{ scale }}
+      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+      {...props}
     >
       {children}
-    </Component>
+    </motion.div>
   );
 };
 
-// Slide In Animation
-interface SlideInProps extends MicroInteractionProps {
-  direction?: 'left' | 'right' | 'up' | 'down';
-  distance?: number;
-}
-
-export const SlideIn = ({ 
-  children, 
-  className = '', 
-  delay = 0, 
-  duration = 0.5, 
-  direction = 'up', 
-  distance = 20,
-  as = motion.div 
-}: SlideInProps) => {
-  const Component = as;
-  
-  const getDirectionValues = () => {
-    switch (direction) {
-      case 'left': return { x: -distance, y: 0 };
-      case 'right': return { x: distance, y: 0 };
-      case 'up': return { x: 0, y: -distance };
-      case 'down': return { x: 0, y: distance };
-      default: return { x: 0, y: -distance };
-    }
-  };
-  
-  const { x, y } = getDirectionValues();
-  
-  return (
-    <Component
-      initial={{ x, y, opacity: 0 }}
-      animate={{ x: 0, y: 0, opacity: 1 }}
-      transition={{ 
-        duration, 
-        delay, 
-        ease: 'easeOut' 
-      }}
-      data-animation="slide-in"
-      className={cn(className)}
-    >
-      {children}
-    </Component>
-  );
-};
-
-// Fade In Animation
-export const FadeIn = ({ 
-  children, 
-  className = '', 
-  delay = 0, 
-  duration = 0.5,
-  as = motion.div 
-}: MicroInteractionProps) => {
-  const Component = as;
-  
-  return (
-    <Component
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ 
-        duration, 
-        delay, 
-        ease: 'easeInOut' 
-      }}
-      data-animation="fade-in"
-      className={cn(className)}
-    >
-      {children}
-    </Component>
-  );
-};
-
-// Scale In Animation
-interface ScaleInProps extends MicroInteractionProps {
-  from?: number;
-}
-
-export const ScaleIn = ({ 
-  children, 
-  className = '', 
-  delay = 0, 
-  duration = 0.5,
-  from = 0.95,
-  as = motion.div 
-}: ScaleInProps) => {
-  const Component = as;
-  
-  return (
-    <Component
-      initial={{ scale: from, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ 
-        duration, 
-        delay, 
-        ease: 'easeOut' 
-      }}
-      data-animation="scale-in"
-      className={cn(className)}
-    >
-      {children}
-    </Component>
-  );
-};
-
-// Float Animation
-interface FloatProps extends MicroInteractionProps {
+/**
+ * Float - Creates a subtle floating animation
+ */
+export const Float: React.FC<React.ComponentProps<typeof motion.div> & { 
   amplitude?: number;
-}
-
-export const Float = ({ 
+  duration?: number;
+}> = ({ 
   children, 
-  className = '', 
-  delay = 0, 
-  duration = 2,
+  className,
   amplitude = 10,
-  repeat = true,
-  as = motion.div 
-}: FloatProps) => {
-  const Component = as;
-  
+  duration = 4,
+  ...props 
+}) => {
   return (
-    <Component
+    <motion.div
+      className={cn(className)}
       animate={{ 
-        y: [0, -amplitude, 0],
+        y: [0, -amplitude, 0], 
       }}
       transition={{ 
         duration, 
-        delay, 
-        ease: "easeInOut",
-        repeat: repeat ? Infinity : 0,
-        repeatType: "loop"
+        repeat: Infinity,
+        ease: "easeInOut"
       }}
-      data-animation="float"
-      className={cn(className)}
+      {...props}
     >
       {children}
-    </Component>
+    </motion.div>
   );
 };
 
-// Pulse Animation
-interface PulseProps extends MicroInteractionProps {
-  scale?: number;
-}
-
-export const Pulse = ({ 
+/**
+ * Pulse - Creates a pulse animation
+ */
+export const Pulse: React.FC<React.ComponentProps<typeof motion.div>> = ({ 
   children, 
-  className = '', 
-  delay = 0, 
-  duration = 1.5,
-  scale = 1.05,
-  repeat = true,
-  as = motion.div 
-}: PulseProps) => {
-  const Component = as;
-  
+  className,
+  ...props 
+}) => {
   return (
-    <Component
+    <motion.div
+      className={cn(className)}
       animate={{ 
-        scale: [1, scale, 1],
+        scale: [1, 1.05, 1],
+        opacity: [0.8, 1, 0.8]
       }}
       transition={{ 
-        duration, 
-        delay, 
-        ease: "easeInOut",
-        repeat: repeat ? Infinity : 0,
-        repeatType: "loop"
+        duration: 2, 
+        repeat: Infinity,
+        ease: "easeInOut"
       }}
-      data-animation="pulse"
-      className={cn(className)}
+      {...props}
     >
       {children}
-    </Component>
+    </motion.div>
   );
 };
 
-// Stagger Children Animation
-interface StaggerProps extends MicroInteractionProps {
+/**
+ * StaggerChildren - Parent component that staggers animations of children
+ */
+export const StaggerChildren: React.FC<React.ComponentProps<typeof motion.div> & {
   staggerDelay?: number;
-}
-
-export const Stagger = ({ 
+}> = ({ 
   children, 
-  className = '', 
-  delay = 0, 
+  className,
   staggerDelay = 0.1,
-  as = motion.div 
-}: StaggerProps) => {
-  const Component = as;
-  
+  ...props 
+}) => {
   return (
-    <Component
+    <motion.div
+      className={cn(className)}
       initial="hidden"
       animate="visible"
       variants={{
         visible: {
           transition: {
-            staggerChildren: staggerDelay,
-            delayChildren: delay
+            staggerChildren: staggerDelay
           }
-        },
-        hidden: {}
-      }}
-      data-animation="stagger"
-      className={cn(className)}
-    >
-      {React.Children.map(children, (child) => {
-        if (!React.isValidElement(child)) return child;
-        
-        return React.cloneElement(child, {
-          // @ts-ignore - we know this is a valid Framer Motion element
-          variants: {
-            visible: { opacity: 1, y: 0 },
-            hidden: { opacity: 0, y: 20 }
-          },
-          transition: { duration: 0.5 }
-        });
-      })}
-    </Component>
-  );
-};
-
-// StaggerChildren component - enhanced version of Stagger that supports container className
-export const StaggerChildren = ({ 
-  children, 
-  className = '',
-  containerClassName = '',
-  staggerDelay = 0.05
-}: { 
-  children: ReactNode; 
-  className?: string;
-  containerClassName?: string;
-  staggerDelay?: number;
-}) => (
-  <motion.div
-    className={containerClassName}
-    initial="hidden"
-    animate="visible"
-    variants={{
-      visible: {
-        transition: {
-          staggerChildren: staggerDelay
         }
-      },
-      hidden: {}
-    }}
-  >
-    {React.Children.map(children, (child) => {
-      if (!React.isValidElement(child)) return child;
-      
-      return (
-        <motion.div
-          className={className}
-          variants={{
-            visible: { opacity: 1, y: 0 },
-            hidden: { opacity: 0, y: 15 }
-          }}
-          transition={{ duration: 0.4 }}
-        >
-          {child}
-        </motion.div>
-      );
-    })}
-  </motion.div>
-);
+      }}
+      {...props}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
-// Rotate Animation
-interface RotateProps extends MicroInteractionProps {
-  degrees?: number;
-}
-
-export const Rotate = ({ 
+/**
+ * StaggerItem - Child item to be used within StaggerChildren
+ */
+export const StaggerItem: React.FC<React.ComponentProps<typeof motion.div>> = ({ 
   children, 
-  className = '', 
-  delay = 0, 
-  duration = 5,
-  degrees = 360,
-  repeat = true,
-  as = motion.div 
-}: RotateProps) => {
-  const Component = as;
-  
+  className,
+  ...props 
+}) => {
   return (
-    <Component
-      animate={{ 
-        rotate: degrees
-      }}
-      transition={{ 
-        duration, 
-        delay, 
-        ease: "linear",
-        repeat: repeat ? Infinity : 0,
-        repeatType: "loop"
-      }}
-      data-animation="rotate"
+    <motion.div
       className={cn(className)}
+      variants={slideUp}
+      {...props}
     >
       {children}
-    </Component>
+    </motion.div>
   );
 };
 
-// Shimmer Animation
-export const Shimmer = ({ 
-  children, 
-  className = '', 
-  delay = 0, 
-  duration = 2,
-  repeat = true,
-  as = motion.div 
-}: MicroInteractionProps) => {
-  const Component = as;
-  
+/**
+ * RevealText - Reveals text one character at a time
+ */
+export const RevealText: React.FC<{
+  text: string;
+  className?: string;
+  charDelay?: number;
+  style?: React.CSSProperties;
+}> = ({ 
+  text, 
+  className,
+  charDelay = 0.05,
+  style
+}) => {
   return (
-    <Component
-      className={cn(
-        "relative overflow-hidden",
-        className
-      )}
-      data-animation="shimmer"
-    >
-      {children}
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full"
-        animate={{ x: ['0%', '200%'] }}
-        transition={{
-          duration,
-          delay,
-          ease: "easeInOut",
-          repeat: repeat ? Infinity : 0,
-          repeatDelay: 0.5
-        }}
-      />
-    </Component>
+    <span className={cn(className)} style={style}>
+      <StaggerChildren staggerDelay={charDelay}>
+        {text.split('').map((char, index) => (
+          <motion.span
+            key={`${char}-${index}`}
+            variants={{
+              hidden: { opacity: 0, y: 5 },
+              visible: { opacity: 1, y: 0 }
+            }}
+            style={{ display: 'inline-block', whiteSpace: 'pre' }}
+          >
+            {char}
+          </motion.span>
+        ))}
+      </StaggerChildren>
+    </span>
   );
 };
 
-// Attention Animation (Shake or Bounce)
-interface AttentionProps extends MicroInteractionProps {
-  type?: 'shake' | 'bounce';
-  intensity?: number;
-}
+/**
+ * Skeleton component for loading states
+ */
+export const Skeleton: React.FC<{
+  className?: string;
+  width?: string | number;
+  height?: string | number;
+  circle?: boolean;
+  pulsate?: boolean;
+}> = ({ 
+  className,
+  width,
+  height,
+  circle = false,
+  pulsate = true
+}) => {
+  const style: React.CSSProperties = {
+    width,
+    height,
+    borderRadius: circle ? '50%' : '0.25rem',
+  };
 
-export const Attention = ({ 
-  children, 
-  className = '', 
-  delay = 0, 
-  duration = 0.4,
-  type = 'shake',
-  intensity = 5,
-  repeat = false,
-  as = motion.div 
-}: AttentionProps) => {
-  const Component = as;
+  return (
+    <div 
+      className={cn(
+        "bg-neutral-200 dark:bg-neutral-800",
+        pulsate && "animate-pulse",
+        className
+      )} 
+      style={style}
+    />
+  );
+};
+
+/**
+ * Animated checkmark component
+ */
+export const Checkmark: React.FC<{
+  className?: string;
+  checked?: boolean;
+  size?: number;
+}> = ({ 
+  className,
+  checked = true,
+  size = 20
+}) => {
+  return (
+    <div className={cn("relative", className)}>
+      <AnimatePresence>
+        {checked && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            exit={{ scale: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            className="bg-primary rounded-full flex items-center justify-center"
+            style={{ width: size, height: size }}
+          >
+            <Check 
+              className="text-white" 
+              size={size * 0.6} 
+              strokeWidth={3} 
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+/**
+ * CountUp animation for numbers
+ */
+export const CountUp: React.FC<{
+  end: number;
+  start?: number;
+  duration?: number;
+  decimals?: number;
+  className?: string;
+  prefix?: string;
+  suffix?: string;
+  delay?: number;
+}> = ({ 
+  end, 
+  start = 0, 
+  duration = 2,
+  decimals = 0,
+  className,
+  prefix = '',
+  suffix = '',
+  delay = 0
+}) => {
+  const [count, setCount] = useState(start);
+  const requestRef = useRef<number>();
+  const startTimeRef = useRef<number>();
+  const endValue = end;
   
-  const variants = {
-    shake: {
-      animate: { 
-        x: [0, -intensity, intensity, -intensity, intensity, 0],
-      },
-      transition: { 
-        duration, 
-        delay, 
-        ease: "easeInOut",
-        repeat: repeat ? Infinity : 0,
-        repeatDelay: 3
-      }
-    },
-    bounce: {
-      animate: { 
-        y: [0, -intensity, 0],
-      },
-      transition: { 
-        duration, 
-        delay, 
-        ease: "easeOut",
-        repeat: repeat ? Infinity : 0,
-        repeatDelay: 3
-      }
+  const animate = (time: number) => {
+    if (startTimeRef.current === undefined) {
+      startTimeRef.current = time;
+    }
+    
+    const elapsed = time - startTimeRef.current;
+    const progress = Math.min(elapsed / (duration * 1000), 1);
+    
+    const currentCount = start + progress * (endValue - start);
+    setCount(currentCount);
+    
+    if (progress < 1) {
+      requestRef.current = requestAnimationFrame(animate);
     }
   };
   
-  return (
-    <Component
-      animate={variants[type].animate}
-      transition={variants[type].transition}
-      data-animation={`attention-${type}`}
-      className={cn(className)}
-    >
-      {children}
-    </Component>
-  );
-};
-
-// Typing Animation
-interface TypingProps extends MicroInteractionProps {
-  text: string;
-  typingSpeed?: number;
-  cursorColor?: string;
-}
-
-export const Typing = ({ 
-  className = '', 
-  delay = 0, 
-  text,
-  typingSpeed = 40,
-  cursorColor = 'currentColor',
-  as = motion.div 
-}: TypingProps) => {
-  const Component = as;
-  const [displayText, setDisplayText] = React.useState('');
-  const [cursorVisible, setCursorVisible] = React.useState(true);
-  
-  React.useEffect(() => {
-    let currentIndex = 0;
-    let timer: NodeJS.Timeout;
-    
-    // Start typing after delay
-    const delayTimer = setTimeout(() => {
-      timer = setInterval(() => {
-        if (currentIndex < text.length) {
-          setDisplayText(prev => prev + text.charAt(currentIndex));
-          currentIndex++;
-        } else {
-          clearInterval(timer);
-          // Start cursor blink after typing completes
-          const cursorTimer = setInterval(() => {
-            setCursorVisible(prev => !prev);
-          }, 500);
-          
-          return () => clearInterval(cursorTimer);
-        }
-      }, typingSpeed);
-    }, delay * 1000);
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    if (delay) {
+      timeout = setTimeout(() => {
+        requestRef.current = requestAnimationFrame(animate);
+      }, delay * 1000);
+    } else {
+      requestRef.current = requestAnimationFrame(animate);
+    }
     
     return () => {
-      clearTimeout(delayTimer);
-      clearInterval(timer);
+      if (timeout) clearTimeout(timeout);
+      if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
-  }, [text, delay, typingSpeed]);
+  }, [end]);
   
   return (
-    <Component
-      data-animation="typing"
-      className={cn("flex items-center", className)}
-    >
-      <span>{displayText}</span>
-      <span 
-        className="inline-block w-[0.1em] h-[1.2em] ml-0.5"
-        style={{ 
-          backgroundColor: cursorColor,
-          opacity: cursorVisible ? 1 : 0,
-          transition: 'opacity 0.2s'
-        }}
-      />
-    </Component>
+    <span className={className}>
+      {prefix}{count.toFixed(decimals)}{suffix}
+    </span>
   );
 };
-
-// Export all animations as a group
-const MicroAnimations = {
-  SlideIn,
-  FadeIn,
-  ScaleIn,
-  Float,
-  Pulse,
-  Stagger,
-  StaggerChildren,
-  Rotate,
-  Shimmer,
-  Attention,
-  Typing,
-  HoverScale,
-  ButtonPress
-};
-
-export default MicroAnimations;

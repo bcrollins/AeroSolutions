@@ -104,7 +104,13 @@ const RecentCoursesWidget: React.FC<RecentCoursesWidgetProps> = ({ widget }) => 
         isError: false,
         error: null,
         refetch,
-      }}>
+        isPending: isRefreshing,
+        isSuccess: !isRefreshing && !!coursesData,
+        isLoadingError: false,
+        isRefetchError: false,
+        status: !isRefreshing && !!coursesData ? 'success' : 'loading',
+        fetchStatus: isRefreshing ? 'fetching' : 'idle',
+      } as any}>
         {(courses: Course[]) => (
           <div className="space-y-4">
             {courses.length === 0 ? (

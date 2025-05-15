@@ -1,22 +1,22 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-// Define widget types and layout settings
+// Widget types
 export type WidgetType = 
-  | 'recentCourses' 
-  | 'progress' 
-  | 'achievements' 
-  | 'recommendations' 
-  | 'calendar' 
-  | 'news' 
-  | 'forum' 
-  | 'analytics' 
-  | 'notes' 
-  | 'todo' 
-  | 'subscription' 
+  | 'recent-courses'
+  | 'progress'
+  | 'recommendations'
+  | 'achievements'
+  | 'calendar'
+  | 'news'
+  | 'forum'
+  | 'analytics'
+  | 'notes'
+  | 'todo'
+  | 'subscription'
   | 'certifications'
-  | 'recentTools'
-  | 'favouriteCourses'
-  | 'upcomingEvents';
+  | 'recent-tools'
+  | 'favorite-courses'
+  | 'upcoming-events';
 
 export type WidgetSize = 'small' | 'medium' | 'large' | 'full';
 
@@ -24,335 +24,335 @@ export interface Widget {
   id: string;
   type: WidgetType;
   title: string;
+  description: string;
   size: WidgetSize;
   position: number;
-  visible: boolean;
-  config?: Record<string, any>;
+  config?: any;
 }
+
+// Dashboard layout types
+export type LayoutType = 'grid' | 'list' | 'masonry';
 
 export interface DashboardLayout {
+  type: LayoutType;
   columns: number;
+}
+
+// Context state interface
+interface DashboardState {
   widgets: Widget[];
-}
-
-export interface DashboardTheme {
-  mode: 'light' | 'dark' | 'system';
-  accentColor: string;
-  showGradients: boolean;
-  reduceMotion: boolean;
-  compactMode: boolean;
-}
-
-export interface DashboardPreferences {
-  showWelcomeMessage: boolean;
-  autoRefresh: boolean;
-  refreshInterval: number; // in minutes
-  defaultView: 'grid' | 'list';
-  hiddenSections: string[];
-}
-
-// Default dashboard settings
-const defaultLayout: DashboardLayout = {
-  columns: 3,
-  widgets: [
-    {
-      id: 'recent-courses',
-      type: 'recentCourses',
-      title: 'Recent Courses',
-      size: 'medium',
-      position: 0,
-      visible: true,
-    },
-    {
-      id: 'progress',
-      type: 'progress',
-      title: 'Your Progress',
-      size: 'medium',
-      position: 1,
-      visible: true,
-    },
-    {
-      id: 'recommendations',
-      type: 'recommendations',
-      title: 'Recommended For You',
-      size: 'large',
-      position: 2,
-      visible: true,
-    },
-    {
-      id: 'achievements',
-      type: 'achievements',
-      title: 'Achievements',
-      size: 'small',
-      position: 3,
-      visible: true,
-    },
-    {
-      id: 'calendar',
-      type: 'calendar',
-      title: 'Your Schedule',
-      size: 'medium',
-      position: 4,
-      visible: true,
-    },
-    {
-      id: 'news',
-      type: 'news',
-      title: 'AI News',
-      size: 'medium',
-      position: 5,
-      visible: true,
-    },
-    {
-      id: 'forum',
-      type: 'forum',
-      title: 'Recent Discussions',
-      size: 'medium',
-      position: 6,
-      visible: true,
-    },
-  ],
-};
-
-const defaultTheme: DashboardTheme = {
-  mode: 'system',
-  accentColor: '#0066cc',
-  showGradients: true,
-  reduceMotion: false,
-  compactMode: false,
-};
-
-const defaultPreferences: DashboardPreferences = {
-  showWelcomeMessage: true,
-  autoRefresh: true,
-  refreshInterval: 5,
-  defaultView: 'grid',
-  hiddenSections: [],
-};
-
-// Create context types
-interface DashboardContextType {
   layout: DashboardLayout;
-  theme: DashboardTheme;
-  preferences: DashboardPreferences;
-  isEditing: boolean;
+  availableWidgets: Widget[];
   isCustomizing: boolean;
-  updateLayout: (newLayout: Partial<DashboardLayout>) => void;
-  updateWidget: (widgetId: string, updates: Partial<Widget>) => void;
-  addWidget: (widget: Omit<Widget, 'id' | 'position'>) => void;
-  removeWidget: (widgetId: string) => void;
-  reorderWidgets: (widgetIds: string[]) => void;
-  resetLayout: () => void;
-  updateTheme: (newTheme: Partial<DashboardTheme>) => void;
-  updatePreferences: (newPreferences: Partial<DashboardPreferences>) => void;
-  setEditing: (editing: boolean) => void;
-  setCustomizing: (customizing: boolean) => void;
 }
 
-// Create context with default values
-const DashboardContext = createContext<DashboardContextType>({
-  layout: defaultLayout,
-  theme: defaultTheme,
-  preferences: defaultPreferences,
-  isEditing: false,
+// Context actions interface
+interface DashboardActions {
+  addWidget: (widgetType: WidgetType) => void;
+  removeWidget: (widgetId: string) => void;
+  updateWidget: (widgetId: string, updates: Partial<Omit<Widget, 'id' | 'type'>>) => void;
+  reorderWidgets: (startIndex: number, endIndex: number) => void;
+  setLayout: (layout: Partial<DashboardLayout>) => void;
+  setIsCustomizing: (isCustomizing: boolean) => void;
+  resetDashboard: () => void;
+}
+
+// Combined context type
+type DashboardContextType = DashboardState & DashboardActions;
+
+// Default context state
+const defaultContext: DashboardContextType = {
+  widgets: [],
+  layout: { type: 'grid', columns: 3 },
+  availableWidgets: [],
   isCustomizing: false,
-  updateLayout: () => {},
-  updateWidget: () => {},
   addWidget: () => {},
   removeWidget: () => {},
+  updateWidget: () => {},
   reorderWidgets: () => {},
-  resetLayout: () => {},
-  updateTheme: () => {},
-  updatePreferences: () => {},
-  setEditing: () => {},
-  setCustomizing: () => {},
-});
-
-// Storage keys for persisting dashboard settings
-const STORAGE_KEYS = {
-  LAYOUT: 'dashboard_layout',
-  THEME: 'dashboard_theme',
-  PREFERENCES: 'dashboard_preferences',
+  setLayout: () => {},
+  setIsCustomizing: () => {},
+  resetDashboard: () => {},
 };
 
+// Create the context
+const DashboardContext = createContext<DashboardContextType>(defaultContext);
+
+// Default available widgets
+const DEFAULT_AVAILABLE_WIDGETS: Widget[] = [
+  {
+    id: 'template-recent-courses',
+    type: 'recent-courses',
+    title: 'Recent Courses',
+    description: 'Shows your recently accessed courses',
+    size: 'medium',
+    position: -1,
+  },
+  {
+    id: 'template-progress',
+    type: 'progress',
+    title: 'Learning Progress',
+    description: 'Track your overall learning progress',
+    size: 'medium',
+    position: -1,
+  },
+  {
+    id: 'template-recommendations',
+    type: 'recommendations',
+    title: 'Recommended for You',
+    description: 'AI-powered course and resource recommendations',
+    size: 'medium',
+    position: -1,
+  },
+  {
+    id: 'template-achievements',
+    type: 'achievements',
+    title: 'Achievements',
+    description: 'View your recent achievements and badges',
+    size: 'small',
+    position: -1,
+  },
+  {
+    id: 'template-calendar',
+    type: 'calendar',
+    title: 'Calendar',
+    description: 'Upcoming courses, deadlines and events',
+    size: 'medium',
+    position: -1,
+  },
+  {
+    id: 'template-news',
+    type: 'news',
+    title: 'AI News & Updates',
+    description: 'Latest AI news and platform updates',
+    size: 'medium',
+    position: -1,
+  },
+  {
+    id: 'template-forum',
+    type: 'forum',
+    title: 'Community Discussions',
+    description: 'Recent forum posts and discussions',
+    size: 'medium',
+    position: -1,
+  },
+  {
+    id: 'template-analytics',
+    type: 'analytics',
+    title: 'Learning Analytics',
+    description: 'Insights into your learning patterns',
+    size: 'large',
+    position: -1,
+  },
+  {
+    id: 'template-notes',
+    type: 'notes',
+    title: 'Notes',
+    description: 'Your recent notes from courses',
+    size: 'medium',
+    position: -1,
+  },
+  {
+    id: 'template-todo',
+    type: 'todo',
+    title: 'To-Do List',
+    description: 'Track your learning tasks and deadlines',
+    size: 'small',
+    position: -1,
+  },
+  {
+    id: 'template-subscription',
+    type: 'subscription',
+    title: 'Subscription',
+    description: 'Information about your current subscription',
+    size: 'small',
+    position: -1,
+  },
+  {
+    id: 'template-certifications',
+    type: 'certifications',
+    title: 'Certifications',
+    description: 'Track your certifications and progress',
+    size: 'medium',
+    position: -1,
+  },
+  {
+    id: 'template-recent-tools',
+    type: 'recent-tools',
+    title: 'Recent Tools',
+    description: 'Quick access to your recently used AI tools',
+    size: 'small',
+    position: -1,
+  },
+  {
+    id: 'template-favorite-courses',
+    type: 'favorite-courses',
+    title: 'Favorite Courses',
+    description: 'Your favorite and pinned courses',
+    size: 'medium',
+    position: -1,
+  },
+  {
+    id: 'template-upcoming-events',
+    type: 'upcoming-events',
+    title: 'Upcoming Events',
+    description: 'Upcoming live sessions and events',
+    size: 'medium',
+    position: -1,
+  },
+];
+
+// Default dashboard widgets
+const DEFAULT_DASHBOARD_WIDGETS: Widget[] = [
+  {
+    id: 'default-recent-courses',
+    type: 'recent-courses',
+    title: 'Recent Courses',
+    description: 'Shows your recently accessed courses',
+    size: 'medium',
+    position: 0,
+  },
+  {
+    id: 'default-progress',
+    type: 'progress',
+    title: 'Learning Progress',
+    description: 'Track your overall learning progress',
+    size: 'medium',
+    position: 1,
+  },
+  {
+    id: 'default-recommendations',
+    type: 'recommendations',
+    title: 'Recommended for You',
+    description: 'AI-powered course and resource recommendations',
+    size: 'medium',
+    position: 2,
+  },
+  {
+    id: 'default-upcoming-events',
+    type: 'upcoming-events',
+    title: 'Upcoming Events',
+    description: 'Upcoming live sessions and events',
+    size: 'small',
+    position: 3,
+  },
+];
+
+// Create the provider component
 export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // State for dashboard settings
-  const [layout, setLayout] = useState<DashboardLayout>(defaultLayout);
-  const [theme, setTheme] = useState<DashboardTheme>(defaultTheme);
-  const [preferences, setPreferences] = useState<DashboardPreferences>(defaultPreferences);
-  const [isEditing, setIsEditing] = useState(false);
+  // State
+  const [widgets, setWidgets] = useState<Widget[]>([]);
+  const [layout, setLayoutState] = useState<DashboardLayout>({ type: 'grid', columns: 3 });
+  const [availableWidgets, setAvailableWidgets] = useState<Widget[]>([]);
   const [isCustomizing, setIsCustomizing] = useState(false);
-
-  // Load saved dashboard settings from localStorage on initial render
+  
+  // Initialize dashboard on first load
   useEffect(() => {
-    try {
-      // Load layout
-      const savedLayout = localStorage.getItem(STORAGE_KEYS.LAYOUT);
-      if (savedLayout) {
-        setLayout(JSON.parse(savedLayout));
+    // In a real app, we would fetch user's dashboard from API
+    // For now, use default widgets
+    setWidgets(DEFAULT_DASHBOARD_WIDGETS);
+    setAvailableWidgets(DEFAULT_AVAILABLE_WIDGETS);
+    
+    // Load from localStorage if available
+    const savedDashboard = localStorage.getItem('rxai-dashboard');
+    if (savedDashboard) {
+      try {
+        const parsed = JSON.parse(savedDashboard);
+        if (parsed.widgets && Array.isArray(parsed.widgets)) {
+          setWidgets(parsed.widgets);
+        }
+        if (parsed.layout) {
+          setLayoutState(parsed.layout);
+        }
+      } catch (error) {
+        console.error('Failed to parse saved dashboard:', error);
       }
-
-      // Load theme
-      const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME);
-      if (savedTheme) {
-        setTheme(JSON.parse(savedTheme));
-      }
-
-      // Load preferences
-      const savedPreferences = localStorage.getItem(STORAGE_KEYS.PREFERENCES);
-      if (savedPreferences) {
-        setPreferences(JSON.parse(savedPreferences));
-      }
-    } catch (error) {
-      console.error('Error loading dashboard settings:', error);
-      // Fallback to defaults
-      setLayout(defaultLayout);
-      setTheme(defaultTheme);
-      setPreferences(defaultPreferences);
     }
   }, []);
-
-  // Save layout to localStorage whenever it changes
+  
+  // Save dashboard to localStorage when it changes
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.LAYOUT, JSON.stringify(layout));
-    } catch (error) {
-      console.error('Error saving dashboard layout:', error);
-    }
-  }, [layout]);
-
-  // Save theme to localStorage whenever it changes
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.THEME, JSON.stringify(theme));
-    } catch (error) {
-      console.error('Error saving dashboard theme:', error);
-    }
-  }, [theme]);
-
-  // Save preferences to localStorage whenever they change
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.PREFERENCES, JSON.stringify(preferences));
-    } catch (error) {
-      console.error('Error saving dashboard preferences:', error);
-    }
-  }, [preferences]);
-
-  // Update layout
-  const updateLayout = (newLayoutPartial: Partial<DashboardLayout>) => {
-    setLayout(prevLayout => ({
-      ...prevLayout,
-      ...newLayoutPartial,
-    }));
-  };
-
-  // Update a specific widget
-  const updateWidget = (widgetId: string, updates: Partial<Widget>) => {
-    setLayout(prevLayout => ({
-      ...prevLayout,
-      widgets: prevLayout.widgets.map(widget => 
-        widget.id === widgetId ? { ...widget, ...updates } : widget
-      ),
-    }));
-  };
-
-  // Add a new widget
-  const addWidget = (widget: Omit<Widget, 'id' | 'position'>) => {
-    const id = `widget-${Date.now()}`;
-    const position = layout.widgets.length;
-    
-    setLayout(prevLayout => ({
-      ...prevLayout,
-      widgets: [
-        ...prevLayout.widgets,
-        { ...widget, id, position },
-      ],
-    }));
-  };
-
-  // Remove a widget
-  const removeWidget = (widgetId: string) => {
-    setLayout(prevLayout => ({
-      ...prevLayout,
-      widgets: prevLayout.widgets
-        .filter(widget => widget.id !== widgetId)
-        .map((widget, index) => ({ ...widget, position: index })),
-    }));
-  };
-
-  // Reorder widgets based on an array of widget IDs
-  const reorderWidgets = (widgetIds: string[]) => {
-    const reorderedWidgets = widgetIds.map((id, index) => {
-      const widget = layout.widgets.find(w => w.id === id);
-      if (!widget) return null;
-      return { ...widget, position: index };
-    }).filter(Boolean) as Widget[];
-    
-    // Handle any widgets not included in the reordering
-    const remainingWidgets = layout.widgets
-      .filter(widget => !widgetIds.includes(widget.id))
-      .map((widget, index) => ({ 
-        ...widget, 
-        position: reorderedWidgets.length + index 
+    if (widgets.length > 0) {
+      localStorage.setItem('rxai-dashboard', JSON.stringify({
+        widgets,
+        layout,
       }));
+    }
+  }, [widgets, layout]);
+  
+  // Actions
+  const addWidget = (widgetType: WidgetType) => {
+    const templateWidget = availableWidgets.find(w => w.type === widgetType);
+    if (!templateWidget) return;
     
-    setLayout(prevLayout => ({
-      ...prevLayout,
-      widgets: [...reorderedWidgets, ...remainingWidgets],
-    }));
+    const newWidget: Widget = {
+      ...templateWidget,
+      id: `widget-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      position: widgets.length,
+    };
+    
+    setWidgets(prev => [...prev, newWidget]);
   };
-
-  // Reset layout to defaults
-  const resetLayout = () => {
-    setLayout(defaultLayout);
+  
+  const removeWidget = (widgetId: string) => {
+    setWidgets(prev => {
+      const filtered = prev.filter(w => w.id !== widgetId);
+      // Reposition remaining widgets
+      return filtered.map((widget, index) => ({
+        ...widget,
+        position: index,
+      }));
+    });
   };
-
-  // Update theme
-  const updateTheme = (newThemePartial: Partial<DashboardTheme>) => {
-    setTheme(prevTheme => ({
-      ...prevTheme,
-      ...newThemePartial,
-    }));
+  
+  const updateWidget = (widgetId: string, updates: Partial<Omit<Widget, 'id' | 'type'>>) => {
+    setWidgets(prev => 
+      prev.map(widget => 
+        widget.id === widgetId 
+          ? { ...widget, ...updates } 
+          : widget
+      )
+    );
   };
-
-  // Update preferences
-  const updatePreferences = (newPreferencesPartial: Partial<DashboardPreferences>) => {
-    setPreferences(prevPreferences => ({
-      ...prevPreferences,
-      ...newPreferencesPartial,
-    }));
+  
+  const reorderWidgets = (startIndex: number, endIndex: number) => {
+    setWidgets(prev => {
+      const result = Array.from(prev);
+      const [removed] = result.splice(startIndex, 1);
+      result.splice(endIndex, 0, removed);
+      
+      // Update positions after reordering
+      return result.map((widget, index) => ({
+        ...widget,
+        position: index,
+      }));
+    });
   };
-
-  // Set editing mode
-  const setEditing = (editing: boolean) => {
-    setIsEditing(editing);
+  
+  const setLayout = (layoutUpdates: Partial<DashboardLayout>) => {
+    setLayoutState(prev => ({ ...prev, ...layoutUpdates }));
   };
-
-  // Set customizing mode
-  const setCustomizing = (customizing: boolean) => {
-    setIsCustomizing(customizing);
+  
+  const resetDashboard = () => {
+    setWidgets(DEFAULT_DASHBOARD_WIDGETS);
+    setLayoutState({ type: 'grid', columns: 3 });
   };
-
-  // Provide context value
+  
+  // Combine state and actions for context value
   const contextValue: DashboardContextType = {
+    widgets,
     layout,
-    theme,
-    preferences,
-    isEditing,
+    availableWidgets,
     isCustomizing,
-    updateLayout,
-    updateWidget,
     addWidget,
     removeWidget,
+    updateWidget,
     reorderWidgets,
-    resetLayout,
-    updateTheme,
-    updatePreferences,
-    setEditing,
-    setCustomizing,
+    setLayout,
+    setIsCustomizing,
+    resetDashboard,
   };
-
+  
   return (
     <DashboardContext.Provider value={contextValue}>
       {children}
@@ -360,13 +360,5 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   );
 };
 
-// Custom hook for using dashboard context
-export const useDashboard = () => {
-  const context = useContext(DashboardContext);
-  if (!context) {
-    throw new Error('useDashboard must be used within a DashboardProvider');
-  }
-  return context;
-};
-
-export default DashboardContext;
+// Custom hook for using the dashboard context
+export const useDashboard = () => useContext(DashboardContext);
