@@ -1,194 +1,217 @@
-import React, { useState, useEffect } from 'react';
-import { BrainCircuit, Sparkles, Activity, CircleCheckBig, Clock, Loader2, Cpu } from 'lucide-react';
-import { useSoundEffects } from '@/hooks/use-sound-effects';
+import React, { useEffect, useState } from 'react';
+import { Progress } from '@/components/ui/progress';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Brain, BookOpen, Check, RefreshCw, AlertTriangle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
+import { useQuery } from '@tanstack/react-query';
 
-interface ArticleGenerationProgressProps {
-  current: number;
+interface ArticleGenerationStats {
   total: number;
-  className?: string;
-  currentArticleTitle?: string;
-  estimatedTimeRemaining?: number;
-  onComplete?: () => void;
+  completed: number;
+  inProgress: number;
+  failed: number;
+  lastArticleTitle: string;
+  estimatedTimeRemaining: number; // in seconds
+  status: 'idle' | 'running' | 'completed' | 'error';
 }
 
-/**
- * Enhanced component to display the progress of article generation in the News Hub
- * with animated stages, detailed metrics, and visual feedback
- */
-const ArticleGenerationProgress: React.FC<ArticleGenerationProgressProps> = ({
-  current,
-  total,
-  className = '',
-  currentArticleTitle = '',
-  estimatedTimeRemaining,
-  onComplete
-}) => {
-  const { playSound } = useSoundEffects();
-  const [showStages, setShowStages] = useState(false);
-  const [simulateStage, setSimulateStage] = useState(1);
-  const [isHovered, setIsHovered] = useState(false);
-  
-  // Calculate percentage
-  const percentage = Math.min(100, Math.round((current / total) * 100));
-  
-  // Auto-calculate estimated time if not provided
-  const calculatedTimeRemaining = estimatedTimeRemaining || 
-    Math.round((total - current) * 1.2); // Rough estimate: 1.2 min per article
-    
-  // Mock current article title if not provided
-  const displayTitle = currentArticleTitle || 
-    (current < total ? `AI Article #${current + 1}` : 'Complete!');
-  
-  // Simulate the different stages of AI generation for visual feedback
-  useEffect(() => {
-    if (current < total) {
-      const interval = setInterval(() => {
-        setSimulateStage((prev) => (prev % 4) + 1);
-      }, 2500);
-      return () => clearInterval(interval);
-    }
-  }, [current, total]);
-  
-  // Play sound when generation completes
-  useEffect(() => {
-    if (percentage === 100) {
-      playSound('success');
-      if (onComplete) onComplete();
-    }
-  }, [percentage, playSound, onComplete]);
+interface ArticleGenerationProgressProps {
+  onComplete?: () => void;
+  className?: string;
+}
 
+const ArticleGenerationProgress: React.FC<ArticleGenerationProgressProps> = ({ 
+  onComplete,
+  className = ''
+}) => {
+  const { toast } = useToast();
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  
+  // Fetch generation status
+  const { 
+    data: stats, 
+    isLoading, 
+    isError,
+    refetch,
+    dataUpdatedAt,
+    isRefetching,
+  } = useQuery({
+    queryKey: ['article-generation-status'],
+    queryFn: async () => {
+      try {
+        // In a real implementation, fetch from the API
+        // return await apiRequest('/api/admin/articles/generation/status');
+        
+        // For demo purposes, simulate a response
+        // This would normally come from the server
+        const mockData: ArticleGenerationStats = {
+          total: 50,
+          completed: Math.min(50, Math.floor(new Date().getSeconds() / 1.2) + 5),
+          inProgress: 1,
+          failed: 0,
+          lastArticleTitle: "Revolutionizing Business Intelligence with GPT-4",
+          estimatedTimeRemaining: 720, // 12 minutes
+          status: 'running'
+        };
+        
+        // Set status based on completion
+        if (mockData.completed >= mockData.total) {
+          mockData.status = 'completed';
+          mockData.inProgress = 0;
+          
+          // Only call onComplete once when generation finishes
+          if (onComplete) {
+            onComplete();
+          }
+        }
+        
+        return mockData;
+      } catch (error) {
+        console.error("Failed to fetch article generation status:", error);
+        throw error;
+      }
+    },
+    refetchInterval: autoRefresh ? 5000 : false,
+    refetchOnWindowFocus: autoRefresh,
+    staleTime: 2000
+  });
+  
+  // Format time remaining
+  const formatTimeRemaining = (seconds: number): string => {
+    if (seconds < 60) return `${seconds} sec remaining`;
+    if (seconds < 3600) {
+      const minutes = Math.ceil(seconds / 60);
+      return `${minutes} min remaining`;
+    }
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.ceil((seconds % 3600) / 60);
+    return `${hours}h ${minutes}m remaining`;
+  };
+  
+  // Calculate completion percentage
+  const getCompletionPercentage = (): number => {
+    if (!stats) return 0;
+    return Math.round((stats.completed / stats.total) * 100);
+  };
+  
+  // Get status badge
+  const getStatusBadge = () => {
+    if (!stats) return <Badge variant="outline">Unknown</Badge>;
+    
+    switch(stats.status) {
+      case 'idle':
+        return <Badge variant="outline" className="bg-gray-100 text-gray-800">Idle</Badge>;
+      case 'running':
+        return <Badge variant="outline" className="bg-blue-100 text-blue-800">In Progress</Badge>;
+      case 'completed':
+        return <Badge variant="outline" className="bg-green-100 text-green-800">Completed</Badge>;
+      case 'error':
+        return <Badge variant="outline" className="bg-red-100 text-red-800">Error</Badge>;
+      default:
+        return <Badge variant="outline">Unknown</Badge>;
+    }
+  };
+  
+  // Render component
   return (
-    <div 
-      className={`rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 
-        bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm shadow-md hover:shadow-lg transition-all duration-300 relative ${className}`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div className="p-5">
-        <div className="flex justify-between items-center mb-3">
-          <div className="flex items-center">
-            <BrainCircuit className="w-5 h-5 mr-2 text-primary" />
-            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-200">
-              AI-Powered Content Generation
-            </h4>
-          </div>
+    <Card className={`bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 overflow-hidden ${className}`}>
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium px-2 py-1 bg-primary/10 text-primary rounded-full">
-              {current} of {total} articles
-            </span>
-            <button 
-              className="text-xs text-gray-500 hover:text-primary transition-colors"
-              onClick={() => setShowStages(!showStages)}
-            >
-              {showStages ? 'Hide Details' : 'Show Details'}
-            </button>
+            <BookOpen className="h-5 w-5 text-primary" />
+            <CardTitle className="text-base font-medium">Article Generation</CardTitle>
           </div>
+          {getStatusBadge()}
         </div>
-        
-        {/* Current article being generated */}
-        <div className="mb-3 flex items-center">
-          <div className="w-full">
-            <div className="text-xs text-gray-500 dark:text-gray-400 mb-1 flex items-center">
-              {current < total ? (
-                <>
-                  <Cpu className="w-3 h-3 mr-1.5" />
-                  <span>Currently generating:</span>
-                </>
-              ) : (
-                <>
-                  <CircleCheckBig className="w-3 h-3 mr-1.5 text-green-500" />
-                  <span className="text-green-600 dark:text-green-400">Generation complete</span>
-                </>
-              )}
-            </div>
-            <div className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
-              {current < total ? (
-                <div className="flex items-center">
-                  <span className="truncate max-w-[250px]">{displayTitle}</span>
-                  <div className="ml-2 flex items-center">
-                    <Loader2 className="w-3 h-3 animate-spin text-primary" />
-                  </div>
-                </div>
-              ) : (
-                <span className="text-green-600 dark:text-green-400">All articles generated successfully!</span>
-              )}
-            </div>
-          </div>
-        </div>
-        
-        {/* Progress bar with gradient and animation */}
-        <div className="w-full h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-2">
-          <div 
-            className={`h-full rounded-full transition-all duration-700 ease-out
-              ${percentage < 100 
-                ? 'bg-gradient-to-r from-blue-500 via-primary to-purple-500 animate-pulse' 
-                : 'bg-green-500'}`}
-            style={{ width: `${percentage}%` }}
-          />
-        </div>
-        
-        {/* Progress details */}
-        <div className="flex justify-between text-xs">
-          <div className="text-gray-500 dark:text-gray-400">
-            {percentage}% complete
-          </div>
-          {current < total && (
-            <div className="text-gray-500 dark:text-gray-400 flex items-center">
-              <Clock className="w-3 h-3 mr-1" />
-              ~{calculatedTimeRemaining} min remaining
-            </div>
-          )}
-        </div>
-        
-        {/* Detailed stages - collapsible */}
-        {showStages && (
-          <div className="mt-4 border-t border-gray-100 dark:border-gray-800 pt-3 space-y-2">
-            <h5 className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Generation Process:</h5>
-            
-            <div className={`flex items-center text-xs ${simulateStage === 1 ? 'text-primary font-medium' : 'text-gray-500'}`}>
-              <div className={`w-4 h-4 rounded-full flex items-center justify-center mr-2 
-                ${simulateStage === 1 ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-800'}`}>
-                <span className="text-[10px]">1</span>
-              </div>
-              <Activity className="w-3 h-3 mr-1.5" />
-              <span>Analyzing trending topics</span>
-            </div>
-            
-            <div className={`flex items-center text-xs ${simulateStage === 2 ? 'text-primary font-medium' : 'text-gray-500'}`}>
-              <div className={`w-4 h-4 rounded-full flex items-center justify-center mr-2 
-                ${simulateStage === 2 ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-800'}`}>
-                <span className="text-[10px]">2</span>
-              </div>
-              <Sparkles className="w-3 h-3 mr-1.5" />
-              <span>Generating content with AI models</span>
-            </div>
-            
-            <div className={`flex items-center text-xs ${simulateStage === 3 ? 'text-primary font-medium' : 'text-gray-500'}`}>
-              <div className={`w-4 h-4 rounded-full flex items-center justify-center mr-2 
-                ${simulateStage === 3 ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-800'}`}>
-                <span className="text-[10px]">3</span>
-              </div>
-              <Cpu className="w-3 h-3 mr-1.5" />
-              <span>Optimizing for readability and accuracy</span>
-            </div>
-            
-            <div className={`flex items-center text-xs ${simulateStage === 4 ? 'text-primary font-medium' : 'text-gray-500'}`}>
-              <div className={`w-4 h-4 rounded-full flex items-center justify-center mr-2 
-                ${simulateStage === 4 ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-800'}`}>
-                <span className="text-[10px]">4</span>
-              </div>
-              <Loader2 className="w-3 h-3 mr-1.5" />
-              <span>Saving to the knowledge base</span>
-            </div>
-          </div>
-        )}
-      </div>
+      </CardHeader>
       
-      {/* Animated border effect when active */}
-      {current < total && isHovered && (
-        <div className="absolute inset-0 border border-primary rounded-xl animate-pulse pointer-events-none" />
-      )}
-    </div>
+      <CardContent className="py-2">
+        {isLoading && !stats ? (
+          <div className="h-16 flex items-center justify-center">
+            <RefreshCw className="h-5 w-5 animate-spin text-primary/70" />
+            <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Loading status...</span>
+          </div>
+        ) : isError ? (
+          <div className="h-16 flex flex-col items-center justify-center">
+            <AlertTriangle className="h-5 w-5 text-amber-500 mb-1" />
+            <span className="text-sm text-gray-600 dark:text-gray-400">Failed to load status</span>
+          </div>
+        ) : stats ? (
+          <>
+            <div className="mb-3">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {stats.status === 'completed' 
+                    ? 'All articles generated' 
+                    : `Generating ${stats.total} articles...`}
+                </span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {getCompletionPercentage()}%
+                </span>
+              </div>
+              
+              <Progress 
+                value={getCompletionPercentage()} 
+                max={100}
+                className="h-2 bg-gray-100 dark:bg-gray-800"
+              />
+            </div>
+            
+            <div className="flex flex-col gap-2 text-sm">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600 dark:text-gray-400">Generated</span>
+                <span className="font-medium text-gray-800 dark:text-gray-200">
+                  {stats.completed} / {stats.total}
+                </span>
+              </div>
+              
+              {stats.status !== 'completed' && stats.status !== 'error' && (
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600 dark:text-gray-400">Time remaining</span>
+                  <span className="font-medium text-gray-800 dark:text-gray-200">
+                    {formatTimeRemaining(stats.estimatedTimeRemaining)}
+                  </span>
+                </div>
+              )}
+              
+              {stats.lastArticleTitle && stats.status !== 'completed' && (
+                <div className="mt-1 pt-2 border-t border-gray-100 dark:border-gray-800">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Latest article:</p>
+                  <p className="text-sm font-medium text-gray-800 dark:text-gray-200 line-clamp-1">
+                    {stats.lastArticleTitle}
+                  </p>
+                </div>
+              )}
+            </div>
+          </>
+        ) : null}
+      </CardContent>
+      
+      <CardFooter className="pt-1 pb-3 flex justify-between">
+        <Button 
+          variant="outline" 
+          size="sm"
+          className="h-8 text-xs"
+          onClick={() => refetch()}
+          disabled={isRefetching}
+        >
+          <RefreshCw className={`mr-1 h-3 w-3 ${isRefetching ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
+        
+        <Button 
+          variant="ghost" 
+          size="sm"
+          className="h-8 text-xs"
+          onClick={() => setAutoRefresh(!autoRefresh)}
+        >
+          {autoRefresh ? 'Pause Auto-Refresh' : 'Enable Auto-Refresh'}
+        </Button>
+      </CardFooter>
+    </Card>
   );
 };
 

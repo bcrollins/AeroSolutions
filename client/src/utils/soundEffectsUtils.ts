@@ -104,10 +104,26 @@ export const initSoundEffects = (): void => {
 
 // Play a specific sound effect
 export const playSoundEffect = (type: SoundEffectType): void => {
-  // Respect user's reduced motion/sound preferences
+  // Check if sound effects are globally disabled via accessibility settings
+  if (window.soundEffectsEnabled === false) {
+    return;
+  }
+  
+  // Respect user's reduced motion/sound preferences from browser settings
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (prefersReducedMotion) {
     return;
+  }
+  
+  // Get the volume from accessibility settings or use default
+  const volume = typeof window.soundEffectsVolume === 'number' 
+    ? window.soundEffectsVolume 
+    : 0.5;
+  
+  // Set volume for audio context if it exists
+  if (audioContext) {
+    const gainNode = audioContext.createGain();
+    gainNode.gain.value = volume;
   }
   
   // Play the appropriate sound effect

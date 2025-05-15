@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&family=SF+Pro+Text:wght@300;400;500;600&display=swap');
 @import url('./styles/utility-classes.css');
+@import url('./styles/accessibility.css');
 /* Using SF Pro (Apple-like) fonts for the premium Apple-inspired design */
 
 @tailwind base;

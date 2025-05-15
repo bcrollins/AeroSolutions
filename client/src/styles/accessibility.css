@@ -1,0 +1,175 @@
+/* Accessibility CSS Utilities
+ * This file contains CSS utilities that enhance accessibility features
+ * including contrast modes, font readability, reduced motion, and focus indicators.
+ */
+
+:root {
+  /* Default scale value that can be modified by JavaScript */
+  --font-scale: 1.0;
+}
+
+/* ======== Text Scaling ======== */
+.font-scaled {
+  font-size: calc(1em * var(--font-scale));
+}
+
+h1.font-scaled {
+  font-size: calc(2rem * var(--font-scale));
+}
+
+h2.font-scaled {
+  font-size: calc(1.75rem * var(--font-scale));
+}
+
+h3.font-scaled {
+  font-size: calc(1.5rem * var(--font-scale));
+}
+
+h4.font-scaled {
+  font-size: calc(1.25rem * var(--font-scale));
+}
+
+p.font-scaled, 
+li.font-scaled, 
+span.font-scaled {
+  font-size: calc(1rem * var(--font-scale));
+}
+
+/* ======== Contrast Modes ======== */
+/* High Contrast Mode */
+.contrast-high {
+  --bg-opacity: 1 !important;
+  --text-opacity: 1 !important;
+}
+
+.contrast-high .bg-opacity-90,
+.contrast-high .bg-opacity-80,
+.contrast-high .bg-opacity-70,
+.contrast-high .bg-opacity-60,
+.contrast-high .bg-opacity-50 {
+  --bg-opacity: 0.95 !important;
+}
+
+.contrast-high .text-gray-700 {
+  color: #1f2937 !important; /* Darker gray for better contrast */
+}
+
+.contrast-high .text-gray-600,
+.contrast-high .text-gray-500 {
+  color: #374151 !important; /* Enhanced gray contrast */
+}
+
+.contrast-high .border-gray-100,
+.contrast-high .border-gray-200 {
+  border-color: #9ca3af !important; /* More visible border */
+}
+
+/* Very High Contrast Mode */
+.contrast-very-high {
+  --bg-opacity: 1 !important;
+  --text-opacity: 1 !important;
+}
+
+.contrast-very-high.dark {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+
+.contrast-very-high:not(.dark) {
+  background-color: #fff !important;
+  color: #000 !important;
+}
+
+.contrast-very-high .text-gray-700,
+.contrast-very-high .text-gray-600,
+.contrast-very-high .text-gray-500,
+.contrast-very-high .text-gray-400 {
+  color: #000 !important;
+}
+
+.contrast-very-high.dark .text-gray-300,
+.contrast-very-high.dark .text-gray-400,
+.contrast-very-high.dark .text-gray-500 {
+  color: #fff !important;
+}
+
+.contrast-very-high .border {
+  border-color: #000 !important;
+  border-width: 2px !important;
+}
+
+.contrast-very-high.dark .border {
+  border-color: #fff !important;
+  border-width: 2px !important;
+}
+
+/* ======== Readable Font ======== */
+/* More readable font stacks optimized for readability */
+.readable-font {
+  --font-primary: 'Verdana', 'Arial', 'Helvetica', sans-serif !important;
+  --font-secondary: 'Georgia', 'Times New Roman', serif !important;
+  font-family: var(--font-primary);
+}
+
+.readable-font h1,
+.readable-font h2,
+.readable-font h3,
+.readable-font h4,
+.readable-font h5,
+.readable-font h6 {
+  font-family: var(--font-primary);
+  letter-spacing: 0.01em;
+}
+
+.readable-font p,
+.readable-font li,
+.readable-font input,
+.readable-font textarea {
+  font-family: var(--font-secondary);
+  line-height: 1.7;
+  letter-spacing: 0.01em;
+}
+
+/* ======== Reduced Animations ======== */
+/* Disable non-essential animations when reduce-motion is enabled */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001s !important;
+    transition-duration: 0.001s !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.001s !important;
+  transition-duration: 0.001s !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+}
+
+.reduce-motion .animate-spin,
+.reduce-motion .animate-pulse,
+.reduce-motion .animate-bounce {
+  animation: none !important;
+}
+
+/* ======== Focus Indicators ======== */
+/* Enhanced focus styles for keyboard navigation */
+.focus-visible-enabled:focus-visible,
+.focus-visible-enabled :focus-visible {
+  outline: 3px solid rgba(59, 130, 246, 0.6) !important; /* Blue outline */
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 2px white !important;
+  border-radius: 2px !important;
+}
+
+.focus-visible-enabled.dark:focus-visible,
+.focus-visible-enabled.dark :focus-visible {
+  outline: 3px solid rgba(96, 165, 250, 0.6) !important;
+  box-shadow: 0 0 0 2px black !important;
+}
