@@ -8,10 +8,6 @@ import {
   Shimmer, 
   ButtonPress,
   HoverScale,
-  RevealText,
-  Skeleton,
-  Checkmark,
-  CountUp,
   StaggerChildren
 } from '../components/UI/MicroInteractions';
 import FeatureShowcase from '../components/UI/FeatureShowcase';
@@ -22,7 +18,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowRight, Check, Lightbulb, Zap } from 'lucide-react';
 
 export default function MicroInteractionsDemo() {
-  const [checkmarkVisible, setCheckmarkVisible] = useState(false);
   
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-12 pb-24">
@@ -242,29 +237,7 @@ export default function MicroInteractionsDemo() {
                 </CardFooter>
               </Card>
 
-              {/* Reveal Text */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Reveal Text</CardTitle>
-                  <CardDescription>
-                    Dramatic text reveal animation with character-by-character animation.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex justify-center p-6 bg-gray-100 dark:bg-gray-800 rounded-md">
-                  <RevealText 
-                    text="Animated Text Reveal" 
-                    className="text-xl font-bold text-orange-500"
-                  />
-                </CardContent>
-                <CardFooter>
-                  <code className="text-sm bg-gray-100 dark:bg-gray-800 p-2 rounded w-full">
-                    {`<RevealText
-  text="Your text here"
-  staggerChildren={0.02}
-/>`}
-                  </code>
-                </CardFooter>
-              </Card>
+
 
               {/* Stagger Children */}
               <Card>
@@ -298,86 +271,9 @@ export default function MicroInteractionsDemo() {
                 </CardFooter>
               </Card>
 
-              {/* Skeleton */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Skeleton</CardTitle>
-                  <CardDescription>
-                    Loading placeholder with animated shimmer effect.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col justify-center p-6 bg-gray-100 dark:bg-gray-800 rounded-md space-y-2">
-                  <Skeleton height="24px" width="80%" rounded="4px" />
-                  <Skeleton height="24px" width="60%" rounded="4px" />
-                  <Skeleton height="24px" width="70%" rounded="4px" />
-                </CardContent>
-                <CardFooter>
-                  <code className="text-sm bg-gray-100 dark:bg-gray-800 p-2 rounded w-full">
-                    {`<Skeleton 
-  height="24px" 
-  width="80%" 
-  rounded="4px" 
-/>`}
-                  </code>
-                </CardFooter>
-              </Card>
 
-              {/* Checkmark */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Checkmark</CardTitle>
-                  <CardDescription>
-                    Animated checkmark for confirmations and completions.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col items-center p-6 bg-gray-100 dark:bg-gray-800 rounded-md">
-                  <div className="flex items-center space-x-2 mb-4">
-                    <Checkmark show={checkmarkVisible} size={32} className="text-green-500" />
-                    <span className={`transition-opacity duration-300 ${checkmarkVisible ? 'opacity-100' : 'opacity-0'}`}>
-                      Task completed!
-                    </span>
-                  </div>
-                  <Button 
-                    onClick={() => setCheckmarkVisible(!checkmarkVisible)}
-                    variant={checkmarkVisible ? "secondary" : "default"}
-                  >
-                    {checkmarkVisible ? "Reset" : "Complete Task"}
-                  </Button>
-                </CardContent>
-                <CardFooter>
-                  <code className="text-sm bg-gray-100 dark:bg-gray-800 p-2 rounded w-full">
-                    {`<Checkmark 
-  show={isCompleted} 
-  size={32} 
-  className="text-green-500" 
-/>`}
-                  </code>
-                </CardFooter>
-              </Card>
 
-              {/* Count Up */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Count Up</CardTitle>
-                  <CardDescription>
-                    Animated numerical counter for statistics and metrics.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex justify-center p-6 bg-gray-100 dark:bg-gray-800 rounded-md">
-                  <div className="text-4xl font-bold text-blue-600">
-                    <CountUp targetValue={9500} prefix="+" />
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <code className="text-sm bg-gray-100 dark:bg-gray-800 p-2 rounded w-full">
-                    {`<CountUp 
-  targetValue={9500} 
-  duration={2} 
-  prefix="+" 
-/>`}
-                  </code>
-                </CardFooter>
-              </Card>
+
             </div>
           </TabsContent>
 
