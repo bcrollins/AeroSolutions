@@ -8,12 +8,13 @@
 const express = require('express');
 const router = express.Router();
 
-// Import controller methods
+// Import controller methods from xaiController instead of openaiController
+// to ensure all AI functionality uses XAI API
 const {
   handleCompletion,
   handleChatCompletion,
   handleImageGeneration
-} = require('../controllers/openaiController');
+} = require('../controllers/xaiController');
 
 // Import middleware
 const { 
@@ -57,15 +58,15 @@ router.post('/images',
   asyncHandler(handleImageGeneration)
 );
 
-// Health check for OpenAI API connection
+// Health check for API connection
 router.get('/status', async (req, res) => {
   try {
-    if (!process.env.OPENAI_API_KEY) {
+    if (!process.env.XAI_API_KEY) {
       return res.status(503).json({
         success: false,
         error: {
-          message: 'OpenAI API key not configured',
-          code: 'OPENAI_API_KEY_MISSING',
+          message: 'XAI API key not configured',
+          code: 'XAI_API_KEY_MISSING',
           status: 503
         }
       });
@@ -75,15 +76,15 @@ router.get('/status', async (req, res) => {
       success: true,
       data: {
         status: 'available',
-        message: 'OpenAI API connection configured'
+        message: 'AI API connection configured'
       }
     });
   } catch (err) {
     res.status(500).json({
       success: false,
       error: {
-        message: 'Failed to check OpenAI API status',
-        code: 'OPENAI_API_ERROR',
+        message: 'Failed to check AI API status',
+        code: 'AI_API_ERROR',
         status: 500
       }
     });

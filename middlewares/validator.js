@@ -77,7 +77,7 @@ function formatZodErrors(error) {
 // Schema for text completion requests
 const completionSchema = z.object({
   prompt: z.string().min(1, 'Prompt is required').max(4000, 'Prompt is too long'),
-  model: z.string().optional().default('gpt-4o'),
+  model: z.string().optional().default('grok-2-1212'),
   maxTokens: z.number().int().positive().max(4000).optional().default(1000),
   temperature: z.number().min(0).max(2).optional().default(0.7),
   responseFormat: z.string().optional()
@@ -106,10 +106,20 @@ const imageSchema = z.object({
   responseFormat: z.enum(['url', 'b64_json']).optional().default('url')
 });
 
+// Schema for vision/image analysis requests
+const visionSchema = z.object({
+  image: z.string().min(1, 'Image data is required'),
+  prompt: z.string().max(1000, 'Prompt is too long').optional(),
+  model: z.string().optional().default('grok-2-vision-1212'),
+  maxTokens: z.number().int().positive().max(4000).optional().default(1000),
+  temperature: z.number().min(0).max(2).optional().default(0.7)
+});
+
 // Export validation middleware for different requests
 module.exports = {
   validateBody,
   validateCompletionRequest: validateBody(completionSchema),
   validateChatRequest: validateBody(chatSchema),
-  validateImageRequest: validateBody(imageSchema)
+  validateImageRequest: validateBody(imageSchema),
+  validateVisionRequest: validateBody(visionSchema)
 };

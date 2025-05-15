@@ -7,6 +7,7 @@
 const express = require('express');
 const path = require('path');
 const openaiRoutes = require('./openaiRoutes');
+const xaiRoutes = require('./xaiRoutes');
 const databaseRoutes = require('./databaseRoutes');
 const requestLogger = require('../middlewares/requestLogger');
 const { errorHandlerMiddleware, notFoundMiddleware } = require('../middlewares/errorHandler');
@@ -29,7 +30,9 @@ function setupRoutes(app) {
   app.use(express.static(path.join(__dirname, '../public')));
   
   // API Routes
-  app.use('/api/openai', openaiRoutes);
+  app.use('/api/openai', openaiRoutes); // Maintaining for backwards compatibility
+  app.use('/api/xai', xaiRoutes);       // Primary AI API endpoint using XAI
+  app.use('/api/ai', xaiRoutes);        // Alias for easier reference
   app.use('/api/database', databaseRoutes);
   
   // Health check endpoint
