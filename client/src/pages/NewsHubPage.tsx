@@ -1125,20 +1125,35 @@ const NewsHubPage: React.FC = () => {
                     {/* Category label with enhanced animation */}
                     {post.category && (
                       <div className="absolute top-3 left-3 transition-transform duration-300 group-hover:translate-y-0.5">
-                        <div className="bg-black/70 backdrop-blur-sm text-white text-xs font-medium py-1 px-2 rounded">
+                        <div className="bg-black/50 backdrop-blur-sm text-white text-xs font-medium py-1 px-2.5 rounded border border-white/20 
+                          shadow-lg group-hover:bg-primary/80 transition-all duration-300">
                           {post.category}
                         </div>
                       </div>
                     )}
                     
-                    {/* New badge */}
-                    {isNew && (
-                      <div className="absolute top-3 right-3 transition-transform duration-300 group-hover:-translate-y-0.5">
-                        <div className="bg-primary text-white text-xs font-bold py-1 px-2 rounded-sm flex items-center">
-                          <span className="mr-1 animate-pulse">●</span> NEW
+                    {/* Badge group for NEW and AI indicators */}
+                    <div className="absolute top-3 right-3 flex flex-col space-y-2 items-end">
+                      {/* New badge */}
+                      {isNew && (
+                        <div className="transition-transform duration-300 group-hover:-translate-y-0.5">
+                          <div className="bg-primary text-white text-xs font-bold py-1 px-2 rounded-sm flex items-center">
+                            <span className="mr-1 animate-pulse">●</span> NEW
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                      
+                      {/* AI-generated content badge */}
+                      {post.aiGeneratedBy && (
+                        <div className="transition-transform duration-300 group-hover:-translate-y-0.5">
+                          <div className="bg-black/40 backdrop-blur-sm text-white text-xs font-medium py-1 px-2 rounded-sm 
+                            border border-white/10 flex items-center gap-1.5 group-hover:bg-purple-600/80 transition-all duration-300">
+                            <BrainCircuit size={12} />
+                            <span>AI Enhanced</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   
                   <CardHeader className="p-5 pb-2">
@@ -1234,27 +1249,37 @@ const NewsHubPage: React.FC = () => {
                       </details>
                     </div>
                     
-                    {/* Actions Bar */}
-                    <div className="flex justify-between items-center border-t border-gray-100 dark:border-gray-800
-                      group-hover:bg-gray-50/50 dark:group-hover:bg-gray-800/30 transition-colors duration-300 rounded-b-lg pt-3">
-                      <ArticleReactionBar 
-                        articleId={post.id}
-                        compact={true}
-                        variant="compact"
-                        className="text-gray-600 dark:text-gray-400"
-                      />
+                    {/* Actions Bar with Reading Time */}
+                    <div className="flex flex-col gap-2">
+                      {/* Reading time indicator */}
+                      <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                        <Clock className="h-3.5 w-3.5 mr-1.5" />
+                        <span>{readingTime} min read</span>
+                      </div>
                       
-                      <Link href={`/articles/${post.id}`}>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-primary hover:text-primary/80 hover:bg-primary/10 group/button"
-                          onClick={() => playSound('navigation')}
-                        >
-                          Read more
-                          <ChevronRight className="h-4 w-4 ml-1 transition-transform duration-300 group-hover/button:translate-x-0.5" />
-                        </Button>
-                      </Link>
+                      {/* Actions row */}
+                      <div className="flex justify-between items-center border-t border-gray-100 dark:border-gray-800
+                        group-hover:bg-gray-50/50 dark:group-hover:bg-gray-800/30 transition-colors duration-300 rounded-b-lg pt-3">
+                        <ArticleReactionBar 
+                          articleId={post.id}
+                          compact={true}
+                          variant="compact"
+                          className="text-gray-600 dark:text-gray-400"
+                        />
+                        
+                        <Link href={`/articles/${post.id}`}>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-primary hover:text-primary/80 hover:bg-primary/10 group/button transition-all duration-300
+                              group-hover:shadow-sm"
+                            onClick={() => playSound('navigation')}
+                          >
+                            Read more
+                            <ChevronRight className="h-4 w-4 ml-1 transition-transform duration-300 group-hover/button:translate-x-0.5" />
+                          </Button>
+                        </Link>
+                      </div>
                     </div>
                   </CardFooter>
                 </Card>
