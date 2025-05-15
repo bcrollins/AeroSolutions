@@ -238,19 +238,19 @@ export default function Header() {
 
         {/* Mobile Menu */}  
         {isMobileMenuOpen && (  
-          <nav className="md:hidden bg-gradient-to-b from-gray-900 to-black border-t border-gray-800 py-4 mt-4 rounded-b-lg shadow-2xl">  
+          <nav className="md:hidden glass-effect py-4 mt-4 rounded-b-lg subtle-shadow apple-scrollbar">  
             <div className="flex flex-col space-y-4 px-6">  
               {menuItems.map((item) => (  
-                <div key={item.label} className="py-2 border-b border-gray-800 last:border-b-0">  
+                <div key={item.label} className="py-2 border-b border-gray-800/20 last:border-b-0">  
                   {item.dropdown ? (  
                     <div>  
                       <button  
                         onClick={item.label === 'AI Products' ? toggleSolutionsDropdown : toggleResourcesDropdown}  
                         className={cn(
-                          "font-medium text-sm tracking-wide text-white hover:text-electric-cyan-400 flex items-center justify-between w-full",
+                          "header-nav-item font-medium text-sm tracking-wide apple-nav-item flex items-center justify-between w-full transition-apple",
                           (item.label === 'AI Products' && isSolutionsDropdownOpen) || 
                           (item.label === 'Resources' && isResourcesDropdownOpen) 
-                            ? "text-electric-cyan-400" : ""
+                            ? "active" : ""
                         )}
                       >  
                         <span>{item.label}</span>  
@@ -263,7 +263,7 @@ export default function Header() {
                       </button>  
                       {((item.label === 'AI Products' && isSolutionsDropdownOpen) || 
                        (item.label === 'Resources' && isResourcesDropdownOpen)) && (  
-                        <div className="pl-4 mt-3 mb-1 space-y-3 border-l-2 border-gray-700">  
+                        <div className="pl-4 mt-3 mb-1 space-y-3 border-l border-white/10">  
                           {item.dropdown.map((subItem) => (  
                             <Link  
                               key={subItem.label}  
@@ -274,8 +274,8 @@ export default function Header() {
                                 setIsResourcesDropdownOpen(false);
                               }}  
                               className={cn(
-                                "block text-gray-300 hover:text-electric-cyan-400 transition-colors duration-200 text-sm py-1",
-                                location === subItem.path ? "text-electric-cyan-400" : ""
+                                "block text-sm py-1 hover-lift apple-nav-item transition-apple",
+                                location === subItem.path ? "active" : ""
                               )}
                             >  
                               {subItem.label}  
@@ -289,8 +289,8 @@ export default function Header() {
                       href={item.path}  
                       onClick={toggleMobileMenu}  
                       className={cn(
-                        "font-medium text-sm tracking-wide text-white hover:text-electric-cyan-400 block",
-                        location === item.path ? "text-electric-cyan-400" : ""
+                        "header-nav-item font-medium text-sm tracking-wide apple-nav-item block py-1 transition-apple",
+                        location === item.path ? "active" : ""
                       )}
                     >  
                       {item.label}  
@@ -305,13 +305,13 @@ export default function Header() {
                     toggleMobileMenu();
                     toggleClientPreview();
                   }}
-                  className="font-medium text-sm tracking-wide text-white hover:text-electric-cyan-400 border border-gray-700 hover:border-electric-cyan-400 px-3 py-2 rounded-md text-center transition-colors duration-200"
+                  className="apple-btn-secondary font-medium text-sm tracking-wide px-3 py-2 rounded-md text-center hover-lift transition-apple"
                 >
                   Client Preview
                 </button>
                 
-                <div className="flex items-center py-2 justify-between bg-gray-800 px-3 rounded-md">
-                  <span className="text-white text-sm">Toggle Theme</span>
+                <div className="flex items-center py-2 justify-between glass-effect px-3 rounded-md subtle-shadow">
+                  <span className="text-white text-sm font-medium">Toggle Theme</span>
                   <ThemeToggle />
                 </div>
                 
