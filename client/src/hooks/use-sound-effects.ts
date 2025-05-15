@@ -7,12 +7,13 @@ export type SoundType =
   'success' | 
   'error' | 
   'notification' | 
-  'hover';
+  'hover' | 
+  'focus';
 
 // Create a global variable to control sound effects state
 declare global {
   interface Window {
-    soundEffectsEnabled: boolean;
+    soundEffectsEnabled?: boolean;
   }
 }
 
@@ -122,6 +123,17 @@ export const useSoundEffects = () => {
         gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
         oscillator.start();
         oscillator.stop(audioContext.currentTime + 0.05);
+        break;
+        
+      case 'focus':
+        // Soft focus sound (gentle rising tone for focus actions)
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(450, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(550, audioContext.currentTime + 0.15);
+        gainNode.gain.setValueAtTime(0.03, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.2);
         break;
     }
   }, [initialized]);
