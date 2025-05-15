@@ -1370,11 +1370,11 @@ const LearnAI: React.FC = () => {
             transition={{ duration: 0.5, delay: 0.9 }}
             className="w-full max-w-6xl mb-16"
           >
-            <h2 className="text-2xl font-bold mb-8 text-center">Student Success Stories</h2>
+            <h2 className="text-2xl font-semibold mb-8 text-center tracking-tight text-gray-800">Student Success Stories</h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {videoTestimonials.map((video, index) => (
-                <Card key={video.id} className="bg-white border border-gray-200 shadow-sm overflow-hidden">
+                <Card key={video.id} className="bg-white border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.04)] rounded-xl overflow-hidden hover:shadow-[0_15px_35px_rgba(0,0,0,0.07)] hover:-translate-y-1 transition-all duration-300">
                   <div 
                     className="relative cursor-pointer group" 
                     onClick={() => {
@@ -1385,40 +1385,66 @@ const LearnAI: React.FC = () => {
                     <img 
                       src={video.thumbnailUrl} 
                       alt={`Testimonial by ${video.name}`} 
-                      className="w-full h-48 object-cover rounded-t-md"
+                      className="w-full h-52 object-cover"
                     />
-                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <div className="w-16 h-16 rounded-full bg-[#0066cc]/90 flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300">
-                        <Play className="w-6 h-6 text-white" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300">
+                        <Play className="w-6 h-6 text-[#0066cc]" />
                       </div>
                     </div>
                   </div>
                   
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-800">{video.name}</h3>
-                    <p className="text-sm text-gray-500 mb-2">{video.role}</p>
-                    <p className="text-sm italic text-gray-700 leading-relaxed">"{video.quote}"</p>
+                  <div className="p-6">
+                    <h3 className="font-semibold text-gray-800 tracking-tight">{video.name}</h3>
+                    <p className="text-sm text-gray-500 mb-3">{video.role}</p>
+                    <p className="text-sm text-gray-700 leading-relaxed">"{video.quote}"</p>
                   </div>
                 </Card>
               ))}
             </div>
             
             <Dialog open={showVideoDialog} onOpenChange={setShowVideoDialog}>
-              <DialogContent className="bg-white border-gray-200 max-w-3xl shadow-lg">
-                <DialogHeader>
-                  <DialogTitle className="text-gray-800 font-semibold">
-                    {videoTestimonials[selectedVideoIndex]?.name} - Success Story
-                  </DialogTitle>
-                </DialogHeader>
+              <DialogContent className="bg-white border-gray-100 max-w-3xl shadow-xl rounded-xl p-0 overflow-hidden">
+                <div className="px-6 pt-6 pb-3">
+                  <DialogHeader>
+                    <DialogTitle className="text-gray-800 font-semibold tracking-tight text-xl">
+                      {videoTestimonials[selectedVideoIndex]?.name} - Success Story
+                    </DialogTitle>
+                    <DialogDescription className="text-gray-500">
+                      Watch how this student transformed their career with RXAI's courses
+                    </DialogDescription>
+                  </DialogHeader>
+                </div>
                 
-                <div className="aspect-video">
+                <div className="aspect-video bg-gray-50">
                   <iframe 
                     src={videoTestimonials[selectedVideoIndex]?.videoUrl} 
-                    className="w-full h-full rounded-md"
+                    className="w-full h-full"
                     title={`Testimonial by ${videoTestimonials[selectedVideoIndex]?.name}`}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                   ></iframe>
+                </div>
+                
+                <div className="p-6 pt-4 border-t border-gray-100">
+                  <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                    "{videoTestimonials[selectedVideoIndex]?.quote}"
+                  </p>
+                  <div className="flex justify-end">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setShowVideoDialog(false)}
+                      className="mr-2 border-gray-200 text-gray-700 hover:bg-gray-50"
+                    >
+                      Close
+                    </Button>
+                    <Button 
+                      className="bg-[#0066cc] hover:bg-[#0055b3] text-white"
+                      onClick={() => window.location.href = "/course/ai-fundamentals"}
+                    >
+                      View Course
+                    </Button>
+                  </div>
                 </div>
               </DialogContent>
             </Dialog>
@@ -1465,34 +1491,36 @@ const LearnAI: React.FC = () => {
             transition={{ duration: 0.5, delay: 1.1 }}
             className="w-full max-w-6xl mb-16"
           >
-            <Card className="bg-white border border-gray-200 shadow-sm overflow-hidden">
+            <Card className="bg-white border border-gray-100 shadow-[0_15px_40px_rgba(0,0,0,0.05)] overflow-hidden rounded-xl">
               <div className="p-8">
-                <div className="flex items-center justify-center mb-6">
-                  <DollarSign className="w-6 h-6 text-[#0066cc] mr-2" />
+                <div className="flex items-center justify-center mb-8">
+                  <div className="h-12 w-12 rounded-full bg-[#0066cc]/10 flex items-center justify-center mr-3">
+                    <DollarSign className="w-6 h-6 text-[#0066cc]" />
+                  </div>
                   <h2 className="text-2xl font-semibold text-gray-800 tracking-tight">Calculate Your ROI</h2>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                   <div className="space-y-6">
                     <div>
-                      <Label className="mb-2 block text-gray-700 font-medium">Your Current Annual Salary</Label>
+                      <Label className="mb-2 block text-gray-700 font-medium tracking-tight">Your Current Annual Salary</Label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
                         <Input 
                           type="number" 
                           value={currentSalary}
                           onChange={(e) => setCurrentSalary(Math.max(0, parseInt(e.target.value) || 0))}
-                          className="pl-7 bg-white text-gray-800 border-gray-300 focus:border-[#0066cc] focus:ring-[#0066cc]/20 rounded-md shadow-sm"
+                          className="pl-7 bg-white text-gray-800 border-gray-200 focus:border-[#0066cc] focus:ring-[#0066cc]/10 rounded-lg shadow-sm"
                         />
                       </div>
                     </div>
                     
                     <div>
-                      <Label className="mb-2 block text-gray-700 font-medium">Your Career Goals</Label>
+                      <Label className="mb-2 block text-gray-700 font-medium tracking-tight">Your Career Goals</Label>
                       <select 
                         value={careerGoals}
                         onChange={(e) => setCareerGoals(e.target.value)}
-                        className="w-full bg-white text-gray-800 border-gray-300 rounded-md px-3 py-2 shadow-sm focus:border-[#0066cc] focus:ring-[#0066cc]/20 transition-colors duration-200"
+                        className="w-full bg-white text-gray-800 border-gray-200 rounded-lg px-3 py-2 shadow-sm focus:border-[#0066cc] focus:ring-[#0066cc]/10 transition-colors duration-200"
                       >
                         <option value="promotion">Promotion in Current Role</option>
                         <option value="new-career">Complete Career Change</option>
@@ -1500,8 +1528,8 @@ const LearnAI: React.FC = () => {
                       </select>
                     </div>
                     
-                    <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                      <h3 className="font-semibold text-gray-800 mb-2">Your Investment</h3>
+                    <div className="bg-gray-50 p-5 rounded-xl border border-gray-100 shadow-sm">
+                      <h3 className="font-semibold text-gray-800 mb-3 tracking-tight">Your Investment</h3>
                       <div className="flex justify-between text-gray-700">
                         <span>RXAI Professional Plan</span>
                         <span className="font-medium">${courseCost}/year</span>
