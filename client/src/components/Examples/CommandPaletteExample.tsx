@@ -27,31 +27,31 @@ const CommandPaletteExample: React.FC = () => {
       name: 'Launch Rocket',
       description: 'Start a new rocket launch sequence',
       icon: <Rocket className="h-4 w-4" />,
-      action: (close) => { 
+      action: (close: () => void) => { 
         toast({
           title: 'Rocket launched!',
           description: 'Your rocket has been successfully launched 🚀',
         });
         close();
       },
-      section: 'actions',
+      section: 'actions' as const,
       shortcut: ['r', 'l'],
       keywords: ['rocket', 'launch', 'space', 'start'],
-      badge: 'popular',
+      badge: 'popular' as const,
     },
     {
       id: 'example-idea',
       name: 'Create Idea',
       description: 'Add a new idea to your collection',
       icon: <Lightbulb className="h-4 w-4" />,
-      action: (close) => { 
+      action: (close: () => void) => { 
         toast({
           title: 'New idea created',
           description: 'Your brilliant idea has been saved',
         });
         close();
       },
-      section: 'actions',
+      section: 'actions' as const,
       shortcut: ['i', 'c'],
       keywords: ['idea', 'create', 'new', 'lightbulb'],
     },
@@ -60,31 +60,31 @@ const CommandPaletteExample: React.FC = () => {
       name: 'Add to Favorites',
       description: 'Add current item to your favorites',
       icon: <Star className="h-4 w-4" />,
-      action: (close) => { 
+      action: (close: () => void) => { 
         toast({
           title: 'Added to favorites',
           description: 'Item has been added to your favorites',
         });
         close();
       },
-      section: 'actions',
+      section: 'actions' as const,
       shortcut: ['f', 'a'],
       keywords: ['favorite', 'star', 'like', 'bookmark'],
-      badge: 'new',
+      badge: 'new' as const,
     },
     {
       id: 'example-break',
       name: 'Take a Coffee Break',
       description: 'Set a reminder for a coffee break',
       icon: <Coffee className="h-4 w-4" />,
-      action: (close) => { 
+      action: (close: () => void) => { 
         toast({
           title: 'Coffee break scheduled',
           description: 'We\'ll remind you in 25 minutes',
         });
         close();
       },
-      section: 'actions',
+      section: 'actions' as const,
       shortcut: ['c', 'b'],
       keywords: ['coffee', 'break', 'rest', 'reminder'],
     },
@@ -93,14 +93,14 @@ const CommandPaletteExample: React.FC = () => {
       name: 'Mark Task as Complete',
       description: 'Mark the current task as finished',
       icon: <FileCheck className="h-4 w-4" />,
-      action: (close) => { 
+      action: (close: () => void) => { 
         toast({
           title: 'Task completed',
           description: 'Your task has been marked as complete',
         });
         close();
       },
-      section: 'actions',
+      section: 'actions' as const,
       shortcut: ['t', 'c'],
       keywords: ['task', 'complete', 'finish', 'done'],
     },
@@ -109,7 +109,7 @@ const CommandPaletteExample: React.FC = () => {
       name: 'Empty Trash',
       description: 'Remove all items from the trash',
       icon: <Trash className="h-4 w-4" />,
-      action: (close) => { 
+      action: (close: () => void) => { 
         toast({
           title: 'Trash emptied',
           description: 'All items have been permanently removed',
@@ -117,7 +117,7 @@ const CommandPaletteExample: React.FC = () => {
         });
         close();
       },
-      section: 'actions',
+      section: 'actions' as const,
       shortcut: ['e', 't'],
       keywords: ['trash', 'delete', 'remove', 'clean'],
     },

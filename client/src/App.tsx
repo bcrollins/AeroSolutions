@@ -6,7 +6,8 @@ import { useTranslation } from 'react-i18next';
 import ContentProtection from "@/components/ContentProtection";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import { CommandPaletteProvider } from "@/components/UI/CommandPalette";
+import { CommandPaletteProvider } from "@/hooks/use-command-palette";
+import CommandPaletteWrapper from "@/components/UI/CommandPaletteWrapper";
 import ABTestClient from "@/components/ABTestClient";
 import { initGA } from "@/lib/analytics";
 import { useAnalytics } from "@/hooks/use-analytics";
@@ -540,6 +541,7 @@ export default function App() {
       {/* Global toast notifications */}
       <Toaster />
       </NotificationProvider>
+        <CommandPaletteWrapper />
       </CommandPaletteProvider>
     </ThemeProvider>
   );

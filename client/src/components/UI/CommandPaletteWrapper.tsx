@@ -12,13 +12,10 @@ const CommandPaletteWrapper: React.FC = () => {
 
   return (
     <CommandPalette
+      actions={actions}
       open={isOpen}
       onOpenChange={setIsOpen}
-      actions={actions}
-      footerText="Press ⌘K or Ctrl+K to open this command palette"
-      placeholder="Type a command or search..."
-      highlightTerms={true}
-      showShortcut={true}
+      contentClassName="bg-background/95 backdrop-blur-md border-border/50"
     />
   );
 };
