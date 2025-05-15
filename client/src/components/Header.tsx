@@ -103,15 +103,25 @@ export default function Header() {
     <>
       <header className="header bg-gradient-to-r from-gray-900 to-black text-white py-4 px-4 sm:px-6 sticky top-0 z-50 shadow-lg" data-branding="rxai">  
         <div className="max-w-7xl mx-auto flex justify-between items-center">  
-          {/* Logo */}  
-          <Link href="/">  
-            <div className="flex items-center group">
-              <div className="flex flex-col">
-                <span className="font-bold tracking-wider text-xl text-white group-hover:text-electric-cyan-400 transition-colors duration-300">RXAI</span>
-                <span className="text-xs text-gray-400">The World Leader in Artificial Intelligence Education</span>
+          {/* Logo and Training CTA Button */}  
+          <div className="flex items-center gap-4">
+            <Link href="/">  
+              <div className="flex items-center group">
+                <div className="flex flex-col">
+                  <span className="font-bold tracking-wider text-xl text-white group-hover:text-electric-cyan-400 transition-colors duration-300">RXAI</span>
+                  <span className="text-xs text-gray-400">The World Leader in Artificial Intelligence Education</span>
+                </div>
               </div>
-            </div>
-          </Link>  
+            </Link>
+            
+            {/* Start AI Training Free button moved here */}
+            <Link  
+              href="/learnai"  
+              className="header-nav-item apple-btn-primary font-medium text-sm px-4 py-1.5 rounded-md transition-apple hover-lift hidden sm:block"  
+            >  
+              Start AI Training Free
+            </Link>
+          </div>
 
           {/* Desktop Menu */}  
           <nav className="hidden md:flex space-x-2 lg:space-x-4 xl:space-x-6 items-center whitespace-nowrap">  
@@ -182,13 +192,6 @@ export default function Header() {
             <ThemeToggle />
             
             <div className="flex items-center space-x-3">
-              <Link  
-                href="/learnai"  
-                className="header-nav-item apple-btn-primary font-medium text-sm px-5 py-2 rounded-md transition-apple hover-lift"  
-              >  
-                Start AI Training Free
-              </Link>
-              
               {isAuthenticated ? (
                 <Link  
                   href="/member-dashboard"  
@@ -209,19 +212,40 @@ export default function Header() {
             </div>  
           </nav>  
 
-          {/* Mobile Menu Toggle */}  
-          <button  
-            className="md:hidden text-white focus:outline-none"  
-            onClick={toggleMobileMenu}  
-            aria-label="Toggle mobile menu"
-          >  
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}  
-          </button>  
+          {/* Mobile Menu Actions */}  
+          <div className="md:hidden flex items-center gap-3">
+            {/* Show Start AI Training Free button on small screens but not xs */}
+            <Link  
+              href="/learnai"  
+              className="header-nav-item apple-btn-primary font-medium text-xs px-3 py-1.5 rounded-md transition-apple hover-lift hidden sm:block md:hidden"  
+            >  
+              Start AI Training
+            </Link>
+            
+            {/* Mobile Menu Toggle */}
+            <button  
+              className="text-white focus:outline-none"  
+              onClick={toggleMobileMenu}  
+              aria-label="Toggle mobile menu"
+            >  
+              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}  
+            </button>
+          </div>  
         </div>  
 
         {/* Mobile Menu */}  
         {isMobileMenuOpen && (  
           <nav className="md:hidden glass-effect py-4 mt-4 rounded-b-lg subtle-shadow apple-scrollbar">  
+            {/* Mobile CTA button for xs screens only */}
+            <div className="sm:hidden px-6 pt-2 pb-4 border-b border-gray-800/20">
+              <Link  
+                href="/learnai"  
+                onClick={toggleMobileMenu}  
+                className="apple-btn-primary font-medium text-sm py-2 px-4 rounded-md text-center w-full block hover-lift transition-apple"  
+              >  
+                Start AI Training Free
+              </Link>
+            </div>
             <div className="flex flex-col space-y-4 px-6">  
               {menuItems.map((item) => (  
                 <div key={item.label} className="py-2 border-b border-gray-800/20 last:border-b-0">  
@@ -298,13 +322,7 @@ export default function Header() {
                   <ThemeToggle />
                 </div>
                 
-                <Link  
-                  href="/learnai"  
-                  onClick={toggleMobileMenu}  
-                  className="apple-btn-primary font-medium text-sm py-3 px-4 rounded-md text-center hover-lift transition-apple"  
-                >  
-                  Start AI Training Free
-                </Link>
+                {/* Mobile menu training button removed from here since it's now at the top */}
                 
                 {isAuthenticated ? (
                   <Link  
