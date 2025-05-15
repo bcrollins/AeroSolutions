@@ -795,35 +795,108 @@ const NewsHubPage: React.FC = () => {
           </p>
         </div>
       ) : filteredPosts.length === 0 ? (
-        <div className="text-center p-10 border border-dashed border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/20 rounded-lg">
-          <div className="mb-3">
-            <Newspaper className="h-14 w-14 mx-auto text-gray-400 dark:text-gray-600 mb-3" />
+        <div className="text-center p-12 border border-dashed border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/20 rounded-xl shadow-sm">
+          <div className="mb-6 relative">
+            <div className="absolute -top-1 -left-1 w-6 h-6 bg-blue-100 dark:bg-blue-900/30 rounded-full animate-pulse"></div>
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-100 dark:bg-green-900/30 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+            <div className="relative inline-block">
+              <div className="absolute inset-0 bg-primary/10 rounded-full blur-md animate-pulse"></div>
+              <Newspaper className="h-16 w-16 mx-auto text-primary relative" />
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-amber-100 dark:bg-amber-900/30 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+            <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-purple-100 dark:bg-purple-900/30 rounded-full animate-pulse" style={{ animationDelay: '1.5s' }}></div>
           </div>
-          <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            No articles found
+          
+          <h3 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-3">
+            {searchQuery ? 'No matching articles found' : 'Articles are being generated'}
           </h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-2 max-w-md mx-auto">
+          
+          <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto leading-relaxed">
             {searchQuery 
-              ? `We couldn't find any articles matching "${searchQuery}". Try a different search term.` 
-              : `We're generating new AI articles right now! They'll appear here soon - check back in a few moments.`}
+              ? (
+                <>
+                  We couldn't find any articles matching <span className="font-medium text-primary bg-primary/10 px-2 py-0.5 rounded">"{searchQuery}"</span>. Try a different search term or browse by category.
+                </>
+              ) 
+              : (
+                <>
+                  We're creating new AI-generated articles just for you! They'll appear here automatically in just a moment - no need to refresh.
+                </>
+              )}
           </p>
+          
+          {!searchQuery && (
+            <div className="flex items-center justify-center space-x-2 mb-6">
+              <div className="h-2 w-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+              <div className="h-2 w-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+              <div className="h-2 w-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            </div>
+          )}
+          
           <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center items-center">
             {searchQuery ? (
-              <Button variant="secondary" onClick={handleClearSearch}>
+              <Button 
+                variant="secondary" 
+                onClick={() => {
+                  handleClearSearch();
+                  playSound('navigation');
+                }}
+                className="bg-primary/10 hover:bg-primary/20 text-primary border-primary/20"
+              >
                 <X className="h-4 w-4 mr-2" />
                 Clear search
               </Button>
             ) : (
-              <Button variant="secondary" onClick={() => window.location.reload()}>
-                <ChevronRight className="h-4 w-4 mr-2" />
-                Refresh page
+              <Button 
+                variant="secondary" 
+                onClick={() => {
+                  window.location.reload();
+                  playSound('navigation');
+                }}
+                className="bg-primary/10 hover:bg-primary/20 text-primary border-primary/20"
+              >
+                <svg className="h-4 w-4 mr-2" width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M1.90321 7.29677C1.90321 10.341 4.11041 12.4147 6.58893 13.1559C6.87255 13.2372 7.06773 13.0148 7.00273 12.7271C6.93773 12.4394 6.87179 12.1405 6.80273 11.8042C6.74273 11.5159 6.68321 11.2229 6.63321 10.9299C4.33393 10.8633 3.33893 9.34385 3.26893 9.2299C3.23821 9.17971 3.22893 9.12485 3.23893 9.06988C3.24893 9.0149 3.27655 8.96398 3.31821 8.92166C3.36143 8.87771 3.41893 8.84271 3.48393 8.82271C3.54893 8.80271 3.61821 8.79785 3.68393 8.80771C3.74607 8.81837 3.80536 8.84106 3.85786 8.87441C3.91071 8.90441 4.99393 9.51623 6.53893 9.58324C6.78539 8.35752 7.52286 7.25238 8.61893 6.56494C7.33393 6.13994 6.61893 5.50549 6.22607 5.08681C5.84286 4.65854 5.77393 4.2816 5.77393 3.98167C5.77393 3.6304 5.91286 3.17114 6.19893 2.88077C6.52286 2.55255 6.96893 2.38898 7.55393 2.38898C8.14286 2.38898 8.58893 2.55248 8.90893 2.88077C9.19893 3.17114 9.33393 3.6304 9.33393 3.98167C9.33393 4.2816 9.26893 4.65854 8.88571 5.08681C8.49286 5.50557 7.77393 6.14001 6.49286 6.56494C7.07286 6.91229 7.54393 7.38442 7.88393 7.94162C8.22393 8.49883 8.41821 9.12693 8.44643 9.7666C8.93643 9.67895 9.56643 9.46988 10.1164 9.11988C10.4864 8.88231 10.8171 8.57359 11.0214 8.18681C11.2414 7.77432 11.2927 7.31165 11.1664 6.84583C11.1346 6.72166 11.0814 6.60462 11.008 6.50064C10.9352 6.39459 10.843 6.30384 10.7364 6.2321C10.6284 6.16263 10.5009 6.11462 10.368 6.09064C10.2364 6.06256 10.1014 6.06256 9.96893 6.08851C9.83643 6.10851 9.70821 6.15645 9.59464 6.22934C9.47821 6.29934 9.37464 6.39529 9.29821 6.50848C9.22179 6.61781 9.16464 6.74681 9.13714 6.88167C9.10464 7.02473 9.10715 7.16992 9.13714 7.31511C9.15652 7.40173 9.19312 7.48359 9.24358 7.55594H9.24393C9.29393 7.62359 9.3532 7.68286 9.42177 7.72932C9.49107 7.78026 9.56964 7.81666 9.65143 7.83857C9.73107 7.85666 9.8132 7.86338 9.89607 7.85666C9.97893 7.84994 10.0607 7.82994 10.1357 7.79994C10.0957 7.89244 10.0364 7.98208 9.95893 8.03994C9.87429 8.10536 9.78143 8.1433 9.68286 8.1522C9.58429 8.1611 9.48571 8.14162 9.39821 8.10068C9.30429 8.05567 9.23143 7.98328 9.18429 7.89958C9.12893 7.80599 9.10322 7.70167 9.10322 7.59584C9.10322 7.48657 9.12893 7.38069 9.18429 7.28717C9.23429 7.19364 9.30715 7.12278 9.39464 7.07778C9.48571 7.03278 9.58429 7.0133 9.68286 7.0222C9.78143 7.03111 9.87429 7.06911 9.95893 7.13446C10.0943 7.24373 10.188 7.39607 10.2221 7.56271C10.2584 7.73692 10.2307 7.92092 10.1421 8.08328C10.0564 8.24564 9.91429 8.36778 9.75322 8.41935C9.59143 8.47585 9.40715 8.46328 9.24393 8.38342C9.0807 8.30342 8.95179 8.16514 8.8807 7.99085C8.81322 7.81664 8.80715 7.62414 8.86786 7.44985C8.92786 7.27414 9.04429 7.13428 9.19393 7.05021C9.34429 6.95828 9.52144 6.92035 9.69071 6.93885C9.86393 6.95828 10.0264 7.03235 10.1557 7.14978C10.2882 7.26042 10.3852 7.40642 10.4414 7.57371C10.5002 7.74099 10.5164 7.92064 10.4877 8.09493C10.457 8.26907 10.3857 8.43386 10.2771 8.57007C10.1677 8.70706 10.0243 8.80971 9.86179 8.87778C9.75107 8.91713 9.63429 8.94713 9.51429 8.96042C9.52643 9.0962 9.51429 9.23184 9.47857 9.36591C9.41357 9.60355 9.28429 9.82527 9.10321 9.99956C8.93107 10.1731 8.71679 10.3124 8.47857 10.4089C8.37429 10.4481 8.26429 10.4817 8.15143 10.5091C7.86786 11.5334 7.18071 12.356 6.22321 12.8094C6.2457 12.899 6.27 12.9916 6.29714 13.0842C6.33429 13.2138 6.37714 13.356 6.42714 13.5095C6.49214 13.7055 6.71893 13.7725 6.87143 13.6521C9.6307 11.9004 11.2371 9.39242 10.9064 6.68677C10.5977 4.17863 8.62821 2.20499 6.1207 1.89591C2.97786 1.51977 0.281786 3.7352 0.281786 6.82371C0.281786 9.39184 1.61893 11.6025 3.58571 12.7126C3.8357 12.8594 4.14714 12.6994 4.13607 12.4125C4.12893 12.242 4.11357 12.0526 4.08571 11.8439C1.68571 10.6833 0.0139286 8.19363 0.903215 5.10606C1.79322 2.01742 4.87679 -0.0631418 8.00572 0.881823C11.1346 1.82678 13.2157 4.91442 12.3264 8.00306C11.899 9.58678 10.9064 10.8568 9.6557 11.7287C10.0914 12.8769 10.5264 14.0362 10.5264 14.0362C10.6264 14.3074 10.4314 14.5963 10.1457 14.5963H4.86071C4.57071 14.5963 4.38071 14.3167 4.4707 14.0429C4.4707 14.0429 4.6882 13.3553 5.01178 12.3452C2.59321 11.2725 1.90321 9.12698 1.90321 7.29677Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"/>
+                </svg>
+                Try refreshing
               </Button>
             )}
-            <Button variant="outline" onClick={() => setActiveTab('all')}>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setActiveTab('all');
+                playSound('click');
+              }}
+              className="border-gray-200 dark:border-gray-700"
+            >
               <BrainCircuit className="h-4 w-4 mr-2" />
               View all topics
             </Button>
           </div>
+          
+          {!searchQuery && (
+            <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                Suggested topics while you wait:
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                {['AI Ethics', 'Machine Learning', 'Deep Learning', 'Neural Networks', 'NLP'].map((topic, i) => (
+                  <Button 
+                    key={i} 
+                    variant="outline" 
+                    size="sm"
+                    className="bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
+                    onClick={() => {
+                      setSearchQuery(topic);
+                      playSound('click');
+                    }}
+                  >
+                    {topic}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <>
@@ -839,39 +912,55 @@ const NewsHubPage: React.FC = () => {
               const isNew = isNewArticle(post.publishedAt, post.createdAt);
               
               return (
-                <Card key={post.id} className="overflow-hidden transition-all duration-300 hover:shadow-lg dark:hover:shadow-gray-800/30 group border border-transparent hover:border-primary/20 dark:hover:border-primary/30">
-                  <div className="relative h-48 bg-gradient-to-br from-gray-100 to-white dark:from-gray-800 dark:to-gray-900 overflow-hidden">
+                <Card 
+                  key={post.id} 
+                  className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/5
+                   dark:hover:shadow-primary/10 group border border-transparent hover:border-primary/20 
+                   dark:hover:border-primary/30 relative hover:-translate-y-1 hover:translate-x-0.5 bg-white/70 dark:bg-gray-900/70
+                   backdrop-blur-sm"
+                >
+                  <div className="relative h-48 bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 overflow-hidden">
+                    {/* Animated glow effect on hover */}
+                    <div className="absolute -inset-1 bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 
+                      opacity-0 group-hover:opacity-100 -z-10 blur-xl transition-opacity duration-700"></div>
+                    
                     <img 
                       src={displayImage}
                       alt={post.title}
-                      className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-105 filter group-hover:brightness-110"
+                      className="w-full h-full object-cover transform transition-all duration-700 group-hover:scale-105 
+                        filter group-hover:brightness-110 group-hover:contrast-105 group-hover:saturate-105"
                       onError={(e) => {
                         // Fallback if image fails to load
                         e.currentTarget.src = getFallbackImage(post.id);
                       }}
                     />
                     
-                    {/* Category label */}
+                    {/* Animated highlight gradient on top of image */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 
+                      group-hover:opacity-100 transition-opacity duration-500"></div>
+                    
+                    {/* Category label with enhanced animation */}
                     {post.category && (
-                      <div className="absolute top-3 left-3">
+                      <div className="absolute top-3 left-3 transition-transform duration-300 group-hover:translate-y-0.5">
                         <Badge 
                           variant="secondary" 
-                          className="bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 shadow-sm
-                          hover:scale-105 transition-transform duration-200"
+                          className="bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-800 
+                            text-gray-700 dark:text-gray-300 shadow-sm backdrop-blur-sm
+                            hover:scale-105 transition-all duration-200 font-medium"
                         >
                           {post.category === 'AI' || post.category.includes('AI') ? (
                             <span className="flex items-center">
-                              <BrainCircuit className="h-3 w-3 mr-1" />
+                              <BrainCircuit className="h-3 w-3 mr-1 text-primary group-hover:animate-pulse" />
                               {post.category}
                             </span>
                           ) : post.category === 'Technology' || post.category === 'Tech' ? (
                             <span className="flex items-center">
-                              <Cpu className="h-3 w-3 mr-1" />
+                              <Cpu className="h-3 w-3 mr-1 text-blue-500" />
                               {post.category}
                             </span>
                           ) : post.category === 'Business' ? (
                             <span className="flex items-center">
-                              <Briefcase className="h-3 w-3 mr-1" />
+                              <Briefcase className="h-3 w-3 mr-1 text-amber-500" />
                               {post.category}
                             </span>
                           ) : (
@@ -881,33 +970,63 @@ const NewsHubPage: React.FC = () => {
                       </div>
                     )}
                     
-                    {/* New badge */}
+                    {/* Enhanced New badge with animation */}
                     {isNew && (
-                      <div className="absolute top-3 right-3">
-                        <Badge 
-                          variant="default" 
-                          className="font-semibold shadow-md backdrop-blur-sm bg-primary/90 hover:bg-primary/100 transition-colors"
-                        >
-                          <span className="animate-pulse-slow">New</span>
-                        </Badge>
+                      <div className="absolute top-3 right-3 transition-transform duration-300 group-hover:translate-y-0.5 group-hover:translate-x-0.5">
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-primary/40 blur-sm rounded-full animate-pulse"></div>
+                          <Badge 
+                            variant="default" 
+                            className="font-semibold shadow-md backdrop-blur-sm bg-primary/90 hover:bg-primary transition-all duration-500 relative"
+                          >
+                            <span className="relative inline-flex overflow-hidden">
+                              <span className="animate-pulse">New</span>
+                              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></span>
+                            </span>
+                          </Badge>
+                        </div>
                       </div>
                     )}
                   </div>
                   
                   <CardHeader className="p-5 pb-2">
-                    <Link href={`/articles/${post.id}`} className="outline-none group-hover:scale-[1.01] inline-block transition-transform duration-200">
-                      <CardTitle className="text-xl font-semibold line-clamp-2 group-hover:text-primary transition-colors">
-                        {post.title}
+                    <Link 
+                      href={`/articles/${post.id}`} 
+                      className="outline-none group-hover:scale-[1.01] inline-block transition-transform duration-300
+                        focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                      onClick={() => playSound('navigation')}
+                    >
+                      <CardTitle className="text-xl font-semibold line-clamp-2 group-hover:text-primary 
+                        transition-colors relative inline"
+                      >
+                        {/* Underline animation on hover */}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-[length:0%_2px] group-hover:bg-[length:100%_2px] 
+                          bg-no-repeat bg-bottom transition-all duration-500">
+                          {post.title}
+                        </span>
+                        {isNew && (
+                          <div className="inline-block ml-2 relative -top-1">
+                            <span className="text-xs text-white dark:text-black font-medium bg-primary/80 dark:bg-primary px-1.5 py-0.5 rounded-sm">
+                              New!
+                            </span>
+                          </div>
+                        )}
                       </CardTitle>
                     </Link>
                     
-                    <CardDescription className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-2">
-                      <span className="flex items-center bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full">
-                        <Clock size={14} className="mr-1 text-primary/70" />
+                    <CardDescription className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-2 flex-wrap gap-2">
+                      <span className="flex items-center bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full
+                        group-hover:bg-gray-200 dark:group-hover:bg-gray-700 transition-colors duration-300">
+                        <Clock size={14} className="mr-1 text-primary/70 group-hover:text-primary transition-colors" />
                         {readingTime} min read
                       </span>
-                      <span className="mx-2 text-gray-300 dark:text-gray-600">•</span>
-                      <span className="text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors">
+                      
+                      <span className="flex items-center text-gray-500 dark:text-gray-400 group-hover:text-gray-700 
+                        dark:group-hover:text-gray-300 transition-colors"
+                      >
+                        <svg className="h-3.5 w-3.5 mr-1 text-gray-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M8 7V3M16 7V3M7 11h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
                         {formatDate(post.publishedAt || post.createdAt)}
                       </span>
                     </CardDescription>
