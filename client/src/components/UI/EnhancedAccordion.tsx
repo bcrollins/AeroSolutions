@@ -25,16 +25,29 @@ interface EnhancedAccordionItemProps {
   badge?: ReactNode;
 }
 
-interface EnhancedAccordionProps {
-  type?: 'single' | 'multiple';
+type AccordionType = 'single' | 'multiple';
+
+interface BaseEnhancedAccordionProps {
   collapsible?: boolean;
-  defaultValue?: string | string[];
   className?: string;
-  onChange?: (value: string | string[]) => void;
   children: ReactNode;
   animated?: boolean;
   variant?: 'default' | 'bordered' | 'separated' | 'minimal' | 'card';
 }
+
+interface SingleAccordionProps extends BaseEnhancedAccordionProps {
+  type: 'single';
+  defaultValue?: string;
+  onChange?: (value: string) => void;
+}
+
+interface MultipleAccordionProps extends BaseEnhancedAccordionProps {
+  type: 'multiple';
+  defaultValue?: string[];
+  onChange?: (value: string[]) => void;
+}
+
+type EnhancedAccordionProps = SingleAccordionProps | MultipleAccordionProps;
 
 /**
  * Enhanced accordion item with animations and customization
@@ -121,16 +134,17 @@ export function EnhancedAccordionItem({
 /**
  * Enhanced accordion with animations and customization options
  */
-export function EnhancedAccordion({
-  type = 'single',
-  collapsible = true,
-  defaultValue,
-  className = '',
-  onChange,
-  children,
-  animated = true,
-  variant = 'default'
-}: EnhancedAccordionProps) {
+export function EnhancedAccordion(props: EnhancedAccordionProps) {
+  const {
+    type,
+    collapsible = true,
+    defaultValue,
+    className = '',
+    onChange,
+    children,
+    animated = true,
+    variant = 'default'
+  } = props;
   // Get variant styles
   const getVariantStyles = () => {
     switch (variant) {
@@ -147,14 +161,26 @@ export function EnhancedAccordion({
     }
   };
   
+  // Create type-specific accordion props
+  const isSingle = type === 'single';
+  const accordionProps = isSingle 
+    ? {
+        type: 'single' as const,
+        collapsible,
+        defaultValue: defaultValue as string | undefined,
+        className: cn(getVariantStyles(), className),
+        onValueChange: onChange as ((value: string) => void) | undefined
+      }
+    : {
+        type: 'multiple' as const,
+        collapsible,
+        defaultValue: defaultValue as string[] | undefined,
+        className: cn(getVariantStyles(), className),
+        onValueChange: onChange as ((value: string[]) => void) | undefined
+      };
+  
   return (
-    <Accordion
-      type={type}
-      collapsible={collapsible}
-      defaultValue={defaultValue}
-      className={cn(getVariantStyles(), className)}
-      onValueChange={onChange}
-    >
+    <Accordion {...accordionProps}>
       {/* Apply animations to children if enabled */}
       {animated
         ? React.Children.map(children, (child, index) => {
