@@ -17,7 +17,7 @@ import useKeyboardSound from '../../hooks/use-keyboard-sound';
 
 export function EnhancedCommandPalette() {
   const [open, setOpen] = useState(false);
-  const [location, setLocation] = useLocation();
+  const [, setLocation] = useLocation();
   const { playSound, soundEnabled } = useSoundEffects();
 
   // Define command groups and items

@@ -8,6 +8,7 @@ import { NotificationProvider } from "@/contexts/NotificationContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { CommandPaletteProvider } from "@/hooks/use-command-palette";
 import CommandPaletteWrapper from "@/components/UI/CommandPaletteWrapper";
+import EnhancedCommandPalette from "@/components/UI/EnhancedCommandPalette";
 import ABTestClient from "@/components/ABTestClient";
 import { initGA } from "@/lib/analytics";
 import { useAnalytics } from "@/hooks/use-analytics";
@@ -16,7 +17,8 @@ import WebSocketListener from "@/components/forum/WebSocketListener";
 import { Button } from "@/components/ui/button";
 import { Shield } from "lucide-react";
 // Import Apple-inspired effects
-import { initAppleEffects, initSoundEffects } from "@/utils/appleEffects";
+import { initAppleEffects } from "@/utils/appleEffects";
+import { initSoundEffects } from "@/utils/soundEffectsUtils";
 // Import OnboardingTour component
 import OnboardingTour from "@/components/Onboarding/OnboardingTour";
 
@@ -588,6 +590,9 @@ export default function App() {
       
       {/* Global toast notifications */}
       <Toaster />
+      
+      {/* Enhanced command palette with sound effects */}
+      <EnhancedCommandPalette />
       </NotificationProvider>
         <CommandPaletteWrapper />
       </CommandPaletteProvider>
