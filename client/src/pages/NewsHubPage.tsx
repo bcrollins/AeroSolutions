@@ -14,7 +14,6 @@ import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import ArticleReactionBar from '@/components/articles/ArticleReactionBar';
 import AIArticleInsights from '@/components/articles/AIArticleInsights';
-import ArticleGenerationProgress from '@/components/ui/ArticleGenerationProgress';
 import { useToast } from "@/hooks/use-toast";
 
 // Add custom keyframes animations
@@ -94,28 +93,8 @@ const NewsHubPage: React.FC = () => {
     return saved ? JSON.parse(saved) : [];
   });
   
-  // Enhanced article generation progress tracking
-  const [articleGenerationProgress, setArticleGenerationProgress] = useState({
-    current: 6,
-    total: 50,
-    isGenerating: true,
-    currentArticleTitle: '',
-    estimatedTimeRemaining: 55 // in minutes
-  });
-  
-  // AI article title examples for simulation
-  const aiArticleTitles = [
-    "AI-Powered Decision Making Strategies for Business Leaders",
-    "The Evolution of Generative AI: Trends and Applications",
-    "Machine Learning Algorithms: A Practical Guide for Implementation",
-    "Neural Networks and Deep Learning Explained",
-    "Ethical Considerations in Artificial Intelligence Development",
-    "Natural Language Processing: Breaking Language Barriers",
-    "Computer Vision Systems: How AI Sees the World",
-    "Reinforcement Learning in Real-World Applications",
-    "AI and IoT: Creating Smarter Connected Ecosystems",
-    "Quantum Computing and AI: The Future of Computation"
-  ];
+  // We've removed the article generation progress feature
+  // and will only display already generated articles
   
   // References
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -319,45 +298,7 @@ const NewsHubPage: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [page, totalPages, playSound]);
   
-  // Enhanced article generation progress simulation with dynamic titles
-  useEffect(() => {
-    if (articleGenerationProgress.isGenerating && articleGenerationProgress.current < articleGenerationProgress.total) {
-      // Initial article title on component mount
-      const randomIndex = Math.floor(Math.random() * aiArticleTitles.length);
-      setArticleGenerationProgress(prev => ({
-        ...prev,
-        currentArticleTitle: aiArticleTitles[randomIndex]
-      }));
-      
-      const interval = setInterval(() => {
-        setArticleGenerationProgress(prev => {
-          const newCurrent = Math.min(prev.current + 1, prev.total);
-          const isComplete = newCurrent >= prev.total;
-          
-          // Randomly select a title from the list for the next article
-          const randomIndex = Math.floor(Math.random() * aiArticleTitles.length);
-          const newTitle = aiArticleTitles[randomIndex];
-          
-          // Calculate estimated time remaining (decreases as more articles are generated)
-          const newEstimatedTimeRemaining = Math.max(5, Math.round((prev.total - newCurrent) * 1.1));
-          
-          return {
-            ...prev,
-            current: newCurrent,
-            isGenerating: !isComplete,
-            currentArticleTitle: isComplete ? '' : newTitle,
-            estimatedTimeRemaining: newEstimatedTimeRemaining
-          };
-        });
-        
-        // Play a subtle sound when a new article is generated
-        playSound('focus');
-        
-      }, 8000); // Update every 8 seconds
-      
-      return () => clearInterval(interval);
-    }
-  }, [articleGenerationProgress.isGenerating, aiArticleTitles, playSound]);
+  // Article generation progress simulation has been removed
   
   // Generate search suggestions based on current input and post data
   const generateSearchSuggestions = (query: string, posts: ArticlePost[]) => {
@@ -929,30 +870,7 @@ const NewsHubPage: React.FC = () => {
         </div>
       </div>
       
-      {/* Enhanced Article Generation Progress */}
-      {articleGenerationProgress.isGenerating && (
-        <div className="mb-8 relative">
-          {/* Glassmorphism card with enhanced progress details */}
-          <ArticleGenerationProgress 
-            current={articleGenerationProgress.current} 
-            total={articleGenerationProgress.total}
-            currentArticleTitle={articleGenerationProgress.currentArticleTitle}
-            estimatedTimeRemaining={articleGenerationProgress.estimatedTimeRemaining}
-            onComplete={() => {
-              toast({
-                title: "Content Generation Complete",
-                description: "All AI articles have been generated successfully!",
-                variant: "success"
-              });
-            }}
-            className="relative z-10"
-          />
-          
-          {/* Decorative background elements */}
-          <div className="absolute -z-10 top-12 left-1/4 w-20 h-20 bg-primary/20 rounded-full blur-3xl opacity-60 animate-pulse"></div>
-          <div className="absolute -z-10 bottom-8 right-1/3 w-24 h-24 bg-purple-500/20 rounded-full blur-3xl opacity-50"></div>
-        </div>
-      )}
+      {/* Article Generation Progress component has been removed */}
       
       {/* Loading state for posts */}
       {isLoading && (
