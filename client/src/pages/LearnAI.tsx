@@ -1295,21 +1295,21 @@ const LearnAI: React.FC = () => {
               
               {curriculumModules.map(module => (
                 <TabsContent key={module.id} value={module.id} className="mt-0">
-                  <Card className="bg-[#2a2a2a] border-[#444] overflow-hidden">
+                  <Card className="bg-white border border-gray-200 shadow-sm overflow-hidden">
                     <div className="p-6">
-                      <h3 className="text-xl font-bold mb-4">{module.title}</h3>
+                      <h3 className="text-xl font-bold mb-4 text-gray-800">{module.title}</h3>
                       
                       <ul className="space-y-3">
                         {module.lessons.map(lesson => (
-                          <li key={lesson.id} className="bg-[#333] rounded-lg p-4">
+                          <li key={lesson.id} className="bg-gray-50 border border-gray-100 rounded-lg p-4 shadow-sm">
                             <div className="flex justify-between items-start">
                               <div className="flex items-start">
-                                <div className={`mr-3 px-2 py-1 text-xs rounded ${lesson.free ? 'bg-green-500/20 text-green-400' : 'bg-[#007bff]/20 text-[#007bff]'}`}>
+                                <div className={`mr-3 px-2 py-1 text-xs rounded font-medium ${lesson.free ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-[#0066cc]'}`}>
                                   {lesson.free ? 'FREE' : 'PREMIUM'}
                                 </div>
                                 <div>
-                                  <h4 className="font-medium">{lesson.title}</h4>
-                                  <p className="text-sm text-gray-400 mt-1">{lesson.duration}</p>
+                                  <h4 className="font-medium text-gray-800">{lesson.title}</h4>
+                                  <p className="text-sm text-gray-500 mt-1">{lesson.duration}</p>
                                 </div>
                               </div>
                               
@@ -1317,7 +1317,7 @@ const LearnAI: React.FC = () => {
                                 <Button 
                                   variant="ghost" 
                                   size="sm"
-                                  className="text-[#007bff]"
+                                  className="text-[#0066cc] hover:bg-blue-50 border border-transparent hover:border-blue-100 font-medium"
                                   onClick={() => window.location.href = `/ai-courses/preview/${module.id}/${lesson.id}`}
                                 >
                                   <Play className="w-4 h-4 mr-1" /> Watch Free
@@ -1326,7 +1326,7 @@ const LearnAI: React.FC = () => {
                                 <Button 
                                   variant="ghost" 
                                   size="sm"
-                                  className="text-gray-400"
+                                  className="text-gray-600 hover:text-gray-800 hover:bg-gray-100 border border-transparent hover:border-gray-200 font-medium"
                                   onClick={() => window.location.href = '/subscriptions'}
                                 >
                                   <Lock className="w-4 h-4 mr-1" /> Unlock
@@ -1339,7 +1339,7 @@ const LearnAI: React.FC = () => {
                       
                       <div className="mt-6 text-center">
                         <Button 
-                          className="bg-[#007bff] hover:bg-blue-600"
+                          className="bg-[#0066cc] hover:bg-blue-700 shadow-sm font-medium px-6 py-2"
                           onClick={() => window.location.href = `/ai-courses/module/${module.id}`}
                         >
                           View Full Curriculum
@@ -1363,7 +1363,7 @@ const LearnAI: React.FC = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {videoTestimonials.map((video, index) => (
-                <Card key={video.id} className="bg-[#2a2a2a] border-[#444] overflow-hidden">
+                <Card key={video.id} className="bg-white border border-gray-200 shadow-sm overflow-hidden">
                   <div 
                     className="relative cursor-pointer group" 
                     onClick={() => {
