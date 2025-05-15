@@ -373,7 +373,7 @@ export default function App() {
           )}
         </Route>
 
-        {/* LearnAI Landing Page */}
+        {/* LearnAI Landing Page - Public access with no authentication required */}
         <Route path="/learnai">
           {() => (
             <>

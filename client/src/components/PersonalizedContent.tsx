@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+// Removing auth dependency for public view
+// import { useAuth } from '@/hooks/useAuth';
 import { trackEvent } from '@/lib/analytics';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -52,27 +53,20 @@ const interestCategories: InterestCategory[] = [
 ];
 
 const PersonalizedContent: React.FC = () => {
-  const { user, isAuthenticated } = useAuth();
+  // Using a fixed isAuthenticated = false for public access
+  const isAuthenticated = false;
+  const user = null;
+  
   const [userInterests, setUserInterests] = useState<string[]>([]);
   const [recommendedCategory, setRecommendedCategory] = useState<InterestCategory | null>(null);
   const [hasInteracted, setHasInteracted] = useState<boolean>(false);
 
   // Get user interests based on browsing history, previous interactions, or cookies
   useEffect(() => {
-    // For authenticated users, we could fetch their interests from the server
-    if (isAuthenticated && user) {
-      // In a real implementation, this would be a server call
-      // For now, simulate with localStorage + random selection for demo
-      const storedInterests = localStorage.getItem(`user-interests-${user.id}`);
-      if (storedInterests) {
-        setUserInterests(JSON.parse(storedInterests));
-      }
-    } else {
-      // For non-authenticated users, use local storage to remember interests
-      const storedInterests = localStorage.getItem('guest-interests');
-      if (storedInterests) {
-        setUserInterests(JSON.parse(storedInterests));
-      }
+    // For non-authenticated users (public view), use local storage
+    const storedInterests = localStorage.getItem('guest-interests');
+    if (storedInterests) {
+      setUserInterests(JSON.parse(storedInterests));
     }
 
     // If no interests are found, initialize with page view history
@@ -128,20 +122,14 @@ const PersonalizedContent: React.FC = () => {
       // If we found an interest, set it
       if (topInterest) {
         setUserInterests([topInterest]);
-        
-        // Save it
-        if (isAuthenticated && user) {
-          localStorage.setItem(`user-interests-${user.id}`, JSON.stringify([topInterest]));
-        } else {
-          localStorage.setItem('guest-interests', JSON.stringify([topInterest]));
-        }
-      } else if (Math.random() > 0.5) {
-        // If still no interests, randomly select one for this demo (50% chance)
+        localStorage.setItem('guest-interests', JSON.stringify([topInterest]));
+      } else {
+        // If still no interests, randomly select one for public demo
         const randomInterest = interestCategories[Math.floor(Math.random() * interestCategories.length)].id;
         setUserInterests([randomInterest]);
       }
     }
-  }, [isAuthenticated, user]);
+  }, []);
 
   // Set recommended category based on user interests
   useEffect(() => {
@@ -174,12 +162,7 @@ const PersonalizedContent: React.FC = () => {
       
       // Save this interest more permanently
       const updatedInterests = Array.from(new Set([...userInterests, recommendedCategory.id]));
-      
-      if (isAuthenticated && user) {
-        localStorage.setItem(`user-interests-${user.id}`, JSON.stringify(updatedInterests));
-      } else {
-        localStorage.setItem('guest-interests', JSON.stringify(updatedInterests));
-      }
+      localStorage.setItem('guest-interests', JSON.stringify(updatedInterests));
       
       setUserInterests(updatedInterests);
       
