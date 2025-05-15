@@ -5,6 +5,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import utility classes after Tailwind to ensure they take precedence */
 @import url('./styles/utility-classes.css');
 
 @keyframes fall {

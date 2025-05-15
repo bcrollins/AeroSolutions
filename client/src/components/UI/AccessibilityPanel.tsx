@@ -1,633 +1,514 @@
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaUniversalAccess, FaFont, FaTextHeight, FaTimes, FaAdjust, FaRegLightbulb } from 'react-icons/fa';
-import { MdSpaceBar, MdOutlineLineWeight, MdInvertColors } from 'react-icons/md';
+import { 
+  FaUniversalAccess, 
+  FaFont, 
+  FaAdjust, 
+  FaTimes, 
+  FaPalette,
+  FaEye, 
+  FaMoon, 
+  FaSun, 
+  FaMousePointer,
+  FaKeyboard,
+  FaHeadphones,
+  FaCheck
+} from 'react-icons/fa';
+import { useNotification } from './NotificationSystem';
 
-// Types
-type TextSize = 'normal' | 'large' | 'x-large';
-type ContrastMode = 'normal' | 'high-contrast' | 'inverted';
-type AnimationSetting = 'normal' | 'reduced' | 'none';
-type LineSpacing = 'normal' | 'increased' | 'double';
-type FontType = 'normal' | 'dyslexic' | 'sans-serif';
+// Types for accessibility settings
+interface AccessibilitySettings {
+  fontSize: 'normal' | 'large' | 'x-large';
+  highContrast: boolean;
+  reducedMotion: boolean;
+  colorScheme: 'system' | 'light' | 'dark';
+  dyslexicFont: boolean;
+  cursorSize: 'normal' | 'large' | 'x-large';
+  keyboardNavigationEnabled: boolean;
+  screenReaderOptimized: boolean;
+}
 
-export interface AccessibilitySettings {
-  textSize: TextSize;
-  contrastMode: ContrastMode;
-  reducedAnimations: AnimationSetting;
-  lineSpacing: LineSpacing;
-  fontType: FontType;
-  highlightLinks: boolean;
-  highlightButtons: boolean;
-  focusIndicators: boolean;
+interface AccessibilityContextType {
+  settings: AccessibilitySettings;
+  updateSettings: (newSettings: Partial<AccessibilitySettings>) => void;
+  resetSettings: () => void;
 }
 
 // Default settings
 const defaultSettings: AccessibilitySettings = {
-  textSize: 'normal',
-  contrastMode: 'normal',
-  reducedAnimations: 'normal',
-  lineSpacing: 'normal',
-  fontType: 'normal',
-  highlightLinks: false,
-  highlightButtons: false,
-  focusIndicators: true,
+  fontSize: 'normal',
+  highContrast: false,
+  reducedMotion: false,
+  colorScheme: 'system',
+  dyslexicFont: false,
+  cursorSize: 'normal',
+  keyboardNavigationEnabled: false,
+  screenReaderOptimized: false
 };
 
-// Context
-type AccessibilityContextType = {
-  settings: AccessibilitySettings;
-  isOpen: boolean;
-  setOpen: (isOpen: boolean) => void;
-  updateSetting: <K extends keyof AccessibilitySettings>(key: K, value: AccessibilitySettings[K]) => void;
-  resetSettings: () => void;
-};
-
-const AccessibilityContext = createContext<AccessibilityContextType>({
-  settings: defaultSettings,
-  isOpen: false,
-  setOpen: () => {},
-  updateSetting: () => {},
-  resetSettings: () => {},
-});
-
-// Hook to use accessibility settings
-export const useAccessibility = () => useContext(AccessibilityContext);
+// Create the context
+const AccessibilityContext = createContext<AccessibilityContextType | null>(null);
 
 // Provider component
-export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // State
-  const [settings, setSettings] = useState<AccessibilitySettings>(() => {
-    // Load from localStorage if available
-    const savedSettings = localStorage.getItem('rxai_a11y_settings');
+export function AccessibilityProvider({ children }: { children: ReactNode }) {
+  // Load settings from localStorage
+  const loadSettings = (): AccessibilitySettings => {
+    if (typeof window === 'undefined') return defaultSettings;
+    
+    const savedSettings = localStorage.getItem('rxai-accessibility-settings');
     if (savedSettings) {
       try {
         return JSON.parse(savedSettings);
-      } catch (e) {
-        console.error('Error parsing accessibility settings', e);
+      } catch (error) {
+        console.error('Failed to parse accessibility settings:', error);
       }
     }
     return defaultSettings;
-  });
-  
-  const [isOpen, setOpen] = useState(false);
-
-  // Update a single setting
-  const updateSetting = <K extends keyof AccessibilitySettings>(key: K, value: AccessibilitySettings[K]) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
   };
-
-  // Reset all settings to default
+  
+  const [settings, setSettings] = useState<AccessibilitySettings>(defaultSettings);
+  
+  // Load settings on initial mount
+  useEffect(() => {
+    setSettings(loadSettings());
+  }, []);
+  
+  // Save settings to localStorage when they change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('rxai-accessibility-settings', JSON.stringify(settings));
+    }
+    
+    // Apply settings to the document
+    applySettings(settings);
+  }, [settings]);
+  
+  // Apply settings to the document
+  const applySettings = (settings: AccessibilitySettings) => {
+    // Apply font size
+    document.documentElement.classList.remove('text-size-normal', 'text-size-large', 'text-size-x-large');
+    document.documentElement.classList.add(`text-size-${settings.fontSize}`);
+    
+    // Apply high contrast
+    if (settings.highContrast) {
+      document.documentElement.classList.add('high-contrast');
+    } else {
+      document.documentElement.classList.remove('high-contrast');
+    }
+    
+    // Apply reduced motion
+    if (settings.reducedMotion) {
+      document.documentElement.classList.add('reduced-motion');
+    } else {
+      document.documentElement.classList.remove('reduced-motion');
+    }
+    
+    // Apply color scheme
+    document.documentElement.classList.remove('theme-light', 'theme-dark');
+    if (settings.colorScheme === 'light') {
+      document.documentElement.classList.add('theme-light');
+    } else if (settings.colorScheme === 'dark') {
+      document.documentElement.classList.add('theme-dark');
+    }
+    
+    // Apply dyslexic font
+    if (settings.dyslexicFont) {
+      document.documentElement.classList.add('dyslexic-font');
+    } else {
+      document.documentElement.classList.remove('dyslexic-font');
+    }
+    
+    // Apply cursor size
+    document.documentElement.classList.remove('cursor-normal', 'cursor-large', 'cursor-x-large');
+    document.documentElement.classList.add(`cursor-${settings.cursorSize}`);
+    
+    // Apply keyboard navigation
+    if (settings.keyboardNavigationEnabled) {
+      document.documentElement.classList.add('keyboard-navigation');
+    } else {
+      document.documentElement.classList.remove('keyboard-navigation');
+    }
+    
+    // Apply screen reader optimizations
+    if (settings.screenReaderOptimized) {
+      document.documentElement.classList.add('screen-reader-optimized');
+    } else {
+      document.documentElement.classList.remove('screen-reader-optimized');
+    }
+  };
+  
+  // Update settings
+  const updateSettings = (newSettings: Partial<AccessibilitySettings>) => {
+    setSettings(prevSettings => ({
+      ...prevSettings,
+      ...newSettings
+    }));
+  };
+  
+  // Reset settings to defaults
   const resetSettings = () => {
     setSettings(defaultSettings);
   };
-
-  // Save settings to localStorage when they change
-  useEffect(() => {
-    localStorage.setItem('rxai_a11y_settings', JSON.stringify(settings));
-    
-    // Apply settings to document body as data attributes
-    const body = document.body;
-    body.setAttribute('data-text-size', settings.textSize);
-    body.setAttribute('data-contrast', settings.contrastMode);
-    body.setAttribute('data-animations', settings.reducedAnimations);
-    body.setAttribute('data-line-spacing', settings.lineSpacing);
-    body.setAttribute('data-font-type', settings.fontType);
-    body.setAttribute('data-highlight-links', settings.highlightLinks.toString());
-    body.setAttribute('data-highlight-buttons', settings.highlightButtons.toString());
-    body.setAttribute('data-focus-indicators', settings.focusIndicators.toString());
-    
-    // Apply CSS variables
-    switch (settings.textSize) {
-      case 'large':
-        body.style.setProperty('--a11y-font-scale', '1.2');
-        break;
-      case 'x-large':
-        body.style.setProperty('--a11y-font-scale', '1.4');
-        break;
-      default:
-        body.style.setProperty('--a11y-font-scale', '1');
-    }
-    
-    switch (settings.lineSpacing) {
-      case 'increased':
-        body.style.setProperty('--a11y-line-height', '1.5');
-        break;
-      case 'double':
-        body.style.setProperty('--a11y-line-height', '2');
-        break;
-      default:
-        body.style.setProperty('--a11y-line-height', 'normal');
-    }
-    
-    // Add font-family if needed
-    if (settings.fontType === 'dyslexic') {
-      body.style.setProperty('--a11y-font-family', '"Open Dyslexic", sans-serif');
-    } else if (settings.fontType === 'sans-serif') {
-      body.style.setProperty('--a11y-font-family', 'Arial, sans-serif');
-    } else {
-      body.style.setProperty('--a11y-font-family', 'inherit');
-    }
-    
-    // Add special CSS classes
-    if (settings.contrastMode === 'high-contrast') {
-      body.classList.add('a11y-high-contrast');
-      body.classList.remove('a11y-inverted');
-    } else if (settings.contrastMode === 'inverted') {
-      body.classList.add('a11y-inverted');
-      body.classList.remove('a11y-high-contrast');
-    } else {
-      body.classList.remove('a11y-high-contrast', 'a11y-inverted');
-    }
-    
-    if (settings.highlightLinks) {
-      body.classList.add('a11y-highlight-links');
-    } else {
-      body.classList.remove('a11y-highlight-links');
-    }
-    
-    if (settings.highlightButtons) {
-      body.classList.add('a11y-highlight-buttons');
-    } else {
-      body.classList.remove('a11y-highlight-buttons');
-    }
-    
-    if (settings.focusIndicators) {
-      body.classList.add('a11y-focus-indicators');
-    } else {
-      body.classList.remove('a11y-focus-indicators');
-    }
-    
-    if (settings.reducedAnimations !== 'normal') {
-      body.classList.add('a11y-reduced-animations');
-      if (settings.reducedAnimations === 'none') {
-        body.classList.add('a11y-no-animations');
-      } else {
-        body.classList.remove('a11y-no-animations');
-      }
-    } else {
-      body.classList.remove('a11y-reduced-animations', 'a11y-no-animations');
-    }
-    
-  }, [settings]);
-
+  
   return (
-    <AccessibilityContext.Provider value={{ settings, isOpen, setOpen, updateSetting, resetSettings }}>
+    <AccessibilityContext.Provider
+      value={{
+        settings,
+        updateSettings,
+        resetSettings
+      }}
+    >
       {children}
-      <AccessibilityPanelUI />
-      <AccessibilityToggleButton />
     </AccessibilityContext.Provider>
   );
-};
+}
 
-// Accessibility Panel UI
-const AccessibilityPanelUI = () => {
-  const { settings, isOpen, setOpen, updateSetting, resetSettings } = useAccessibility();
+// Hook for using accessibility settings
+export function useAccessibility() {
+  const context = useContext(AccessibilityContext);
   
-  // Animation variants
-  const panelVariants = {
-    hidden: { opacity: 0, x: 300 },
-    visible: { 
-      opacity: 1, 
-      x: 0,
-      transition: { type: 'spring', stiffness: 300, damping: 30 }
-    },
-    exit: { 
-      opacity: 0, 
-      x: 300,
-      transition: { duration: 0.2 }
+  if (!context) {
+    throw new Error('useAccessibility must be used within an AccessibilityProvider');
+  }
+  
+  return context;
+}
+
+// Accessibility Panel Component
+export default function AccessibilityPanel() {
+  const [isOpen, setIsOpen] = useState(false);
+  const { settings, updateSettings, resetSettings } = useAccessibility();
+  const { showNotification } = useNotification();
+  
+  const handleSettingsChange = (newSettings: Partial<AccessibilitySettings>) => {
+    updateSettings(newSettings);
+    
+    // Show notification for certain settings
+    if ('fontSize' in newSettings) {
+      showNotification({
+        title: 'Font Size Updated',
+        message: `Text size has been changed to ${newSettings.fontSize}`,
+        type: 'info',
+        duration: 3000
+      });
+    } else if ('colorScheme' in newSettings) {
+      showNotification({
+        title: 'Color Scheme Updated',
+        message: `Color scheme has been changed to ${newSettings.colorScheme} mode`,
+        type: 'info',
+        duration: 3000
+      });
     }
   };
   
+  const handleReset = () => {
+    resetSettings();
+    showNotification({
+      title: 'Settings Reset',
+      message: 'Accessibility settings have been reset to defaults',
+      type: 'info',
+      duration: 3000
+    });
+  };
+  
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
+    <>
+      {/* Accessibility Button */}
+      <button
+        onClick={() => setIsOpen(true)}
+        className="fixed bottom-4 left-4 z-40 p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg"
+        aria-label="Open accessibility settings"
+      >
+        <FaUniversalAccess className="h-6 w-6" />
+      </button>
+      
+      {/* Accessibility Panel */}
+      <AnimatePresence>
+        {isOpen && (
           <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
             initial={{ opacity: 0 }}
-            animate={{ opacity: 0.5 }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black z-40"
-            onClick={() => setOpen(false)}
-          />
-          
-          {/* Panel */}
-          <motion.div
-            variants={panelVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="fixed right-0 top-0 h-full w-full sm:w-96 bg-white z-50 shadow-xl overflow-y-auto"
+            onClick={() => setIsOpen(false)}
           >
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-                  <FaUniversalAccess className="mr-2 text-blue-600" />
-                  Accessibility
+            <motion.div
+              className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Panel Header */}
+              <div className="p-4 border-b dark:border-gray-700 flex justify-between items-center">
+                <h2 className="text-lg font-semibold flex items-center">
+                  <FaUniversalAccess className="mr-2 text-blue-600 dark:text-blue-500" />
+                  Accessibility Settings
                 </h2>
                 <button
-                  onClick={() => setOpen(false)}
-                  className="p-2 rounded-full hover:bg-gray-100 text-gray-500"
+                  onClick={() => setIsOpen(false)}
+                  className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
                   aria-label="Close accessibility panel"
                 >
-                  <FaTimes />
+                  <FaTimes className="h-5 w-5 text-gray-500" />
                 </button>
               </div>
               
-              <div className="space-y-8">
-                {/* Text Size */}
+              {/* Panel Content */}
+              <div className="p-4 space-y-6">
+                {/* Font Size */}
                 <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
-                    <FaTextHeight className="mr-2 text-blue-600" />
+                  <h3 className="text-base font-medium mb-2 flex items-center">
+                    <FaFont className="mr-2 text-blue-600 dark:text-blue-500" />
                     Text Size
                   </h3>
                   <div className="flex space-x-2">
                     <button
-                      onClick={() => updateSetting('textSize', 'normal')}
-                      className={`px-4 py-2 rounded-lg ${
-                        settings.textSize === 'normal' 
-                          ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                          : 'bg-gray-100 text-gray-700 border border-transparent hover:border-gray-300'
+                      onClick={() => handleSettingsChange({ fontSize: 'normal' })}
+                      className={`px-3 py-2 rounded border ${
+                        settings.fontSize === 'normal'
+                          ? 'bg-blue-100 border-blue-500 text-blue-800'
+                          : 'bg-gray-100 border-gray-300 hover:bg-gray-200'
                       }`}
                     >
                       Normal
                     </button>
                     <button
-                      onClick={() => updateSetting('textSize', 'large')}
-                      className={`px-4 py-2 rounded-lg ${
-                        settings.textSize === 'large' 
-                          ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                          : 'bg-gray-100 text-gray-700 border border-transparent hover:border-gray-300'
+                      onClick={() => handleSettingsChange({ fontSize: 'large' })}
+                      className={`px-3 py-2 rounded border ${
+                        settings.fontSize === 'large'
+                          ? 'bg-blue-100 border-blue-500 text-blue-800'
+                          : 'bg-gray-100 border-gray-300 hover:bg-gray-200'
                       }`}
+                      style={{ fontSize: '1.1em' }}
                     >
                       Large
                     </button>
                     <button
-                      onClick={() => updateSetting('textSize', 'x-large')}
-                      className={`px-4 py-2 rounded-lg ${
-                        settings.textSize === 'x-large' 
-                          ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                          : 'bg-gray-100 text-gray-700 border border-transparent hover:border-gray-300'
+                      onClick={() => handleSettingsChange({ fontSize: 'x-large' })}
+                      className={`px-3 py-2 rounded border ${
+                        settings.fontSize === 'x-large'
+                          ? 'bg-blue-100 border-blue-500 text-blue-800'
+                          : 'bg-gray-100 border-gray-300 hover:bg-gray-200'
                       }`}
+                      style={{ fontSize: '1.2em' }}
                     >
-                      Extra Large
+                      X-Large
                     </button>
                   </div>
                 </div>
                 
-                {/* Contrast Mode */}
+                {/* Color Scheme */}
                 <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
-                    <FaAdjust className="mr-2 text-blue-600" />
-                    Contrast
+                  <h3 className="text-base font-medium mb-2 flex items-center">
+                    <FaPalette className="mr-2 text-blue-600 dark:text-blue-500" />
+                    Color Scheme
                   </h3>
                   <div className="flex space-x-2">
                     <button
-                      onClick={() => updateSetting('contrastMode', 'normal')}
-                      className={`px-4 py-2 rounded-lg ${
-                        settings.contrastMode === 'normal' 
-                          ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                          : 'bg-gray-100 text-gray-700 border border-transparent hover:border-gray-300'
+                      onClick={() => handleSettingsChange({ colorScheme: 'system' })}
+                      className={`px-3 py-2 rounded border flex items-center justify-center ${
+                        settings.colorScheme === 'system'
+                          ? 'bg-blue-100 border-blue-500 text-blue-800'
+                          : 'bg-gray-100 border-gray-300 hover:bg-gray-200'
                       }`}
                     >
-                      Normal
+                      <FaAdjust className="mr-1" />
+                      System
                     </button>
                     <button
-                      onClick={() => updateSetting('contrastMode', 'high-contrast')}
-                      className={`px-4 py-2 rounded-lg ${
-                        settings.contrastMode === 'high-contrast' 
-                          ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                          : 'bg-gray-100 text-gray-700 border border-transparent hover:border-gray-300'
+                      onClick={() => handleSettingsChange({ colorScheme: 'light' })}
+                      className={`px-3 py-2 rounded border flex items-center justify-center ${
+                        settings.colorScheme === 'light'
+                          ? 'bg-blue-100 border-blue-500 text-blue-800'
+                          : 'bg-gray-100 border-gray-300 hover:bg-gray-200'
                       }`}
                     >
-                      High Contrast
+                      <FaSun className="mr-1" />
+                      Light
                     </button>
                     <button
-                      onClick={() => updateSetting('contrastMode', 'inverted')}
-                      className={`px-4 py-2 rounded-lg ${
-                        settings.contrastMode === 'inverted' 
-                          ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                          : 'bg-gray-100 text-gray-700 border border-transparent hover:border-gray-300'
+                      onClick={() => handleSettingsChange({ colorScheme: 'dark' })}
+                      className={`px-3 py-2 rounded border flex items-center justify-center ${
+                        settings.colorScheme === 'dark'
+                          ? 'bg-blue-100 border-blue-500 text-blue-800'
+                          : 'bg-gray-100 border-gray-300 hover:bg-gray-200'
                       }`}
                     >
-                      Inverted
+                      <FaMoon className="mr-1" />
+                      Dark
                     </button>
                   </div>
                 </div>
                 
-                {/* Motion */}
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
-                    <FaRegLightbulb className="mr-2 text-blue-600" />
-                    Animations
-                  </h3>
-                  <div className="flex space-x-2">
+                {/* Toggle Options */}
+                <div className="space-y-4">
+                  {/* High Contrast */}
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center cursor-pointer">
+                      <FaEye className="mr-2 text-blue-600 dark:text-blue-500" />
+                      <span>High Contrast</span>
+                    </label>
                     <button
-                      onClick={() => updateSetting('reducedAnimations', 'normal')}
-                      className={`px-4 py-2 rounded-lg ${
-                        settings.reducedAnimations === 'normal' 
-                          ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                          : 'bg-gray-100 text-gray-700 border border-transparent hover:border-gray-300'
+                      onClick={() => handleSettingsChange({ highContrast: !settings.highContrast })}
+                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        settings.highContrast ? 'bg-blue-600' : 'bg-gray-300'
                       }`}
+                      aria-pressed={settings.highContrast}
+                      aria-label="Toggle high contrast"
                     >
-                      Normal
-                    </button>
-                    <button
-                      onClick={() => updateSetting('reducedAnimations', 'reduced')}
-                      className={`px-4 py-2 rounded-lg ${
-                        settings.reducedAnimations === 'reduced' 
-                          ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                          : 'bg-gray-100 text-gray-700 border border-transparent hover:border-gray-300'
-                      }`}
-                    >
-                      Reduced
-                    </button>
-                    <button
-                      onClick={() => updateSetting('reducedAnimations', 'none')}
-                      className={`px-4 py-2 rounded-lg ${
-                        settings.reducedAnimations === 'none' 
-                          ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                          : 'bg-gray-100 text-gray-700 border border-transparent hover:border-gray-300'
-                      }`}
-                    >
-                      None
-                    </button>
-                  </div>
-                </div>
-                
-                {/* Line Spacing */}
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
-                    <MdOutlineLineWeight className="mr-2 text-blue-600" />
-                    Line Spacing
-                  </h3>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => updateSetting('lineSpacing', 'normal')}
-                      className={`px-4 py-2 rounded-lg ${
-                        settings.lineSpacing === 'normal' 
-                          ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                          : 'bg-gray-100 text-gray-700 border border-transparent hover:border-gray-300'
-                      }`}
-                    >
-                      Normal
-                    </button>
-                    <button
-                      onClick={() => updateSetting('lineSpacing', 'increased')}
-                      className={`px-4 py-2 rounded-lg ${
-                        settings.lineSpacing === 'increased' 
-                          ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                          : 'bg-gray-100 text-gray-700 border border-transparent hover:border-gray-300'
-                      }`}
-                    >
-                      Increased
-                    </button>
-                    <button
-                      onClick={() => updateSetting('lineSpacing', 'double')}
-                      className={`px-4 py-2 rounded-lg ${
-                        settings.lineSpacing === 'double' 
-                          ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                          : 'bg-gray-100 text-gray-700 border border-transparent hover:border-gray-300'
-                      }`}
-                    >
-                      Double
-                    </button>
-                  </div>
-                </div>
-                
-                {/* Font */}
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
-                    <FaFont className="mr-2 text-blue-600" />
-                    Font Type
-                  </h3>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => updateSetting('fontType', 'normal')}
-                      className={`px-4 py-2 rounded-lg ${
-                        settings.fontType === 'normal' 
-                          ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                          : 'bg-gray-100 text-gray-700 border border-transparent hover:border-gray-300'
-                      }`}
-                    >
-                      Normal
-                    </button>
-                    <button
-                      onClick={() => updateSetting('fontType', 'sans-serif')}
-                      className={`px-4 py-2 rounded-lg ${
-                        settings.fontType === 'sans-serif' 
-                          ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                          : 'bg-gray-100 text-gray-700 border border-transparent hover:border-gray-300'
-                      }`}
-                    >
-                      Sans-serif
-                    </button>
-                    <button
-                      onClick={() => updateSetting('fontType', 'dyslexic')}
-                      className={`px-4 py-2 rounded-lg ${
-                        settings.fontType === 'dyslexic' 
-                          ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                          : 'bg-gray-100 text-gray-700 border border-transparent hover:border-gray-300'
-                      }`}
-                    >
-                      Dyslexic
-                    </button>
-                  </div>
-                </div>
-                
-                {/* Additional Settings Toggles */}
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Additional Options</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox" 
-                        id="highlight-links"
-                        checked={settings.highlightLinks}
-                        onChange={(e) => updateSetting('highlightLinks', e.target.checked)}
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      <motion.div
+                        className="bg-white w-4 h-4 rounded-full shadow-md"
+                        animate={{ 
+                          x: settings.highContrast ? 24 : 0 
+                        }}
                       />
-                      <label htmlFor="highlight-links" className="ml-2 text-gray-700">
-                        Highlight Links
-                      </label>
-                    </div>
-                    
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox" 
-                        id="highlight-buttons"
-                        checked={settings.highlightButtons}
-                        onChange={(e) => updateSetting('highlightButtons', e.target.checked)}
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    </button>
+                  </div>
+                  
+                  {/* Reduced Motion */}
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center cursor-pointer">
+                      <FaMousePointer className="mr-2 text-blue-600 dark:text-blue-500" />
+                      <span>Reduced Motion</span>
+                    </label>
+                    <button
+                      onClick={() => handleSettingsChange({ reducedMotion: !settings.reducedMotion })}
+                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        settings.reducedMotion ? 'bg-blue-600' : 'bg-gray-300'
+                      }`}
+                      aria-pressed={settings.reducedMotion}
+                      aria-label="Toggle reduced motion"
+                    >
+                      <motion.div
+                        className="bg-white w-4 h-4 rounded-full shadow-md"
+                        animate={{ 
+                          x: settings.reducedMotion ? 24 : 0 
+                        }}
                       />
-                      <label htmlFor="highlight-buttons" className="ml-2 text-gray-700">
-                        Highlight Buttons
-                      </label>
-                    </div>
-                    
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox" 
-                        id="focus-indicators"
-                        checked={settings.focusIndicators}
-                        onChange={(e) => updateSetting('focusIndicators', e.target.checked)}
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    </button>
+                  </div>
+                  
+                  {/* Dyslexic Font */}
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center cursor-pointer">
+                      <FaFont className="mr-2 text-blue-600 dark:text-blue-500" />
+                      <span>Dyslexia-friendly Font</span>
+                    </label>
+                    <button
+                      onClick={() => handleSettingsChange({ dyslexicFont: !settings.dyslexicFont })}
+                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        settings.dyslexicFont ? 'bg-blue-600' : 'bg-gray-300'
+                      }`}
+                      aria-pressed={settings.dyslexicFont}
+                      aria-label="Toggle dyslexia-friendly font"
+                    >
+                      <motion.div
+                        className="bg-white w-4 h-4 rounded-full shadow-md"
+                        animate={{ 
+                          x: settings.dyslexicFont ? 24 : 0 
+                        }}
                       />
-                      <label htmlFor="focus-indicators" className="ml-2 text-gray-700">
-                        Enhanced Focus Indicators
-                      </label>
-                    </div>
+                    </button>
+                  </div>
+                  
+                  {/* Keyboard Navigation */}
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center cursor-pointer">
+                      <FaKeyboard className="mr-2 text-blue-600 dark:text-blue-500" />
+                      <span>Enhanced Keyboard Navigation</span>
+                    </label>
+                    <button
+                      onClick={() => handleSettingsChange({ 
+                        keyboardNavigationEnabled: !settings.keyboardNavigationEnabled 
+                      })}
+                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        settings.keyboardNavigationEnabled ? 'bg-blue-600' : 'bg-gray-300'
+                      }`}
+                      aria-pressed={settings.keyboardNavigationEnabled}
+                      aria-label="Toggle keyboard navigation"
+                    >
+                      <motion.div
+                        className="bg-white w-4 h-4 rounded-full shadow-md"
+                        animate={{ 
+                          x: settings.keyboardNavigationEnabled ? 24 : 0 
+                        }}
+                      />
+                    </button>
+                  </div>
+                  
+                  {/* Screen Reader Optimizations */}
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center cursor-pointer">
+                      <FaHeadphones className="mr-2 text-blue-600 dark:text-blue-500" />
+                      <span>Screen Reader Optimizations</span>
+                    </label>
+                    <button
+                      onClick={() => handleSettingsChange({ 
+                        screenReaderOptimized: !settings.screenReaderOptimized 
+                      })}
+                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        settings.screenReaderOptimized ? 'bg-blue-600' : 'bg-gray-300'
+                      }`}
+                      aria-pressed={settings.screenReaderOptimized}
+                      aria-label="Toggle screen reader optimizations"
+                    >
+                      <motion.div
+                        className="bg-white w-4 h-4 rounded-full shadow-md"
+                        animate={{ 
+                          x: settings.screenReaderOptimized ? 24 : 0 
+                        }}
+                      />
+                    </button>
                   </div>
                 </div>
                 
                 {/* Reset Button */}
-                <div className="mt-8 text-center">
+                <div className="flex justify-center pt-2">
                   <button
-                    onClick={resetSettings}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                    onClick={handleReset}
+                    className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg flex items-center"
                   >
-                    Reset to Default Settings
+                    <FaUndo className="mr-2" />
+                    Reset to Defaults
                   </button>
                 </div>
               </div>
-            </div>
+              
+              {/* Current Settings Summary */}
+              <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900 rounded-b-xl">
+                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Active Settings:</h3>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                    Font: {settings.fontSize}
+                  </span>
+                  <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                    Theme: {settings.colorScheme}
+                  </span>
+                  {settings.highContrast && (
+                    <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full flex items-center">
+                      <FaCheck className="mr-1 h-2.5 w-2.5" />
+                      High Contrast
+                    </span>
+                  )}
+                  {settings.reducedMotion && (
+                    <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full flex items-center">
+                      <FaCheck className="mr-1 h-2.5 w-2.5" />
+                      Reduced Motion
+                    </span>
+                  )}
+                  {settings.dyslexicFont && (
+                    <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full flex items-center">
+                      <FaCheck className="mr-1 h-2.5 w-2.5" />
+                      Dyslexic Font
+                    </span>
+                  )}
+                </div>
+              </div>
+            </motion.div>
           </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+        )}
+      </AnimatePresence>
+    </>
   );
-};
-
-// Toggle button
-const AccessibilityToggleButton = () => {
-  const { setOpen } = useAccessibility();
-  
-  return (
-    <button
-      onClick={() => setOpen(true)}
-      className="fixed bottom-6 left-6 z-30 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-      aria-label="Open accessibility options"
-    >
-      <FaUniversalAccess className="h-6 w-6" />
-    </button>
-  );
-};
-
-// CSS Utility class to apply to the <html> element
-export const accessibilityCss = `
-  /* Base accessibility variables */
-  :root {
-    --a11y-font-scale: 1;
-    --a11y-line-height: normal;
-    --a11y-font-family: inherit;
-  }
-  
-  /* Apply scaled font sizes */
-  html[data-text-size] {
-    font-size: calc(100% * var(--a11y-font-scale));
-  }
-  
-  /* Apply line spacing */
-  html[data-line-spacing] body {
-    line-height: var(--a11y-line-height);
-  }
-  
-  /* Apply font changes */
-  html[data-font-type] body {
-    font-family: var(--a11y-font-family);
-  }
-  
-  /* High contrast mode */
-  body.a11y-high-contrast {
-    color: #fff !important;
-    background: #000 !important;
-  }
-  
-  body.a11y-high-contrast * {
-    background-color: #000 !important;
-    color: #fff !important;
-    border-color: #fff !important;
-  }
-  
-  body.a11y-high-contrast a,
-  body.a11y-high-contrast button:not([disabled]) {
-    color: #ffff00 !important;
-    text-decoration: underline !important;
-  }
-  
-  body.a11y-high-contrast img,
-  body.a11y-high-contrast video {
-    filter: grayscale(100%) contrast(120%);
-  }
-  
-  /* Inverted colors */
-  body.a11y-inverted {
-    filter: invert(100%) hue-rotate(180deg);
-  }
-  
-  body.a11y-inverted img,
-  body.a11y-inverted video {
-    filter: invert(100%) hue-rotate(180deg);
-  }
-  
-  /* Highlight links */
-  body.a11y-highlight-links a {
-    text-decoration: underline !important;
-    font-weight: bold !important;
-    color: #0000ff !important;
-    background-color: #ffff00 !important;
-    outline: 2px solid #ffff00 !important;
-  }
-  
-  /* Highlight buttons */
-  body.a11y-highlight-buttons button,
-  body.a11y-highlight-buttons [role="button"] {
-    outline: 3px solid #ff0000 !important;
-    background-color: #ffff00 !important;
-    color: #000000 !important;
-    font-weight: bold !important;
-  }
-  
-  /* Focus indicators */
-  body.a11y-focus-indicators *:focus {
-    outline: 3px solid #0066cc !important;
-    outline-offset: 2px !important;
-  }
-  
-  /* Reduced animations */
-  @media (prefers-reduced-motion: reduce) {
-    * {
-      animation-duration: 0.001ms !important;
-      transition-duration: 0.001ms !important;
-      animation-iteration-count: 1 !important;
-      transition-delay: 0s !important;
-      animation-delay: 0s !important;
-    }
-  }
-  
-  body.a11y-reduced-animations * {
-    transition-duration: 0.1s !important;
-    animation-duration: 0.1s !important;
-  }
-  
-  body.a11y-no-animations * {
-    transition-property: none !important;
-    animation: none !important;
-    transition: none !important;
-  }
-`;
-
-/*
-// Example usage
-import { AccessibilityProvider, useAccessibility } from '@/components/UI/AccessibilityPanel';
-
-// In your app root
-<AccessibilityProvider>
-  <App />
-</AccessibilityProvider>
-
-// Optional: Add CSS (in a global CSS file or using a CSS-in-JS solution)
-const GlobalStyles = createGlobalStyle\`
-  ${accessibilityCss}
-\`;
-*/
+}
