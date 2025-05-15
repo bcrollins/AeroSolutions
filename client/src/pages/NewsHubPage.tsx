@@ -638,24 +638,49 @@ const NewsHubPage: React.FC = () => {
                   </div>
                   
                   <CardHeader className="p-5 pb-2">
-                    <Link href={`/articles/${post.id}`} className="outline-none">
-                      <CardTitle className="text-xl font-semibold line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    <Link href={`/articles/${post.id}`} className="outline-none group-hover:scale-[1.01] inline-block transition-transform duration-200">
+                      <CardTitle className="text-xl font-semibold line-clamp-2 group-hover:text-primary transition-colors">
                         {post.title}
                       </CardTitle>
                     </Link>
                     
                     <CardDescription className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-2">
-                      <Clock size={14} className="mr-1 text-gray-400" />
-                      {readingTime} min read
-                      <span className="mx-2">•</span>
-                      {formatDate(post.publishedAt || post.createdAt)}
+                      <span className="flex items-center bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full">
+                        <Clock size={14} className="mr-1 text-primary/70" />
+                        {readingTime} min read
+                      </span>
+                      <span className="mx-2 text-gray-300 dark:text-gray-600">•</span>
+                      <span className="text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors">
+                        {formatDate(post.publishedAt || post.createdAt)}
+                      </span>
                     </CardDescription>
                   </CardHeader>
                   
                   <CardContent className="p-5 pt-2">
-                    <p className="text-gray-600 dark:text-gray-300 line-clamp-3 text-sm">
-                      {post.summary || post.content.replace(/<[^>]*>/g, '').substring(0, 160) + '...'}
-                    </p>
+                    <div className="relative">
+                      <p className="text-gray-600 dark:text-gray-300 line-clamp-3 text-sm leading-relaxed">
+                        {post.summary || post.content.replace(/<[^>]*>/g, '').substring(0, 160) + '...'}
+                      </p>
+                      <div className="absolute bottom-0 right-0 w-full h-8 bg-gradient-to-t from-white dark:from-gray-900 to-transparent pointer-events-none"></div>
+                      
+                      {post.tags && post.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                          {post.tags.slice(0, 3).map((tag, idx) => (
+                            <Badge 
+                              key={idx} 
+                              variant="outline" 
+                              className="text-xs bg-transparent hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
+                              onClick={() => {
+                                setSearchQuery(tag);
+                                playSound('soft-click');
+                              }}
+                            >
+                              #{tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </CardContent>
                   
                   <CardFooter className="p-3 flex justify-between items-center border-t border-gray-100 dark:border-gray-800">
@@ -667,9 +692,14 @@ const NewsHubPage: React.FC = () => {
                     
                     <Link 
                       href={`/articles/${post.id}`}
-                      className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center transition-colors"
+                      className="text-sm font-medium text-primary hover:text-primary/80 dark:hover:text-primary/90 
+                        flex items-center transition-all px-3 py-1.5 rounded-md 
+                        bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 
+                        shadow-sm hover:shadow group"
+                      onClick={() => playSound('tap')}
                     >
-                      Read more <ChevronRight size={16} className="ml-1" />
+                      <span>Read article</span>
+                      <ChevronRight size={16} className="ml-1 transition-transform duration-300 group-hover:translate-x-1" />
                     </Link>
                   </CardFooter>
                 </Card>
