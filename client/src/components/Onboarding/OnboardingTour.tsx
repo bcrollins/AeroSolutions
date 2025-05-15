@@ -5,6 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { X, ArrowRight, ArrowLeft, Check } from 'lucide-react';
 import useLocalStorage from '../../hooks/use-local-storage';
 import { useToast } from '@/hooks/use-toast';
+import useSoundEffects from '../../hooks/use-sound-effects';
 
 // Define the structure of a tour step
 interface TourStep {
@@ -99,6 +100,7 @@ export default function OnboardingTour({ forceTour = false }: OnboardingTourProp
   const [elementPosition, setElementPosition] = useState({ top: 0, left: 0, width: 0, height: 0 });
   const highlightedElementRef = useRef<Element | null>(null);
   const { toast } = useToast();
+  const { playSound, soundEnabled } = useSoundEffects();
 
   // Show the tour if forced or if the user hasn't completed it
   useEffect(() => {
@@ -192,6 +194,7 @@ export default function OnboardingTour({ forceTour = false }: OnboardingTourProp
   // Handle next step
   const handleNextStep = () => {
     if (currentStepIndex < tourSteps.length - 1) {
+      if (soundEnabled) playSound('click');
       setCurrentStepIndex(currentStepIndex + 1);
     } else {
       completeTour();
@@ -201,6 +204,7 @@ export default function OnboardingTour({ forceTour = false }: OnboardingTourProp
   // Handle previous step
   const handlePrevStep = () => {
     if (currentStepIndex > 0) {
+      if (soundEnabled) playSound('click');
       setCurrentStepIndex(currentStepIndex - 1);
     }
   };
