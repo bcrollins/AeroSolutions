@@ -271,21 +271,15 @@ export default function App() {
           )}
         </Route>
 
-        {/* Articles Routes */}
+        {/* Articles Routes - Redirect to News */}
         <Route path="/articles">
-          {() => (
-            <>
-              <Helmet>
-                <title>Articles | RXAI - AI, Automation, and Web Development Resources</title>
-                <meta name="description" content="Explore our collection of SEO-optimized articles about artificial intelligence, automation, and web development. Find answers to your questions and learn with RXAI." />
-                <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://rollinsx.dev/articles" />
-                <html lang={i18n.language.split('-')[0]} />
-                <meta httpEquiv="Content-Language" content={i18n.language} />
-              </Helmet>
-              <ArticlesPage />
-            </>
-          )}
+          {() => {
+            // Redirect to /news
+            useEffect(() => {
+              setLocation('/news');
+            }, []);
+            return null;
+          }}
         </Route>
 
         <Route path="/articles/:slug">

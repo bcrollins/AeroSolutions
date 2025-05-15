@@ -123,10 +123,10 @@ const NewsHubPage: React.FC = () => {
   return (
     <div className="container py-12 max-w-7xl">
       <Helmet>
-        <title>ROLLINSX | Knowledge Hub - Latest AI Articles</title>
+        <title>RXAI | AI News & Articles Hub</title>
         <meta 
           name="description" 
-          content="Explore our comprehensive collection of AI articles, business intelligence insights, and tech innovations at ROLLINSX Knowledge Hub." 
+          content="Explore our comprehensive collection of AI articles, tutorials, business intelligence insights, and tech innovations at the RXAI News Hub." 
         />
       </Helmet>
 
@@ -135,16 +135,16 @@ const NewsHubPage: React.FC = () => {
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
           <Link href="/" className="hover:text-primary transition-colors">Home</Link>
           <ChevronRight className="h-4 w-4" />
-          <span className="text-primary font-medium">Knowledge Hub</span>
+          <span className="text-primary font-medium">AI News & Articles</span>
         </div>
         
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
           <div>
             <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-600">
-              ROLLINSX Knowledge Hub
+              RXAI News & Articles
             </h1>
             <p className="text-muted-foreground mt-2 max-w-2xl">
-              Explore our comprehensive collection of articles on artificial intelligence, business applications, and technology innovations.
+              Your comprehensive resource for articles on artificial intelligence, business applications, and the latest in technology innovations.
             </p>
           </div>
         </div>
@@ -169,6 +169,8 @@ const NewsHubPage: React.FC = () => {
               <TabsTrigger value="ai">AI</TabsTrigger>
               <TabsTrigger value="business">Business</TabsTrigger>
               <TabsTrigger value="tech">Technology</TabsTrigger>
+              <TabsTrigger value="tutorials">Tutorials</TabsTrigger>
+              <TabsTrigger value="news">News</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
