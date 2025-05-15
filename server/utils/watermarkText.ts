@@ -1,4 +1,4 @@
-import { grokApi } from '../grok';
+import { grokApi } from './grok';
 
 /**
  * Use XAI to subtly watermark text content with ROLLINSX branding

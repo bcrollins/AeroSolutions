@@ -1,4 +1,4 @@
-import { grokApi } from '../grok';
+import { grokApi } from './grok';
 import { db } from '../db';
 import { socialPlatforms, posts, socialPosts } from '@shared/schema';
 import { eq } from 'drizzle-orm';

@@ -1,7 +1,7 @@
 import { db } from '../db';
 import { eq, and, sql, desc, gte } from 'drizzle-orm';
 import { users, userAchievements, achievements, insertUserAchievementSchema } from '@shared/schema';
-import { grokApi } from '../grok';
+import { grokApi } from './grok';
 
 /**
  * Achievement Service

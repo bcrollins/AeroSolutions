@@ -85,7 +85,7 @@ class XAIApi {
         },
       ];
 
-      const response = await openai.chat.completions.create({
+      const response = await xai.chat.completions.create({
         model,
         messages,
         max_tokens: maxTokens,
@@ -115,7 +115,7 @@ class XAIApi {
     model = 'grok-2-vision-1212'
   ): Promise<string> {
     try {
-      const response = await openai.chat.completions.create({
+      const response = await xai.chat.completions.create({
         model,
         messages: [
           {
