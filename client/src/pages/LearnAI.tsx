@@ -52,7 +52,8 @@ import {
   Briefcase,
   Building,
   Calculator,
-  Trophy
+  Trophy,
+  Lock
 } from 'lucide-react';
 
 // Lazy loaded components for better performance
@@ -176,15 +177,440 @@ const Testimonial: React.FC<{
   );
 };
 
+// Career data for salary calculator
+interface CareerData {
+  role: string;
+  salaryRange: {
+    before: { min: number, max: number },
+    after: { min: number, max: number }
+  };
+  demandGrowth: number; // Percentage growth YoY
+  companies: string[];
+}
+
+const aiCareers: Record<string, CareerData> = {
+  'data-scientist': {
+    role: 'Data Scientist',
+    salaryRange: {
+      before: { min: 85000, max: 120000 },
+      after: { min: 110000, max: 165000 }
+    },
+    demandGrowth: 32,
+    companies: ['Google', 'Microsoft', 'Amazon', 'Meta', 'Apple']
+  },
+  'ml-engineer': {
+    role: 'Machine Learning Engineer',
+    salaryRange: {
+      before: { min: 95000, max: 140000 },
+      after: { min: 125000, max: 185000 }
+    },
+    demandGrowth: 38,
+    companies: ['Tesla', 'NVIDIA', 'OpenAI', 'IBM', 'Microsoft']
+  },
+  'ai-researcher': {
+    role: 'AI Research Scientist',
+    salaryRange: {
+      before: { min: 110000, max: 160000 },
+      after: { min: 140000, max: 210000 }
+    },
+    demandGrowth: 26,
+    companies: ['DeepMind', 'Google Brain', 'OpenAI', 'Microsoft Research', 'Stanford AI Lab']
+  },
+  'ai-product-manager': {
+    role: 'AI Product Manager',
+    salaryRange: {
+      before: { min: 90000, max: 135000 },
+      after: { min: 115000, max: 170000 }
+    },
+    demandGrowth: 29,
+    companies: ['Adobe', 'Salesforce', 'Amazon', 'Spotify', 'Netflix']
+  },
+  'computer-vision-engineer': {
+    role: 'Computer Vision Engineer',
+    salaryRange: {
+      before: { min: 95000, max: 145000 },
+      after: { min: 120000, max: 180000 }
+    },
+    demandGrowth: 31,
+    companies: ['Meta', 'Waymo', 'Tesla', 'Cruise', 'Apple']
+  }
+};
+
+// ROI Calculator data
+const courseCost = 999; // Annual course subscription
+const avgSalaryIncrease = 25000;
+const avgTimeToPromotion = 9; // months
+const jobPlacementRate = 0.87; // 87% placement rate
+
+// Curriculum modules for preview
+const curriculumModules = [
+  {
+    id: 'fundamentals',
+    title: 'AI Fundamentals',
+    lessons: [
+      { id: 'intro', title: 'Introduction to AI', duration: '15 min', free: true },
+      { id: 'history', title: 'History and Evolution of AI', duration: '25 min', free: true },
+      { id: 'types', title: 'Types of AI Systems', duration: '30 min', free: true },
+      { id: 'ethics', title: 'Ethical Considerations in AI', duration: '45 min', free: false },
+      { id: 'future', title: 'The Future of AI', duration: '35 min', free: false },
+    ]
+  },
+  {
+    id: 'ml-basics',
+    title: 'Machine Learning Basics',
+    lessons: [
+      { id: 'intro-ml', title: 'Introduction to Machine Learning', duration: '20 min', free: true },
+      { id: 'supervised', title: 'Supervised Learning', duration: '40 min', free: false },
+      { id: 'unsupervised', title: 'Unsupervised Learning', duration: '35 min', free: false },
+      { id: 'reinforcement', title: 'Reinforcement Learning', duration: '45 min', free: false },
+      { id: 'evaluation', title: 'Model Evaluation & Validation', duration: '50 min', free: false },
+    ]
+  },
+  {
+    id: 'deep-learning',
+    title: 'Deep Learning',
+    lessons: [
+      { id: 'intro-dl', title: 'Introduction to Neural Networks', duration: '30 min', free: false },
+      { id: 'cnn', title: 'Convolutional Neural Networks', duration: '55 min', free: false },
+      { id: 'rnn', title: 'Recurrent Neural Networks', duration: '50 min', free: false },
+      { id: 'transformers', title: 'Transformers & Attention', duration: '60 min', free: false },
+      { id: 'gans', title: 'Generative Adversarial Networks', duration: '45 min', free: false },
+    ]
+  }
+];
+
+// Pricing tiers
+const pricingPlans = [
+  {
+    id: 'free',
+    name: 'Free Trial',
+    price: 0,
+    description: 'Sample our curriculum with limited access',
+    features: [
+      'Access to 5 beginner lessons',
+      'Community forum read access',
+      'AI basics eBook',
+      'Course syllabus preview'
+    ],
+    popular: false,
+    cta: 'Start Free Trial'
+  },
+  {
+    id: 'basic',
+    name: 'Basic',
+    price: 19,
+    annualPrice: 190,
+    description: 'Perfect for AI enthusiasts getting started',
+    features: [
+      'Access to all beginner courses',
+      'Basic AI project templates',
+      'Community forum access',
+      'Monthly live Q&A sessions',
+      'Course completion certificate'
+    ],
+    popular: false,
+    cta: 'Get Started'
+  },
+  {
+    id: 'pro',
+    name: 'Professional',
+    price: 49,
+    annualPrice: 490,
+    description: 'Comprehensive AI education for serious learners',
+    features: [
+      'Access to all courses and workshops',
+      'Advanced project portfolio building',
+      '1:1 mentoring session (monthly)',
+      'Professional certification',
+      'Career path guidance',
+      'Job placement assistance'
+    ],
+    popular: true,
+    cta: 'Go Professional'
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    price: 199,
+    annualPrice: 1990,
+    description: 'Complete solution for teams and companies',
+    features: [
+      'Everything in Professional plan',
+      'Team-based learning paths',
+      'Custom workshops for your company',
+      'Dedicated account manager',
+      'Private AI consulting (10hrs)',
+      'Custom certification program',
+      'Enterprise analytics dashboard'
+    ],
+    popular: false,
+    cta: 'Contact Sales'
+  }
+];
+
+// Social proof companies
+const trustedCompanies = [
+  'Google', 'Microsoft', 'Amazon', 'Meta', 'IBM', 'Apple', 'NVIDIA', 'Tesla', 'Salesforce', 'Adobe'
+];
+
+// Enrollment stats for live counter
+const enrollmentStats = {
+  totalStudents: 54289,
+  activeToday: 3762,
+  newThisWeek: 842,
+  avgRating: 4.8,
+  completionRate: 0.91
+};
+
+// Expert endorsements
+const expertEndorsements = [
+  {
+    name: 'Dr. Michael Chen',
+    title: 'AI Research Director, Stanford University',
+    quote: 'RXAI provides the most comprehensive AI curriculum I\'ve seen. Their teaching methodology bridges theory and practice exceptionally well.',
+    image: 'https://placehold.co/150x150/2a2a2a/007bff?text=MC'
+  },
+  {
+    name: 'Sarah Johnson, PhD',
+    title: 'Chief AI Officer, TechVision Corp',
+    quote: 'I\'ve hired multiple RXAI graduates and they consistently demonstrate superior practical knowledge compared to other candidates.',
+    image: 'https://placehold.co/150x150/2a2a2a/007bff?text=SJ'
+  },
+  {
+    name: 'James Wilson',
+    title: 'Senior ML Engineer, NVIDIA',
+    quote: 'The hands-on projects in RXAI\'s curriculum directly translate to real-world applications. This is what the industry needs.',
+    image: 'https://placehold.co/150x150/2a2a2a/007bff?text=JW'
+  }
+];
+
+// Course success metrics for before/after comparison
+const successMetrics = [
+  { 
+    metric: 'Average Salary', 
+    before: '$85,000', 
+    after: '$110,000', 
+    increase: '29%',
+    icon: <DollarSign className="w-5 h-5 text-[#007bff]" />
+  },
+  { 
+    metric: 'Job Interviews', 
+    before: '2-3 per month', 
+    after: '8-10 per month', 
+    increase: '300%',
+    icon: <Briefcase className="w-5 h-5 text-[#007bff]" />
+  },
+  { 
+    metric: 'Project Portfolio', 
+    before: '1-2 projects', 
+    after: '10+ advanced projects', 
+    increase: '500%',
+    icon: <Award className="w-5 h-5 text-[#007bff]" />
+  },
+  { 
+    metric: 'Technical Skills', 
+    before: 'Basic/Intermediate', 
+    after: 'Advanced/Expert', 
+    increase: '85%',
+    icon: <BarChart3 className="w-5 h-5 text-[#007bff]" />
+  }
+];
+
+// Video testimonials
+const videoTestimonials = [
+  {
+    id: 'video1',
+    name: 'Jamie Cho',
+    role: 'Senior Data Scientist at Acme Inc.',
+    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    thumbnailUrl: 'https://placehold.co/400x225/2a2a2a/007bff?text=Jamie+Cho+Video',
+    quote: 'After completing the AI program, I received three job offers within two weeks.'
+  },
+  {
+    id: 'video2',
+    name: 'Robert Martinez',
+    role: 'AI Engineer at TechCorp',
+    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    thumbnailUrl: 'https://placehold.co/400x225/2a2a2a/007bff?text=Robert+Martinez+Video',
+    quote: 'The hands-on projects helped me build a portfolio that impressed employers.'
+  },
+  {
+    id: 'video3',
+    name: 'Lisa Johnson',
+    role: 'ML Team Lead at InnovateTech',
+    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    thumbnailUrl: 'https://placehold.co/400x225/2a2a2a/007bff?text=Lisa+Johnson+Video',
+    quote: 'I transitioned from a non-technical role to ML Team Lead within 9 months.'
+  }
+];
+
+// Calculate time until next cohort start
+const getTimeUntilNextCohort = () => {
+  const now = new Date();
+  const nextCohortStart = new Date();
+  
+  // Next cohort starts on the 1st of next month
+  nextCohortStart.setMonth(nextCohortStart.getMonth() + 1);
+  nextCohortStart.setDate(1);
+  nextCohortStart.setHours(0, 0, 0, 0);
+  
+  const timeRemaining = nextCohortStart.getTime() - now.getTime();
+  
+  const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+  
+  return { days, hours, minutes };
+};
+
 const LearnAI: React.FC = () => {
+  // Quiz state
   const [currentQuestion, setCurrentQuestion] = useState<number>(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [score, setScore] = useState<number>(0);
   const [quizCompleted, setQuizCompleted] = useState<boolean>(false);
+  
+  // UI state
   const [showTestimonials, setShowTestimonials] = useState<boolean>(false);
   const [pageLoadTime] = useState<number>(Date.now());
   const [hasScrolled, setHasScrolled] = useState<boolean>(false);
   const [showExitIntent, setShowExitIntent] = useState<boolean>(true);
+  const [activePricingTab, setActivePricingTab] = useState<string>('monthly');
+  const [selectedVideoIndex, setSelectedVideoIndex] = useState<number>(0);
+  const [showVideoDialog, setShowVideoDialog] = useState<boolean>(false);
+  const [countdownTime, setCountdownTime] = useState(getTimeUntilNextCohort());
+  const [currentEnrollmentCount, setCurrentEnrollmentCount] = useState(enrollmentStats.totalStudents);
+  const [activeCurriculumModule, setActiveCurriculumModule] = useState('fundamentals');
+  
+  // Salary calculator state
+  const [selectedCareer, setSelectedCareer] = useState<string>('data-scientist');
+  const [experienceYears, setExperienceYears] = useState<number>(3);
+  const [location, setLocation] = useState<string>('us-average');
+  const locationMultiplier = location === 'us-coast' ? 1.25 : location === 'us-midwest' ? 0.85 : 1;
+  const currentCareer = aiCareers[selectedCareer];
+  const calculatedSalaryBefore = Math.round((currentCareer.salaryRange.before.min + (currentCareer.salaryRange.before.max - currentCareer.salaryRange.before.min) * (Math.min(experienceYears, 10) / 10)) * locationMultiplier);
+  const calculatedSalaryAfter = Math.round((currentCareer.salaryRange.after.min + (currentCareer.salaryRange.after.max - currentCareer.salaryRange.after.min) * (Math.min(experienceYears, 10) / 10)) * locationMultiplier);
+  
+  // ROI calculator state
+  const [currentSalary, setCurrentSalary] = useState<number>(85000);
+  const [careerGoals, setCareerGoals] = useState<string>('promotion');
+  const roiMultiplier = careerGoals === 'promotion' ? 1.0 : careerGoals === 'new-career' ? 1.2 : 0.8;
+  const calculatedRoi = Math.round((avgSalaryIncrease * roiMultiplier) / courseCost);
+  const projectedSalaryIncrease = Math.round(avgSalaryIncrease * roiMultiplier);
+  const projectedFirstYearReturn = projectedSalaryIncrease - courseCost;
+  
+  // Multi-step enrollment form state
+  const [enrollmentStep, setEnrollmentStep] = useState<number>(1);
+  const [enrollmentForm, setEnrollmentForm] = useState({
+    name: '',
+    email: '',
+    goal: '',
+    experience: '',
+    referral: ''
+  });
+  
+  // Interactive elements refs
+  const aiDemoRef = useRef<HTMLDivElement>(null);
+  const pricingRef = useRef<HTMLDivElement>(null);
+  const curriculumRef = useRef<HTMLDivElement>(null);
+  
+  // Chatbot state
+  const [chatbotOpen, setChatbotOpen] = useState<boolean>(false);
+  const [chatMessages, setChatMessages] = useState<Array<{type: 'user' | 'bot', text: string}>>([
+    {type: 'bot', text: 'Hi there! 👋 I\'m your AI learning assistant. How can I help you today?'}
+  ]);
+  const [chatInput, setChatInput] = useState<string>('');
+  
+  // Update countdown timer every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCountdownTime(getTimeUntilNextCohort());
+    }, 60000);
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  // Simulate enrollment counter updates for social proof
+  useEffect(() => {
+    // Randomly increment enrollment numbers periodically
+    const interval = setInterval(() => {
+      const randomIncrement = Math.floor(Math.random() * 3) + 1;
+      setCurrentEnrollmentCount(prev => prev + randomIncrement);
+    }, 45000); // Every 45 seconds
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  // Handle chatbot interactions
+  const handleChatSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!chatInput.trim()) return;
+    
+    // Add user message
+    const userMessage = {type: 'user' as const, text: chatInput};
+    setChatMessages(prev => [...prev, userMessage]);
+    setChatInput('');
+    
+    // Track chat engagement
+    trackEvent('chatbot_message_sent', 'engagement', 'learn_ai_landing');
+    
+    // Simulate response generation
+    setTimeout(() => {
+      let botResponse = '';
+      
+      // Simple rule-based responses
+      const lowerInput = chatInput.toLowerCase();
+      
+      if (lowerInput.includes('price') || lowerInput.includes('cost') || lowerInput.includes('expensive')) {
+        botResponse = 'Our courses start at just $19/month for the Basic plan. The Professional plan at $49/month offers the best value with mentorship and career assistance. Would you like to see the full pricing details?';
+      } else if (lowerInput.includes('free') || lowerInput.includes('trial')) {
+        botResponse = 'Yes! We offer a free trial that gives you access to 5 introductory lessons. You can sign up without a credit card and explore the basics of AI to see if our program is right for you.';
+      } else if (lowerInput.includes('job') || lowerInput.includes('career') || lowerInput.includes('salary')) {
+        botResponse = 'Our graduates see an average salary increase of $25,000 after completing our program. We also offer job placement assistance with our Professional plan, which has an 87% placement rate within 6 months of graduation.';
+      } else if (lowerInput.includes('time') || lowerInput.includes('duration') || lowerInput.includes('long')) {
+        botResponse = 'Most students complete our core curriculum in 3-6 months with 5-10 hours of study per week. However, you will have lifetime access to all course materials, so you can learn at your own pace.';
+      } else if (lowerInput.includes('certificate') || lowerInput.includes('certification')) {
+        botResponse = 'Yes, all paid plans include course completion certificates. Our Professional plan includes industry-recognized professional certification that employers value highly.';
+      } else {
+        botResponse = 'Thanks for your question! Our AI courses are designed to take you from beginner to professional with practical, hands-on training. Would you like to see our curriculum or discuss specific plans that might fit your goals?';
+      }
+      
+      setChatMessages(prev => [...prev, {type: 'bot', text: botResponse}]);
+    }, 1000);
+  };
+  
+  // Handle enrollment form updates
+  const updateEnrollmentForm = (field: string, value: string) => {
+    setEnrollmentForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+  
+  // Proceed to next enrollment step
+  const nextEnrollmentStep = () => {
+    setEnrollmentStep(prev => prev + 1);
+    trackEvent('enrollment_step_completed', 'conversion', `step_${enrollmentStep}`);
+  };
+  
+  // Handle demo registration
+  const handleQuickDemoSignup = (email: string) => {
+    if (!email || !email.includes('@')) return;
+    
+    // Track conversion
+    trackEvent('demo_registration', 'conversion', 'quick_signup');
+    
+    // Navigate to demo
+    window.location.href = `/ai-courses/demo?email=${encodeURIComponent(email)}`;
+  };
+  
+  // Scroll to section
+  const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => {
+    if (ref.current) {
+      ref.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
   
   // Track page view and engagement metrics
   useEffect(() => {
@@ -333,12 +759,23 @@ const LearnAI: React.FC = () => {
               "@type": "Organization",
               "name": "RXAI",
               "sameAs": "https://rxai.com"
+            },
+            "offers": {
+              "@type": "Offer",
+              "price": "49.00",
+              "priceCurrency": "USD",
+              "availability": "https://schema.org/InStock"
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.8",
+              "reviewCount": "2547"
             }
           })}
         </script>
       </Helmet>
       
-      {/* Show exit intent popup */}
+      {/* Show exit intent popup - Enhancement #18: Exit-Intent Popup */}
       {showExitIntent && (
         <Suspense fallback={null}>
           <ExitIntentPopup 
@@ -349,283 +786,1516 @@ const LearnAI: React.FC = () => {
         </Suspense>
       )}
       
+      {/* Enhancement #12: Automated Chatbot Assistance */}
+      <div className={`fixed bottom-5 right-5 z-50 transition-all ${chatbotOpen ? 'scale-100' : 'scale-0'}`}>
+        <Card className="w-80 max-h-96 flex flex-col bg-[#2a2a2a] border-[#007bff]/30 overflow-hidden shadow-lg">
+          <div className="bg-[#007bff] p-3 flex justify-between items-center">
+            <div className="flex items-center">
+              <Sparkles className="w-5 h-5 text-white mr-2" />
+              <h3 className="font-bold text-white">AI Assistant</h3>
+            </div>
+            <Button variant="ghost" size="icon" className="text-white" onClick={() => setChatbotOpen(false)}>
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11.7816 4.03157C12.0062 3.80702 12.0062 3.44295 11.7816 3.2184C11.5571 2.99385 11.193 2.99385 10.9685 3.2184L7.50005 6.68682L4.03164 3.2184C3.80708 2.99385 3.44301 2.99385 3.21846 3.2184C2.99391 3.44295 2.99391 3.80702 3.21846 4.03157L6.68688 7.49999L3.21846 10.9684C2.99391 11.193 2.99391 11.557 3.21846 11.7816C3.44301 12.0061 3.80708 12.0061 4.03164 11.7816L7.50005 8.31316L10.9685 11.7816C11.193 12.0061 11.5571 12.0061 11.7816 11.7816C12.0062 11.557 12.0062 11.193 11.7816 10.9684L8.31322 7.49999L11.7816 4.03157Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg>
+            </Button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-3 space-y-3 max-h-72">
+            {chatMessages.map((message, index) => (
+              <div key={index} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`rounded-lg p-2 max-w-[85%] ${message.type === 'user' ? 'bg-[#007bff] text-white' : 'bg-[#333] text-white'}`}>
+                  {message.text}
+                </div>
+              </div>
+            ))}
+          </div>
+          <form onSubmit={handleChatSubmit} className="border-t border-[#444] p-2 flex">
+            <Input 
+              type="text" 
+              placeholder="Ask a question..." 
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              className="flex-1 bg-[#333] border-[#444] focus:border-[#007bff] text-white"
+            />
+            <Button type="submit" size="sm" className="ml-2 bg-[#007bff]">
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1.20308 1.04312C1.00328 0.954998 0.772341 0.989939 0.601954 1.13468C0.431567 1.27942 0.341824 1.51485 0.364101 1.75111L0.997601 7.00111C1.01507 7.1897 1.11449 7.36175 1.26737 7.47371L8.20094 12.4435C8.36139 12.5634 8.57361 12.5982 8.76487 12.5367C8.95613 12.4752 9.10333 12.3244 9.15484 12.1332L9.84939 9.93616L13.9526 5.83255C14.2086 5.57653 14.2086 5.17026 13.9526 4.91424C13.6965 4.65821 13.2903 4.65821 13.0342 4.91424L9.3902 8.55832L7.27668 7.00111L13.1669 2.9511C13.3777 2.80513 13.4593 2.54176 13.3678 2.31127C13.2763 2.08078 13.0299 1.94559 12.7822 1.9881L1.28216 3.68918C1.03261 3.73168 0.843343 3.91259 0.800111 4.16324L0.0646143 7.94386C0.0210442 8.19658 0.137134 8.44699 0.356968 8.58695L1.26737 9.20042C1.48721 9.34038 1.76655 9.32375 1.96886 9.15479L5.99698 5.83253C6.253 5.57651 6.253 5.17024 5.99698 4.91421C5.74096 4.65819 5.33469 4.65819 5.07867 4.91421L1.65808 7.70979L1.34833 7.48349L1.89337 4.69293L12.0724 3.18138L6.95483 6.70017C6.72676 6.85906 6.60673 7.13452 6.64855 7.40957L7.56534 13.4098C7.6154 13.7397 7.91573 13.9754 8.25102 13.9754H8.35159C8.70971 13.9582 8.9991 13.6748 9.02276 13.3159L9.6381 9.67175L12.3703 7.0009C12.6263 6.74487 12.6263 6.33861 12.3703 6.08258C12.1142 5.82656 11.708 5.82656 11.4519 6.08258L8.93856 8.59587L8.52803 11.237L7.84718 7.00553L1.20308 1.04312Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg>
+            </Button>
+          </form>
+        </Card>
+      </div>
+      
+      {!chatbotOpen && (
+        <Button 
+          onClick={() => setChatbotOpen(true)}
+          className="fixed bottom-5 right-5 z-50 rounded-full w-14 h-14 bg-[#007bff] hover:bg-blue-600 flex items-center justify-center shadow-lg"
+        >
+          <Sparkles className="w-6 h-6 text-white" />
+        </Button>
+      )}
+      
       <div className="container mx-auto py-12 px-4">
         <div className="flex flex-col items-center justify-center">
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-4xl md:text-6xl font-bold text-center mb-4"
-          >
-            Learn AI with RXAI
-          </motion.h1>
-          
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-xl md:text-2xl text-center mb-8 text-[#007bff]"
-          >
-            The World Leader in Artificial Intelligence Education
-          </motion.h2>
-          
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-lg md:text-xl text-center mb-6 max-w-3xl"
-          >
-            Transform your career with our industry-leading AI courses. Gain practical skills through 
-            hands-on projects, receive mentorship from AI experts, and join a community of innovators.
-          </motion.p>
-          
-          {/* Personalized Content Section */}
-          <div className="w-full max-w-4xl mx-auto mb-8">
-            <Suspense fallback={
-              <div className="w-full h-24 bg-gray-800/50 animate-pulse rounded-lg"></div>
-            }>
-              <PersonalizedContent />
-            </Suspense>
+          {/* Enhancement #1: Dynamic Hero Section */}
+          <div className="w-full max-w-6xl mb-16">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.7 }}
+              className="relative rounded-xl overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-[#1a1a1a] via-[#1a1a1a]/80 to-transparent z-10"></div>
+              <div className="relative z-20 p-8 md:p-12 flex flex-col md:max-w-[60%]">
+                <motion.h1 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                  className="text-4xl md:text-6xl font-bold mb-4"
+                >
+                  Master AI and <span className="text-[#007bff]">Transform Your Future</span>
+                </motion.h1>
+                
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  className="text-lg md:text-xl mb-6 text-gray-300"
+                >
+                  Join {currentEnrollmentCount.toLocaleString()}+ students mastering AI through hands-on projects, 
+                  expert mentorship, and a curriculum built by industry leaders.
+                </motion.p>
+                
+                {/* Enhancement #5: Countdown Timer */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="bg-[#2a2a2a]/80 p-4 rounded-lg mb-6 inline-block"
+                >
+                  <p className="text-sm text-[#007bff] font-medium mb-2">Next cohort starts in:</p>
+                  <div className="flex space-x-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold">{countdownTime.days}</div>
+                      <div className="text-xs text-gray-400">Days</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold">{countdownTime.hours}</div>
+                      <div className="text-xs text-gray-400">Hours</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold">{countdownTime.minutes}</div>
+                      <div className="text-xs text-gray-400">Mins</div>
+                    </div>
+                  </div>
+                </motion.div>
+                
+                {/* Enhancement #15: One-Click Demo Registration */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                  className="flex flex-col sm:flex-row gap-4"
+                >
+                  <div className="flex-1">
+                    <Input 
+                      type="email" 
+                      placeholder="Enter your email"
+                      id="quick-demo-email"
+                      className="bg-white/10 border-0 focus:ring-[#007bff] text-white h-12"
+                    />
+                  </div>
+                  <Button 
+                    onClick={() => {
+                      const email = (document.getElementById('quick-demo-email') as HTMLInputElement).value;
+                      handleQuickDemoSignup(email);
+                    }}
+                    className="bg-[#007bff] hover:bg-blue-600 h-12 px-6 text-base"
+                  >
+                    <Play className="w-4 h-4 mr-2" /> Try Free Demo
+                  </Button>
+                </motion.div>
+                
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.5 }}
+                  className="mt-4 text-sm text-gray-400"
+                >
+                  No credit card required. Get instant access to 5 free lessons.
+                </motion.div>
+              </div>
+              
+              {/* Enhancement #1: Dynamic Interactive AI Demo */}
+              <div 
+                ref={aiDemoRef}
+                className="absolute right-0 bottom-0 top-0 w-full md:w-[45%] bg-[#2a2a2a] rounded-l-xl hidden md:block"
+              >
+                <div className="h-full flex flex-col justify-center items-center p-6 relative">
+                  <div className="bg-[#1a1a1a] rounded-lg p-4 w-full max-w-sm mx-auto shadow-xl">
+                    <div className="flex items-center mb-4">
+                      <div className="w-8 h-8 rounded-full bg-[#007bff] flex items-center justify-center mr-3">
+                        <Zap className="w-4 h-4 text-white" />
+                      </div>
+                      <h3 className="font-semibold">RXAI Image Classifier</h3>
+                    </div>
+                    <div className="bg-[#333] rounded-lg p-4 mb-4 h-48 flex items-center justify-center">
+                      <div className="text-center">
+                        <p className="text-gray-400 mb-2">Try our live AI demo</p>
+                        <Button 
+                          variant="outline" 
+                          className="border-[#007bff] text-[#007bff] hover:bg-[#007bff] hover:text-white"
+                          onClick={() => window.location.href = '/ai-courses/demo'}
+                        >
+                          Test AI Model Now
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="bg-[#333] h-3 w-full rounded-full overflow-hidden">
+                        <div className="bg-[#007bff] h-full w-[75%]"></div>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span>Building your skills</span>
+                        <span>75%</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="absolute -right-1 top-6 bottom-6 w-2 bg-[#007bff] rounded-l-full"></div>
+                </div>
+              </div>
+            </motion.div>
           </div>
           
-          <div className="w-full max-w-6xl">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="bg-[#2a2a2a] rounded-lg p-6 md:p-8 mb-12"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <h2 className="text-2xl md:text-3xl font-bold mb-6 text-white">Master AI Skills That Matter</h2>
-                  <ul className="space-y-3">
-                    <li className="flex items-start">
-                      <span className="text-[#007bff] mr-2">✓</span>
-                      <span>Comprehensive curriculum from fundamental to advanced AI concepts</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-[#007bff] mr-2">✓</span>
-                      <span>Hands-on projects with real-world applications</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-[#007bff] mr-2">✓</span>
-                      <span>Mentorship from industry experts with proven track records</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-[#007bff] mr-2">✓</span>
-                      <span>Self-paced learning with lifetime access to course materials</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-[#007bff] mr-2">✓</span>
-                      <span>Recognized certification to showcase your expertise</span>
-                    </li>
-                  </ul>
-                  <div className="mt-8">
-                    <Button 
-                      className="bg-[#007bff] hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg transition-colors duration-300"
-                      onClick={() => window.location.href = '/ai-courses/catalog'}
-                    >
-                      Browse Course Catalog
-                    </Button>
-                  </div>
-                </div>
-                <div className="rounded-lg overflow-hidden">
-                  <img 
-                    src="/images/ai-learning-dashboard.webp" 
-                    alt="RXAI Learning Dashboard" 
-                    className="w-full h-auto"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = "https://placehold.co/600x400/2a2a2a/007bff?text=AI+Learning+Platform";
-                    }}
-                  />
-                </div>
+          {/* Enhancement #10: Live Enrollment Counter */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="w-full max-w-6xl mb-16"
+          >
+            <div className="bg-[#2a2a2a]/60 rounded-lg p-4 flex flex-wrap justify-around">
+              <div className="text-center px-4 py-2">
+                <div className="text-3xl font-bold text-[#007bff]">{currentEnrollmentCount.toLocaleString()}</div>
+                <div className="text-sm text-gray-400">Total Students</div>
               </div>
-            </motion.div>
+              <div className="text-center px-4 py-2">
+                <div className="text-3xl font-bold text-[#007bff]">{enrollmentStats.activeToday.toLocaleString()}</div>
+                <div className="text-sm text-gray-400">Learning Today</div>
+              </div>
+              <div className="text-center px-4 py-2">
+                <div className="text-3xl font-bold text-[#007bff]">{enrollmentStats.avgRating}</div>
+                <div className="text-sm text-gray-400">Student Rating</div>
+              </div>
+              <div className="text-center px-4 py-2">
+                <div className="text-3xl font-bold text-[#007bff]">{Math.round(enrollmentStats.completionRate * 100)}%</div>
+                <div className="text-sm text-gray-400">Completion Rate</div>
+              </div>
+            </div>
+          </motion.div>
+          
+          {/* Enhancement #3: Social Proof Wall */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="w-full max-w-6xl mb-16"
+          >
+            <h2 className="text-2xl font-bold mb-2 text-center">Trusted by Industry Leaders</h2>
+            <p className="text-center text-gray-400 mb-8">Our graduates work at top technology companies worldwide</p>
             
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="bg-[#2a2a2a] rounded-lg p-6 md:p-8 mb-12"
-            >
-              <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center">Is this course for you?</h2>
-              <p className="text-center mb-8 text-gray-300">
-                Take our quick readiness quiz to see if you're prepared for our AI courses and get personalized recommendations.
-              </p>
-              
-              {!quizCompleted ? (
-                <Card className="bg-[#333] border-none p-6">
-                  <div className="mb-6">
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>Question {currentQuestion + 1} of {quizQuestions.length}</span>
-                      <span>{Math.round(progressPercentage)}% Complete</span>
-                    </div>
-                    <Progress value={progressPercentage} className="h-2 bg-gray-700" />
-                  </div>
-                  
-                  <h3 className="text-xl font-medium mb-6">{currentQuestionData.question}</h3>
-                  
-                  <RadioGroup 
-                    value={answers[currentQuestionData.id] || ""} 
-                    onValueChange={(value) => {
-                      const option = currentQuestionData.options.find(o => o.id === value);
-                      if (option) {
-                        handleOptionSelect(currentQuestionData.id, value, option.points);
-                      }
-                    }}
-                    className="space-y-4 mb-8"
-                  >
-                    {currentQuestionData.options.map((option) => (
-                      <div key={option.id} className="flex items-center space-x-2 p-3 rounded-md hover:bg-[#444] transition-colors">
-                        <RadioGroupItem value={option.id} id={option.id} />
-                        <Label htmlFor={option.id} className="flex-1 cursor-pointer">{option.text}</Label>
+            <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
+              {trustedCompanies.map((company, index) => (
+                <div key={index} className="text-gray-400 text-lg font-semibold">{company}</div>
+              ))}
+            </div>
+          </motion.div>
+          
+          {/* Enhancement #19: Before/After Skills Comparison */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+            className="w-full max-w-6xl mb-16"
+          >
+            <h2 className="text-2xl font-bold mb-8 text-center">Your Transformation with RXAI</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {successMetrics.map((metric, index) => (
+                <Card key={index} className="bg-[#2a2a2a] border-none overflow-hidden">
+                  <div className="p-6">
+                    <div className="flex items-center mb-4">
+                      <div className="w-10 h-10 rounded-full bg-[#007bff]/20 flex items-center justify-center mr-3">
+                        {metric.icon}
                       </div>
-                    ))}
-                  </RadioGroup>
-                  
-                  <div className="flex justify-between">
-                    <Button 
-                      variant="outline" 
-                      onClick={handlePreviousQuestion}
-                      disabled={currentQuestion === 0}
-                    >
-                      Previous
-                    </Button>
-                    <Button 
-                      onClick={handleNextQuestion}
-                      disabled={!answers[currentQuestionData.id]}
-                      className="bg-[#007bff] hover:bg-blue-600"
-                    >
-                      {currentQuestion === quizQuestions.length - 1 ? "See Results" : "Next"}
-                    </Button>
-                  </div>
-                </Card>
-              ) : (
-                <Card className="bg-[#333] border-none p-6">
-                  <div className="text-center mb-6">
-                    <h3 className="text-2xl font-bold text-[#007bff]">{result.title}</h3>
-                    <div className="flex justify-center my-4">
-                      <div className="inline-flex items-center justify-center p-4 bg-[#2a2a2a] rounded-full">
-                        <span className="text-2xl font-bold">{score}/{quizQuestions.length * 10}</span>
-                      </div>
+                      <h3 className="font-semibold">{metric.metric}</h3>
                     </div>
-                    <p className="text-gray-300 mb-4">{result.description}</p>
-                    <p className="font-medium mb-6">{result.recommendation}</p>
                     
-                    <div className="flex flex-col sm:flex-row justify-center gap-4">
-                      <Button 
-                        className="bg-[#007bff] hover:bg-blue-600"
-                        onClick={() => window.location.href = '/ai-courses/catalog'}
-                      >
-                        {result.cta}
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        onClick={handleResetQuiz}
-                      >
-                        Retake Quiz
-                      </Button>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-[#333] p-3 rounded-lg">
+                        <div className="text-sm text-gray-400 mb-1">Before</div>
+                        <div className="text-lg font-semibold">{metric.before}</div>
+                      </div>
+                      <div className="bg-[#007bff]/20 p-3 rounded-lg">
+                        <div className="text-sm text-[#007bff] mb-1">After</div>
+                        <div className="text-lg font-semibold">{metric.after}</div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4 text-center">
+                      <span className="inline-block bg-[#007bff]/20 text-[#007bff] px-2 py-1 rounded-full text-sm">
+                        +{metric.increase}
+                      </span>
                     </div>
                   </div>
                 </Card>
-              )}
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-              className="mb-12"
-            >
-              <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center">Hear from our students</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Testimonial 
-                  name="Sarah Johnson"
-                  role="Data Scientist at TechCorp"
-                  text="The RXAI courses completely transformed my career. I went from a data analyst to a senior data scientist within months of completing their Advanced ML specialization."
-                  imageUrl="https://placehold.co/100x100/2a2a2a/007bff?text=SJ"
-                />
-                <Testimonial 
-                  name="Michael Chen"
-                  role="AI Engineer"
-                  text="What sets RXAI apart is the practical, hands-on approach. I built a portfolio of real-world projects that impressed employers and landed my dream job."
-                  imageUrl="https://placehold.co/100x100/2a2a2a/007bff?text=MC"
-                />
-                <Testimonial 
-                  name="Priya Sharma"
-                  role="ML Team Lead"
-                  text="As someone with no prior programming experience, I was amazed at how accessible RXAI made complex AI concepts. Their beginner track gave me the foundation I needed."
-                  imageUrl="https://placehold.co/100x100/2a2a2a/007bff?text=PS"
-                />
-              </div>
-              {!showTestimonials && (
-                <div className="text-center mt-6">
+              ))}
+            </div>
+          </motion.div>
+          
+          {/* Enhancement #4: AI Career Salary Calculator */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+            className="w-full max-w-6xl mb-16"
+          >
+            <Card className="bg-[#2a2a2a] border-none overflow-hidden">
+              <div className="p-8">
+                <div className="flex items-center justify-center mb-6">
+                  <Calculator className="w-6 h-6 text-[#007bff] mr-2" />
+                  <h2 className="text-2xl font-bold">AI Career Salary Calculator</h2>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="mb-2 block">Select AI Career Path</Label>
+                      <select 
+                        value={selectedCareer}
+                        onChange={(e) => setSelectedCareer(e.target.value)}
+                        className="w-full bg-[#333] text-white border-[#444] rounded-md px-3 py-2 focus:border-[#007bff] focus:ring-[#007bff]"
+                      >
+                        {Object.keys(aiCareers).map((career) => (
+                          <option key={career} value={career}>
+                            {aiCareers[career].role}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <Label className="mb-2 block">Years of Experience</Label>
+                      <input 
+                        type="range" 
+                        min="0" 
+                        max="10" 
+                        value={experienceYears} 
+                        onChange={(e) => setExperienceYears(parseInt(e.target.value))}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between text-sm text-gray-400">
+                        <span>Entry Level</span>
+                        <span>{experienceYears} Years</span>
+                        <span>Senior</span>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label className="mb-2 block">Location</Label>
+                      <select 
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        className="w-full bg-[#333] text-white border-[#444] rounded-md px-3 py-2 focus:border-[#007bff] focus:ring-[#007bff]"
+                      >
+                        <option value="us-average">US Average</option>
+                        <option value="us-coast">US Coastal Cities</option>
+                        <option value="us-midwest">US Midwest</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div className="md:col-span-2 bg-[#1e1e1e] p-6 rounded-lg">
+                    <div className="mb-6">
+                      <div className="text-sm text-gray-400 mb-1">Selected Career Path</div>
+                      <h3 className="text-xl font-semibold text-[#007bff]">{currentCareer.role}</h3>
+                      <div className="text-sm text-gray-400 mt-2">Top Companies: {currentCareer.companies.join(', ')}</div>
+                      <div className="text-sm text-gray-400">Year-over-Year Demand Growth: <span className="text-green-400">+{currentCareer.demandGrowth}%</span></div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-8">
+                      <div>
+                        <div className="text-sm text-gray-400 mb-2">Current Average Salary</div>
+                        <div className="text-3xl font-bold">${calculatedSalaryBefore.toLocaleString()}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-[#007bff] mb-2">Expected Salary After RXAI</div>
+                        <div className="text-3xl font-bold text-[#007bff]">${calculatedSalaryAfter.toLocaleString()}</div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-8 pt-4 border-t border-[#444]">
+                      <div className="text-center">
+                        <div className="text-sm text-gray-400 mb-2">Potential Salary Increase</div>
+                        <div className="text-2xl font-bold text-green-400">+${(calculatedSalaryAfter - calculatedSalaryBefore).toLocaleString()} per year</div>
+                        <div className="text-sm text-gray-400 mt-2">
+                          That's a {Math.round((calculatedSalaryAfter - calculatedSalaryBefore) / calculatedSalaryBefore * 100)}% increase!
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-8 text-center">
                   <Button 
-                    variant="link"
-                    onClick={() => setShowTestimonials(true)}
-                    className="text-[#007bff]"
+                    onClick={() => window.location.href = '/ai-courses/catalog'}
+                    className="bg-[#007bff] hover:bg-blue-600"
                   >
-                    View more testimonials
+                    Start Your Career Transformation
                   </Button>
                 </div>
-              )}
-              {showTestimonials && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  transition={{ duration: 0.3 }}
-                  className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6"
-                >
-                  <Testimonial 
-                    name="James Wilson"
-                    role="Startup Founder"
-                    text="The knowledge I gained from RXAI courses enabled me to implement AI solutions in my startup, reducing costs by 40% and improving customer satisfaction."
-                    imageUrl="https://placehold.co/100x100/2a2a2a/007bff?text=JW"
-                  />
-                  <Testimonial 
-                    name="Sophia Rodriguez"
-                    role="Healthcare AI Specialist"
-                    text="RXAI's specialized healthcare AI course gave me the unique skills to develop models that are now helping diagnose diseases earlier and more accurately."
-                    imageUrl="https://placehold.co/100x100/2a2a2a/007bff?text=SR"
-                  />
-                  <Testimonial 
-                    name="David Kim"
-                    role="NLP Research Scientist"
-                    text="The advanced NLP course contained cutting-edge information that I wasn't finding anywhere else. The instructors are clearly active practitioners in the field."
-                    imageUrl="https://placehold.co/100x100/2a2a2a/007bff?text=DK"
-                  />
-                </motion.div>
-              )}
-            </motion.div>
-            
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.6 }}
-              className="bg-[#2a2a2a] rounded-lg p-8 text-center"
-            >
-              <h2 className="text-2xl font-bold mb-6">Ready to start your AI learning journey?</h2>
-              <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
-                Join thousands of students who have accelerated their careers through RXAI's comprehensive AI education platform.
+              </div>
+            </Card>
+          </motion.div>
+          
+          {/* Enhancement #2: Tiered Pricing Display */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.7 }}
+            className="w-full max-w-6xl mb-16"
+            ref={pricingRef}
+          >
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold mb-3">Simple, Transparent Pricing</h2>
+              <p className="text-gray-400 max-w-2xl mx-auto">
+                Choose the plan that fits your learning goals. All plans include lifetime access to course materials.
               </p>
-              <div className="flex flex-col sm:flex-row justify-center gap-4">
-                <Button 
-                  className="bg-[#007bff] hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg transition-colors duration-300"
-                  onClick={() => window.location.href = '/ai-courses/catalog'}
+              
+              <div className="flex justify-center mt-6">
+                <div className="bg-[#2a2a2a] p-1 rounded-full inline-flex">
+                  <Button 
+                    variant={activePricingTab === 'monthly' ? 'default' : 'ghost'}
+                    className={activePricingTab === 'monthly' ? 'bg-[#007bff] text-white' : 'text-gray-400'}
+                    onClick={() => setActivePricingTab('monthly')}
+                  >
+                    Monthly
+                  </Button>
+                  <Button 
+                    variant={activePricingTab === 'annual' ? 'default' : 'ghost'}
+                    className={activePricingTab === 'annual' ? 'bg-[#007bff] text-white' : 'text-gray-400'}
+                    onClick={() => setActivePricingTab('annual')}
+                  >
+                    Annual <span className="ml-1 text-xs bg-green-500 text-white px-1.5 py-0.5 rounded-full">SAVE 20%</span>
+                  </Button>
+                </div>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {pricingPlans.map((plan) => (
+                <div key={plan.id} className="relative">
+                  {plan.popular && (
+                    <div className="absolute -top-4 inset-x-0 flex justify-center">
+                      <span className="bg-[#007bff] text-white text-xs font-bold px-3 py-1 rounded-full">
+                        MOST POPULAR
+                      </span>
+                    </div>
+                  )}
+                  
+                  <Card className={`h-full flex flex-col ${plan.popular ? 'border-[#007bff]/50 shadow-lg shadow-[#007bff]/10' : 'border-[#444]'} bg-[#2a2a2a]`}>
+                    <div className="p-6 flex-1">
+                      <h3 className="text-xl font-bold mb-1">{plan.name}</h3>
+                      <p className="text-sm text-gray-400 mb-4">{plan.description}</p>
+                      
+                      <div className="mb-6">
+                        <div className="text-3xl font-bold">
+                          ${activePricingTab === 'monthly' ? plan.price : plan.annualPrice ? Math.round(plan.annualPrice / 12) : 0}
+                          <span className="text-sm font-normal text-gray-400">/mo</span>
+                        </div>
+                        {activePricingTab === 'annual' && plan.annualPrice && (
+                          <div className="text-sm text-gray-400">
+                            ${plan.annualPrice} billed annually
+                          </div>
+                        )}
+                      </div>
+                      
+                      <ul className="space-y-3 mb-8">
+                        {plan.features.map((feature, idx) => (
+                          <li key={idx} className="flex items-start">
+                            <Check className="w-5 h-5 text-[#007bff] mr-2 flex-shrink-0" />
+                            <span className="text-sm">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    
+                    <div className="p-6 pt-0">
+                      <Button 
+                        className={`w-full ${plan.popular ? 'bg-[#007bff] hover:bg-blue-600' : 'bg-[#444] hover:bg-[#555]'}`}
+                        onClick={() => window.location.href = `/subscriptions/checkout?plan=${plan.id}&billing=${activePricingTab}`}
+                      >
+                        {plan.cta}
+                      </Button>
+                    </div>
+                  </Card>
+                </div>
+              ))}
+            </div>
+            
+            <div className="mt-8 text-center text-sm text-gray-400">
+              Need a custom plan for your organization? <a href="/enterprise" className="text-[#007bff] hover:underline">Contact our enterprise team</a>.
+            </div>
+          </motion.div>
+          
+          {/* Enhancement #8: Course Curriculum Preview */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.8 }}
+            className="w-full max-w-6xl mb-16"
+            ref={curriculumRef}
+          >
+            <h2 className="text-2xl font-bold mb-8 text-center">Preview Our Curriculum</h2>
+            
+            <Tabs defaultValue="fundamentals">
+              <TabsList className="w-full justify-center mb-8">
+                {curriculumModules.map(module => (
+                  <TabsTrigger 
+                    key={module.id} 
+                    value={module.id}
+                    onClick={() => setActiveCurriculumModule(module.id)}
+                  >
+                    {module.title}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              
+              {curriculumModules.map(module => (
+                <TabsContent key={module.id} value={module.id} className="mt-0">
+                  <Card className="bg-[#2a2a2a] border-[#444] overflow-hidden">
+                    <div className="p-6">
+                      <h3 className="text-xl font-bold mb-4">{module.title}</h3>
+                      
+                      <ul className="space-y-3">
+                        {module.lessons.map(lesson => (
+                          <li key={lesson.id} className="bg-[#333] rounded-lg p-4">
+                            <div className="flex justify-between items-start">
+                              <div className="flex items-start">
+                                <div className={`mr-3 px-2 py-1 text-xs rounded ${lesson.free ? 'bg-green-500/20 text-green-400' : 'bg-[#007bff]/20 text-[#007bff]'}`}>
+                                  {lesson.free ? 'FREE' : 'PREMIUM'}
+                                </div>
+                                <div>
+                                  <h4 className="font-medium">{lesson.title}</h4>
+                                  <p className="text-sm text-gray-400 mt-1">{lesson.duration}</p>
+                                </div>
+                              </div>
+                              
+                              {lesson.free ? (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  className="text-[#007bff]"
+                                  onClick={() => window.location.href = `/ai-courses/preview/${module.id}/${lesson.id}`}
+                                >
+                                  <Play className="w-4 h-4 mr-1" /> Watch Free
+                                </Button>
+                              ) : (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  className="text-gray-400"
+                                  onClick={() => window.location.href = '/subscriptions'}
+                                >
+                                  <Lock className="w-4 h-4 mr-1" /> Unlock
+                                </Button>
+                              )}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                      
+                      <div className="mt-6 text-center">
+                        <Button 
+                          className="bg-[#007bff] hover:bg-blue-600"
+                          onClick={() => window.location.href = `/ai-courses/module/${module.id}`}
+                        >
+                          View Full Curriculum
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                </TabsContent>
+              ))}
+            </Tabs>
+          </motion.div>
+          
+          {/* Enhancement #7: Video Testimonial Gallery */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.9 }}
+            className="w-full max-w-6xl mb-16"
+          >
+            <h2 className="text-2xl font-bold mb-8 text-center">Student Success Stories</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {videoTestimonials.map((video, index) => (
+                <Card key={video.id} className="bg-[#2a2a2a] border-[#444] overflow-hidden">
+                  <div 
+                    className="relative cursor-pointer group" 
+                    onClick={() => {
+                      setSelectedVideoIndex(index);
+                      setShowVideoDialog(true);
+                    }}
+                  >
+                    <img 
+                      src={video.thumbnailUrl} 
+                      alt={`Testimonial by ${video.name}`} 
+                      className="w-full h-48 object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="w-16 h-16 rounded-full bg-[#007bff]/90 flex items-center justify-center">
+                        <Play className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="p-4">
+                    <h3 className="font-bold">{video.name}</h3>
+                    <p className="text-sm text-gray-400 mb-2">{video.role}</p>
+                    <p className="text-sm italic">"{video.quote}"</p>
+                  </div>
+                </Card>
+              ))}
+            </div>
+            
+            <Dialog open={showVideoDialog} onOpenChange={setShowVideoDialog}>
+              <DialogContent className="bg-[#1a1a1a] border-[#444] max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle>
+                    {videoTestimonials[selectedVideoIndex]?.name} - Success Story
+                  </DialogTitle>
+                </DialogHeader>
+                
+                <div className="aspect-video">
+                  <iframe 
+                    src={videoTestimonials[selectedVideoIndex]?.videoUrl} 
+                    className="w-full h-full rounded-md"
+                    title={`Testimonial by ${videoTestimonials[selectedVideoIndex]?.name}`}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  ></iframe>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </motion.div>
+          
+          {/* Enhancement #9: Expert Endorsements */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 1 }}
+            className="w-full max-w-6xl mb-16"
+          >
+            <h2 className="text-2xl font-bold mb-8 text-center">Endorsed by Industry Experts</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {expertEndorsements.map((expert, index) => (
+                <Card key={index} className="bg-[#2a2a2a] border-[#444] overflow-hidden">
+                  <div className="p-6">
+                    <div className="flex items-center mb-4">
+                      <div className="w-16 h-16 rounded-full overflow-hidden mr-4">
+                        <img 
+                          src={expert.image} 
+                          alt={expert.name} 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div>
+                        <h3 className="font-bold">{expert.name}</h3>
+                        <p className="text-sm text-gray-400">{expert.title}</p>
+                      </div>
+                    </div>
+                    
+                    <p className="italic text-gray-300">"{expert.quote}"</p>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </motion.div>
+          
+          {/* Enhancement #22: ROI Calculator */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 1.1 }}
+            className="w-full max-w-6xl mb-16"
+          >
+            <Card className="bg-[#2a2a2a] border-[#444] overflow-hidden">
+              <div className="p-8">
+                <div className="flex items-center justify-center mb-6">
+                  <DollarSign className="w-6 h-6 text-[#007bff] mr-2" />
+                  <h2 className="text-2xl font-bold">Calculate Your ROI</h2>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-6">
+                    <div>
+                      <Label className="mb-2 block">Your Current Annual Salary</Label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                        <Input 
+                          type="number" 
+                          value={currentSalary}
+                          onChange={(e) => setCurrentSalary(Math.max(0, parseInt(e.target.value) || 0))}
+                          className="pl-7 bg-[#333] text-white border-[#444] focus:border-[#007bff] focus:ring-[#007bff]"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label className="mb-2 block">Your Career Goals</Label>
+                      <select 
+                        value={careerGoals}
+                        onChange={(e) => setCareerGoals(e.target.value)}
+                        className="w-full bg-[#333] text-white border-[#444] rounded-md px-3 py-2 focus:border-[#007bff] focus:ring-[#007bff]"
+                      >
+                        <option value="promotion">Promotion in Current Role</option>
+                        <option value="new-career">Complete Career Change</option>
+                        <option value="freelance">Freelance/Consulting Work</option>
+                      </select>
+                    </div>
+                    
+                    <div className="bg-[#333] p-4 rounded-lg">
+                      <h3 className="font-semibold mb-2">Your Investment</h3>
+                      <div className="flex justify-between">
+                        <span>RXAI Professional Plan</span>
+                        <span>${courseCost}/year</span>
+                      </div>
+                      <div className="text-sm text-gray-400 mt-2">
+                        One-time investment giving you lifetime access to course materials and 1 year of community access.
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-[#1e1e1e] p-6 rounded-lg">
+                    <h3 className="text-xl font-semibold mb-6 text-center">Your Return on Investment</h3>
+                    
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <span>Average Salary Increase</span>
+                        <span className="text-xl font-bold text-green-400">+${projectedSalaryIncrease.toLocaleString()}/year</span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span>Typical Time to Achievement</span>
+                        <span className="font-semibold">{avgTimeToPromotion} months</span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span>Job Placement Rate</span>
+                        <span className="font-semibold">{Math.round(jobPlacementRate * 100)}%</span>
+                      </div>
+                      
+                      <div className="pt-4 border-t border-[#444]">
+                        <div className="flex items-center justify-between">
+                          <span>First Year Return</span>
+                          <span className="text-xl font-bold text-green-400">+${projectedFirstYearReturn.toLocaleString()}</span>
+                        </div>
+                        <div className="text-sm text-gray-400 mt-1">
+                          After subtracting the course cost
+                        </div>
+                      </div>
+                      
+                      <div className="pt-4 border-t border-[#444] text-center">
+                        <div className="text-3xl font-bold text-[#007bff] mb-2">{calculatedRoi}x ROI</div>
+                        <div className="text-sm text-gray-400">
+                          For every $1 you invest, you get approximately ${calculatedRoi} back
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-8 text-center">
+                  <Button 
+                    onClick={() => window.location.href = '/subscriptions'}
+                    className="bg-[#007bff] hover:bg-blue-600 px-8"
+                  >
+                    Invest in Your Future
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+          
+          {/* Enhancement #20: AI Job Market Trend Data */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 1.2 }}
+            className="w-full max-w-6xl mb-16"
+          >
+            <Card className="bg-[#2a2a2a] border-[#444] overflow-hidden">
+              <div className="p-8">
+                <h2 className="text-2xl font-bold mb-6 text-center">AI Job Market Insights</h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-[#333] p-6 rounded-lg">
+                    <div className="flex items-center justify-center mb-4">
+                      <Briefcase className="w-8 h-8 text-[#007bff]" />
+                    </div>
+                    <h3 className="text-xl font-bold text-center mb-2">35%</h3>
+                    <p className="text-center text-gray-400">
+                      Increase in AI job postings in the last year
+                    </p>
+                  </div>
+                  
+                  <div className="bg-[#333] p-6 rounded-lg">
+                    <div className="flex items-center justify-center mb-4">
+                      <DollarSign className="w-8 h-8 text-[#007bff]" />
+                    </div>
+                    <h3 className="text-xl font-bold text-center mb-2">$138,500</h3>
+                    <p className="text-center text-gray-400">
+                      Average salary for AI professionals
+                    </p>
+                  </div>
+                  
+                  <div className="bg-[#333] p-6 rounded-lg">
+                    <div className="flex items-center justify-center mb-4">
+                      <Building className="w-8 h-8 text-[#007bff]" />
+                    </div>
+                    <h3 className="text-xl font-bold text-center mb-2">79%</h3>
+                    <p className="text-center text-gray-400">
+                      Of companies plan to increase AI hiring
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="mt-8 text-center text-gray-300">
+                  AI skills are among the most in-demand in today's job market, with growth projected to continue accelerating over the next decade.
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+          
+          {/* Enhancement #21: Employer Recognition Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 1.3 }}
+            className="w-full max-w-6xl mb-16"
+          >
+            <h2 className="text-2xl font-bold mb-8 text-center">Recognized by Leading Employers</h2>
+            
+            <div className="bg-[#2a2a2a] border border-[#444] rounded-lg p-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                  <h3 className="text-xl font-semibold mb-4">RXAI Certification is Industry-Recognized</h3>
+                  <p className="text-gray-400 mb-6">
+                    Our certification is recognized by leading technology companies worldwide as a mark of excellence
+                    in AI education. Graduates of our programs are actively sought out by hiring managers at top companies.
+                  </p>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-start">
+                      <Trophy className="w-5 h-5 text-[#007bff] mr-3 mt-1" />
+                      <div>
+                        <h4 className="font-semibold">Preferred Hiring Status</h4>
+                        <p className="text-sm text-gray-400">
+                          RXAI graduates receive preferred hiring status at over 120 partner companies.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start">
+                      <Star className="w-5 h-5 text-[#007bff] mr-3 mt-1" />
+                      <div>
+                        <h4 className="font-semibold">87% Placement Rate</h4>
+                        <p className="text-sm text-gray-400">
+                          87% of our graduates find relevant employment within 6 months of program completion.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start">
+                      <Users className="w-5 h-5 text-[#007bff] mr-3 mt-1" />
+                      <div>
+                        <h4 className="font-semibold">Alumni Network</h4>
+                        <p className="text-sm text-gray-400">
+                          Access to our 50,000+ alumni network for job referrals and career opportunities.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-[#252525] p-6 rounded-lg">
+                  <h3 className="text-lg font-semibold mb-4 text-center">What Employers Say</h3>
+                  
+                  <div className="space-y-4">
+                    <Card className="bg-[#333] border-none">
+                      <div className="p-4">
+                        <p className="text-sm italic mb-3">"RXAI graduates consistently demonstrate strong practical skills and theoretical knowledge. They're able to contribute immediately to our AI projects."</p>
+                        <div className="flex items-center">
+                          <div className="text-sm">
+                            <div className="font-semibold">Mark Johnson</div>
+                            <div className="text-gray-400">AI Hiring Manager, Google</div>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                    
+                    <Card className="bg-[#333] border-none">
+                      <div className="p-4">
+                        <p className="text-sm italic mb-3">"The quality of RXAI's curriculum is evident in their graduates. They have a deep understanding of real-world AI applications that sets them apart."</p>
+                        <div className="flex items-center">
+                          <div className="text-sm">
+                            <div className="font-semibold">Sarah Chen</div>
+                            <div className="text-gray-400">Technical Recruiter, Microsoft</div>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+          
+          {/* Enhancement #6: Personalized Learning Path Quiz */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="bg-[#2a2a2a] rounded-lg p-6 md:p-8 mb-16"
+          >
+            <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center">Is this course for you?</h2>
+            <p className="text-center mb-8 text-gray-300">
+              Take our quick readiness quiz to see if you're prepared for our AI courses and get personalized recommendations.
+            </p>
+            
+            {!quizCompleted ? (
+              <Card className="bg-[#333] border-none p-6">
+                <div className="mb-6">
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>Question {currentQuestion + 1} of {quizQuestions.length}</span>
+                    <span>{Math.round(progressPercentage)}% Complete</span>
+                  </div>
+                  <Progress value={progressPercentage} className="h-2 bg-gray-700" />
+                </div>
+                
+                <h3 className="text-xl font-medium mb-6">{currentQuestionData.question}</h3>
+                
+                <RadioGroup 
+                  value={answers[currentQuestionData.id] || ""} 
+                  onValueChange={(value) => {
+                    const option = currentQuestionData.options.find(o => o.id === value);
+                    if (option) {
+                      handleOptionSelect(currentQuestionData.id, value, option.points);
+                    }
+                  }}
+                  className="space-y-4 mb-8"
                 >
-                  Browse Course Catalog
-                </Button>
+                  {currentQuestionData.options.map((option) => (
+                    <div key={option.id} className="flex items-center space-x-2 p-3 rounded-md hover:bg-[#444] transition-colors">
+                      <RadioGroupItem value={option.id} id={option.id} />
+                      <Label htmlFor={option.id} className="flex-1 cursor-pointer">{option.text}</Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+                
+                <div className="flex justify-between">
+                  <Button 
+                    variant="outline" 
+                    onClick={handlePreviousQuestion}
+                    disabled={currentQuestion === 0}
+                  >
+                    Previous
+                  </Button>
+                  <Button 
+                    onClick={handleNextQuestion}
+                    disabled={!answers[currentQuestionData.id]}
+                    className="bg-[#007bff] hover:bg-blue-600"
+                  >
+                    {currentQuestion === quizQuestions.length - 1 ? "See Results" : "Next"}
+                  </Button>
+                </div>
+              </Card>
+            ) : (
+              <Card className="bg-[#333] border-none p-6">
+                <div className="text-center mb-6">
+                  <h3 className="text-2xl font-bold text-[#007bff]">{result.title}</h3>
+                  <div className="flex justify-center my-4">
+                    <div className="inline-flex items-center justify-center p-4 bg-[#2a2a2a] rounded-full">
+                      <span className="text-2xl font-bold">{score}/{quizQuestions.length * 10}</span>
+                    </div>
+                  </div>
+                  <p className="text-gray-300 mb-4">{result.description}</p>
+                  <p className="font-medium mb-6">{result.recommendation}</p>
+                  
+                  <div className="flex flex-col sm:flex-row justify-center gap-4">
+                    <Button 
+                      className="bg-[#007bff] hover:bg-blue-600"
+                      onClick={() => window.location.href = '/ai-courses/catalog'}
+                    >
+                      {result.cta}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={handleResetQuiz}
+                    >
+                      Retake Quiz
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            )}
+          </motion.div>
+          
+          {/* Enhancement #23: Course Community Preview */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 1.4 }}
+            className="w-full max-w-6xl mb-16"
+          >
+            <h2 className="text-2xl font-bold mb-8 text-center">Join a Thriving Community</h2>
+            
+            <div className="bg-[#2a2a2a] rounded-lg overflow-hidden">
+              <div className="grid grid-cols-1 md:grid-cols-2">
+                <div className="p-8">
+                  <h3 className="text-xl font-semibold mb-4">Connect with 50,000+ AI Learners</h3>
+                  <p className="text-gray-400 mb-6">
+                    Learning is better together. Join our active community of AI practitioners, from beginners to experts,
+                    all working together to master artificial intelligence.
+                  </p>
+                  
+                  <div className="space-y-4 mb-8">
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 rounded-full bg-[#007bff]/20 flex items-center justify-center mr-3">
+                        <Users className="w-5 h-5 text-[#007bff]" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold">Peer Learning Groups</h4>
+                        <p className="text-sm text-gray-400">Connect with peers at your skill level for collaborative learning</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 rounded-full bg-[#007bff]/20 flex items-center justify-center mr-3">
+                        <CalendarClock className="w-5 h-5 text-[#007bff]" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold">Weekly Live Events</h4>
+                        <p className="text-sm text-gray-400">Attend workshops, Q&A sessions, and expert talks each week</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 rounded-full bg-[#007bff]/20 flex items-center justify-center mr-3">
+                        <Share2 className="w-5 h-5 text-[#007bff]" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold">Project Showcases</h4>
+                        <p className="text-sm text-gray-400">Share your work and get feedback from the community</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    className="bg-[#007bff] hover:bg-blue-600 w-full"
+                    onClick={() => window.location.href = '/community'}
+                  >
+                    Preview Community
+                  </Button>
+                </div>
+                
+                <div className="bg-[#333] p-6 flex flex-col">
+                  <h3 className="text-lg font-semibold mb-4">Recent Community Discussions</h3>
+                  
+                  <div className="space-y-4 flex-1">
+                    <div className="bg-[#2a2a2a] p-4 rounded-lg">
+                      <div className="flex justify-between mb-2">
+                        <div className="font-medium">Best approach for fine-tuning LLMs?</div>
+                        <div className="text-xs text-gray-400">2h ago</div>
+                      </div>
+                      <p className="text-sm text-gray-400 mb-2">What's your preferred approach for fine-tuning large language models with limited data?</p>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-[#007bff]">24 replies</span>
+                        <span className="text-gray-400">Advanced ML Module</span>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-[#2a2a2a] p-4 rounded-lg">
+                      <div className="flex justify-between mb-2">
+                        <div className="font-medium">Project collaboration: Vision transformer</div>
+                        <div className="text-xs text-gray-400">6h ago</div>
+                      </div>
+                      <p className="text-sm text-gray-400 mb-2">Looking for 2-3 people to collaborate on an image classification project using ViT.</p>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-[#007bff]">9 replies</span>
+                        <span className="text-gray-400">Project Collaboration</span>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-[#2a2a2a] p-4 rounded-lg">
+                      <div className="flex justify-between mb-2">
+                        <div className="font-medium">Weekly challenge: Sentiment analysis</div>
+                        <div className="text-xs text-gray-400">1d ago</div>
+                      </div>
+                      <p className="text-sm text-gray-400 mb-2">This week's coding challenge is to build a sentiment analysis model with >90% accuracy.</p>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-[#007bff]">32 submissions</span>
+                        <span className="text-gray-400">Weekly Challenges</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 pt-4 border-t border-[#444] text-center text-sm text-gray-400">
+                    Full community access available with paid subscriptions
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+          
+          {/* Enhancement #17: Multi-step Enrollment Process */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 1.5 }}
+            className="w-full max-w-6xl mb-16"
+          >
+            <Card className="bg-[#2a2a2a] border-[#444] overflow-hidden">
+              <div className="p-8">
+                <h2 className="text-2xl font-bold mb-6 text-center">Start Your AI Journey Today</h2>
+                
+                <div className="max-w-xl mx-auto">
+                  <div className="mb-8">
+                    <div className="flex justify-between mb-2">
+                      {[1, 2, 3].map(step => (
+                        <div key={step} className="flex flex-col items-center">
+                          <div 
+                            className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
+                              enrollmentStep === step 
+                                ? 'bg-[#007bff] text-white' 
+                                : enrollmentStep > step 
+                                  ? 'bg-green-500 text-white' 
+                                  : 'bg-[#333] text-gray-400'
+                            }`}
+                          >
+                            {enrollmentStep > step ? (
+                              <Check className="w-5 h-5" />
+                            ) : (
+                              step
+                            )}
+                          </div>
+                          <div className="text-sm text-center">
+                            {step === 1 ? 'Your Info' : step === 2 ? 'Goals' : 'Get Started'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="relative h-1 bg-[#333] rounded-full mt-2">
+                      <div 
+                        className="absolute h-full bg-[#007bff] rounded-full transition-all"
+                        style={{ width: `${((enrollmentStep - 1) / 2) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                  
+                  {enrollmentStep === 1 && (
+                    <div className="space-y-4">
+                      <h3 className="text-xl font-semibold mb-4">Tell us about yourself</h3>
+                      
+                      <div>
+                        <Label htmlFor="enrollment-name">Your Name</Label>
+                        <Input 
+                          id="enrollment-name"
+                          value={enrollmentForm.name}
+                          onChange={(e) => updateEnrollmentForm('name', e.target.value)}
+                          className="bg-[#333] text-white border-[#444] focus:border-[#007bff] focus:ring-[#007bff]"
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="enrollment-email">Your Email</Label>
+                        <Input 
+                          id="enrollment-email"
+                          type="email"
+                          value={enrollmentForm.email}
+                          onChange={(e) => updateEnrollmentForm('email', e.target.value)}
+                          className="bg-[#333] text-white border-[#444] focus:border-[#007bff] focus:ring-[#007bff]"
+                        />
+                      </div>
+                      
+                      <div className="pt-4 flex justify-end">
+                        <Button 
+                          onClick={nextEnrollmentStep}
+                          disabled={!enrollmentForm.name || !enrollmentForm.email}
+                          className="bg-[#007bff] hover:bg-blue-600"
+                        >
+                          Continue <ChevronRight className="w-4 h-4 ml-1" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {enrollmentStep === 2 && (
+                    <div className="space-y-4">
+                      <h3 className="text-xl font-semibold mb-4">What are your goals?</h3>
+                      
+                      <div>
+                        <Label htmlFor="enrollment-goal">Primary Goal</Label>
+                        <select 
+                          id="enrollment-goal"
+                          value={enrollmentForm.goal}
+                          onChange={(e) => updateEnrollmentForm('goal', e.target.value)}
+                          className="w-full bg-[#333] text-white border-[#444] rounded-md px-3 py-2 focus:border-[#007bff] focus:ring-[#007bff]"
+                        >
+                          <option value="">Select your primary goal</option>
+                          <option value="career-change">Career Change into AI</option>
+                          <option value="skill-improvement">Improve Current Skills</option>
+                          <option value="salary-increase">Increase Salary</option>
+                          <option value="business">Apply AI to My Business</option>
+                          <option value="hobby">Personal Interest/Hobby</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="enrollment-experience">Your Experience Level</Label>
+                        <select 
+                          id="enrollment-experience"
+                          value={enrollmentForm.experience}
+                          onChange={(e) => updateEnrollmentForm('experience', e.target.value)}
+                          className="w-full bg-[#333] text-white border-[#444] rounded-md px-3 py-2 focus:border-[#007bff] focus:ring-[#007bff]"
+                        >
+                          <option value="">Select your experience level</option>
+                          <option value="beginner">Beginner (No Programming Experience)</option>
+                          <option value="intermediate">Intermediate (Some Programming)</option>
+                          <option value="advanced">Advanced (Experienced Developer)</option>
+                        </select>
+                      </div>
+                      
+                      <div className="pt-4 flex justify-between">
+                        <Button 
+                          variant="outline"
+                          onClick={() => setEnrollmentStep(1)}
+                        >
+                          Back
+                        </Button>
+                        
+                        <Button 
+                          onClick={nextEnrollmentStep}
+                          disabled={!enrollmentForm.goal || !enrollmentForm.experience}
+                          className="bg-[#007bff] hover:bg-blue-600"
+                        >
+                          Continue <ChevronRight className="w-4 h-4 ml-1" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {enrollmentStep === 3 && (
+                    <div className="space-y-6">
+                      <h3 className="text-xl font-semibold mb-4">You're all set!</h3>
+                      
+                      <Card className="bg-[#333] border-none p-6">
+                        <div className="space-y-4">
+                          <div className="flex justify-center mb-4">
+                            <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
+                              <Check className="w-8 h-8 text-green-500" />
+                            </div>
+                          </div>
+                          
+                          <div className="text-center">
+                            <h4 className="text-lg font-semibold mb-2">Personalized Learning Plan Ready</h4>
+                            <p className="text-gray-400 mb-4">
+                              Based on your goals and experience, we've created a customized learning path for you.
+                            </p>
+                          </div>
+                          
+                          <div className="bg-[#2a2a2a] p-4 rounded-lg">
+                            <div className="flex items-center mb-2">
+                              <Star className="w-4 h-4 text-[#007bff] mr-2" />
+                              <span className="font-medium">Recommended Path:</span>
+                            </div>
+                            <div className="pl-6">
+                              {enrollmentForm.experience === 'beginner' ? (
+                                <span>AI Foundations → Python for AI → Machine Learning Essentials</span>
+                              ) : enrollmentForm.experience === 'intermediate' ? (
+                                <span>Intermediate ML → Advanced Neural Networks → Specialization</span>
+                              ) : (
+                                <span>Advanced ML Engineering → Deep Learning → AI Research Methods</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                      
+                      <div className="flex flex-col gap-3">
+                        <Button 
+                          onClick={() => window.location.href = `/ai-courses/plan?goal=${enrollmentForm.goal}&experience=${enrollmentForm.experience}`}
+                          className="bg-[#007bff] hover:bg-blue-600"
+                        >
+                          View My Learning Plan
+                        </Button>
+                        
+                        <Button 
+                          variant="outline"
+                          onClick={() => setEnrollmentStep(1)}
+                        >
+                          Start Over
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+          
+          {/* Enhancement #24: AI Certification Path */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 1.6 }}
+            className="w-full max-w-6xl mb-16"
+          >
+            <h2 className="text-2xl font-bold mb-8 text-center">Your Path to AI Certification</h2>
+            
+            <Card className="bg-[#2a2a2a] border-[#444] overflow-hidden">
+              <div className="p-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div>
+                    <h3 className="text-xl font-semibold mb-4">Industry-Recognized Certification</h3>
+                    <p className="text-gray-400 mb-6">
+                      Our certification program is designed to verify your AI expertise to potential employers
+                      and demonstrate your ability to apply AI concepts in real-world scenarios.
+                    </p>
+                    
+                    <div className="space-y-4 mb-8">
+                      <div className="flex items-start">
+                        <div className="w-6 h-6 rounded-full bg-[#007bff]/20 flex items-center justify-center mr-3 mt-1">
+                          <span className="text-[#007bff] font-bold">1</span>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold">Complete Core Curriculum</h4>
+                          <p className="text-sm text-gray-400">Master the essential AI concepts and techniques</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start">
+                        <div className="w-6 h-6 rounded-full bg-[#007bff]/20 flex items-center justify-center mr-3 mt-1">
+                          <span className="text-[#007bff] font-bold">2</span>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold">Build Practical Projects</h4>
+                          <p className="text-sm text-gray-400">Apply your knowledge by creating real-world AI projects</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start">
+                        <div className="w-6 h-6 rounded-full bg-[#007bff]/20 flex items-center justify-center mr-3 mt-1">
+                          <span className="text-[#007bff] font-bold">3</span>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold">Pass Certification Exam</h4>
+                          <p className="text-sm text-gray-400">Demonstrate your expertise through a rigorous evaluation</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start">
+                        <div className="w-6 h-6 rounded-full bg-[#007bff]/20 flex items-center justify-center mr-3 mt-1">
+                          <span className="text-[#007bff] font-bold">4</span>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold">Showcase Digital Certificate</h4>
+                          <p className="text-sm text-gray-400">Add your verified credential to LinkedIn and your resume</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      className="bg-[#007bff] hover:bg-blue-600 w-full"
+                      onClick={() => window.location.href = '/certification'}
+                    >
+                      Learn More About Certification
+                    </Button>
+                  </div>
+                  
+                  <div className="bg-[#333] p-6 rounded-lg">
+                    <div className="flex justify-center mb-6">
+                      <div className="w-32 h-32 rounded-full bg-[#2a2a2a] flex items-center justify-center border-4 border-[#007bff]">
+                        <Award className="w-16 h-16 text-[#007bff]" />
+                      </div>
+                    </div>
+                    
+                    <h3 className="text-xl font-bold text-center mb-4">RXAI Professional Certification</h3>
+                    
+                    <div className="space-y-4 mb-6">
+                      <div className="flex justify-between">
+                        <span>Recognition:</span>
+                        <span className="font-medium">Industry-wide</span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span>Duration:</span>
+                        <span className="font-medium">3-6 months</span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span>Projects Required:</span>
+                        <span className="font-medium">5 practical projects</span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span>Success Rate:</span>
+                        <span className="font-medium">92% with our curriculum</span>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-[#2a2a2a] p-4 rounded-lg text-center">
+                      <div className="text-sm text-gray-400 mb-1">Included with:</div>
+                      <div className="font-semibold">Professional & Enterprise Plans</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+          
+          {/* Enhancement #25: Streamlined Checkout Flow */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 1.7 }}
+            className="bg-[#2a2a2a] rounded-lg p-8 text-center mb-16"
+          >
+            <h2 className="text-2xl font-bold mb-6">Ready to Transform Your Career?</h2>
+            <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
+              Join over 50,000 students who have mastered AI and advanced their careers through RXAI's industry-leading curriculum.
+            </p>
+            
+            <div className="bg-[#333] max-w-md mx-auto p-6 rounded-lg mb-8">
+              <h3 className="font-semibold mb-4">Most Popular Choice</h3>
+              <div className="flex items-baseline justify-center gap-2 mb-2">
+                <span className="text-3xl font-bold">$49</span>
+                <span className="text-gray-400">/month</span>
+              </div>
+              <p className="text-sm text-gray-400 mb-4">Professional Plan - Cancel Anytime</p>
+              
+              <div className="space-y-2 mb-6 text-sm">
+                <div className="flex items-center justify-center">
+                  <Check className="w-4 h-4 text-green-500 mr-2" />
+                  <span>Full access to all courses & content</span>
+                </div>
+                <div className="flex items-center justify-center">
+                  <Check className="w-4 h-4 text-green-500 mr-2" />
+                  <span>Monthly 1:1 mentoring sessions</span>
+                </div>
+                <div className="flex items-center justify-center">
+                  <Check className="w-4 h-4 text-green-500 mr-2" />
+                  <span>Professional certification</span>
+                </div>
+              </div>
+              
+              <Button 
+                className="bg-[#007bff] hover:bg-blue-600 w-full"
+                onClick={() => window.location.href = '/subscriptions/checkout?plan=pro&billing=monthly'}
+              >
+                Start Learning Now
+              </Button>
+              
+              <div className="text-xs text-gray-400 mt-3">
+                30-day money-back guarantee. No questions asked.
+              </div>
+            </div>
+            
+            <div className="flex flex-wrap justify-center gap-4">
+              <Button 
+                variant="outline"
+                className="border-[#007bff] text-[#007bff]"
+                onClick={() => scrollToSection(pricingRef)}
+              >
+                Compare All Plans
+              </Button>
+              
+              <Button 
+                variant="ghost"
+                className="text-gray-400"
+                onClick={() => window.location.href = '/ai-courses/demo'}
+              >
+                Try Free Demo
+              </Button>
+            </div>
+          </motion.div>
+          
+          {/* Traditional testimonials section kept from original */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+            className="mb-12"
+          >
+            <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center">Hear from our students</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Testimonial 
+                name="Sarah Johnson"
+                role="Data Scientist at TechCorp"
+                text="The RXAI courses completely transformed my career. I went from a data analyst to a senior data scientist within months of completing their Advanced ML specialization."
+                imageUrl="https://placehold.co/100x100/2a2a2a/007bff?text=SJ"
+              />
+              <Testimonial 
+                name="Michael Chen"
+                role="AI Engineer"
+                text="What sets RXAI apart is the practical, hands-on approach. I built a portfolio of real-world projects that impressed employers and landed my dream job."
+                imageUrl="https://placehold.co/100x100/2a2a2a/007bff?text=MC"
+              />
+              <Testimonial 
+                name="Priya Sharma"
+                role="ML Team Lead"
+                text="As someone with no prior programming experience, I was amazed at how accessible RXAI made complex AI concepts. Their beginner track gave me the foundation I needed."
+                imageUrl="https://placehold.co/100x100/2a2a2a/007bff?text=PS"
+              />
+            </div>
+            {!showTestimonials && (
+              <div className="text-center mt-6">
                 <Button 
-                  variant="outline"
-                  className="border-[#007bff] text-[#007bff] hover:bg-[#007bff] hover:text-white font-bold py-3 px-8 rounded-lg transition-colors duration-300"
-                  onClick={() => window.location.href = '/subscriptions'}
+                  variant="link"
+                  onClick={() => setShowTestimonials(true)}
+                  className="text-[#007bff]"
                 >
-                  View Pricing Plans
+                  View more testimonials
                 </Button>
               </div>
-            </motion.div>
-          </div>
+            )}
+            {showTestimonials && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                transition={{ duration: 0.3 }}
+                className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6"
+              >
+                <Testimonial 
+                  name="James Wilson"
+                  role="Startup Founder"
+                  text="The knowledge I gained from RXAI courses enabled me to implement AI solutions in my startup, reducing costs by 40% and improving customer satisfaction."
+                  imageUrl="https://placehold.co/100x100/2a2a2a/007bff?text=JW"
+                />
+                <Testimonial 
+                  name="Sophia Rodriguez"
+                  role="Healthcare AI Specialist"
+                  text="RXAI's specialized healthcare AI course gave me the unique skills to develop models that are now helping diagnose diseases earlier and more accurately."
+                  imageUrl="https://placehold.co/100x100/2a2a2a/007bff?text=SR"
+                />
+                <Testimonial 
+                  name="David Kim"
+                  role="NLP Research Scientist"
+                  text="The advanced NLP course contained cutting-edge information that I wasn't finding anywhere else. The instructors are clearly active practitioners in the field."
+                  imageUrl="https://placehold.co/100x100/2a2a2a/007bff?text=DK"
+                />
+              </motion.div>
+            )}
+          </motion.div>
         </div>
       </div>
     </div>
