@@ -49,7 +49,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
       icon: <Navigation className="h-4 w-4" />,
       action: () => {
         playSound('navigation');
-        navigate('/');
+        setLocation('/');
         setIsOpen(false);
       },
       shortcut: 'g h',
@@ -63,7 +63,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
       icon: <Navigation className="h-4 w-4" />,
       action: () => {
         playSound('navigation');
-        navigate('/articles');
+        setLocation('/articles');
         setIsOpen(false);
       },
       shortcut: 'g a',
@@ -77,7 +77,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
       icon: <Navigation className="h-4 w-4" />,
       action: () => {
         playSound('navigation');
-        navigate('/courses');
+        setLocation('/courses');
         setIsOpen(false);
       },
       shortcut: 'g c',
@@ -108,7 +108,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
       icon: <Settings className="h-4 w-4" />,
       action: () => {
         playSound('navigation');
-        navigate('/settings/accessibility');
+        setLocation('/settings/accessibility');
         setIsOpen(false);
       },
       category: 'settings'
@@ -167,7 +167,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
       icon: <Search className="h-4 w-4" />,
       action: () => {
         playSound('navigation');
-        navigate(`/search?q=${encodeURIComponent(inputValue)}`);
+        setLocation(`/search?q=${encodeURIComponent(inputValue)}`);
         setIsOpen(false);
       },
       category: 'search'
@@ -180,7 +180,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
       icon: <Search className="h-4 w-4" />,
       action: () => {
         playSound('navigation');
-        navigate(`/courses/search?q=${encodeURIComponent(inputValue)}`);
+        setLocation(`/courses/search?q=${encodeURIComponent(inputValue)}`);
         setIsOpen(false);
       },
       category: 'search'

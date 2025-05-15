@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Sheet, 
-  SheetTrigger, 
   SheetContent, 
   SheetHeader, 
-  SheetTitle, 
+  SheetTitle,
+  SheetTrigger,
   SheetDescription 
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -27,36 +27,48 @@ interface KeyboardShortcutsGuideProps {
 
 const KeyboardShortcutsGuide: React.FC<KeyboardShortcutsGuideProps> = ({ 
   trigger,
-  className = ''
+  className
 }) => {
   const [open, setOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<ShortcutCategory | 'all'>('all');
+  const [categories, setCategories] = useState<ShortcutCategory[]>([]);
+  const [activeTab, setActiveTab] = useState<string>('all');
+  const [shortcuts, setShortcuts] = useState<KeyboardShortcut[]>([]);
   
-  // Get shortcuts based on active tab
-  const shortcuts = activeTab === 'all' 
-    ? getAllShortcuts() 
-    : getShortcutsByCategory(activeTab as ShortcutCategory);
+  // Initialize categories and shortcuts
+  useEffect(() => {
+    // Get all shortcuts
+    const allShortcuts = getAllShortcuts();
+    setShortcuts(allShortcuts);
+    
+    // Extract unique categories
+    const uniqueCategories = Array.from(
+      new Set(allShortcuts.map(s => s.category))
+    ) as ShortcutCategory[];
+    
+    setCategories(uniqueCategories);
+  }, [open]);
   
-  // Group shortcuts by category for better organization
-  const shortcutsByCategory = shortcuts.reduce((acc, shortcut) => {
-    if (!acc[shortcut.category]) {
-      acc[shortcut.category] = [];
-    }
-    acc[shortcut.category].push(shortcut);
-    return acc;
-  }, {} as Record<ShortcutCategory, KeyboardShortcut[]>);
+  // Listen for the custom event to open the guide
+  useEffect(() => {
+    const handleShowShortcutsGuide = () => setOpen(true);
+    window.addEventListener('show-shortcuts-guide', handleShowShortcutsGuide);
+    
+    return () => {
+      window.removeEventListener('show-shortcuts-guide', handleShowShortcutsGuide);
+    };
+  }, []);
   
-  // Render a group of shortcuts
-  const renderShortcutGroup = (
-    category: ShortcutCategory, 
-    shortcuts: KeyboardShortcut[]
-  ) => {
+  // Render shortcut list
+  const renderShortcutsByCategory = (category: ShortcutCategory) => {
+    const categoryShortcuts = getShortcutsByCategory(category);
+    
     const getCategoryIcon = (cat: ShortcutCategory) => {
       switch (cat) {
         case 'navigation': return <Navigation className="h-4 w-4" />;
         case 'search': return <Search className="h-4 w-4" />;
         case 'content': return <BookOpen className="h-4 w-4" />;
         case 'accessibility': return <Settings className="h-4 w-4" />;
+        case 'ui': return <HelpCircle className="h-4 w-4" />;
         default: return <Keyboard className="h-4 w-4" />;
       }
     };
@@ -78,24 +90,28 @@ const KeyboardShortcutsGuide: React.FC<KeyboardShortcutsGuideProps> = ({
           {getCategoryIcon(category)}
           <h3>{getCategoryLabel(category)}</h3>
         </div>
-        
-        <div className="grid grid-cols-1 gap-2">
-          {shortcuts.map((shortcut) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {categoryShortcuts.map((shortcut) => (
             <div 
               key={shortcut.id} 
-              className="flex justify-between items-center py-2 px-3 rounded-md border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900"
+              className="flex items-center justify-between p-2 rounded-md bg-secondary/30"
             >
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                {shortcut.description}
-              </span>
-              <code className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-xs font-mono">
+              <div className="flex-1">
+                <div className="text-sm font-medium">{shortcut.description}</div>
+              </div>
+              <kbd className="px-2 py-1 text-xs font-mono rounded bg-secondary text-secondary-foreground">
                 {formatShortcutKey(shortcut)}
-              </code>
+              </kbd>
             </div>
           ))}
         </div>
       </div>
     );
+  };
+  
+  // Render all shortcuts
+  const renderAllShortcuts = () => {
+    return categories.map(category => renderShortcutsByCategory(category));
   };
   
   return (
@@ -104,76 +120,56 @@ const KeyboardShortcutsGuide: React.FC<KeyboardShortcutsGuideProps> = ({
         {trigger || (
           <Button 
             variant="outline" 
-            size="sm" 
-            className={`gap-2 ${className}`}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                setOpen(true);
-              }
-            }}
+            size="icon"
+            className={className}
+            aria-label="Keyboard shortcuts"
           >
             <Keyboard className="h-4 w-4" />
-            <span>Keyboard Shortcuts</span>
           </Button>
         )}
       </SheetTrigger>
-      
-      <SheetContent side="right" className="w-full max-w-md sm:max-w-lg">
-        <SheetHeader className="mb-4">
+      <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetHeader className="mb-6">
           <SheetTitle className="flex items-center gap-2">
             <Keyboard className="h-5 w-5" />
             Keyboard Shortcuts
           </SheetTitle>
           <SheetDescription>
-            Use these keyboard shortcuts to navigate the platform more efficiently.
+            Master the platform with these keyboard shortcuts for faster navigation and productivity.
           </SheetDescription>
         </SheetHeader>
         
-        <Tabs 
-          defaultValue="all" 
-          value={activeTab}
-          onValueChange={(value) => setActiveTab(value as ShortcutCategory | 'all')}
-          className="mt-4"
-        >
-          <TabsList className="grid grid-cols-3 mb-4">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="navigation">Navigation</TabsTrigger>
-            <TabsTrigger value="accessibility">Accessibility</TabsTrigger>
+        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-4 w-full">
+            <TabsTrigger value="all">All Shortcuts</TabsTrigger>
+            {categories.map(category => (
+              <TabsTrigger key={category} value={category}>
+                {category.charAt(0).toUpperCase() + category.slice(1)}
+              </TabsTrigger>
+            ))}
           </TabsList>
           
-          <div className="mt-4 max-h-[calc(100vh-220px)] overflow-y-auto pr-2">
-            {activeTab === 'all' ? (
-              Object.entries(shortcutsByCategory).map(([category, shortcuts]) => (
-                renderShortcutGroup(category as ShortcutCategory, shortcuts)
-              ))
-            ) : (
-              shortcuts.length > 0 ? (
-                renderShortcutGroup(activeTab as ShortcutCategory, shortcuts)
-              ) : (
-                <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <HelpCircle className="h-10 w-10 text-gray-300 dark:text-gray-600 mb-3" />
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    No shortcuts available for this category.
-                  </p>
-                </div>
-              )
-            )}
-          </div>
+          <TabsContent value="all">
+            {renderAllShortcuts()}
+          </TabsContent>
+          
+          {categories.map(category => (
+            <TabsContent key={category} value={category}>
+              {renderShortcutsByCategory(category)}
+            </TabsContent>
+          ))}
         </Tabs>
         
-        <div className="mt-4">
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-            Keyboard shortcuts can be enabled or disabled in the accessibility settings.
+        <div className="mt-6 text-sm text-secondary-foreground/70">
+          <p className="mb-2">
+            <span className="font-medium">Tip:</span> Press{' '}
+            <kbd className="px-1 py-0.5 text-xs rounded bg-secondary text-secondary-foreground">?</kbd>{' '}
+            at any time to open this shortcuts guide.
           </p>
-          <div className="flex justify-end">
-            <Button 
-              size="sm" 
-              variant="ghost" 
-              onClick={() => setOpen(false)}
-            >
-              Close
-            </Button>
+          <div className="text-xs mt-4 border-t border-secondary/20 pt-4">
+            <p>
+              Customize your keyboard shortcuts in Settings &rarr; Accessibility &rarr; Keyboard.
+            </p>
           </div>
         </div>
       </SheetContent>

@@ -5,9 +5,20 @@
  * throughout the application, improving accessibility and power user experience.
  */
 
-import { useEffect } from 'react';
+// Store all the registered keyboard shortcuts
+let shortcuts: KeyboardShortcut[] = [];
+let enabled: Record<string, boolean> = {};
+let initialized = false;
 
-// Define shortcut types and interfaces
+// The categories of keyboard shortcuts
+export type ShortcutCategory = 
+  'navigation' | 
+  'content' | 
+  'accessibility' | 
+  'ui' | 
+  'search';
+
+// Keyboard shortcut definition
 export interface KeyboardShortcut {
   id: string;
   key: string;
@@ -21,210 +32,252 @@ export interface KeyboardShortcut {
   global?: boolean;
 }
 
-export type ShortcutCategory = 
-  'navigation' | 
-  'content' | 
-  'accessibility' | 
-  'ui' | 
-  'search';
-
-// Registry of all registered shortcuts
-const shortcutRegistry: Map<string, KeyboardShortcut> = new Map();
-
-// Array of enabled shortcuts (for toggling)
-let enabledShortcuts: Set<string> = new Set();
-
-// Register a new keyboard shortcut
+/**
+ * Register a new keyboard shortcut
+ * @param shortcut The keyboard shortcut to register
+ */
 export const registerShortcut = (shortcut: KeyboardShortcut): void => {
   const id = shortcut.id || generateShortcutId(shortcut);
-  shortcutRegistry.set(id, shortcut);
-  enabledShortcuts.add(id);
+  
+  // Check if shortcut already exists
+  const existingIndex = shortcuts.findIndex(s => s.id === id);
+  
+  if (existingIndex !== -1) {
+    // Update existing shortcut
+    shortcuts[existingIndex] = { ...shortcut, id };
+  } else {
+    // Add new shortcut
+    shortcuts.push({ ...shortcut, id });
+    // Enable by default
+    enabled[id] = true;
+  }
+  
+  console.log(`Registered keyboard shortcut: ${id} (${formatShortcutKey(shortcut)})`);
 };
 
-// Unregister a keyboard shortcut
+/**
+ * Unregister a keyboard shortcut by ID
+ * @param id The ID of the shortcut to unregister
+ */
 export const unregisterShortcut = (id: string): void => {
-  shortcutRegistry.delete(id);
-  enabledShortcuts.delete(id);
+  shortcuts = shortcuts.filter(s => s.id !== id);
+  delete enabled[id];
 };
 
-// Generate a shortcut ID if not provided
+/**
+ * Generate a unique ID for a shortcut based on its properties
+ * @param shortcut The shortcut to generate an ID for
+ * @returns A unique ID string
+ */
 const generateShortcutId = (shortcut: KeyboardShortcut): string => {
   const modifiers = [
-    shortcut.ctrlKey && 'ctrl',
-    shortcut.shiftKey && 'shift',
-    shortcut.altKey && 'alt',
-    shortcut.metaKey && 'meta'
-  ].filter(Boolean).join('+');
+    shortcut.ctrlKey ? 'ctrl' : '',
+    shortcut.shiftKey ? 'shift' : '',
+    shortcut.altKey ? 'alt' : '',
+    shortcut.metaKey ? 'meta' : '',
+  ].filter(Boolean).join('-');
   
-  return modifiers ? `${modifiers}+${shortcut.key}` : shortcut.key;
+  return `${shortcut.category}-${modifiers}-${shortcut.key}`;
 };
 
-// Enable or disable a shortcut
-export const setShortcutEnabled = (id: string, enabled: boolean): void => {
-  if (enabled) {
-    enabledShortcuts.add(id);
-  } else {
-    enabledShortcuts.delete(id);
+/**
+ * Set whether a shortcut is enabled
+ * @param id The ID of the shortcut
+ * @param enabled Whether the shortcut should be enabled
+ */
+export const setShortcutEnabled = (id: string, isEnabled: boolean): void => {
+  if (shortcuts.some(s => s.id === id)) {
+    enabled[id] = isEnabled;
   }
 };
 
-// Toggle shortcut state
+/**
+ * Toggle whether a shortcut is enabled and return the new state
+ * @param id The ID of the shortcut
+ * @returns The new enabled state
+ */
 export const toggleShortcutEnabled = (id: string): boolean => {
-  const isEnabled = enabledShortcuts.has(id);
-  setShortcutEnabled(id, !isEnabled);
-  return !isEnabled;
+  if (shortcuts.some(s => s.id === id)) {
+    enabled[id] = !enabled[id];
+    return enabled[id];
+  }
+  return false;
 };
 
-// Check if a shortcut is enabled
+/**
+ * Check if a shortcut is enabled
+ * @param id The ID of the shortcut
+ * @returns Whether the shortcut is enabled
+ */
 export const isShortcutEnabled = (id: string): boolean => {
-  return enabledShortcuts.has(id);
+  return enabled[id] !== false; // Default to true if not set
 };
 
-// Get all registered shortcuts
+/**
+ * Get all registered shortcuts
+ * @returns All shortcuts
+ */
 export const getAllShortcuts = (): KeyboardShortcut[] => {
-  return Array.from(shortcutRegistry.values());
+  return [...shortcuts];
 };
 
-// Get all shortcuts for a specific category
+/**
+ * Get shortcuts by category
+ * @param category The category to filter by
+ * @returns Shortcuts in the specified category
+ */
 export const getShortcutsByCategory = (category: ShortcutCategory): KeyboardShortcut[] => {
-  return Array.from(shortcutRegistry.values())
-    .filter(shortcut => shortcut.category === category);
+  return shortcuts.filter(s => s.category === category);
 };
 
-// Handle keyboard events
+/**
+ * Handle keyboard events and trigger shortcut actions
+ * @param event The keyboard event
+ */
 const handleKeyDown = (event: KeyboardEvent): void => {
-  // Skip if the event target is an input element or contentEditable
-  if (
-    event.target instanceof HTMLInputElement ||
-    event.target instanceof HTMLTextAreaElement ||
-    event.target instanceof HTMLSelectElement ||
-    (event.target instanceof HTMLElement && event.target.isContentEditable)
-  ) {
+  // Don't trigger shortcuts when typing in inputs, textareas, etc.
+  if (event.target instanceof HTMLInputElement || 
+      event.target instanceof HTMLTextAreaElement ||
+      event.target instanceof HTMLSelectElement ||
+      (event.target as HTMLElement).isContentEditable) {
     return;
   }
   
-  // Check each registered shortcut
-  for (const [id, shortcut] of shortcutRegistry) {
-    // Skip disabled shortcuts
-    if (!enabledShortcuts.has(id)) {
-      continue;
-    }
+  // Find matching shortcuts
+  const matchingShortcuts = shortcuts.filter(shortcut => {
+    const keyMatch = shortcut.key.toLowerCase() === event.key.toLowerCase();
+    const ctrlMatch = !!shortcut.ctrlKey === event.ctrlKey;
+    const shiftMatch = !!shortcut.shiftKey === event.shiftKey;
+    const altMatch = !!shortcut.altKey === event.altKey;
+    const metaMatch = !!shortcut.metaKey === event.metaKey;
     
-    // Check if the key and modifiers match
-    const keyMatches = event.key.toLowerCase() === shortcut.key.toLowerCase();
-    const ctrlMatches = Boolean(event.ctrlKey) === Boolean(shortcut.ctrlKey);
-    const shiftMatches = Boolean(event.shiftKey) === Boolean(shortcut.shiftKey);
-    const altMatches = Boolean(event.altKey) === Boolean(shortcut.altKey);
-    const metaMatches = Boolean(event.metaKey) === Boolean(shortcut.metaKey);
-    
-    // If all conditions match, execute the action
-    if (keyMatches && ctrlMatches && shiftMatches && altMatches && metaMatches) {
+    return keyMatch && ctrlMatch && shiftMatch && altMatch && metaMatch;
+  });
+  
+  // Execute enabled shortcuts
+  matchingShortcuts.forEach(shortcut => {
+    if (enabled[shortcut.id] !== false) { // Default to enabled if not set
       event.preventDefault();
       shortcut.action();
-      break;
     }
+  });
+};
+
+/**
+ * Initialize the keyboard shortcuts system
+ */
+export const initKeyboardShortcuts = (): void => {
+  if (!initialized && typeof window !== 'undefined') {
+    window.addEventListener('keydown', handleKeyDown);
+    initialized = true;
+    console.log('Keyboard shortcuts initialized');
   }
 };
 
-// Initialize the keyboard shortcuts system
-export const initKeyboardShortcuts = (): void => {
-  window.addEventListener('keydown', handleKeyDown);
-  console.log('Keyboard shortcuts system initialized');
-};
-
-// Cleanup the keyboard shortcuts system
+/**
+ * Clean up the keyboard shortcuts system
+ */
 export const cleanupKeyboardShortcuts = (): void => {
-  window.removeEventListener('keydown', handleKeyDown);
+  if (initialized && typeof window !== 'undefined') {
+    window.removeEventListener('keydown', handleKeyDown);
+    initialized = false;
+    console.log('Keyboard shortcuts cleaned up');
+  }
 };
 
-// Format a keyboard shortcut for display
+/**
+ * Format a shortcut key for display
+ * @param shortcut The shortcut to format
+ * @returns A formatted string representation
+ */
 export const formatShortcutKey = (shortcut: KeyboardShortcut): string => {
   const parts: string[] = [];
   
-  // Add modifiers
   if (shortcut.ctrlKey) parts.push('Ctrl');
-  if (shortcut.shiftKey) parts.push('Shift');
   if (shortcut.altKey) parts.push('Alt');
-  if (shortcut.metaKey) parts.push(navigator.platform.includes('Mac') ? '⌘' : 'Win');
+  if (shortcut.shiftKey) parts.push('Shift');
+  if (shortcut.metaKey) parts.push('⌘');
   
-  // Format the key
+  // Format special keys or use the key value
   let key = shortcut.key;
-  
-  // Special key formatting
-  switch (key.toLowerCase()) {
-    case 'arrowup': key = '↑'; break;
-    case 'arrowdown': key = '↓'; break;
-    case 'arrowleft': key = '←'; break;
-    case 'arrowright': key = '→'; break;
-    case 'enter': key = '↵'; break;
-    case 'escape': key = 'Esc'; break;
-    case 'delete': key = 'Del'; break;
-    case ' ': key = 'Space'; break;
-    default:
-      // Capitalize single character keys
-      if (key.length === 1) {
-        key = key.toUpperCase();
-      }
-  }
+  if (key === ' ') key = 'Space';
+  else if (key === 'ArrowUp') key = '↑';
+  else if (key === 'ArrowDown') key = '↓';
+  else if (key === 'ArrowLeft') key = '←';
+  else if (key === 'ArrowRight') key = '→';
+  else if (key.length === 1) key = key.toUpperCase();
   
   parts.push(key);
   
   return parts.join(' + ');
 };
 
-// React hook for using keyboard shortcuts
+/**
+ * React hook to register a keyboard shortcut with automatic cleanup
+ * @param key The key for the shortcut
+ * @param callback The action to perform
+ * @param options Additional options for the shortcut
+ */
 export const useKeyboardShortcut = (
   key: string,
-  action: () => void,
-  options: {
+  callback: () => void,
+  options?: {
     ctrlKey?: boolean;
     shiftKey?: boolean;
     altKey?: boolean;
     metaKey?: boolean;
-    enabled?: boolean;
     description?: string;
     category?: ShortcutCategory;
     id?: string;
-  } = {}
-): void => {
-  useEffect(() => {
-    const id = options.id || generateShortcutId({
-      id: '',
-      key,
-      action,
-      description: options.description || '',
-      category: options.category || 'ui',
-      ctrlKey: options.ctrlKey,
-      shiftKey: options.shiftKey,
-      altKey: options.altKey,
-      metaKey: options.metaKey
-    });
-    
-    const shortcut: KeyboardShortcut = {
-      id,
-      key,
-      action,
-      description: options.description || 'No description',
-      category: options.category || 'ui',
-      ctrlKey: options.ctrlKey,
-      shiftKey: options.shiftKey,
-      altKey: options.altKey,
-      metaKey: options.metaKey
-    };
-    
-    registerShortcut(shortcut);
-    
-    if (options.enabled === false) {
-      setShortcutEnabled(id, false);
-    }
-    
-    return () => {
-      unregisterShortcut(id);
-    };
-  }, [key, action, options]);
+    enabled?: boolean;
+  }
+) => {
+  // Ensure the keyboard shortcuts system is initialized
+  if (!initialized) {
+    initKeyboardShortcuts();
+  }
+  
+  const shortcut: KeyboardShortcut = {
+    id: options?.id || `${key}-${Date.now()}`,
+    key,
+    description: options?.description || `Shortcut for ${key}`,
+    category: options?.category || 'ui',
+    action: callback,
+    ctrlKey: options?.ctrlKey,
+    shiftKey: options?.shiftKey,
+    altKey: options?.altKey,
+    metaKey: options?.metaKey,
+  };
+  
+  // Register the shortcut when the component mounts
+  registerShortcut(shortcut);
+  
+  // Set initial enabled state
+  if (options?.enabled !== undefined) {
+    setShortcutEnabled(shortcut.id, options.enabled);
+  }
+  
+  // Clean up the shortcut when the component unmounts
+  return () => {
+    unregisterShortcut(shortcut.id);
+  };
 };
 
-// Initialize on load
+// Initialize the shortcuts system if we're in a browser environment
 if (typeof window !== 'undefined') {
   initKeyboardShortcuts();
 }
+
+export default {
+  registerShortcut,
+  unregisterShortcut,
+  getAllShortcuts,
+  getShortcutsByCategory,
+  formatShortcutKey,
+  setShortcutEnabled,
+  toggleShortcutEnabled,
+  isShortcutEnabled,
+  initKeyboardShortcuts,
+  cleanupKeyboardShortcuts,
+  useKeyboardShortcut,
+};
