@@ -1912,7 +1912,7 @@ const LearnAI: React.FC = () => {
                           id="enrollment-name"
                           value={enrollmentForm.name}
                           onChange={(e) => updateEnrollmentForm('name', e.target.value)}
-                          className="bg-[#333] text-white border-[#444] focus:border-[#007bff] focus:ring-[#007bff]"
+                          className="bg-white text-gray-800 border-gray-200 focus:border-[#007bff] focus:ring-[#007bff]"
                         />
                       </div>
                       
@@ -1923,7 +1923,7 @@ const LearnAI: React.FC = () => {
                           type="email"
                           value={enrollmentForm.email}
                           onChange={(e) => updateEnrollmentForm('email', e.target.value)}
-                          className="bg-[#333] text-white border-[#444] focus:border-[#007bff] focus:ring-[#007bff]"
+                          className="bg-white text-gray-800 border-gray-200 focus:border-[#007bff] focus:ring-[#007bff]"
                         />
                       </div>
                       
@@ -1949,7 +1949,7 @@ const LearnAI: React.FC = () => {
                           id="enrollment-goal"
                           value={enrollmentForm.goal}
                           onChange={(e) => updateEnrollmentForm('goal', e.target.value)}
-                          className="w-full bg-[#333] text-white border-[#444] rounded-md px-3 py-2 focus:border-[#007bff] focus:ring-[#007bff]"
+                          className="w-full bg-white text-gray-800 border-gray-200 rounded-md px-3 py-2 focus:border-[#007bff] focus:ring-[#007bff]"
                         >
                           <option value="">Select your primary goal</option>
                           <option value="career-change">Career Change into AI</option>
