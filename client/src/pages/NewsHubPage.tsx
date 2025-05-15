@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
+import ArticleReactionBar from '@/components/articles/ArticleReactionBar';
 
 // Type definitions
 interface ArticlePost {
@@ -904,15 +905,20 @@ const ArticleCard = ({
           {post.summary || post.content?.substring(0, 120) + '...' || 'Read the full article for more information.'}
         </p>
         
-        <div className="flex items-center justify-between text-xs text-gray-400 pt-3 border-t border-gray-100">
-          <span className="font-medium text-gray-500">{new Date(safeDate).toLocaleDateString(undefined, {
-            month: 'short', 
-            day: 'numeric'
-          })}</span>
+        <div className="flex flex-col gap-2">
+          {/* Article reaction bar */}
+          <ArticleReactionBar articleId={post.id} variant="compact" className="mb-1" />
           
-          <Button variant="ghost" size="sm" className="h-7 px-3 text-xs text-blue-600 hover:text-blue-800 group">
-            Read <ChevronRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-0.5" />
-          </Button>
+          <div className="flex items-center justify-between text-xs text-gray-400 pt-3 border-t border-gray-100">
+            <span className="font-medium text-gray-500">{new Date(safeDate).toLocaleDateString(undefined, {
+              month: 'short', 
+              day: 'numeric'
+            })}</span>
+            
+            <Button variant="ghost" size="sm" className="h-7 px-3 text-xs text-blue-600 hover:text-blue-800 group">
+              Read <ChevronRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+            </Button>
+          </div>
         </div>
       </div>
     </Card>
