@@ -162,17 +162,17 @@ const Testimonial: React.FC<{
   imageUrl: string;
 }> = ({ name, role, text, imageUrl }) => {
   return (
-    <div className="bg-[#2a2a2a] rounded-lg p-6 shadow-lg">
+    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
       <div className="flex items-center mb-4">
-        <div className="w-12 h-12 rounded-full overflow-hidden mr-4">
+        <div className="w-12 h-12 rounded-full overflow-hidden mr-4 border border-gray-100 shadow-sm">
           <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
         </div>
         <div>
-          <h4 className="font-bold text-white">{name}</h4>
-          <p className="text-sm text-gray-400">{role}</p>
+          <h4 className="font-bold text-gray-800">{name}</h4>
+          <p className="text-sm text-gray-500">{role}</p>
         </div>
       </div>
-      <p className="text-gray-300 italic">"{text}"</p>
+      <p className="text-gray-600 italic">"{text}"</p>
     </div>
   );
 };
@@ -399,28 +399,28 @@ const successMetrics = [
     before: '$85,000', 
     after: '$110,000', 
     increase: '29%',
-    icon: <DollarSign className="w-5 h-5 text-[#007bff]" />
+    icon: <DollarSign className="w-5 h-5 text-[#0066cc]" />
   },
   { 
     metric: 'Job Interviews', 
     before: '2-3 per month', 
     after: '8-10 per month', 
     increase: '300%',
-    icon: <Briefcase className="w-5 h-5 text-[#007bff]" />
+    icon: <Briefcase className="w-5 h-5 text-[#0066cc]" />
   },
   { 
     metric: 'Project Portfolio', 
     before: '1-2 projects', 
     after: '10+ advanced projects', 
     increase: '500%',
-    icon: <Award className="w-5 h-5 text-[#007bff]" />
+    icon: <Award className="w-5 h-5 text-[#0066cc]" />
   },
   { 
     metric: 'Technical Skills', 
     before: 'Basic/Intermediate', 
     after: 'Advanced/Expert', 
     increase: '85%',
-    icon: <BarChart3 className="w-5 h-5 text-[#007bff]" />
+    icon: <BarChart3 className="w-5 h-5 text-[#0066cc]" />
   }
 ];
 
@@ -431,7 +431,7 @@ const videoTestimonials = [
     name: 'Jamie Cho',
     role: 'Senior Data Scientist at Acme Inc.',
     videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-    thumbnailUrl: 'https://placehold.co/400x225/2a2a2a/007bff?text=Jamie+Cho+Video',
+    thumbnailUrl: 'https://placehold.co/400x225/f5f5f7/0066cc?text=Jamie+Cho+Video',
     quote: 'After completing the AI program, I received three job offers within two weeks.'
   },
   {
