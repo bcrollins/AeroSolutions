@@ -1374,19 +1374,19 @@ const LearnAI: React.FC = () => {
                     <img 
                       src={video.thumbnailUrl} 
                       alt={`Testimonial by ${video.name}`} 
-                      className="w-full h-48 object-cover"
+                      className="w-full h-48 object-cover rounded-t-md"
                     />
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="w-16 h-16 rounded-full bg-[#007bff]/90 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="w-16 h-16 rounded-full bg-[#0066cc]/90 flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300">
                         <Play className="w-6 h-6 text-white" />
                       </div>
                     </div>
                   </div>
                   
                   <div className="p-4">
-                    <h3 className="font-bold">{video.name}</h3>
-                    <p className="text-sm text-gray-600 mb-2">{video.role}</p>
-                    <p className="text-sm italic text-gray-800">"{video.quote}"</p>
+                    <h3 className="font-semibold text-gray-800">{video.name}</h3>
+                    <p className="text-sm text-gray-500 mb-2">{video.role}</p>
+                    <p className="text-sm italic text-gray-700 leading-relaxed">"{video.quote}"</p>
                   </div>
                 </Card>
               ))}
@@ -1395,7 +1395,7 @@ const LearnAI: React.FC = () => {
             <Dialog open={showVideoDialog} onOpenChange={setShowVideoDialog}>
               <DialogContent className="bg-white border-gray-200 max-w-3xl shadow-lg">
                 <DialogHeader>
-                  <DialogTitle>
+                  <DialogTitle className="text-gray-800 font-semibold">
                     {videoTestimonials[selectedVideoIndex]?.name} - Success Story
                   </DialogTitle>
                 </DialogHeader>
@@ -1420,14 +1420,14 @@ const LearnAI: React.FC = () => {
             transition={{ duration: 0.5, delay: 1 }}
             className="w-full max-w-6xl mb-16"
           >
-            <h2 className="text-2xl font-bold mb-8 text-center">Endorsed by Industry Experts</h2>
+            <h2 className="text-2xl font-semibold mb-8 text-center tracking-tight text-gray-800">Endorsed by Industry Experts</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {expertEndorsements.map((expert, index) => (
-                <Card key={index} className="bg-[#2a2a2a] border-[#444] overflow-hidden">
+                <Card key={index} className="bg-white border border-gray-200 shadow-sm overflow-hidden hover:border-gray-300 transition-colors duration-300">
                   <div className="p-6">
                     <div className="flex items-center mb-4">
-                      <div className="w-16 h-16 rounded-full overflow-hidden mr-4">
+                      <div className="w-16 h-16 rounded-full overflow-hidden mr-4 border border-gray-200 shadow-sm">
                         <img 
                           src={expert.image} 
                           alt={expert.name} 
@@ -1435,12 +1435,12 @@ const LearnAI: React.FC = () => {
                         />
                       </div>
                       <div>
-                        <h3 className="font-bold">{expert.name}</h3>
-                        <p className="text-sm text-gray-400">{expert.title}</p>
+                        <h3 className="font-semibold text-gray-800">{expert.name}</h3>
+                        <p className="text-sm text-gray-500">{expert.title}</p>
                       </div>
                     </div>
                     
-                    <p className="italic text-gray-300">"{expert.quote}"</p>
+                    <p className="italic text-gray-700 leading-relaxed">"{expert.quote}"</p>
                   </div>
                 </Card>
               ))}
@@ -1454,11 +1454,11 @@ const LearnAI: React.FC = () => {
             transition={{ duration: 0.5, delay: 1.1 }}
             className="w-full max-w-6xl mb-16"
           >
-            <Card className="bg-[#2a2a2a] border-[#444] overflow-hidden">
+            <Card className="bg-white border border-gray-200 shadow-sm overflow-hidden">
               <div className="p-8">
                 <div className="flex items-center justify-center mb-6">
-                  <DollarSign className="w-6 h-6 text-[#007bff] mr-2" />
-                  <h2 className="text-2xl font-bold">Calculate Your ROI</h2>
+                  <DollarSign className="w-6 h-6 text-[#0066cc] mr-2" />
+                  <h2 className="text-2xl font-semibold text-gray-800 tracking-tight">Calculate Your ROI</h2>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
