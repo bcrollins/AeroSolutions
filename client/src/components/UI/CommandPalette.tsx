@@ -1,555 +1,810 @@
-import React, { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { useLocation } from 'wouter';
-import { Command as CommandPrimitive } from 'cmdk';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
+import { useLocation, useRoute } from 'wouter';
+import { 
   Command,
-  CommandDialog,
   CommandInput,
   CommandList,
   CommandEmpty,
   CommandGroup,
   CommandItem,
   CommandSeparator,
+  CommandShortcut,
 } from '@/components/ui/command';
 import {
-  Calculator,
-  Calendar,
-  CreditCard,
-  Settings,
-  Smile,
-  User,
-  Search,
-  FileText,
-  Book,
-  Home,
-  Zap,
-  Video,
-  GraduationCap,
-  MessageSquare,
-  PanelLeft,
-  LayoutDashboard,
-  HelpCircle,
-  LifeBuoy,
-  LogOut,
-  FileCode,
-  FileQuestion,
-  StickyNote,
-  Newspaper,
-  BookOpen
-} from 'lucide-react';
+  Dialog,
+  DialogContent,
+} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { 
+  Search, 
+  Home, 
+  Settings, 
+  User, 
+  BookOpen, 
+  Layout, 
+  DollarSign,
+  FileText, 
+  Layers,
+  History,
+  Star,
+  PieChart,
+  Bell,
+  HelpCircle,
+  Mail,
+  MessageSquare,
+  Calendar,
+  LogOut,
+  CheckCircle2,
+  Terminal,
+  Command as CommandIcon,
+  PanelRight,
+  MoonStar,
+  Sun,
+  ArrowRight,
+  ArrowLeft,
+  Briefcase
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { useDevice } from '@/hooks/use-device';
 
-// Define command action types
-type CommandAction = {
+export interface CommandAction {
   id: string;
   name: string;
   description?: string;
-  icon?: React.ReactNode;
   shortcut?: string[];
-  section: 'navigation' | 'actions' | 'tools' | 'help' | 'account' | 'courses';
-  keywords: string[];
-  action: () => void;
+  icon?: React.ReactNode;
+  action: (close: () => void) => void;
+  section: 'navigation' | 'actions' | 'settings' | 'search';
+  keywords?: string[];
+  badge?: 'new' | 'beta' | 'popular' | 'updated';
   disabled?: boolean;
-};
-
-// Context for the command palette
-type CommandPaletteContextType = {
-  isOpen: boolean;
-  openCommandPalette: () => void;
-  closeCommandPalette: () => void;
-  toggleCommandPalette: () => void;
-  registerCommand: (command: CommandAction) => void;
-  unregisterCommand: (id: string) => void;
-};
-
-const CommandPaletteContext = createContext<CommandPaletteContextType>({
-  isOpen: false,
-  openCommandPalette: () => {},
-  closeCommandPalette: () => {},
-  toggleCommandPalette: () => {},
-  registerCommand: () => {},
-  unregisterCommand: () => {},
-});
-
-export const useCommandPalette = () => useContext(CommandPaletteContext);
-
-interface CommandPaletteProviderProps {
-  children: ReactNode;
-  defaultCommands?: CommandAction[];
 }
 
-export function CommandPaletteProvider({
-  children,
-  defaultCommands = [],
-}: CommandPaletteProviderProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [commands, setCommands] = useState<CommandAction[]>(defaultCommands);
-  const [location, setLocation] = useLocation();
+interface CommandPaletteProps {
+  actions?: CommandAction[];
+  placeholder?: string;
+  defaultActions?: boolean;
+  recentItemsCount?: number;
+  showShortcut?: boolean;
+  hotkeys?: string[];
+  maxResults?: number;
+  autoFocus?: boolean;
+  searchDelay?: number;
+  className?: string;
+  contentClassName?: string;
+  footerText?: string;
+  highlightTerms?: boolean;
+}
 
-  // Effect to handle keyboard shortcut
+/**
+ * CommandPalette - A comprehensive command palette for quick navigation and actions
+ * 
+ * @example
+ * <CommandPalette 
+ *   actions={[
+ *     {
+ *       id: 'go-home',
+ *       name: 'Go to Homepage',
+ *       icon: <Home />,
+ *       action: (close) => { navigate('/'); close(); },
+ *       section: 'navigation',
+ *       shortcut: ['g', 'h']
+ *     }
+ *   ]}
+ *   hotkeys={['cmd+k', 'ctrl+k']}
+ * />
+ */
+export const CommandPalette: React.FC<CommandPaletteProps> = ({
+  actions = [],
+  placeholder = 'Search commands...',
+  defaultActions = true,
+  recentItemsCount = 3,
+  showShortcut = true,
+  hotkeys = ['meta+k', 'ctrl+k'],
+  maxResults = 10,
+  autoFocus = true,
+  searchDelay = 100,
+  className = '',
+  contentClassName = '',
+  footerText = '',
+  highlightTerms = true,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [recentActions, setRecentActions] = useState<CommandAction[]>([]);
+  const [filteredActions, setFilteredActions] = useState<CommandAction[]>([]);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [, navigate] = useLocation();
+  const { isMobile } = useDevice();
+  
+  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  
+  // Load recent actions from localStorage
   useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        setIsOpen((open) => !open);
+    try {
+      const savedRecent = localStorage.getItem('command-palette-recent');
+      if (savedRecent) {
+        const parsed = JSON.parse(savedRecent);
+        const matchingActions = parsed
+          .map((id: string) => [...defaultCommandActions, ...actions].find(a => a.id === id))
+          .filter((a: CommandAction | undefined): a is CommandAction => Boolean(a))
+          .slice(0, recentItemsCount);
+        
+        setRecentActions(matchingActions);
+      }
+    } catch (error) {
+      console.error('Failed to load recent commands:', error);
+    }
+  }, [actions, recentItemsCount]);
+  
+  // Save recent actions to localStorage
+  const saveRecentAction = useCallback((action: CommandAction) => {
+    try {
+      const savedRecent = localStorage.getItem('command-palette-recent');
+      const recentIds = savedRecent ? JSON.parse(savedRecent) : [];
+      
+      // Remove the action if it already exists, then add it to the front
+      const updatedRecent = [
+        action.id,
+        ...recentIds.filter((id: string) => id !== action.id)
+      ].slice(0, 10); // Limit to 10 most recent
+      
+      localStorage.setItem('command-palette-recent', JSON.stringify(updatedRecent));
+      
+      // Update the recent actions list
+      const matchingActions = updatedRecent
+        .map((id: string) => [...defaultCommandActions, ...actions].find(a => a.id === id))
+        .filter((a): a is CommandAction => Boolean(a))
+        .slice(0, recentItemsCount);
+      
+      setRecentActions(matchingActions);
+    } catch (error) {
+      console.error('Failed to save recent command:', error);
+    }
+  }, [actions, recentItemsCount]);
+  
+  // Filter actions based on search input
+  useEffect(() => {
+    if (searchTimeout.current) {
+      clearTimeout(searchTimeout.current);
+    }
+    
+    searchTimeout.current = setTimeout(() => {
+      const allActions = [...(defaultActions ? defaultCommandActions : []), ...actions];
+      
+      if (!search) {
+        setFilteredActions(allActions);
+        return;
+      }
+      
+      const searchLower = search.toLowerCase();
+      const filtered = allActions.filter(action => {
+        const nameMatch = action.name.toLowerCase().includes(searchLower);
+        const descMatch = action.description?.toLowerCase().includes(searchLower) || false;
+        const keywordMatch = action.keywords?.some(k => k.toLowerCase().includes(searchLower)) || false;
+        const shortcutMatch = action.shortcut?.some(s => s.toLowerCase().includes(searchLower)) || false;
+        
+        return nameMatch || descMatch || keywordMatch || shortcutMatch;
+      }).slice(0, maxResults);
+      
+      setFilteredActions(filtered);
+      setActiveIndex(0);
+    }, searchDelay);
+    
+    return () => {
+      if (searchTimeout.current) {
+        clearTimeout(searchTimeout.current);
       }
     };
-
-    document.addEventListener('keydown', down);
-    return () => document.removeEventListener('keydown', down);
-  }, []);
-
-  // Define commands based on current app state
+  }, [search, actions, defaultActions, maxResults, searchDelay]);
+  
+  // Set up keyboard shortcuts
   useEffect(() => {
-    // Navigation commands
-    const navigationCommands: CommandAction[] = [
-      {
-        id: 'home',
-        name: 'Home',
-        icon: <Home className="h-4 w-4" />,
-        shortcut: ['g', 'h'],
-        section: 'navigation',
-        keywords: ['home', 'main', 'start', 'landing'],
-        action: () => {
-          setLocation('/');
-          setIsOpen(false);
-        },
-      },
-      {
-        id: 'dashboard',
-        name: 'Dashboard',
-        icon: <LayoutDashboard className="h-4 w-4" />,
-        shortcut: ['g', 'd'],
-        section: 'navigation',
-        keywords: ['dashboard', 'stats', 'overview', 'analytics'],
-        action: () => {
-          setLocation('/dashboard');
-          setIsOpen(false);
-        },
-      },
-      {
-        id: 'courses',
-        name: 'Browse Courses',
-        icon: <Book className="h-4 w-4" />,
-        shortcut: ['g', 'c'],
-        section: 'navigation',
-        keywords: ['courses', 'classes', 'learning', 'catalog'],
-        action: () => {
-          setLocation('/courses');
-          setIsOpen(false);
-        },
-      },
-      {
-        id: 'articles',
-        name: 'Articles & Resources',
-        icon: <Newspaper className="h-4 w-4" />,
-        shortcut: ['g', 'a'],
-        section: 'navigation',
-        keywords: ['articles', 'blog', 'resources', 'news', 'read'],
-        action: () => {
-          setLocation('/articles');
-          setIsOpen(false);
-        },
-      },
-      {
-        id: 'community',
-        name: 'Community Forum',
-        icon: <MessageSquare className="h-4 w-4" />,
-        shortcut: ['g', 'f'],
-        section: 'navigation',
-        keywords: ['community', 'forum', 'chat', 'discuss', 'questions'],
-        action: () => {
-          setLocation('/community');
-          setIsOpen(false);
-        },
-      },
-    ];
-
-    // Course-related commands
-    const courseCommands: CommandAction[] = [
-      {
-        id: 'my-courses',
-        name: 'My Courses',
-        icon: <BookOpen className="h-4 w-4" />,
-        section: 'courses',
-        keywords: ['my courses', 'enrolled', 'learning', 'progress'],
-        action: () => {
-          setLocation('/dashboard/courses');
-          setIsOpen(false);
-        },
-      },
-      {
-        id: 'continue-learning',
-        name: 'Continue Learning',
-        icon: <GraduationCap className="h-4 w-4" />,
-        section: 'courses',
-        keywords: ['continue', 'resume', 'last', 'course'],
-        action: () => {
-          // This would typically navigate to the last accessed course
-          setLocation('/dashboard/courses/continue');
-          setIsOpen(false);
-        },
-      },
-      {
-        id: 'ai-fundamentals',
-        name: 'AI Fundamentals',
-        icon: <Zap className="h-4 w-4" />,
-        section: 'courses',
-        keywords: ['ai', 'fundamentals', 'basics', 'introduction'],
-        action: () => {
-          setLocation('/courses/ai-fundamentals');
-          setIsOpen(false);
-        },
-      },
-      {
-        id: 'course-certificates',
-        name: 'My Certificates',
-        icon: <FileText className="h-4 w-4" />,
-        section: 'courses',
-        keywords: ['certificates', 'achievements', 'completion', 'awards'],
-        action: () => {
-          setLocation('/dashboard/certificates');
-          setIsOpen(false);
-        },
-      },
-    ];
-
-    // Tools commands
-    const toolCommands: CommandAction[] = [
-      {
-        id: 'search',
-        name: 'Search...',
-        icon: <Search className="h-4 w-4" />,
-        shortcut: ['/'],
-        section: 'tools',
-        keywords: ['search', 'find', 'lookup'],
-        action: () => {
-          setIsOpen(false);
-          // This would typically focus a search input
-          document.getElementById('global-search')?.focus();
-        },
-      },
-      {
-        id: 'notes',
-        name: 'My Notes',
-        icon: <StickyNote className="h-4 w-4" />,
-        section: 'tools',
-        keywords: ['notes', 'annotations', 'save', 'highlights'],
-        action: () => {
-          setLocation('/dashboard/notes');
-          setIsOpen(false);
-        },
-      },
-      {
-        id: 'calendar',
-        name: 'Calendar',
-        icon: <Calendar className="h-4 w-4" />,
-        section: 'tools',
-        keywords: ['calendar', 'schedule', 'events', 'dates'],
-        action: () => {
-          setLocation('/dashboard/calendar');
-          setIsOpen(false);
-        },
-      },
-    ];
-
-    // Account commands
-    const accountCommands: CommandAction[] = [
-      {
-        id: 'profile',
-        name: 'My Profile',
-        icon: <User className="h-4 w-4" />,
-        section: 'account',
-        keywords: ['profile', 'account', 'me', 'personal'],
-        action: () => {
-          setLocation('/dashboard/profile');
-          setIsOpen(false);
-        },
-      },
-      {
-        id: 'subscription',
-        name: 'Subscription',
-        icon: <CreditCard className="h-4 w-4" />,
-        section: 'account',
-        keywords: ['subscription', 'billing', 'plan', 'payment'],
-        action: () => {
-          setLocation('/dashboard/subscription');
-          setIsOpen(false);
-        },
-      },
-      {
-        id: 'settings',
-        name: 'Settings',
-        icon: <Settings className="h-4 w-4" />,
-        shortcut: ['g', 's'],
-        section: 'account',
-        keywords: ['settings', 'preferences', 'options', 'config'],
-        action: () => {
-          setLocation('/settings');
-          setIsOpen(false);
-        },
-      },
-      {
-        id: 'logout',
-        name: 'Log Out',
-        icon: <LogOut className="h-4 w-4" />,
-        section: 'account',
-        keywords: ['logout', 'sign out', 'exit'],
-        action: () => {
-          // This would typically call a logout function
-          window.location.href = '/api/logout';
-          setIsOpen(false);
-        },
-      },
-    ];
-
-    // Help commands
-    const helpCommands: CommandAction[] = [
-      {
-        id: 'help-center',
-        name: 'Help Center',
-        icon: <HelpCircle className="h-4 w-4" />,
-        section: 'help',
-        keywords: ['help', 'support', 'assistance', 'docs'],
-        action: () => {
-          setLocation('/help');
-          setIsOpen(false);
-        },
-      },
-      {
-        id: 'contact-support',
-        name: 'Contact Support',
-        icon: <LifeBuoy className="h-4 w-4" />,
-        section: 'help',
-        keywords: ['contact', 'support', 'assistance', 'ticket'],
-        action: () => {
-          setLocation('/support');
-          setIsOpen(false);
-        },
-      },
-      {
-        id: 'shortcuts',
-        name: 'Keyboard Shortcuts',
-        icon: <FileCode className="h-4 w-4" />,
-        shortcut: ['?'],
-        section: 'help',
-        keywords: ['keyboard', 'shortcuts', 'keys', 'hotkeys'],
-        action: () => {
-          // This would typically open a keyboard shortcuts overlay
-          document.dispatchEvent(new KeyboardEvent('keydown', { key: '?' }));
-          setIsOpen(false);
-        },
-      },
-      {
-        id: 'faq',
-        name: 'FAQ',
-        icon: <FileQuestion className="h-4 w-4" />,
-        section: 'help',
-        keywords: ['faq', 'questions', 'answers', 'common'],
-        action: () => {
-          setLocation('/faq');
-          setIsOpen(false);
-        },
-      },
-    ];
-
-    // Combine all commands
-    setCommands([
-      ...navigationCommands,
-      ...courseCommands,
-      ...toolCommands, 
-      ...accountCommands,
-      ...helpCommands
-    ]);
-  }, [setLocation, location]);
-
-  // Register and unregister custom commands
-  const registerCommand = (command: CommandAction) => {
-    setCommands((prevCommands) => {
-      // Check if command with same ID already exists
-      if (prevCommands.some((cmd) => cmd.id === command.id)) {
-        return prevCommands.map((cmd) =>
-          cmd.id === command.id ? command : cmd
-        );
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isHotkey = hotkeys.some(hotkey => {
+        const keys = hotkey.split('+');
+        const modifiers = keys.slice(0, -1);
+        const key = keys[keys.length - 1];
+        
+        const modifiersMatch = modifiers.every(modifier => {
+          switch (modifier) {
+            case 'meta':
+            case 'cmd':
+              return e.metaKey;
+            case 'ctrl':
+              return e.ctrlKey;
+            case 'alt':
+              return e.altKey;
+            case 'shift':
+              return e.shiftKey;
+            default:
+              return false;
+          }
+        });
+        
+        return modifiersMatch && e.key.toLowerCase() === key.toLowerCase();
+      });
+      
+      if (isHotkey) {
+        e.preventDefault();
+        setIsOpen(true);
       }
-      return [...prevCommands, command];
-    });
-  };
-
-  const unregisterCommand = (id: string) => {
-    setCommands((prevCommands) =>
-      prevCommands.filter((cmd) => cmd.id !== id)
-    );
-  };
-
-  // Provide context value
-  const contextValue: CommandPaletteContextType = {
-    isOpen,
-    openCommandPalette: () => setIsOpen(true),
-    closeCommandPalette: () => setIsOpen(false),
-    toggleCommandPalette: () => setIsOpen((prev) => !prev),
-    registerCommand,
-    unregisterCommand,
-  };
-
-  return (
-    <CommandPaletteContext.Provider value={contextValue}>
-      {children}
-      <CommandPaletteModal
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        commands={commands}
-      />
-    </CommandPaletteContext.Provider>
-  );
-}
-
-interface CommandPaletteModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  commands: CommandAction[];
-}
-
-function CommandPaletteModal({
-  isOpen,
-  onClose,
-  commands,
-}: CommandPaletteModalProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const commandsBySection = React.useMemo(() => {
-    return commands.reduce(
-      (acc, command) => {
-        if (!acc[command.section]) {
-          acc[command.section] = [];
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [hotkeys]);
+  
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isOpen) return;
+      
+      const visibleActions = filteredActions.filter(a => !a.disabled);
+      
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          setActiveIndex(prev => (prev + 1) % visibleActions.length);
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setActiveIndex(prev => (prev - 1 + visibleActions.length) % visibleActions.length);
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (visibleActions[activeIndex]) {
+            executeAction(visibleActions[activeIndex]);
+          }
+          break;
+        case 'Escape':
+          e.preventDefault();
+          setIsOpen(false);
+          break;
+      }
+      
+      // Handle shortcut keys when command palette is open
+      if (e.key.length === 1 && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        for (const action of filteredActions) {
+          if (action.shortcut && action.shortcut[0] === e.key.toLowerCase() && !action.disabled) {
+            e.preventDefault();
+            executeAction(action);
+            break;
+          }
         }
-        acc[command.section].push(command);
-        return acc;
-      },
-      {} as Record<string, CommandAction[]>
-    );
-  }, [commands]);
-
-  // Get section titles
-  const getSectionTitle = (section: string) => {
-    switch (section) {
-      case 'navigation':
-        return 'Navigation';
-      case 'actions':
-        return 'Actions';
-      case 'tools':
-        return 'Tools';
-      case 'help':
-        return 'Help & Support';
-      case 'account':
-        return 'Account';
-      case 'courses':
-        return 'Courses';
-      default:
-        return section.charAt(0).toUpperCase() + section.slice(1);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, activeIndex, filteredActions]);
+  
+  // Focus input on open
+  useEffect(() => {
+    if (isOpen && autoFocus && inputRef.current) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 50);
     }
+  }, [isOpen, autoFocus]);
+  
+  // Execute a command action
+  const executeAction = useCallback((action: CommandAction) => {
+    if (action.disabled) return;
+    
+    action.action(() => setIsOpen(false));
+    saveRecentAction(action);
+  }, [saveRecentAction]);
+  
+  // Highlight matching text
+  const highlightMatch = useCallback((text: string, query: string): React.ReactNode => {
+    if (!highlightTerms || !query || !text) return text;
+    
+    const parts = text.split(new RegExp(`(${query})`, 'gi'));
+    return (
+      <>
+        {parts.map((part, i) => 
+          part.toLowerCase() === query.toLowerCase() ? 
+            <span key={i} className="bg-primary/20 text-primary font-semibold rounded-sm px-0.5">{part}</span> : 
+            part
+        )}
+      </>
+    );
+  }, [highlightTerms]);
+  
+  // Close the command palette
+  const handleClose = () => {
+    setIsOpen(false);
+    setSearch('');
   };
-
-  return (
-    <CommandDialog open={isOpen} onOpenChange={onClose}>
-      <div className="max-h-[85vh] overflow-hidden rounded-lg border bg-background shadow-xl">
-        <div className="flex flex-col">
-          <CommandInput
-            placeholder="Type a command or search..."
-            value={searchQuery}
-            onValueChange={setSearchQuery}
-            className="border-0 border-b focus:ring-0"
-          />
-          <CommandList className="max-h-[65vh] overflow-y-auto overflow-x-hidden">
-            <CommandEmpty className="py-6 text-center text-sm">
-              No commands found.
-            </CommandEmpty>
-            
-            {Object.entries(commandsBySection).map(([section, sectionCommands]) => (
-              <CommandGroup
-                key={section}
-                heading={getSectionTitle(section)}
-                className="py-2 px-1"
-              >
-                {sectionCommands.map((command) => (
-                  <CommandItem
-                    key={command.id}
-                    onSelect={() => {
-                      command.action();
-                      onClose();
-                    }}
-                    disabled={command.disabled}
-                    className={cn(
-                      "flex items-center gap-2 px-2 py-1.5",
-                      command.disabled && "opacity-40 cursor-not-allowed"
-                    )}
-                  >
-                    {command.icon && (
-                      <span className="flex-shrink-0 text-muted-foreground">
-                        {command.icon}
-                      </span>
-                    )}
-                    <span className="flex-grow truncate">
-                      {command.name}
-                      {command.description && (
-                        <span className="ml-2 text-xs text-muted-foreground">
-                          {command.description}
-                        </span>
-                      )}
-                    </span>
-                    {command.shortcut && (
-                      <div className="flex-shrink-0 flex items-center gap-1">
-                        {command.shortcut.map((key, i) => (
-                          <React.Fragment key={i}>
-                            <kbd className="rounded bg-muted px-1.5 py-0.5 text-xs font-semibold">
-                              {key}
-                            </kbd>
-                            {i < command.shortcut!.length - 1 && (
-                              <span className="text-xs text-muted-foreground">
-                                +
-                              </span>
-                            )}
-                          </React.Fragment>
-                        ))}
-                      </div>
-                    )}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            ))}
-            <div className="py-2 px-4 text-xs text-muted-foreground">
-              <p>
-                Press <kbd className="rounded bg-muted px-1 py-0.5">↑</kbd> and{" "}
-                <kbd className="rounded bg-muted px-1 py-0.5">↓</kbd> to navigate,{" "}
-                <kbd className="rounded bg-muted px-1 py-0.5">Enter</kbd> to select,{" "}
-                <kbd className="rounded bg-muted px-1 py-0.5">Esc</kbd> to close
-              </p>
-            </div>
-          </CommandList>
-        </div>
-      </div>
-    </CommandDialog>
-  );
-}
-
-export function CommandButton({ className }: { className?: string }) {
-  const { openCommandPalette } = useCommandPalette();
+  
+  // Group actions by section
+  const getActionsBySection = (section: string): CommandAction[] => {
+    return filteredActions.filter(action => action.section === section);
+  };
+  
+  // Get placeholder based on device
+  const getPlaceholder = () => {
+    if (isMobile) return placeholder;
+    return `${placeholder} (${hotkeys[0].includes('meta') ? '⌘' : 'Ctrl'}+K)`;
+  };
+  
+  // Default navigation actions
+  const defaultCommandActions: CommandAction[] = defaultActions ? [
+    {
+      id: 'home',
+      name: 'Go to Home',
+      description: 'Navigate to the homepage',
+      icon: <Home className="h-4 w-4" />,
+      action: (close) => { 
+        navigate('/'); 
+        close();
+      },
+      section: 'navigation',
+      shortcut: ['g', 'h'],
+      keywords: ['home', 'main', 'dashboard', 'start'],
+    },
+    {
+      id: 'courses',
+      name: 'Browse Courses',
+      description: 'View all available AI courses',
+      icon: <BookOpen className="h-4 w-4" />,
+      action: (close) => { 
+        navigate('/courses'); 
+        close();
+      },
+      section: 'navigation',
+      shortcut: ['g', 'c'],
+      keywords: ['learn', 'education', 'classes', 'training'],
+    },
+    {
+      id: 'profile',
+      name: 'View Profile',
+      description: 'Go to your user profile',
+      icon: <User className="h-4 w-4" />,
+      action: (close) => { 
+        navigate('/profile'); 
+        close();
+      },
+      section: 'navigation',
+      shortcut: ['g', 'p'],
+      keywords: ['account', 'me', 'user', 'personal'],
+    },
+    {
+      id: 'settings',
+      name: 'Settings',
+      description: 'Adjust your account settings',
+      icon: <Settings className="h-4 w-4" />,
+      action: (close) => { 
+        navigate('/settings'); 
+        close();
+      },
+      section: 'navigation',
+      shortcut: ['g', 's'],
+      keywords: ['preferences', 'options', 'configure'],
+    },
+    {
+      id: 'articles',
+      name: 'Browse Articles',
+      description: 'Read the latest AI articles',
+      icon: <FileText className="h-4 w-4" />,
+      action: (close) => { 
+        navigate('/articles'); 
+        close();
+      },
+      section: 'navigation',
+      shortcut: ['g', 'a'],
+      keywords: ['blog', 'content', 'read', 'news'],
+    },
+    {
+      id: 'pricing',
+      name: 'View Pricing',
+      description: 'See subscription plans and pricing',
+      icon: <DollarSign className="h-4 w-4" />,
+      action: (close) => { 
+        navigate('/pricing'); 
+        close();
+      },
+      section: 'navigation',
+      shortcut: ['g', '$'],
+      keywords: ['plans', 'subscribe', 'membership', 'payment'],
+    },
+    {
+      id: 'toggle-theme',
+      name: 'Toggle Theme',
+      description: 'Switch between light and dark mode',
+      icon: <MoonStar className="h-4 w-4" />,
+      action: (close) => { 
+        // Get current theme
+        const isDark = document.documentElement.classList.contains('dark-theme');
+        // Toggle theme
+        document.documentElement.classList.remove(isDark ? 'dark-theme' : 'light-theme');
+        document.documentElement.classList.add(isDark ? 'light-theme' : 'dark-theme');
+        // Save preference
+        localStorage.setItem('theme-preference', isDark ? 'light' : 'dark');
+        close();
+      },
+      section: 'settings',
+      shortcut: ['t', 't'],
+      keywords: ['dark', 'light', 'mode', 'appearance'],
+    },
+    {
+      id: 'logout',
+      name: 'Logout',
+      description: 'Sign out of your account',
+      icon: <LogOut className="h-4 w-4" />,
+      action: (close) => { 
+        window.location.href = '/api/logout';
+        close();
+      },
+      section: 'settings',
+      shortcut: ['l', 'o'],
+      keywords: ['signout', 'exit', 'end session'],
+    },
+    {
+      id: 'help',
+      name: 'Help & Support',
+      description: 'Get help with using the platform',
+      icon: <HelpCircle className="h-4 w-4" />,
+      action: (close) => { 
+        navigate('/help'); 
+        close();
+      },
+      section: 'settings',
+      shortcut: ['h', 'p'],
+      keywords: ['support', 'assistance', 'guide', 'faq'],
+    },
+    {
+      id: 'toggle-sidebar',
+      name: 'Toggle Sidebar',
+      description: 'Show or hide sidebar',
+      icon: <PanelRight className="h-4 w-4" />,
+      action: (close) => { 
+        // Find sidebar element and toggle it
+        const sidebarToggle = document.querySelector('[data-sidebar-toggle]') as HTMLElement;
+        if (sidebarToggle) {
+          sidebarToggle.click();
+        }
+        close();
+      },
+      section: 'actions',
+      shortcut: ['t', 's'],
+      keywords: ['panel', 'menu', 'navigation', 'side'],
+    },
+    {
+      id: 'search',
+      name: 'Search Content',
+      description: 'Search for courses, articles and more',
+      icon: <Search className="h-4 w-4" />,
+      action: (close) => { 
+        navigate('/search'); 
+        close();
+      },
+      section: 'actions',
+      shortcut: ['/', 's'],
+      keywords: ['find', 'lookup', 'query'],
+      badge: 'popular',
+    },
+  ] : [];
   
   return (
-    <button
-      onClick={openCommandPalette}
-      className={cn(
-        "inline-flex items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm text-muted-foreground shadow-sm hover:bg-accent hover:text-accent-foreground",
-        className
-      )}
-    >
-      <div className="flex items-center gap-1">
-        <Search className="h-4 w-4" />
-        <span>Search or use command...</span>
+    <>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent 
+          className={cn(
+            "p-0 max-w-2xl gap-0 shadow-xl border-border/50 backdrop-blur-sm", 
+            contentClassName
+          )}
+        >
+          <Command 
+            className={cn("rounded-lg", className)}
+            loop
+          >
+            <div className="flex items-center border-b px-3 sticky top-0 bg-background/90 backdrop-blur-sm z-10">
+              <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+              <CommandInput 
+                placeholder={getPlaceholder()} 
+                className="flex h-11 py-3 w-full"
+                value={search}
+                onValueChange={setSearch}
+                ref={inputRef}
+              />
+              {search && (
+                <button 
+                  className="rounded text-xs px-1.5 py-0.5 hover:bg-accent text-muted-foreground"
+                  onClick={() => setSearch('')}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <CommandList>
+              <CommandEmpty className="py-6 text-center text-sm">
+                <div className="mx-auto flex flex-col items-center justify-center space-y-1">
+                  <SearchX className="h-6 w-6 text-muted-foreground mb-2" />
+                  <p className="text-muted-foreground">No commands found</p>
+                  <p className="text-xs text-muted-foreground/70">Try a different search term</p>
+                </div>
+              </CommandEmpty>
+              
+              {/* Recent commands */}
+              {recentActions.length > 0 && !search && (
+                <>
+                  <CommandGroup heading="Recent">
+                    {recentActions.map((action, index) => (
+                      <CommandItem
+                        key={action.id}
+                        onSelect={() => executeAction(action)}
+                        disabled={action.disabled}
+                        className={cn(
+                          "flex items-center gap-2 px-4 py-2.5 cursor-default",
+                          action.disabled && "opacity-50 cursor-not-allowed",
+                          activeIndex === index && "bg-accent",
+                        )}
+                      >
+                        <div className="rounded-md bg-primary/10 p-1.5 text-primary mr-1">
+                          {action.icon || <Terminal className="h-3.5 w-3.5" />}
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm">
+                            {highlightMatch(action.name, search)}
+                          </div>
+                          {action.description && (
+                            <div className="text-xs text-muted-foreground">
+                              {highlightMatch(action.description, search)}
+                            </div>
+                          )}
+                        </div>
+                        {showShortcut && action.shortcut && (
+                          <div className="flex">
+                            {action.shortcut.map((key, i) => (
+                              <React.Fragment key={i}>
+                                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                                  {key}
+                                </kbd>
+                                {i < action.shortcut!.length - 1 && (
+                                  <span className="mx-0.5 text-xs text-muted-foreground">+</span>
+                                )}
+                              </React.Fragment>
+                            ))}
+                          </div>
+                        )}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                  <CommandSeparator />
+                </>
+              )}
+              
+              {/* Navigation section */}
+              {getActionsBySection('navigation').length > 0 && (
+                <>
+                  <CommandGroup heading="Navigation">
+                    {getActionsBySection('navigation').map((action, index) => (
+                      <CommandItem
+                        key={action.id}
+                        onSelect={() => executeAction(action)}
+                        disabled={action.disabled}
+                        className={cn(
+                          "flex items-center gap-2 px-4 py-2.5 cursor-default",
+                          action.disabled && "opacity-50 cursor-not-allowed",
+                        )}
+                      >
+                        <div className="rounded-md bg-primary/10 p-1.5 text-primary mr-1">
+                          {action.icon || <Terminal className="h-3.5 w-3.5" />}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">{highlightMatch(action.name, search)}</span>
+                            {action.badge && (
+                              <Badge 
+                                variant="outline" 
+                                className={cn(
+                                  "text-[10px] py-0 h-4 px-1.5",
+                                  action.badge === 'new' && "bg-green-500/10 text-green-600 border-green-500/20",
+                                  action.badge === 'beta' && "bg-blue-500/10 text-blue-600 border-blue-500/20",
+                                  action.badge === 'popular' && "bg-orange-500/10 text-orange-600 border-orange-500/20",
+                                  action.badge === 'updated' && "bg-purple-500/10 text-purple-600 border-purple-500/20"
+                                )}
+                              >
+                                {action.badge}
+                              </Badge>
+                            )}
+                          </div>
+                          {action.description && (
+                            <div className="text-xs text-muted-foreground">
+                              {highlightMatch(action.description, search)}
+                            </div>
+                          )}
+                        </div>
+                        {showShortcut && action.shortcut && (
+                          <div className="flex">
+                            {action.shortcut.map((key, i) => (
+                              <React.Fragment key={i}>
+                                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                                  {key}
+                                </kbd>
+                                {i < action.shortcut!.length - 1 && (
+                                  <span className="mx-0.5 text-xs text-muted-foreground">+</span>
+                                )}
+                              </React.Fragment>
+                            ))}
+                          </div>
+                        )}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                  <CommandSeparator />
+                </>
+              )}
+              
+              {/* Actions section */}
+              {getActionsBySection('actions').length > 0 && (
+                <>
+                  <CommandGroup heading="Actions">
+                    {getActionsBySection('actions').map((action) => (
+                      <CommandItem
+                        key={action.id}
+                        onSelect={() => executeAction(action)}
+                        disabled={action.disabled}
+                        className={cn(
+                          "flex items-center gap-2 px-4 py-2.5 cursor-default",
+                          action.disabled && "opacity-50 cursor-not-allowed",
+                        )}
+                      >
+                        <div className="rounded-md bg-primary/10 p-1.5 text-primary mr-1">
+                          {action.icon || <Terminal className="h-3.5 w-3.5" />}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">{highlightMatch(action.name, search)}</span>
+                            {action.badge && (
+                              <Badge 
+                                variant="outline" 
+                                className={cn(
+                                  "text-[10px] py-0 h-4 px-1.5",
+                                  action.badge === 'new' && "bg-green-500/10 text-green-600 border-green-500/20",
+                                  action.badge === 'beta' && "bg-blue-500/10 text-blue-600 border-blue-500/20",
+                                  action.badge === 'popular' && "bg-orange-500/10 text-orange-600 border-orange-500/20",
+                                  action.badge === 'updated' && "bg-purple-500/10 text-purple-600 border-purple-500/20"
+                                )}
+                              >
+                                {action.badge}
+                              </Badge>
+                            )}
+                          </div>
+                          {action.description && (
+                            <div className="text-xs text-muted-foreground">
+                              {highlightMatch(action.description, search)}
+                            </div>
+                          )}
+                        </div>
+                        {showShortcut && action.shortcut && (
+                          <div className="flex">
+                            {action.shortcut.map((key, i) => (
+                              <React.Fragment key={i}>
+                                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                                  {key}
+                                </kbd>
+                                {i < action.shortcut!.length - 1 && (
+                                  <span className="mx-0.5 text-xs text-muted-foreground">+</span>
+                                )}
+                              </React.Fragment>
+                            ))}
+                          </div>
+                        )}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                  <CommandSeparator />
+                </>
+              )}
+              
+              {/* Settings section */}
+              {getActionsBySection('settings').length > 0 && (
+                <>
+                  <CommandGroup heading="Settings">
+                    {getActionsBySection('settings').map((action) => (
+                      <CommandItem
+                        key={action.id}
+                        onSelect={() => executeAction(action)}
+                        disabled={action.disabled}
+                        className={cn(
+                          "flex items-center gap-2 px-4 py-2.5 cursor-default",
+                          action.disabled && "opacity-50 cursor-not-allowed",
+                        )}
+                      >
+                        <div className="rounded-md bg-primary/10 p-1.5 text-primary mr-1">
+                          {action.icon || <Terminal className="h-3.5 w-3.5" />}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">{highlightMatch(action.name, search)}</span>
+                            {action.badge && (
+                              <Badge 
+                                variant="outline" 
+                                className={cn(
+                                  "text-[10px] py-0 h-4 px-1.5",
+                                  action.badge === 'new' && "bg-green-500/10 text-green-600 border-green-500/20",
+                                  action.badge === 'beta' && "bg-blue-500/10 text-blue-600 border-blue-500/20",
+                                  action.badge === 'popular' && "bg-orange-500/10 text-orange-600 border-orange-500/20",
+                                  action.badge === 'updated' && "bg-purple-500/10 text-purple-600 border-purple-500/20"
+                                )}
+                              >
+                                {action.badge}
+                              </Badge>
+                            )}
+                          </div>
+                          {action.description && (
+                            <div className="text-xs text-muted-foreground">
+                              {highlightMatch(action.description, search)}
+                            </div>
+                          )}
+                        </div>
+                        {showShortcut && action.shortcut && (
+                          <div className="flex">
+                            {action.shortcut.map((key, i) => (
+                              <React.Fragment key={i}>
+                                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                                  {key}
+                                </kbd>
+                                {i < action.shortcut!.length - 1 && (
+                                  <span className="mx-0.5 text-xs text-muted-foreground">+</span>
+                                )}
+                              </React.Fragment>
+                            ))}
+                          </div>
+                        )}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </>
+              )}
+            </CommandList>
+            
+            {footerText && (
+              <div className="border-t py-2 px-4 text-xs text-center text-muted-foreground">
+                {footerText}
+              </div>
+            )}
+          </Command>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Command palette trigger button */}
+      <div className="fixed bottom-4 right-4 md:bottom-8 md:right-8 z-10">
+        <button
+          onClick={() => setIsOpen(true)}
+          className="bg-background border border-border/40 shadow-lg rounded-full p-3 hover:bg-accent transition-colors duration-200"
+          aria-label="Open command palette"
+        >
+          <CommandIcon className="h-5 w-5" />
+        </button>
       </div>
-      <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-xs font-medium opacity-100 sm:flex">
-        <span className="text-xs">⌘</span>K
-      </kbd>
-    </button>
+    </>
   );
-}
+};
+
+// SearchX icon for empty state
+const SearchX = ({ className }: { className?: string }) => (
+  <svg
+    className={className}
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="m13.5 8.5-5 5" />
+    <path d="m8.5 8.5 5 5" />
+    <circle cx="11" cy="11" r="8" />
+    <path d="m21 21-4.3-4.3" />
+  </svg>
+);
+
+export default CommandPalette;
