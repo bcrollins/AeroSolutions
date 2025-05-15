@@ -18,6 +18,7 @@ import analyticsRoutes from "./routes/analytics";
 import aiCoursesRoutes from "./routes/aiCourses";
 import certificatesRoutes from "./routes/certificates";
 import contentCalendarRoutes from "./routes/contentCalendar";
+import aiInsightsRoutes from "./routes/ai-insights";
 import { storage } from "./storage";
 import { logger } from "./utils/logger";
 import { setupAuth } from "./replitAuth";
