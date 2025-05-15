@@ -282,18 +282,18 @@ export default function OriginalHero() {
                         {/* Left side ROLLINSX Logo */}
                         <div className="relative w-28 h-28 -rotate-12 flex items-center justify-center">
                           {/* Background glow */}
-                          <div className="absolute inset-0 rounded-full bg-white/10 border border-white/40 shadow-[0_0_10px_rgba(255,255,255,0.4)]"></div>
+                          <div className="absolute inset-0 rounded-full bg-[#0066cc]/10 border border-[#0066cc]/20 shadow-[0_0_10px_rgba(0,102,204,0.15)]"></div>
                           
                           {/* Logo image */}
                           <Logo width={80} height={80} className="z-10" />
                           
                           {/* Accent dot */}
-                          <div className="absolute bottom-2 left-2 w-1.5 h-1.5 rounded-full bg-[#3B82F6]/90 animate-pulse"></div>
+                          <div className="absolute bottom-2 left-2 w-1.5 h-1.5 rounded-full bg-[#0066cc]/80 animate-pulse"></div>
                         </div>
                       </div>
                       
                       {/* Top side */}
-                      <div className="absolute inset-0 w-full h-full bg-[#1E3A8A]/60 rounded-xl flex items-center justify-center"
+                      <div className="absolute inset-0 w-full h-full bg-white/90 rounded-xl flex items-center justify-center"
                            style={{ 
                              transform: "rotateX(90deg) translateZ(24px)",
                              transformOrigin: "top"
@@ -301,7 +301,7 @@ export default function OriginalHero() {
                         {/* Top side ROLLINSX Logo */}
                         <div className="relative w-28 h-28 rotate-45 flex items-center justify-center">
                           {/* Background glow */}
-                          <div className="absolute inset-0 rounded-full bg-white/10 border border-white/30 shadow-[0_0_8px_rgba(255,255,255,0.3)]"></div>
+                          <div className="absolute inset-0 rounded-full bg-[#0066cc]/10 border border-[#0066cc]/20 shadow-[0_0_8px_rgba(0,102,204,0.15)]"></div>
                           
                           {/* Logo image */}
                           <Logo width={72} height={72} className="z-10" />
@@ -309,7 +309,7 @@ export default function OriginalHero() {
                       </div>
                       
                       {/* Bottom side */}
-                      <div className="absolute inset-0 w-full h-full bg-[#3B82F6]/60 rounded-xl flex items-center justify-center"
+                      <div className="absolute inset-0 w-full h-full bg-[#0066cc]/20 rounded-xl flex items-center justify-center"
                            style={{ 
                              transform: "rotateX(-90deg) translateZ(24px)",
                              transformOrigin: "bottom"
@@ -317,7 +317,7 @@ export default function OriginalHero() {
                         {/* Bottom side ROLLINSX Logo */}
                         <div className="relative w-28 h-28 -rotate-45 flex items-center justify-center">
                           {/* Background glow */}
-                          <div className="absolute inset-0 rounded-full bg-white/10 border border-white/30 shadow-[0_0_8px_rgba(255,255,255,0.3)]"></div>
+                          <div className="absolute inset-0 rounded-full bg-white/80 border border-[#0066cc]/20 shadow-[0_0_8px_rgba(0,102,204,0.15)]"></div>
                           
                           {/* Logo image */}
                           <Logo width={72} height={72} className="z-10" />
@@ -325,7 +325,7 @@ export default function OriginalHero() {
                       </div>
                       
                       {/* Back side */}
-                      <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-[#1E3A8A] to-[#3B82F6]/80 rounded-xl flex items-center justify-center"
+                      <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-white to-[#0066cc]/40 rounded-xl flex items-center justify-center"
                            style={{ 
                              transform: "rotateY(180deg) translateZ(24px)",
                              transformOrigin: "center"
