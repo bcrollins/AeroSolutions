@@ -4,7 +4,7 @@ import { emailCampaigns, users } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import NodeCache from 'node-cache';
 import { OpenAI } from 'openai';
-import { grokApi } from '../grok';
+import { grokApi } from '../utils/grok';
 import * as authUtils from '../utils/auth';
 
 // Setup xAI client

@@ -2,8 +2,9 @@ import OpenAI from "openai";
 import { performance } from 'node:perf_hooks';
 import NodeCache from 'node-cache';
 
-// Initialize the xAI client
-const openai = new OpenAI({ 
+// Initialize the xAI client with the OpenAI SDK
+// Note: We use OpenAI's SDK with a custom baseURL to connect to xAI's API
+const xai = new OpenAI({ 
   baseURL: "https://api.x.ai/v1",
   apiKey: process.env.XAI_API_KEY 
 });
@@ -40,7 +41,7 @@ function generateCacheKey(message: string): string {
 }
 
 /**
- * Generates a response for the copilot feature using OpenAI's API with caching and optimized performance
+ * Generates a response for the copilot feature using xAI's API with caching and optimized performance
  * @param userMessage The message from the user
  * @returns A response from the AI assistant
  */
@@ -84,7 +85,7 @@ export async function generateCopilotResponse(userMessage: string): Promise<stri
     
     // Make the API call with appropriate error handling
     try {
-      const response = await openai.chat.completions.create({
+      const response = await xai.chat.completions.create({
         model: "grok-2-1212",
         messages: [
           {
@@ -109,7 +110,7 @@ export async function generateCopilotResponse(userMessage: string): Promise<stri
       
       // Validate the response
       if (!response.choices || response.choices.length === 0 || !response.choices[0].message) {
-        throw new Error("Invalid response format from OpenAI");
+        throw new Error("Invalid response format from xAI API");
       }
       
       const aiResponse = response.choices[0].message.content || 
@@ -143,7 +144,7 @@ export async function generateCopilotResponse(userMessage: string): Promise<stri
     }
   } catch (error: any) {
     // Log the error with appropriate context
-    console.error("Error generating OpenAI response:", error);
+    console.error("Error generating xAI response:", error);
     
     // Clean and structured error propagation
     throw new Error(
