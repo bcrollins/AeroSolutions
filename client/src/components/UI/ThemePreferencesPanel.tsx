@@ -10,7 +10,7 @@ import {
   Square,
   SquareAsterisk,
   RotateCcw,
-  SquareCorners,
+  SquareCode,
   ZoomIn
 } from 'lucide-react';
 import { motion } from 'framer-motion';

@@ -65,7 +65,7 @@ export interface Command {
  * EnhancedCommandPalette - An enhanced version of the command palette with more functionality
  */
 export const EnhancedCommandPalette: React.FC = () => {
-  const { isOpen, setIsOpen, registerCommand, unregisterCommand } = useCommandPalette();
+  const { isOpen, setIsOpen } = useCommandPalette();
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredCommands, setFilteredCommands] = useState<Command[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -456,7 +456,7 @@ export const EnhancedCommandPalette: React.FC = () => {
   };
 
   return (
-    <>
+    <div>
       {/* Keyboard Shortcuts Modal */}
       <Dialog open={showKeyboardShortcutsModal} onOpenChange={setShowKeyboardShortcutsModal}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
@@ -524,10 +524,10 @@ export const EnhancedCommandPalette: React.FC = () => {
       
       {/* Command Palette */}
       <CommandPalette
-        isOpen={isOpen}
-        setIsOpen={setIsOpen}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        value={searchTerm}
+        onValueChange={setSearchTerm}
         placeholder="Search commands, navigation, and more..."
         extraContent={
         <div className="p-1 mt-2">
@@ -675,5 +675,6 @@ export const EnhancedCommandPalette: React.FC = () => {
         </div>
       }
     />
+    </div>
   );
 };
