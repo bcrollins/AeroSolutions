@@ -94,12 +94,28 @@ const NewsHubPage: React.FC = () => {
     return saved ? JSON.parse(saved) : [];
   });
   
-  // Add article generation progress tracking
+  // Enhanced article generation progress tracking
   const [articleGenerationProgress, setArticleGenerationProgress] = useState({
     current: 6,
     total: 50,
-    isGenerating: true
+    isGenerating: true,
+    currentArticleTitle: '',
+    estimatedTimeRemaining: 55 // in minutes
   });
+  
+  // AI article title examples for simulation
+  const aiArticleTitles = [
+    "AI-Powered Decision Making Strategies for Business Leaders",
+    "The Evolution of Generative AI: Trends and Applications",
+    "Machine Learning Algorithms: A Practical Guide for Implementation",
+    "Neural Networks and Deep Learning Explained",
+    "Ethical Considerations in Artificial Intelligence Development",
+    "Natural Language Processing: Breaking Language Barriers",
+    "Computer Vision Systems: How AI Sees the World",
+    "Reinforcement Learning in Real-World Applications",
+    "AI and IoT: Creating Smarter Connected Ecosystems",
+    "Quantum Computing and AI: The Future of Computation"
+  ];
   
   // References
   const searchInputRef = useRef<HTMLInputElement>(null);
