@@ -2290,7 +2290,7 @@ const LearnAI: React.FC = () => {
                 <Button 
                   variant="link"
                   onClick={() => setShowTestimonials(true)}
-                  className="text-[#007bff]"
+                  className="text-[#0066cc] hover:text-[#0055b3] transition-colors duration-200"
                 >
                   View more testimonials
                 </Button>
@@ -2307,19 +2307,19 @@ const LearnAI: React.FC = () => {
                   name="James Wilson"
                   role="Startup Founder"
                   text="The knowledge I gained from RXAI courses enabled me to implement AI solutions in my startup, reducing costs by 40% and improving customer satisfaction."
-                  imageUrl="https://placehold.co/100x100/2a2a2a/007bff?text=JW"
+                  imageUrl="https://placehold.co/100x100/f0f0f0/0066cc?text=JW"
                 />
                 <Testimonial 
                   name="Sophia Rodriguez"
                   role="Healthcare AI Specialist"
                   text="RXAI's specialized healthcare AI course gave me the unique skills to develop models that are now helping diagnose diseases earlier and more accurately."
-                  imageUrl="https://placehold.co/100x100/2a2a2a/007bff?text=SR"
+                  imageUrl="https://placehold.co/100x100/f0f0f0/0066cc?text=SR"
                 />
                 <Testimonial 
                   name="David Kim"
                   role="NLP Research Scientist"
                   text="The advanced NLP course contained cutting-edge information that I wasn't finding anywhere else. The instructors are clearly active practitioners in the field."
-                  imageUrl="https://placehold.co/100x100/2a2a2a/007bff?text=DK"
+                  imageUrl="https://placehold.co/100x100/f0f0f0/0066cc?text=DK"
                 />
               </motion.div>
             )}
