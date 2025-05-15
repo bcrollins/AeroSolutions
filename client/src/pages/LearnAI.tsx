@@ -1510,9 +1510,10 @@ const LearnAI: React.FC = () => {
                           type="number" 
                           value={currentSalary}
                           onChange={(e) => setCurrentSalary(Math.max(0, parseInt(e.target.value) || 0))}
-                          className="pl-7 bg-white text-gray-800 border-gray-200 focus:border-[#0066cc] focus:ring-[#0066cc]/10 rounded-lg shadow-sm"
+                          className="pl-7 bg-white text-gray-800 border-gray-200 focus:border-[#0066cc] focus:ring-[#0066cc]/10 rounded-lg shadow-sm tabular-nums"
                         />
                       </div>
+                      <p className="mt-1.5 text-xs text-gray-500">Average AI professional salary: $138,500/year</p>
                     </div>
                     
                     <div>
@@ -1532,45 +1533,45 @@ const LearnAI: React.FC = () => {
                       <h3 className="font-semibold text-gray-800 mb-3 tracking-tight">Your Investment</h3>
                       <div className="flex justify-between text-gray-700">
                         <span>RXAI Professional Plan</span>
-                        <span className="font-medium">${courseCost}/year</span>
+                        <span className="font-medium tabular-nums">${courseCost}/year</span>
                       </div>
-                      <div className="text-sm text-gray-600 mt-2">
+                      <div className="text-sm text-gray-500 mt-2">
                         One-time investment giving you lifetime access to course materials and 1 year of community access.
                       </div>
                     </div>
                   </div>
                   
-                  <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                    <h3 className="text-xl font-semibold mb-6 text-center text-gray-800">Your Return on Investment</h3>
+                  <div className="bg-white p-7 rounded-xl border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.03)]">
+                    <h3 className="text-xl font-semibold mb-7 text-center text-gray-800 tracking-tight">Your Return on Investment</h3>
                     
-                    <div className="space-y-6">
-                      <div className="flex items-center justify-between text-gray-700">
-                        <span>Average Salary Increase</span>
-                        <span className="text-xl font-bold text-green-600">+${projectedSalaryIncrease.toLocaleString()}/year</span>
+                    <div className="space-y-5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-700">Average Salary Increase</span>
+                        <span className="text-xl font-semibold text-green-600 tabular-nums tracking-tight">+${projectedSalaryIncrease.toLocaleString()}/year</span>
                       </div>
                       
-                      <div className="flex items-center justify-between text-gray-700">
-                        <span>Typical Time to Achievement</span>
-                        <span className="font-semibold">{avgTimeToPromotion} months</span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-700">Typical Time to Achievement</span>
+                        <span className="font-medium text-gray-800 tabular-nums">{avgTimeToPromotion} months</span>
                       </div>
                       
-                      <div className="flex items-center justify-between text-gray-700">
-                        <span>Job Placement Rate</span>
-                        <span className="font-semibold">{Math.round(jobPlacementRate * 100)}%</span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-700">Job Placement Rate</span>
+                        <span className="font-medium text-gray-800 tabular-nums">{Math.round(jobPlacementRate * 100)}%</span>
                       </div>
                       
-                      <div className="pt-4 border-t border-gray-200">
-                        <div className="flex items-center justify-between text-gray-700">
-                          <span>First Year Return</span>
-                          <span className="text-xl font-bold text-green-600">+${projectedFirstYearReturn.toLocaleString()}</span>
+                      <div className="pt-5 mt-3 border-t border-gray-100">
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-700">First Year Return</span>
+                          <span className="text-xl font-semibold text-green-600 tabular-nums tracking-tight">+${projectedFirstYearReturn.toLocaleString()}</span>
                         </div>
-                        <div className="text-sm text-gray-600 mt-1">
+                        <div className="text-sm text-gray-500 mt-1">
                           After subtracting the course cost
                         </div>
                       </div>
                       
-                      <div className="pt-4 border-t border-gray-200 text-center">
-                        <div className="text-3xl font-bold text-[#0066cc] mb-2">{calculatedRoi}x ROI</div>
+                      <div className="pt-5 mt-3 border-t border-gray-100 text-center">
+                        <div className="text-3xl font-semibold text-[#0066cc] mb-2 tabular-nums tracking-tight">{calculatedRoi}x ROI</div>
                         <div className="text-sm text-gray-600">
                           For every $1 you invest, you get approximately ${calculatedRoi} back
                         </div>
@@ -1650,41 +1651,47 @@ const LearnAI: React.FC = () => {
           >
             <h2 className="text-2xl font-semibold mb-8 text-center text-gray-800 tracking-tight">Recognized by Leading Employers</h2>
             
-            <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="bg-white border border-gray-100 shadow-[0_15px_40px_rgba(0,0,0,0.04)] rounded-xl p-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                 <div>
-                  <h3 className="text-xl font-semibold mb-4 text-gray-800">RXAI Certification is Industry-Recognized</h3>
-                  <p className="text-gray-600 mb-6">
+                  <h3 className="text-xl font-semibold mb-4 text-gray-800 tracking-tight">RXAI Certification is Industry-Recognized</h3>
+                  <p className="text-gray-600 mb-6 leading-relaxed">
                     Our certification is recognized by leading technology companies worldwide as a mark of excellence
                     in AI education. Graduates of our programs are actively sought out by hiring managers at top companies.
                   </p>
                   
-                  <div className="space-y-4">
+                  <div className="space-y-5">
                     <div className="flex items-start">
-                      <Trophy className="w-5 h-5 text-[#0066cc] mr-3 mt-1" />
+                      <div className="w-8 h-8 rounded-full bg-[#0066cc]/10 flex items-center justify-center mr-3 flex-shrink-0">
+                        <Trophy className="w-4 h-4 text-[#0066cc]" />
+                      </div>
                       <div>
-                        <h4 className="font-semibold text-gray-800">Preferred Hiring Status</h4>
-                        <p className="text-sm text-gray-600">
+                        <h4 className="font-semibold text-gray-800 tracking-tight">Preferred Hiring Status</h4>
+                        <p className="text-sm text-gray-600 mt-1">
                           RXAI graduates receive preferred hiring status at over 120 partner companies.
                         </p>
                       </div>
                     </div>
                     
                     <div className="flex items-start">
-                      <Star className="w-5 h-5 text-[#0066cc] mr-3 mt-1" />
+                      <div className="w-8 h-8 rounded-full bg-[#0066cc]/10 flex items-center justify-center mr-3 flex-shrink-0">
+                        <Star className="w-4 h-4 text-[#0066cc]" />
+                      </div>
                       <div>
-                        <h4 className="font-semibold text-gray-800">87% Placement Rate</h4>
-                        <p className="text-sm text-gray-600">
+                        <h4 className="font-semibold text-gray-800 tracking-tight">87% Placement Rate</h4>
+                        <p className="text-sm text-gray-600 mt-1">
                           87% of our graduates find relevant employment within 6 months of program completion.
                         </p>
                       </div>
                     </div>
                     
                     <div className="flex items-start">
-                      <Users className="w-5 h-5 text-[#0066cc] mr-3 mt-1" />
+                      <div className="w-8 h-8 rounded-full bg-[#0066cc]/10 flex items-center justify-center mr-3 flex-shrink-0">
+                        <Users className="w-4 h-4 text-[#0066cc]" />
+                      </div>
                       <div>
-                        <h4 className="font-semibold text-gray-800">Alumni Network</h4>
-                        <p className="text-sm text-gray-600">
+                        <h4 className="font-semibold text-gray-800 tracking-tight">Alumni Network</h4>
+                        <p className="text-sm text-gray-600 mt-1">
                           Access to our 50,000+ alumni network for job referrals and career opportunities.
                         </p>
                       </div>
@@ -1692,33 +1699,35 @@ const LearnAI: React.FC = () => {
                   </div>
                 </div>
                 
-                <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                  <h3 className="text-lg font-semibold mb-4 text-center text-gray-800">What Employers Say</h3>
+                <div className="bg-gray-50 p-7 rounded-xl border border-gray-100 shadow-sm">
+                  <h3 className="text-lg font-semibold mb-5 text-center text-gray-800 tracking-tight">What Employers Say</h3>
                   
-                  <div className="space-y-4">
-                    <Card className="bg-white border border-gray-200 shadow-sm">
-                      <div className="p-4">
-                        <p className="text-sm italic text-gray-700 mb-3">"RXAI graduates consistently demonstrate strong practical skills and theoretical knowledge. They're able to contribute immediately to our AI projects."</p>
+                  <div className="space-y-5">
+                    <div className="bg-white border border-gray-100 shadow-sm rounded-xl p-5 hover:shadow-md transition-shadow duration-300">
+                      <div className="relative pl-8">
+                        <div className="absolute top-0 left-0 text-4xl text-[#0066cc]/20 font-serif">"</div>
+                        <p className="text-sm text-gray-700 leading-relaxed mb-4">RXAI graduates consistently demonstrate strong practical skills and theoretical knowledge. They're able to contribute immediately to our AI projects.</p>
                         <div className="flex items-center">
                           <div className="text-sm">
-                            <div className="font-semibold text-gray-900">Mark Johnson</div>
-                            <div className="text-gray-500">AI Hiring Manager, Google</div>
+                            <div className="font-semibold text-gray-800 tracking-tight">Mark Johnson</div>
+                            <div className="text-[#0066cc] text-xs font-medium">AI Hiring Manager, Google</div>
                           </div>
                         </div>
                       </div>
-                    </Card>
+                    </div>
                     
-                    <Card className="bg-white border border-gray-200 shadow-sm">
-                      <div className="p-4">
-                        <p className="text-sm italic text-gray-700 mb-3">"The quality of RXAI's curriculum is evident in their graduates. They have a deep understanding of real-world AI applications that sets them apart."</p>
+                    <div className="bg-white border border-gray-100 shadow-sm rounded-xl p-5 hover:shadow-md transition-shadow duration-300">
+                      <div className="relative pl-8">
+                        <div className="absolute top-0 left-0 text-4xl text-[#0066cc]/20 font-serif">"</div>
+                        <p className="text-sm text-gray-700 leading-relaxed mb-4">The quality of RXAI's curriculum is evident in their graduates. They have a deep understanding of real-world AI applications that sets them apart.</p>
                         <div className="flex items-center">
                           <div className="text-sm">
-                            <div className="font-semibold text-gray-900">Sarah Chen</div>
-                            <div className="text-gray-500">Technical Recruiter, Microsoft</div>
+                            <div className="font-semibold text-gray-800 tracking-tight">Sarah Chen</div>
+                            <div className="text-[#0066cc] text-xs font-medium">Technical Recruiter, Microsoft</div>
                           </div>
                         </div>
                       </div>
-                    </Card>
+                    </div>
                   </div>
                 </div>
               </div>
