@@ -6,6 +6,29 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom animations for article cards */
+@keyframes slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-in-article {
+  animation: slideInFromBottom 0.5s ease-out forwards;
+}
+
+/* Apple-inspired grid layout */
+.articles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-gap: 1.5rem;
+}
+
 @keyframes fall {
   0% {
     transform: translateY(-100px) rotate(0deg);

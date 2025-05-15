@@ -161,6 +161,13 @@ const NewsHubPage: React.FC = () => {
           <Link href="/" className="hover:text-primary transition-colors">Home</Link>
           <ChevronRight className="h-4 w-4" />
           <span className="text-primary font-medium">AI News & Articles</span>
+          {allPosts.length > 0 && allPosts.length < 50 && (
+            <div className="flex items-center ml-2 animate-pulse">
+              <span className="bg-blue-500/10 text-blue-600 text-xs py-0.5 px-2 rounded-full border border-blue-200">
+                Generating {allPosts.length}/50
+              </span>
+            </div>
+          )}
         </div>
         
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
@@ -576,7 +583,8 @@ const ArticleCard = ({
   if (featured) {
     return (
       <Card 
-        className="overflow-hidden h-full transition-all duration-300 hover:shadow-lg group"
+        className={`overflow-hidden h-full transition-all duration-300 hover:shadow-lg group ${className}`}
+        style={style}
         onMouseEnter={() => playSound('hover')}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 h-full">
@@ -650,7 +658,8 @@ const ArticleCard = ({
   // Regular article card
   return (
     <Card 
-      className="overflow-hidden h-full transition-all duration-300 hover:shadow-lg group border border-transparent hover:border-blue-100"
+      className={`overflow-hidden h-full transition-all duration-300 hover:shadow-lg group border border-transparent hover:border-blue-100 ${className}`}
+      style={style}
       onMouseEnter={() => playSound('hover')}
     >
       <div className="h-48 w-full relative">
