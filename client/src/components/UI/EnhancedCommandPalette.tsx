@@ -521,33 +521,24 @@ export const EnhancedCommandPalette: React.FC = () => {
       <CommandPalette
         open={isOpen}
         onOpenChange={setIsOpen}
-        value={searchTerm}
-        onValueChange={setSearchTerm}
         placeholder="Search commands, navigation, and more..."
-        extraContent={
-        <div className="p-1 mt-2">
-          {!searchTerm && !selectedCategory && recentCommands.length > 0 && (
-            <div className="mb-4">
-              <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Recent
-              </div>
-              <div className="space-y-1">
-                {recentCommands.map((command, index) => (
-                  <button
-                    key={command.id}
-                    className={cn(
-                      'w-full flex items-center px-2 py-1.5 text-sm rounded text-left',
-                      index === selectedIndex && !selectedCategory ? 'bg-blue-50 text-blue-900 dark:bg-blue-900/20 dark:text-blue-100' : 'hover:bg-gray-100 dark:hover:bg-gray-800'
-                    )}
-                    onClick={() => executeCommand(command)}
-                  >
-                    {command.icon && <span className="mr-2">{command.icon}</span>}
-                    <span>{command.title}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+        actions={globalCommands.map(cmd => ({
+          id: cmd.id,
+          name: cmd.title,
+          description: cmd.description,
+          icon: cmd.icon,
+          action: close => {
+            cmd.action();
+            close();
+          },
+          section: cmd.category as any,
+          keywords: cmd.keywords,
+          shortcut: cmd.shortcut ? cmd.shortcut.split(' ') : undefined,
+          badge: cmd.isNew ? 'new' : cmd.isPopular ? 'popular' : undefined,
+          disabled: cmd.disabled
+        }))}
+        contentClassName="max-w-xl"
+      />
           
           {selectedCategory ? (
             <div className="space-y-4">
