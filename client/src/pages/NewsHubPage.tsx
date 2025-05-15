@@ -94,6 +94,13 @@ const NewsHubPage: React.FC = () => {
     return saved ? JSON.parse(saved) : [];
   });
   
+  // Add article generation progress tracking
+  const [articleGenerationProgress, setArticleGenerationProgress] = useState({
+    current: 6,
+    total: 50,
+    isGenerating: true
+  });
+  
   // References
   const searchInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
@@ -295,6 +302,24 @@ const NewsHubPage: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [page, totalPages, playSound]);
+  
+  // Simulate article generation progress
+  useEffect(() => {
+    if (articleGenerationProgress.isGenerating && articleGenerationProgress.current < articleGenerationProgress.total) {
+      const interval = setInterval(() => {
+        setArticleGenerationProgress(prev => {
+          const newCurrent = Math.min(prev.current + 1, prev.total);
+          return {
+            ...prev,
+            current: newCurrent,
+            isGenerating: newCurrent < prev.total
+          };
+        });
+      }, 5000); // Update every 5 seconds
+      
+      return () => clearInterval(interval);
+    }
+  }, [articleGenerationProgress]);
   
   // Generate search suggestions based on current input and post data
   const generateSearchSuggestions = (query: string, posts: ArticlePost[]) => {
@@ -829,7 +854,7 @@ const NewsHubPage: React.FC = () => {
       </div>
       
       {/* Results count and sorting options */}
-      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-800">
+      <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-800">
         <div className="flex items-center">
           <div className="bg-primary/10 rounded-full p-1.5 mr-2">
             <Search size={16} className="text-primary" />
@@ -865,6 +890,16 @@ const NewsHubPage: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* Article Generation Progress */}
+      {articleGenerationProgress.isGenerating && (
+        <div className="mb-6">
+          <ArticleGenerationProgress 
+            current={articleGenerationProgress.current} 
+            total={articleGenerationProgress.total} 
+          />
+        </div>
+      )}
       
       {/* Loading state for posts */}
       {isLoading && (
