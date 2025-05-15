@@ -396,85 +396,239 @@ const NewsHubPage: React.FC = () => {
       
       {/* Search and Filters */}
       <div className="mb-8 flex flex-col md:flex-row gap-4 items-start">
-        <div className="relative w-full md:w-96">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+        <div className="relative w-full md:w-96 group">
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-primary">
+            <Search size={18} className="transition-transform group-focus-within:scale-110" />
+          </div>
           <Input
             ref={searchInputRef}
             type="text"
             placeholder="Search articles..."
-            className="pl-10 h-11 rounded-lg"
+            className="pl-10 h-11 rounded-lg border-gray-200 dark:border-gray-700 shadow-sm
+              focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all duration-300"
             value={searchQuery}
             onChange={handleSearchChange}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                handleClearSearch();
+                playSound('focus');
+              } else if (e.key === 'Enter') {
+                playSound('navigation');
+                // Focus away from input after search
+                e.currentTarget.blur();
+              }
+            }}
           />
           {searchQuery && (
             <Button 
               variant="ghost" 
               size="icon" 
-              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8"
-              onClick={handleClearSearch}
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 opacity-70 hover:opacity-100
+                hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
+              onClick={() => {
+                handleClearSearch();
+                playSound('focus');
+              }}
               aria-label="Clear search"
             >
-              <X size={18} />
+              <X size={16} className="text-gray-500 dark:text-gray-400" />
             </Button>
+          )}
+          
+          {/* Search suggestions - show when typing */}
+          {searchQuery.length > 0 && (
+            <div className="absolute mt-1 w-full bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-10">
+              <div className="p-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                Suggested Topics
+              </div>
+              <div className="p-2 grid grid-cols-2 gap-2">
+                {['AI Ethics', 'Machine Learning', 'Deep Learning', 'Neural Networks', 'Natural Language Processing']
+                  .filter(topic => topic.toLowerCase().includes(searchQuery.toLowerCase()))
+                  .slice(0, 4)
+                  .map((topic, idx) => (
+                    <Button 
+                      key={idx} 
+                      variant="ghost" 
+                      size="sm" 
+                      className="justify-start h-auto py-1.5 text-left"
+                      onClick={() => {
+                        setSearchQuery(topic);
+                        playSound('click');
+                        searchInputRef.current?.blur();
+                      }}
+                    >
+                      <BrainCircuit className="h-3.5 w-3.5 mr-2 text-primary/70" />
+                      {topic}
+                    </Button>
+                  ))}
+              </div>
+            </div>
           )}
         </div>
         
         <Tabs value={activeTab} className="w-full">
-          <TabsList className="w-full md:w-auto grid grid-cols-3 md:flex md:flex-row gap-1 bg-gray-100/80 dark:bg-gray-800/50 p-1 rounded-lg">
+          <TabsList className="w-full md:w-auto grid grid-cols-3 md:flex md:flex-row gap-1.5 bg-gray-100/80 dark:bg-gray-800/50 p-1.5 rounded-lg shadow-inner">
             <TabsTrigger 
               value="all" 
-              onClick={() => setActiveTab('all')}
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 rounded py-2"
+              onClick={() => {
+                setActiveTab('all');
+                playSound('navigation');
+              }}
+              className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm
+                rounded-md py-2 px-4 font-medium text-gray-700 dark:text-gray-300
+                data-[state=active]:text-primary dark:data-[state=active]:text-primary
+                transition-all duration-200 hover:bg-white/40 dark:hover:bg-gray-700/40"
             >
-              All
+              <span className="flex items-center">
+                <svg className="h-4 w-4 mr-1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                All
+              </span>
+              <div className="absolute -bottom-1.5 left-0 right-0 h-1 bg-primary/80 rounded-full transform scale-x-0 data-[state=active]:scale-x-100 transition-transform duration-300"></div>
             </TabsTrigger>
+            
             <TabsTrigger 
               value="ai" 
-              onClick={() => setActiveTab('ai')}
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 rounded py-2"
+              onClick={() => {
+                setActiveTab('ai');
+                playSound('navigation');
+              }}
+              className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm
+                rounded-md py-2 px-4 font-medium text-gray-700 dark:text-gray-300
+                data-[state=active]:text-primary dark:data-[state=active]:text-primary
+                transition-all duration-200 hover:bg-white/40 dark:hover:bg-gray-700/40"
             >
-              <BrainCircuit size={16} className="mr-1.5" />
-              AI
+              <span className="flex items-center">
+                <BrainCircuit size={16} className="mr-1.5" />
+                AI
+              </span>
+              <div className="absolute -bottom-1.5 left-0 right-0 h-1 bg-primary/80 rounded-full transform scale-x-0 data-[state=active]:scale-x-100 transition-transform duration-300"></div>
             </TabsTrigger>
+            
             <TabsTrigger 
               value="business" 
-              onClick={() => setActiveTab('business')}
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 rounded py-2"
+              onClick={() => {
+                setActiveTab('business');
+                playSound('navigation');
+              }}
+              className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm
+                rounded-md py-2 px-4 font-medium text-gray-700 dark:text-gray-300
+                data-[state=active]:text-primary dark:data-[state=active]:text-primary
+                transition-all duration-200 hover:bg-white/40 dark:hover:bg-gray-700/40"
             >
-              Business
+              <span className="flex items-center">
+                <Briefcase size={16} className="mr-1.5" />
+                Business
+              </span>
+              <div className="absolute -bottom-1.5 left-0 right-0 h-1 bg-primary/80 rounded-full transform scale-x-0 data-[state=active]:scale-x-100 transition-transform duration-300"></div>
             </TabsTrigger>
+            
             <TabsTrigger 
               value="tech" 
-              onClick={() => setActiveTab('tech')}
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 rounded py-2"
+              onClick={() => {
+                setActiveTab('tech');
+                playSound('navigation');
+              }}
+              className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm
+                rounded-md py-2 px-4 font-medium text-gray-700 dark:text-gray-300
+                data-[state=active]:text-primary dark:data-[state=active]:text-primary
+                transition-all duration-200 hover:bg-white/40 dark:hover:bg-gray-700/40"
             >
-              Tech
+              <span className="flex items-center">
+                <Cpu size={16} className="mr-1.5" />
+                Tech
+              </span>
+              <div className="absolute -bottom-1.5 left-0 right-0 h-1 bg-primary/80 rounded-full transform scale-x-0 data-[state=active]:scale-x-100 transition-transform duration-300"></div>
             </TabsTrigger>
+            
             <TabsTrigger 
               value="tutorials" 
-              onClick={() => setActiveTab('tutorials')}
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 rounded py-2"
+              onClick={() => {
+                setActiveTab('tutorials');
+                playSound('navigation');
+              }}
+              className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm
+                rounded-md py-2 px-4 font-medium text-gray-700 dark:text-gray-300
+                data-[state=active]:text-primary dark:data-[state=active]:text-primary
+                transition-all duration-200 hover:bg-white/40 dark:hover:bg-gray-700/40"
             >
-              <BookOpen size={16} className="mr-1.5" />
-              Tutorials
+              <span className="flex items-center">
+                <BookOpen size={16} className="mr-1.5" />
+                Tutorials
+              </span>
+              <div className="absolute -bottom-1.5 left-0 right-0 h-1 bg-primary/80 rounded-full transform scale-x-0 data-[state=active]:scale-x-100 transition-transform duration-300"></div>
             </TabsTrigger>
+            
             <TabsTrigger 
               value="news" 
-              onClick={() => setActiveTab('news')}
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 rounded py-2"
+              onClick={() => {
+                setActiveTab('news');
+                playSound('navigation');
+              }}
+              className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm
+                rounded-md py-2 px-4 font-medium text-gray-700 dark:text-gray-300
+                data-[state=active]:text-primary dark:data-[state=active]:text-primary
+                transition-all duration-200 hover:bg-white/40 dark:hover:bg-gray-700/40"
             >
-              <Newspaper size={16} className="mr-1.5" />
-              News
+              <span className="flex items-center">
+                <Newspaper size={16} className="mr-1.5" />
+                News
+              </span>
+              <div className="absolute -bottom-1.5 left-0 right-0 h-1 bg-primary/80 rounded-full transform scale-x-0 data-[state=active]:scale-x-100 transition-transform duration-300"></div>
             </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
       
-      {/* Results count */}
-      <div className="mb-6 flex justify-between items-center">
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          {getResultCountText()}
-        </p>
+      {/* Results count and sorting options */}
+      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-800">
+        <div className="flex items-center">
+          <div className="bg-primary/10 rounded-full p-1.5 mr-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary">
+              <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <rect x="9" y="3" width="6" height="4" rx="2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M9 14h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M9 10h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M9 18h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+              {getResultCountText()}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {activeTab === 'all' ? 'Showing all articles' : `Filtered by ${activeTab}`}
+              {searchQuery && ` • Search: "${searchQuery}"`}
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500 dark:text-gray-400">Sort by:</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs h-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
+            onClick={() => playSound('click')}
+          >
+            <Clock className="h-3 w-3 mr-1" />
+            Newest first
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs h-8"
+            onClick={() => playSound('click')}
+          >
+            <svg className="h-3 w-3 mr-1" width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M7.5 2C7.77614 2 8 1.77614 8 1.5C8 1.22386 7.77614 1 7.5 1C7.22386 1 7 1.22386 7 1.5C7 1.77614 7.22386 2 7.5 2Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd" />
+              <path d="M7.5 8C7.77614 8 8 7.77614 8 7.5C8 7.22386 7.77614 7 7.5 7C7.22386 7 7 7.22386 7 7.5C7 7.77614 7.22386 8 7.5 8Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd" />
+              <path d="M7.5 14C7.77614 14 8 13.7761 8 13.5C8 13.2239 7.77614 13 7.5 13C7.22386 13 7 13.2239 7 13.5C7 13.7761 7.22386 14 7.5 14Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd" />
+            </svg>
+            Relevance
+          </Button>
+        </div>
       </div>
       
       {/* Articles grid */}
@@ -672,7 +826,7 @@ const NewsHubPage: React.FC = () => {
                               className="text-xs bg-transparent hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
                               onClick={() => {
                                 setSearchQuery(tag);
-                                playSound('soft-click');
+                                playSound('click');
                               }}
                             >
                               #{tag}
@@ -696,7 +850,7 @@ const NewsHubPage: React.FC = () => {
                         flex items-center transition-all px-3 py-1.5 rounded-md 
                         bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 
                         shadow-sm hover:shadow group"
-                      onClick={() => playSound('tap')}
+                      onClick={() => playSound('click')}
                     >
                       <span>Read article</span>
                       <ChevronRight size={16} className="ml-1 transition-transform duration-300 group-hover:translate-x-1" />
