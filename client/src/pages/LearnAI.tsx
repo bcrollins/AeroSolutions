@@ -1841,7 +1841,7 @@ const LearnAI: React.FC = () => {
                         <div className="font-medium">Weekly challenge: Sentiment analysis</div>
                         <div className="text-xs text-gray-400">1d ago</div>
                       </div>
-                      <p className="text-sm text-gray-400 mb-2">This week's coding challenge is to build a sentiment analysis model with >90% accuracy.</p>
+                      <p className="text-sm text-gray-400 mb-2">This week's coding challenge is to build a sentiment analysis model with over 90% accuracy.</p>
                       <div className="flex justify-between text-xs">
                         <span className="text-[#007bff]">32 submissions</span>
                         <span className="text-gray-400">Weekly Challenges</span>
