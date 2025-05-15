@@ -48,6 +48,20 @@ export const CommandPaletteProvider: React.FC<CommandPaletteProviderProps> = ({
     );
   };
 
+  // Set up keyboard shortcuts for opening command palette
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Command/Ctrl + K to open command palette
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   return (
     <CommandPaletteContext.Provider
       value={{ isOpen, setIsOpen, addActions, removeActions, actions }}

@@ -1,4 +1,14 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { 
+  APIError, 
+  AuthenticationError, 
+  AuthorizationError, 
+  NetworkError, 
+  ValidationError, 
+  handleAPIResponse, 
+  logError, 
+  getUserFriendlyErrorMessage
+} from "./errorHandler";
 
 // Error handling with more detailed error types
 export class ApiError extends Error {
@@ -24,7 +34,7 @@ export class ApiError extends Error {
   }
 }
 
-// Improved error handling with detailed error information
+// Enhanced error handling with detailed error information and logging
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     let errorData = null;
@@ -43,7 +53,50 @@ async function throwIfResNotOk(res: Response) {
       }
     }
     
-    throw new ApiError(res.status, res.statusText, errorText, errorData);
+    // Create a more specific error based on status code
+    let error: Error;
+    
+    switch (res.status) {
+      case 401:
+        error = new AuthenticationError(errorText);
+        break;
+      
+      case 403:
+        error = new AuthorizationError(errorText);
+        break;
+      
+      case 400:
+        if (errorData && (errorData.validationErrors || errorData.fieldErrors)) {
+          error = new ValidationError(
+            errorText,
+            errorData.validationErrors || errorData.fieldErrors
+          );
+        } else {
+          error = new APIError(errorText, res.status, errorData);
+        }
+        break;
+      
+      case 404:
+        error = new APIError(`Resource not found: ${errorText}`, 404, errorData);
+        break;
+      
+      default:
+        error = new APIError(errorText, res.status, errorData);
+    }
+    
+    // Log the error details
+    logError(error, undefined, {
+      context: {
+        url: res.url,
+        status: res.status,
+        statusText: res.statusText,
+        headers: Object.fromEntries(res.headers.entries()),
+        errorData
+      },
+      level: res.status >= 500 ? 'error' : 'warning'
+    });
+    
+    throw error;
   }
 }
 
