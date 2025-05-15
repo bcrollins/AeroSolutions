@@ -11,6 +11,34 @@ interface MicroInteractionProps {
   as?: React.ElementType;
 }
 
+// Button Press Animation
+interface ButtonPressProps extends Omit<MicroInteractionProps, 'delay' | 'duration'> {
+  scale?: number;
+  duration?: number;
+}
+
+export const ButtonPress = ({ 
+  children, 
+  className = '', 
+  scale = 0.95,
+  duration = 0.1,
+  as = motion.div 
+}: ButtonPressProps) => {
+  const Component = as;
+  
+  return (
+    <Component
+      className={cn(className)}
+      whileTap={{ 
+        scale,
+        transition: { duration }
+      }}
+    >
+      {children}
+    </Component>
+  );
+};
+
 // Slide In Animation
 interface SlideInProps extends MicroInteractionProps {
   direction?: 'left' | 'right' | 'up' | 'down';
