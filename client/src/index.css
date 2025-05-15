@@ -65,6 +65,24 @@
   animation: scaleIn 0.6s ease-out forwards;
 }
 
+/* Shimmer effect */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+}
+
+.skew-x-30 {
+  transform: skewX(30deg);
+}
+
 @keyframes fall {
   0% {
     transform: translateY(-100px) rotate(0deg);

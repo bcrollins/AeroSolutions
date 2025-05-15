@@ -200,18 +200,21 @@ const NewsHubPage: React.FC = () => {
           
           {/* Articles Generation Status */}
           <div className="mt-6 md:mt-0">
-            <div className="bg-blue-50 rounded-lg p-3 border border-blue-100 flex items-center shadow-sm">
-              <div className="flex-shrink-0 mr-3">
+            <div className="bg-blue-50/90 backdrop-blur-sm rounded-2xl p-4 border border-blue-100 flex items-center shadow-sm">
+              <div className="flex-shrink-0 mr-4 relative">
                 {allPosts.length < 50 ? (
-                  <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center">
-                    <svg className="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-blue-200 rounded-full animate-ping opacity-40"></div>
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center relative">
+                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </div>
                   </div>
                 ) : (
-                  <div className="h-9 w-9 rounded-full bg-green-100 flex items-center justify-center">
-                    <svg className="h-5 w-5 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
+                    <svg className="h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
@@ -226,8 +229,13 @@ const NewsHubPage: React.FC = () => {
                 <p className="text-xs text-blue-600">
                   {allPosts.length < 50 
                     ? 'RXAI is creating professional-quality articles in real-time.' 
-                    : 'All articles have been successfully generated using xAI/grok technology.'}
+                    : 'All articles have been successfully generated using advanced AI technology.'}
                 </p>
+                {allPosts.length < 50 && (
+                  <div className="w-full max-w-xs mt-2 bg-white rounded-full h-1.5 overflow-hidden">
+                    <div className="bg-blue-600 h-1.5 rounded-full" style={{ width: `${Math.max(5, (allPosts.length / 50) * 100)}%` }}></div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -410,10 +418,10 @@ const NewsHubPage: React.FC = () => {
           {allPosts.length === 0 ? (
             // No articles are loaded yet but they're being generated
             <div className="flex flex-col items-center">
-              <div className="relative w-16 h-16 mb-6">
-                <div className="absolute inset-0 bg-blue-200 rounded-full animate-ping opacity-75"></div>
-                <div className="relative bg-blue-100 rounded-full p-4">
-                  <svg className="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <div className="relative w-20 h-20 mb-8">
+                <div className="absolute inset-0 bg-blue-200 rounded-full animate-ping opacity-50"></div>
+                <div className="relative bg-gradient-to-br from-blue-400 to-blue-600 rounded-full p-5 shadow-lg">
+                  <svg className="animate-spin h-10 w-10 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
@@ -423,8 +431,12 @@ const NewsHubPage: React.FC = () => {
               <p className="text-muted-foreground mb-4 max-w-lg">
                 RXAI is currently generating professional-quality AI articles. This process takes a few minutes as we create comprehensive, well-researched content.
               </p>
-              <div className="w-full max-w-md mx-auto bg-white rounded-full h-2.5 mb-6 overflow-hidden">
-                <div className="bg-blue-600 h-2.5 rounded-full animate-progress"></div>
+              <div className="w-full max-w-md mx-auto bg-white/50 backdrop-blur-sm rounded-full h-3 mb-6 overflow-hidden shadow-inner">
+                <div className="bg-gradient-to-r from-blue-400 to-blue-600 h-3 rounded-full animate-progress relative">
+                  <div className="absolute inset-0 bg-white/10 overflow-hidden">
+                    <div className="h-full w-1/4 bg-white/20 skew-x-30 animate-shimmer"></div>
+                  </div>
+                </div>
               </div>
               <p className="text-sm text-blue-600">
                 Your articles will automatically appear once they are ready. The page will refresh automatically.
