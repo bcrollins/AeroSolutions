@@ -17,7 +17,8 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu';
-import { Menu, X, ChevronDown, User, LogOut, Star, History, Globe, Shield, Users } from 'lucide-react';
+import { Menu, X, ChevronDown, User, LogOut, Star, History, Globe, Shield, Users, HelpCircle } from 'lucide-react';
+import { restartOnboardingTour } from '@/components/Onboarding/OnboardingTour';
 import LanguageSwitcher from './LanguageSwitcher';
 import ClientPreviewModal from './ClientPreviewModal';
 import RXAILogo from './RXAILogo';

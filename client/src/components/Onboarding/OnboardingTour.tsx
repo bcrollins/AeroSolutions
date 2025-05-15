@@ -20,6 +20,14 @@ interface OnboardingTourProps {
   forceTour?: boolean;
 }
 
+// Create a global function to restart the tour
+// This will be called from other components
+let globalRestartTour: () => void = () => {};
+
+export const restartOnboardingTour = () => {
+  globalRestartTour();
+};
+
 export default function OnboardingTour({ forceTour = false }: OnboardingTourProps) {
   // Tour steps data - could be moved to a config file
   const tourSteps: TourStep[] = [
@@ -100,6 +108,28 @@ export default function OnboardingTour({ forceTour = false }: OnboardingTourProp
       setShowTour(false);
     }
   }, [forceTour, hasCompletedTour, setShowTour]);
+  
+  // Set up the global restart function
+  useEffect(() => {
+    // Define the restart function
+    globalRestartTour = () => {
+      // Reset to first step
+      setCurrentStepIndex(0);
+      // Show the tour
+      setShowTour(true);
+      
+      toast({
+        title: "Tour restarted",
+        description: "Let's explore the platform features again!",
+        variant: "default"
+      });
+    };
+    
+    // Clean up when component unmounts
+    return () => {
+      globalRestartTour = () => {};
+    };
+  }, [setCurrentStepIndex, setShowTour, toast]);
 
   // Find the target element and calculate its position
   useEffect(() => {
