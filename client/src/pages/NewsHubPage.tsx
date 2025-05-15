@@ -443,7 +443,7 @@ const NewsHubPage: React.FC = () => {
               </span>
             </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 articles-grid">
               {/* Skip the first post if it's featured and we're showing all posts */}
               {currentPagePosts
                 .filter((post, index) => !(
@@ -452,9 +452,34 @@ const NewsHubPage: React.FC = () => {
                   activeTab === 'all' && 
                   (post.featuredPost || filteredPosts.filter(p => p.featuredPost).length === 0)
                 ))
-                .map(post => (
-                  <ArticleCard key={post.id} post={post} />
+                .map((post, index) => (
+                  <ArticleCard 
+                    key={post.id} 
+                    post={post} 
+                    className={`transition-all duration-300 slide-in-article`} 
+                    style={{ animationDelay: `${index * 0.08}s` }}
+                  />
                 ))}
+              
+              {/* Show message when more articles are being generated */}
+              {allPosts.length > 0 && allPosts.length < 50 && currentPagePosts.length < 5 && (
+                <div className="col-span-full p-6 bg-blue-50 rounded-lg border border-blue-100 text-center">
+                  <div className="flex justify-center mb-3">
+                    <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                      <svg className="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-medium text-blue-800 mb-1">
+                    More Articles Coming
+                  </h3>
+                  <p className="text-sm text-blue-600">
+                    We're generating additional AI-powered articles. Check back in a moment to see new content.
+                  </p>
+                </div>
+              )}
             </div>
           </section>
           
@@ -527,7 +552,17 @@ const NewsHubPage: React.FC = () => {
 };
 
 // Article Card Component
-const ArticleCard = ({ post, featured = false }: { post: ArticlePost, featured?: boolean }) => {
+const ArticleCard = ({ 
+  post, 
+  featured = false,
+  className = '',
+  style = {}
+}: { 
+  post: ArticlePost, 
+  featured?: boolean,
+  className?: string,
+  style?: React.CSSProperties
+}) => {
   // Access sound effects
   const { playSound } = useSoundEffects();
   
