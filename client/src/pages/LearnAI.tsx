@@ -735,7 +735,7 @@ const LearnAI: React.FC = () => {
   const result = getQuizResult(score);
 
   return (
-    <div className="min-h-screen bg-[#1a1a1a] text-white">
+    <div className="min-h-screen bg-white text-gray-800">
       <Helmet>
         <title>Learn AI with RXAI - The World Leader in AI Education</title>
         <meta name="description" content="Start your AI learning journey with RXAI's comprehensive courses. From beginners to advanced practitioners, our expert-led curriculum will transform your career." />
