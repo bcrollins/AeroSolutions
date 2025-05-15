@@ -95,14 +95,7 @@ export default function Header() {
         { label: 'Digital Tools', path: '/digital-tools' },
       ],  
     },  
-    {
-      label: 'Resources',
-      dropdown: [
-        { label: 'Articles', path: '/articles' },
-        { label: 'News Hub', path: '/news' },
-        { label: 'Contact', path: '/contact' },
-      ],
-    },
+    { label: 'AI News', path: '/news' },
     { label: 'Client Preview', path: '/client-preview' }
   ];  
 
@@ -113,9 +106,6 @@ export default function Header() {
           {/* Logo */}  
           <Link href="/">  
             <div className="flex items-center group">
-              <div className="transition-transform duration-300 group-hover:scale-110">
-                <Logo height={28} width={28} className="mr-2" />
-              </div>
               <div className="flex flex-col">
                 <span className="font-bold tracking-wider text-xl text-white group-hover:text-electric-cyan-400 transition-colors duration-300">RXAI</span>
                 <span className="text-xs text-gray-400">The World Leader in Artificial Intelligence Education</span>
@@ -124,7 +114,7 @@ export default function Header() {
           </Link>  
 
           {/* Desktop Menu */}  
-          <nav className="hidden md:flex space-x-6 lg:space-x-8 items-center">  
+          <nav className="hidden md:flex space-x-4 lg:space-x-6 items-center">  
             {menuItems.map((item) => (  
               <div key={item.label} className="relative">  
                 {item.dropdown ? (  
