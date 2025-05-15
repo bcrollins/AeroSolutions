@@ -62,6 +62,21 @@ const NewsHubPage: React.FC = () => {
     refetchOnWindowFocus: true, // Refresh data when user returns to the tab
     refetchInterval: 15000, // Refresh every 15 seconds to get newly generated articles
   });
+  
+  // Debug article data separately to avoid TypeScript errors
+  React.useEffect(() => {
+    if (postsData) {
+      console.log('Article data retrieved successfully:', Array.isArray(postsData) ? postsData.length : 0, 'articles found');
+      if (Array.isArray(postsData) && postsData.length > 0) {
+        console.log('First article sample:', postsData[0]);
+      } else {
+        console.log('No articles found in the API response');
+      }
+    }
+    if (error) {
+      console.error('Error fetching articles:', error);
+    }
+  }, [postsData, error]);
 
   // Make sure we have an array of posts
   const allPosts: ArticlePost[] = Array.isArray(postsData) ? postsData : [];
@@ -837,6 +852,8 @@ const ArticleCard = ({
   const safeSlug = post.slug || `article-${post.id}`;
   const safeDate = post.publishedAt || post.createdAt || new Date().toISOString();
   const readTime = post.readTimeMinutes || Math.ceil((post.content?.length || 0) / 1500) || 5;
+  // Check if article is new (less than 3 days old)
+  const isNew = (new Date().getTime() - new Date(safeDate).getTime()) / (1000 * 60 * 60 * 24) < 3;
   
   // Use a different layout for featured articles
   if (featured) {
@@ -914,21 +931,22 @@ const ArticleCard = ({
     );
   }
   
-  // Regular article card - Apple-inspired design
+  // Regular article card - Apple-inspired design with improved UI and type safety
   return (
     <Card 
-      className={`overflow-hidden h-full transition-all duration-300 hover:shadow-md group border-0 bg-white ${className}`}
+      className={`overflow-hidden h-full transition-all duration-300 hover:shadow-lg group border-0 bg-white ${className}`}
       style={{...style, borderRadius: '1.25rem'}}
       onMouseEnter={() => playSound('hover')}
     >
       <div className="h-48 w-full relative overflow-hidden">
         {post.imageUrl ? (
-          <div className="absolute inset-0 transform group-hover:scale-105 transition-transform duration-700">
+          <div className="absolute inset-0 transform group-hover:scale-105 transition-transform duration-700 ease-out">
             <img 
               src={post.imageUrl} 
               alt={safeTitle} 
               className="h-full w-full object-cover" 
               onError={(e) => {
+                console.log("Image load error, using fallback for:", safeTitle);
                 // Replace broken image with a fallback gradient and icon
                 const target = e.target as HTMLImageElement;
                 target.style.display = 'none';
@@ -937,9 +955,9 @@ const ArticleCard = ({
                 // Create and append an icon element based on article category
                 const icon = document.createElement('div');
                 
-                if (post.category?.toLowerCase().includes('ai')) {
+                if (post.category && typeof post.category === 'string' && post.category.toLowerCase().includes('ai')) {
                   icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-12 w-12 text-blue-400/50"><path d="M12 2v1m0 18v1m9-9h-1M4 12H3m15.364 6.364-.7071-.7071M6.34315 6.34315l-.70711-.70711m12.72796.00003-.7071.70708M6.3432 17.6569l-.70711.7071M16 12c0 2.2091-1.7909 4-4 4-2.20914 0-4-1.7909-4-4 0-2.20914 1.79086-4 4-4 2.2091 0 4 1.79086 4 4Z"></path></svg>`;
-                } else if (post.category?.toLowerCase().includes('business')) {
+                } else if (post.category && typeof post.category === 'string' && post.category.toLowerCase().includes('business')) {
                   icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-12 w-12 text-blue-400/50"><path d="M3 12H5M5 12C7.76142 12 10 9.76142 10 7C10 4.23858 7.76142 2 5 2H3V22H5C7.76142 22 10 19.7614 10 17C10 14.2386 7.76142 12 5 12Z"></path><path d="M21 12H19M19 12C16.2386 12 14 9.76142 14 7C14 4.23858 16.2386 2 19 2H21V22H19C16.2386 22 14 19.7614 14 17C14 14.2386 16.2386 12 19 12Z"></path></svg>`;
                 } else {
                   icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-12 w-12 text-blue-400/50"><path d="M21 12a9 9.00001 0 11-18 0 9 9.00001 0 0118 0z"></path><path d="M12 8v4l2.5 2.5"></path></svg>`;
@@ -948,26 +966,33 @@ const ArticleCard = ({
                 target.parentElement!.appendChild(icon);
               }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-gray-900/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            {/* Apple-style image overlay gradient */}
+            <div className="absolute inset-0 bg-gradient-to-t from-gray-900/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
           </div>
         ) : (
           <div className="h-full w-full bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
-            <BrainCircuit className="h-12 w-12 text-blue-400/50" />
+            {post.category && typeof post.category === 'string' && post.category.toLowerCase().includes('ai') ? (
+              <BrainCircuit className="h-12 w-12 text-blue-400/50" />
+            ) : (
+              <BookOpen className="h-12 w-12 text-blue-400/50" />
+            )}
           </div>
         )}
         
-        {/* Reading time indicator badge */}
+        {/* Reading time indicator badge - Apple-style floating indicator */}
         <div className="absolute -bottom-5 right-5 z-10">
-          <div className="bg-white rounded-full h-10 w-10 flex flex-col items-center justify-center shadow-sm border border-gray-100">
+          <div className="bg-white rounded-full h-10 w-10 flex flex-col items-center justify-center shadow-md border border-gray-100 group-hover:border-blue-100 transition-colors duration-300">
             <span className="text-sm font-bold text-blue-600 leading-none">{readTime}</span>
             <span className="text-[9px] text-gray-500 leading-none mt-0.5">min</span>
           </div>
         </div>
         
         {/* New articles get a badge */}
-        {(new Date().getTime() - new Date(safeDate).getTime()) / (1000 * 60 * 60 * 24) < 3 && (
+        {isNew && (
           <div className="absolute top-3 left-3 z-10">
-            <Badge className="bg-blue-600/90 backdrop-blur-sm shadow-sm text-white font-medium text-xs px-2.5 py-0.5 rounded-full">New</Badge>
+            <Badge className="bg-blue-600/90 backdrop-blur-sm shadow-sm text-white font-medium text-xs px-2.5 py-0.5 rounded-full">
+              New
+            </Badge>
           </div>
         )}
       </div>
@@ -984,7 +1009,7 @@ const ArticleCard = ({
         <Link 
           href={`/news/${safeSlug}`}
           onClick={() => playSound('click')}
-          className="block transition-transform duration-300 group-hover:translate-x-1"
+          className="block transition-transform duration-300 hover:translate-x-1"
         >
           <h3 className="font-semibold text-lg tracking-tight mb-2 line-clamp-2 text-gray-800 group-hover:text-blue-600 transition-colors">
             {safeTitle}
@@ -992,20 +1017,31 @@ const ArticleCard = ({
         </Link>
         
         <p className="text-gray-500 text-sm mb-4 line-clamp-2 leading-relaxed">
-          {post.summary || post.content?.substring(0, 120) + '...' || 'Read the full article for more information.'}
+          {post.summary || 
+           (post.content && typeof post.content === 'string' ? post.content.substring(0, 120) + '...' : '') || 
+           'Read the full article for more information.'}
         </p>
         
         <div className="flex flex-col gap-2">
-          {/* Article reaction bar */}
-          <ArticleReactionBar articleId={post.id} variant="compact" className="mb-1" />
+          {/* Article reaction bar with type safety */}
+          <ArticleReactionBar 
+            articleId={typeof post.id === 'number' || typeof post.id === 'string' ? post.id : 0} 
+            variant="compact" 
+            className="mb-1" 
+          />
           
           <div className="flex items-center justify-between text-xs text-gray-400 pt-3 border-t border-gray-100">
             <span className="font-medium text-gray-500">{new Date(safeDate).toLocaleDateString(undefined, {
               month: 'short', 
-              day: 'numeric'
+              day: 'numeric',
+              year: 'numeric'
             })}</span>
             
-            <Button variant="ghost" size="sm" className="h-7 px-3 text-xs text-blue-600 hover:text-blue-800 group">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-7 px-3 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-all duration-300 group"
+            >
               Read <ChevronRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-0.5" />
             </Button>
           </div>
