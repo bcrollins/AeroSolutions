@@ -13,6 +13,8 @@ import { useAuth } from "@/hooks/useAuth";
 import WebSocketListener from "@/components/forum/WebSocketListener";
 import { Button } from "@/components/ui/button";
 import { Shield } from "lucide-react";
+// Import Apple-inspired effects
+import { initAppleEffects, initSoundEffects } from "@/utils/appleEffects";
 
 // Popup Components
 import ClientInputPopup from "@/components/popups/ClientInputPopup";
