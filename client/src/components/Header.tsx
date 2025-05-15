@@ -131,10 +131,10 @@ export default function Header() {
                   <button  
                     onClick={item.label === 'AI Products' ? toggleSolutionsDropdown : toggleResourcesDropdown}  
                     className={cn(
-                      "font-medium text-sm tracking-wide text-white hover:text-electric-cyan-400 flex items-center transition-colors duration-200",
+                      "header-nav-item font-medium text-sm tracking-wide apple-nav-item flex items-center transition-apple",
                       (item.label === 'AI Products' && isSolutionsDropdownOpen) || 
                       (item.label === 'Resources' && isResourcesDropdownOpen) 
-                        ? "text-electric-cyan-400" : ""
+                        ? "active" : ""
                     )}
                   >  
                     {item.label}  
@@ -149,8 +149,8 @@ export default function Header() {
                   <Link  
                     href={item.path}  
                     className={cn(
-                      "font-medium text-sm tracking-wide text-white hover:text-electric-cyan-400 transition-colors duration-200",
-                      location === item.path ? "text-electric-cyan-400" : ""
+                      "header-nav-item font-medium text-sm tracking-wide apple-nav-item transition-apple",
+                      location === item.path ? "active" : ""
                     )}
                   >  
                     {item.label}  
@@ -159,7 +159,7 @@ export default function Header() {
                 {item.dropdown && 
                   ((item.label === 'AI Products' && isSolutionsDropdownOpen) || 
                    (item.label === 'Resources' && isResourcesDropdownOpen)) && (  
-                  <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-lg shadow-xl z-10 overflow-hidden border border-gray-100">  
+                  <div className="absolute top-full left-0 mt-2 w-56 glass-effect rounded-lg subtle-shadow z-10 overflow-hidden">  
                     <div className="py-1">
                       {item.dropdown.map((subItem) => (  
                         <Link  
@@ -171,8 +171,8 @@ export default function Header() {
                             setIsSupportDropdownOpen(false);
                           }}
                           className={cn(
-                            "block px-4 py-2 text-gray-800 hover:bg-slate-blue-50 hover:text-slate-blue-700 transition-colors duration-200",
-                            location === subItem.path ? "bg-slate-blue-50 text-slate-blue-700" : ""
+                            "block px-4 py-2 text-white hover:bg-white/10 transition-apple hover-lift",
+                            location === subItem.path ? "bg-white/5 text-electric-cyan-400" : ""
                           )}
                         >  
                           {subItem.label}  
@@ -185,7 +185,7 @@ export default function Header() {
             ))}  
             <button
               onClick={toggleClientPreview}
-              className="font-medium text-sm tracking-wide text-white hover:text-electric-cyan-400 transition-colors duration-200 border border-gray-700 hover:border-electric-cyan-400 px-3 py-1.5 rounded-md"
+              className="header-nav-item apple-btn-outline font-medium text-sm tracking-wide px-3 py-1.5 rounded-md transition-apple"
             >
               Client Preview
             </button>
@@ -194,14 +194,14 @@ export default function Header() {
             <div className="flex items-center space-x-3">
               <Link  
                 href="/learnai"  
-                className="font-medium text-sm px-4 py-2 rounded-md border border-electric-cyan-400 text-white hover:bg-electric-cyan-400/20 transition-all duration-300 hover:shadow-lg"  
+                className="header-nav-item apple-btn-secondary font-medium text-sm px-4 py-2 rounded-md transition-apple hover-lift"  
               >  
                 Learn AI
               </Link>
               
               <Link  
                 href="/subscriptions"  
-                className="font-medium text-sm px-4 py-2 rounded-md bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 hover:shadow-lg"  
+                className="header-nav-item apple-btn-primary font-medium text-sm px-4 py-2 rounded-md transition-apple hover-lift"  
               >  
                 Try Free  
               </Link>
@@ -209,7 +209,7 @@ export default function Header() {
               {isAuthenticated ? (
                 <Link  
                   href="/member-dashboard"  
-                  className="font-medium text-sm px-4 py-2 rounded-md bg-electric-cyan-600 text-white hover:bg-electric-cyan-700 transition-all duration-300 hover:shadow-lg flex items-center gap-2"  
+                  className="header-nav-item apple-btn-accent font-medium text-sm px-4 py-2 rounded-md transition-apple hover-lift flex items-center gap-2"  
                 >  
                   <LayoutDashboard className="w-4 h-4" />
                   Dashboard  
@@ -217,7 +217,7 @@ export default function Header() {
               ) : (
                 <Link  
                   href="/login"  
-                  className="font-medium text-sm px-4 py-2 rounded-md bg-electric-cyan-600 text-white hover:bg-electric-cyan-700 transition-all duration-300 hover:shadow-lg flex items-center gap-2"  
+                  className="header-nav-item apple-btn-accent font-medium text-sm px-4 py-2 rounded-md transition-apple hover-lift flex items-center gap-2"  
                 >  
                   <ShieldCheck className="w-4 h-4" />
                   Login  
