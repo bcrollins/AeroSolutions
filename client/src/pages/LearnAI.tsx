@@ -1785,82 +1785,82 @@ const LearnAI: React.FC = () => {
             transition={{ duration: 0.5, delay: 1.4 }}
             className="w-full max-w-6xl mb-16"
           >
-            <h2 className="text-2xl font-bold mb-8 text-center">Join a Thriving Community</h2>
+            <h2 className="text-2xl font-bold mb-8 text-center text-gray-800">Join a Thriving Community</h2>
             
-            <div className="bg-[#2a2a2a] rounded-lg overflow-hidden">
+            <div className="bg-white rounded-lg overflow-hidden border border-gray-200 shadow-sm">
               <div className="grid grid-cols-1 md:grid-cols-2">
                 <div className="p-8">
-                  <h3 className="text-xl font-semibold mb-4">Connect with 50,000+ AI Learners</h3>
-                  <p className="text-gray-400 mb-6">
+                  <h3 className="text-xl font-semibold mb-4 text-gray-800">Connect with 50,000+ AI Learners</h3>
+                  <p className="text-gray-600 mb-6">
                     Learning is better together. Join our active community of AI practitioners, from beginners to experts,
                     all working together to master artificial intelligence.
                   </p>
                   
                   <div className="space-y-4 mb-8">
                     <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-full bg-[#007bff]/20 flex items-center justify-center mr-3">
-                        <Users className="w-5 h-5 text-[#007bff]" />
+                      <div className="w-10 h-10 rounded-full bg-[#0066cc]/10 flex items-center justify-center mr-3 shadow-sm border border-gray-100">
+                        <Users className="w-5 h-5 text-[#0066cc]" />
                       </div>
                       <div>
-                        <h4 className="font-semibold">Peer Learning Groups</h4>
-                        <p className="text-sm text-gray-400">Connect with peers at your skill level for collaborative learning</p>
+                        <h4 className="font-semibold text-gray-800">Peer Learning Groups</h4>
+                        <p className="text-sm text-gray-500">Connect with peers at your skill level for collaborative learning</p>
                       </div>
                     </div>
                     
                     <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-full bg-[#007bff]/20 flex items-center justify-center mr-3">
-                        <CalendarClock className="w-5 h-5 text-[#007bff]" />
+                      <div className="w-10 h-10 rounded-full bg-[#0066cc]/10 flex items-center justify-center mr-3 shadow-sm border border-gray-100">
+                        <CalendarClock className="w-5 h-5 text-[#0066cc]" />
                       </div>
                       <div>
-                        <h4 className="font-semibold">Weekly Live Events</h4>
-                        <p className="text-sm text-gray-400">Attend workshops, Q&A sessions, and expert talks each week</p>
+                        <h4 className="font-semibold text-gray-800">Weekly Live Events</h4>
+                        <p className="text-sm text-gray-500">Attend workshops, Q&A sessions, and expert talks each week</p>
                       </div>
                     </div>
                     
                     <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-full bg-[#007bff]/20 flex items-center justify-center mr-3">
-                        <Share2 className="w-5 h-5 text-[#007bff]" />
+                      <div className="w-10 h-10 rounded-full bg-[#0066cc]/10 flex items-center justify-center mr-3 shadow-sm border border-gray-100">
+                        <Share2 className="w-5 h-5 text-[#0066cc]" />
                       </div>
                       <div>
-                        <h4 className="font-semibold">Project Showcases</h4>
-                        <p className="text-sm text-gray-400">Share your work and get feedback from the community</p>
+                        <h4 className="font-semibold text-gray-800">Project Showcases</h4>
+                        <p className="text-sm text-gray-500">Share your work and get feedback from the community</p>
                       </div>
                     </div>
                   </div>
                   
                   <Button 
-                    className="bg-[#007bff] hover:bg-blue-600 w-full"
+                    className="bg-[#0066cc] hover:bg-[#004c99] text-white shadow-sm w-full"
                     onClick={() => window.location.href = '/community'}
                   >
                     Preview Community
                   </Button>
                 </div>
                 
-                <div className="bg-[#333] p-6 flex flex-col">
-                  <h3 className="text-lg font-semibold mb-4">Recent Community Discussions</h3>
+                <div className="bg-gray-50 p-6 flex flex-col border-l border-gray-200">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800">Recent Community Discussions</h3>
                   
                   <div className="space-y-4 flex-1">
-                    <div className="bg-[#2a2a2a] p-4 rounded-lg">
+                    <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                       <div className="flex justify-between mb-2">
-                        <div className="font-medium">Best approach for fine-tuning LLMs?</div>
-                        <div className="text-xs text-gray-400">2h ago</div>
+                        <div className="font-medium text-gray-800">Best approach for fine-tuning LLMs?</div>
+                        <div className="text-xs text-gray-500">2h ago</div>
                       </div>
-                      <p className="text-sm text-gray-400 mb-2">What's your preferred approach for fine-tuning large language models with limited data?</p>
+                      <p className="text-sm text-gray-600 mb-2">What's your preferred approach for fine-tuning large language models with limited data?</p>
                       <div className="flex justify-between text-xs">
-                        <span className="text-[#007bff]">24 replies</span>
-                        <span className="text-gray-400">Advanced ML Module</span>
+                        <span className="text-[#0066cc] font-medium">24 replies</span>
+                        <span className="text-gray-500 bg-gray-100 px-2 py-1 rounded-full">Advanced ML Module</span>
                       </div>
                     </div>
                     
-                    <div className="bg-[#2a2a2a] p-4 rounded-lg">
+                    <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                       <div className="flex justify-between mb-2">
-                        <div className="font-medium">Project collaboration: Vision transformer</div>
-                        <div className="text-xs text-gray-400">6h ago</div>
+                        <div className="font-medium text-gray-800">Project collaboration: Vision transformer</div>
+                        <div className="text-xs text-gray-500">6h ago</div>
                       </div>
-                      <p className="text-sm text-gray-400 mb-2">Looking for 2-3 people to collaborate on an image classification project using ViT.</p>
+                      <p className="text-sm text-gray-600 mb-2">Looking for 2-3 people to collaborate on an image classification project using ViT.</p>
                       <div className="flex justify-between text-xs">
-                        <span className="text-[#007bff]">9 replies</span>
-                        <span className="text-gray-400">Project Collaboration</span>
+                        <span className="text-[#0066cc] font-medium">9 replies</span>
+                        <span className="text-gray-500 bg-gray-100 px-2 py-1 rounded-full">Project Collaboration</span>
                       </div>
                     </div>
                     
