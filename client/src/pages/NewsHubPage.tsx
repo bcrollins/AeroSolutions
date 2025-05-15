@@ -861,64 +861,122 @@ const NewsHubPage: React.FC = () => {
             })}
           </div>
           
-          {/* Pagination */}
+          {/* Enhanced Pagination with Animations and Micro-interactions */}
           {totalPages > 1 && (
             <div className="mt-10 flex justify-center">
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(prev => Math.max(1, prev - 1))}
-                  disabled={page === 1}
-                  aria-label="Previous page"
-                >
-                  Previous
-                </Button>
-                
-                <div className="flex items-center space-x-1">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .filter(p => p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1))
-                    .map((p, i, arr) => {
-                      // Add ellipsis
-                      const needsEllipsisBefore = i > 0 && arr[i - 1] !== p - 1;
-                      const needsEllipsisAfter = i < arr.length - 1 && arr[i + 1] !== p + 1;
-                      
-                      return (
-                        <React.Fragment key={p}>
-                          {needsEllipsisBefore && (
-                            <span className="px-3 py-2 text-gray-400 dark:text-gray-500">...</span>
-                          )}
-                          
-                          <Button
-                            variant={p === page ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setPage(p)}
-                            className={p === page 
-                              ? "bg-blue-600 text-white hover:bg-blue-700" 
-                              : "text-gray-700 dark:text-gray-300"}
-                            aria-label={`Page ${p}`}
-                            aria-current={p === page ? "page" : undefined}
-                          >
-                            {p}
-                          </Button>
-                          
-                          {needsEllipsisAfter && (
-                            <span className="px-3 py-2 text-gray-400 dark:text-gray-500">...</span>
-                          )}
-                        </React.Fragment>
-                      );
-                    })}
+              <div className="flex flex-col items-center space-y-3">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Showing page {page} of {totalPages} ({filteredPosts.length} articles)
+                </p>
+                <div className="flex items-center bg-gray-50 dark:bg-gray-800/70 rounded-lg p-1.5 shadow-sm border border-gray-100 dark:border-gray-800">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setPage(prev => Math.max(1, prev - 1));
+                      playSound('navigation');
+                    }}
+                    disabled={page === 1}
+                    aria-label="Previous page"
+                    className={`text-gray-700 dark:text-gray-300 h-8 px-2 rounded-md ${page === 1 ? 'opacity-50' : 'hover:bg-white dark:hover:bg-gray-700'}`}
+                  >
+                    <div className="flex items-center">
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      <span>Previous</span>
+                    </div>
+                  </Button>
+                  
+                  <div className="flex items-center space-x-1 mx-2 px-3 border-x border-gray-200 dark:border-gray-700">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter(p => p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1))
+                      .map((p, i, arr) => {
+                        // Add ellipsis
+                        const needsEllipsisBefore = i > 0 && arr[i - 1] !== p - 1;
+                        const needsEllipsisAfter = i < arr.length - 1 && arr[i + 1] !== p + 1;
+                        
+                        return (
+                          <React.Fragment key={p}>
+                            {needsEllipsisBefore && (
+                              <span className="px-2.5 py-1.5 text-gray-400 dark:text-gray-500">•••</span>
+                            )}
+                            
+                            <Button
+                              variant={p === page ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => {
+                                setPage(p);
+                                playSound('click');
+                              }}
+                              className={`h-8 w-8 ${p === page 
+                                ? "bg-primary hover:bg-primary/90 text-white ring-2 ring-primary/30 transform scale-105 transition-all" 
+                                : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-all"}`}
+                              aria-label={`Page ${p}`}
+                              aria-current={p === page ? "page" : undefined}
+                            >
+                              {p}
+                            </Button>
+                            
+                            {needsEllipsisAfter && (
+                              <span className="px-2.5 py-1.5 text-gray-400 dark:text-gray-500">•••</span>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
+                  </div>
+                  
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setPage(prev => Math.min(totalPages, prev + 1));
+                      playSound('navigation');
+                    }}
+                    disabled={page === totalPages}
+                    aria-label="Next page"
+                    className={`text-gray-700 dark:text-gray-300 h-8 px-2 rounded-md ${page === totalPages ? 'opacity-50' : 'hover:bg-white dark:hover:bg-gray-700'}`}
+                  >
+                    <div className="flex items-center">
+                      <span>Next</span>
+                      <ChevronRight className="h-4 w-4 ml-1 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                  </Button>
                 </div>
                 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
-                  disabled={page === totalPages}
-                  aria-label="Next page"
-                >
-                  Next
-                </Button>
+                <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  <div className="flex items-center gap-1 mr-4">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-400">
+                      <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
+                      <path d="M3 9h18" stroke="currentColor" strokeWidth="2"/>
+                      <path d="M9 9v12" stroke="currentColor" strokeWidth="2"/>
+                    </svg>
+                    <span>Jump to page: </span>
+                  </div>
+                  {[1, 2, Math.floor(totalPages/2), totalPages-1, totalPages].filter((v, i, a) => a.indexOf(v) === i && v > 0 && v <= totalPages)
+                    .map(p => (
+                      <Button
+                        key={p}
+                        variant="link"
+                        size="sm"
+                        onClick={() => {
+                          setPage(p);
+                          playSound('click');
+                        }}
+                        className={`p-1 h-6 ${p === page ? 'text-primary font-medium' : 'text-gray-500 dark:text-gray-400'}`}
+                      >
+                        {p}
+                      </Button>
+                    ))}
+                </div>
+                
+                <div className="text-xs text-gray-400 dark:text-gray-600 flex items-center gap-1.5 mt-1">
+                  <kbd className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-gray-500 dark:text-gray-400">
+                    ←
+                  </kbd>
+                  <kbd className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-gray-500 dark:text-gray-400">
+                    →
+                  </kbd>
+                  <span> to navigate</span>
+                </div>
               </div>
             </div>
           )}
