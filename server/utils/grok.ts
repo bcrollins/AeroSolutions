@@ -19,21 +19,22 @@ interface JsonGenerationOptions<T> {
 }
 
 // Make sure we have the API key
-if (!process.env.OPENAI_API_KEY) {
-  console.warn('No OPENAI_API_KEY found in environment. AI-powered features will not work.');
+if (!process.env.XAI_API_KEY) {
+  console.warn('No XAI_API_KEY found in environment. AI-powered features will not work.');
 }
 
-// Initialize the OpenAI client
+// Initialize the xAI client
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: "https://api.x.ai/v1",
+  apiKey: process.env.XAI_API_KEY,
 });
 
-// OpenAIApi class for interaction with OpenAI
-class OpenAIApi {
+// XAIApi class for interaction with xAI
+class XAIApi {
   // Generate text based on a prompt
   async generateText({
     prompt,
-    model = 'gpt-4o',
+    model = 'grok-2-1212',
     maxTokens = 1500,
     temperature = 0.7,
     systemPrompt = 'You are a helpful, precise, and advanced AI assistant.',
@@ -67,7 +68,7 @@ class OpenAIApi {
   // Generate structured JSON data
   async generateJson<T>({
     prompt,
-    model = 'gpt-4o',
+    model = 'grok-2-1212',
     maxTokens = 1500,
     temperature = 0.3,
     systemPrompt = 'You are a helpful, precise AI assistant. Respond to the prompt with properly structured JSON.',
@@ -111,7 +112,7 @@ class OpenAIApi {
   async analyzeImage(
     base64Image: string,
     prompt: string,
-    model = 'gpt-4o'
+    model = 'grok-2-vision-1212'
   ): Promise<string> {
     try {
       const response = await openai.chat.completions.create({
