@@ -126,7 +126,7 @@ export default function MicroInteractionsDemo() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex justify-center p-6 bg-gray-100 dark:bg-gray-800 rounded-md">
-                  <Float amplitude={5}>
+                  <Float distance={5}>
                     <div className="w-24 h-24 bg-purple-500 rounded-lg flex items-center justify-center">
                       <span className="text-white font-bold">Float</span>
                     </div>
@@ -134,7 +134,7 @@ export default function MicroInteractionsDemo() {
                 </CardContent>
                 <CardFooter>
                   <code className="text-sm bg-gray-100 dark:bg-gray-800 p-2 rounded w-full">
-                    {`<Float amplitude={5} duration={3}>
+                    {`<Float distance={5} duration={3}>
   <YourContent />
 </Float>`}
                   </code>
@@ -174,17 +174,27 @@ export default function MicroInteractionsDemo() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex justify-center p-6 bg-gray-100 dark:bg-gray-800 rounded-md">
-                  <Shimmer>
-                    <div className="w-24 h-24 bg-pink-500 rounded-lg flex items-center justify-center">
-                      <span className="text-white font-bold">Shimmer</span>
-                    </div>
-                  </Shimmer>
+                  <div className="w-24 h-24 bg-pink-500 rounded-lg flex items-center justify-center relative overflow-hidden">
+                    <span className="text-white font-bold z-10 relative">Shimmer</span>
+                    <Shimmer 
+                      width="100%" 
+                      height="100%" 
+                      borderRadius="0.5rem"
+                      className="absolute inset-0"
+                    />
+                  </div>
                 </CardContent>
                 <CardFooter>
                   <code className="text-sm bg-gray-100 dark:bg-gray-800 p-2 rounded w-full">
-                    {`<Shimmer>
+                    {`<div className="relative overflow-hidden">
   <YourContent />
-</Shimmer>`}
+  <Shimmer 
+    width="100%" 
+    height="100%" 
+    borderRadius="0.5rem"
+    className="absolute inset-0"
+  />
+</div>`}
                   </code>
                 </CardFooter>
               </Card>
@@ -353,9 +363,14 @@ export default function MicroInteractionsDemo() {
                 <CardContent>
                   <HoverScale>
                     <Card className="bg-primary/5 border-primary/20 overflow-hidden">
-                      <Shimmer>
-                        <div className="h-1 bg-gradient-to-r from-primary/60 to-primary w-full" />
-                      </Shimmer>
+                      <div className="relative h-1 w-full">
+                        <div className="h-1 bg-gradient-to-r from-primary/60 to-primary w-full z-10 relative" />
+                        <Shimmer 
+                          width="100%" 
+                          height="100%" 
+                          className="absolute inset-0" 
+                        />
+                      </div>
                       <CardContent className="pt-6">
                         <div className="flex items-center space-x-1 mb-4">
                           {Array.from({ length: 5 }).map((_, i) => (
