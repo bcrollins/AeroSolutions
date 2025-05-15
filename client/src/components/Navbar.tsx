@@ -105,6 +105,7 @@ const Navbar: React.FC = () => {
     { name: 'Digital Tools Suite', path: '/ai-tools', description: 'Suite of AI-powered tools for content creation, code assistance, analytics, design, and more' },
     { name: 'Service Packages', path: '/service-packages', description: 'Explore our full-stack development service packages with no payment until satisfied' },
     { name: 'Case Studies', path: '/case-studies', description: 'Browse our portfolio of successful web development projects across multiple industries' },
+    { name: 'Micro-Interactions', path: '/micro-interactions', description: 'Explore our library of elegant micro-interactions designed to enhance user experiences' },
   ];
 
   return (

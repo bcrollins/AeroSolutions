@@ -417,6 +417,23 @@ export default function App() {
           )}
         </Route>
         
+        {/* Micro-interactions Demo Page */}
+        <Route path="/micro-interactions">
+          {() => (
+            <>
+              <Helmet>
+                <title>UI Micro-Interactions | RXAI - Advanced UX Design</title>
+                <meta name="description" content="Explore RXAI's library of elegant micro-interactions designed to enhance user experiences with subtle motion and feedback. See how we create engaging digital experiences." />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href="https://rollinsx.dev/micro-interactions" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <MicroInteractionsDemo />
+            </>
+          )}
+        </Route>
+        
         {/* Admin Routes */}
         <Route path="/admin">
           {() => {
