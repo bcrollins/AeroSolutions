@@ -12,6 +12,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { BadgesDisplay, LeaderboardDisplay } from '@/components/course/GamificationElements';
 import CodeEnvironment from '@/components/course/CodeEnvironment';
 import LearningPathSelector from '@/components/course/LearningPathSelector';
+import LearningAnalytics from '@/components/course/LearningAnalytics';
+import CollaborationTools from '@/components/course/CollaborationTools';
 import { 
   ChevronRight, 
   CheckCircle2, 
@@ -467,6 +469,18 @@ const CoursesDashboard = () => {
               >
                 Code Practice
               </TabsTrigger>
+              <TabsTrigger 
+                value="analytics" 
+                className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-electric-cyan-400 data-[state=active]:text-white rounded-none"
+              >
+                Analytics
+              </TabsTrigger>
+              <TabsTrigger 
+                value="collaboration" 
+                className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-electric-cyan-400 data-[state=active]:text-white rounded-none"
+              >
+                Collaboration
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="modules" className="space-y-6">
@@ -827,6 +841,14 @@ const CoursesDashboard = () => {
                   </div>
                 </Card>
               </div>
+            </TabsContent>
+            
+            <TabsContent value="analytics" className="space-y-6">
+              <LearningAnalytics />
+            </TabsContent>
+            
+            <TabsContent value="collaboration" className="space-y-6">
+              <CollaborationTools />
             </TabsContent>
           </Tabs>
         </motion.div>
