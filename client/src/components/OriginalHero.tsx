@@ -71,14 +71,14 @@ export default function OriginalHero() {
   return (
     <section 
       id="home" 
-      className="pt-32 pb-24 hero-section bg-gradient-to-br from-[#1E3A8A] via-[#60A5FA]/20 to-[#1E3A8A]/80 relative overflow-hidden"
+      className="pt-32 pb-24 hero-section bg-white relative overflow-hidden"
       aria-label="ROLLINSX Introduction"
     >
       {/* Background Pattern */}
       <div 
         className="absolute inset-0 opacity-5" 
         style={{
-          backgroundImage: "url('data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h10v10H0zm10 20h10v10H10zM0 40h10v10H0zm30-20h10v10H30zm20-20h10v10H50z' fill='%233B82F6' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E')", 
+          backgroundImage: "url('data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h10v10H0zm10 20h10v10H10zM0 40h10v10H0zm30-20h10v10H30zm20-20h10v10H50z' fill='%230066cc' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E')", 
           backgroundSize: "60px 60px", 
           backgroundPosition: "center"
         }}
@@ -86,36 +86,36 @@ export default function OriginalHero() {
       />
       
       {/* Subtle overlay gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#1E3A8A]/10 z-0"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-white/80 to-white z-0"></div>
       
-      {/* Cyan accent line at top */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#3B82F6] via-[#F3F4F6] to-[#3B82F6]"></div>
+      {/* Blue accent line at top */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#0066cc] via-[#f8f9fa] to-[#0066cc]"></div>
       
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid md:grid-cols-2 gap-16 items-center">
-          <div className="text-white">
+          <div className="text-gray-900">
             <motion.div 
-              className="inline-block mb-4 px-3 py-1 bg-[#3B82F6]/10 border border-[#3B82F6]/20 rounded-full"
+              className="inline-block mb-4 px-3 py-1 bg-[#0066cc]/10 border border-[#0066cc]/20 rounded-full"
               variants={fadeInUp}
               initial="hidden"
               animate="visible"
               custom={0}
             >
-              <span className="text-[#3B82F6] text-sm font-medium tracking-wider uppercase font-inter">Premier AI Education Platform</span>
+              <span className="text-[#0066cc] text-sm font-medium tracking-wider uppercase font-inter">Premier AI Education Platform</span>
             </motion.div>
             
             <motion.h1 
-              className="text-5xl lg:text-6xl font-bold font-poppins leading-tight text-white tracking-tight"
+              className="text-5xl lg:text-6xl font-bold font-poppins leading-tight text-gray-900 tracking-tight"
               variants={fadeInUp}
               initial="hidden"
               animate="visible"
               custom={1}
             >
-              <span className="text-[#3B82F6]">AI Courses</span> & Digital Tools for Modern Creators
+              <span className="text-[#0066cc]">AI Courses</span> & Digital Tools for Modern Creators
             </motion.h1>
             
             <motion.p 
-              className="mt-8 text-xl text-light-gray leading-relaxed font-lato"
+              className="mt-8 text-xl text-gray-700 leading-relaxed font-lato"
               variants={fadeInUp}
               initial="hidden"
               animate="visible"
@@ -125,7 +125,7 @@ export default function OriginalHero() {
             </motion.p>
             
             <motion.p 
-              className="mt-5 text-lg text-gray-200 leading-relaxed font-lato"
+              className="mt-5 text-lg text-gray-600 leading-relaxed font-lato"
               variants={fadeInUp}
               initial="hidden"
               animate="visible"
@@ -143,14 +143,14 @@ export default function OriginalHero() {
             >
               <Link 
                 href="/learnai" 
-                className="bg-[#3B82F6] hover:bg-[#3B82F6]/90 text-[#1E3A8A] font-bold py-4 px-8 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_5px_15px_rgba(59,130,246,0.35)] font-inter"
+                className="bg-[#0066cc] hover:bg-[#0055b3] text-white font-bold py-4 px-8 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_5px_15px_rgba(0,102,204,0.35)] font-inter"
                 aria-label="Browse AI courses and start learning"
               >
                 Learn AI Today
               </Link>
               <Link 
                 href="/subscriptionspage" 
-                className="bg-transparent hover:bg-white/10 text-white font-semibold py-4 px-8 rounded-lg border border-[#3B82F6]/30 transition-all duration-300 hover:scale-105 hover:border-[#3B82F6]/60 font-inter"
+                className="bg-transparent hover:bg-gray-100 text-gray-900 font-semibold py-4 px-8 rounded-lg border border-gray-300 transition-all duration-300 hover:scale-105 hover:border-[#0066cc]/40 font-inter"
                 aria-label="View all subscription plans"
               >
                 View Plans
@@ -236,7 +236,7 @@ export default function OriginalHero() {
                       onClick={handleCubeClick}
                     >
                       {/* Main face - front */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#3B82F6] to-[#1E3A8A] shadow-[0_10px_30px_rgba(59,130,246,0.4)] flex items-center justify-center rounded-xl z-10"
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#0066cc] to-white shadow-[0_10px_30px_rgba(0,102,204,0.25)] flex items-center justify-center rounded-xl z-10"
                            style={{ transformStyle: "preserve-3d" }}>
                         <div className="relative flex items-center justify-center h-full w-full" 
                              style={{ transform: "translateZ(2px)" }}>
@@ -255,7 +255,7 @@ export default function OriginalHero() {
                       </div>
                       
                       {/* Right side */}
-                      <div className="absolute inset-0 w-full h-full bg-[#3B82F6]/80 rounded-xl flex items-center justify-center"
+                      <div className="absolute inset-0 w-full h-full bg-[#0066cc]/60 rounded-xl flex items-center justify-center"
                            style={{ 
                              transform: "rotateY(90deg) translateZ(24px)",
                              transformOrigin: "right"
@@ -263,18 +263,18 @@ export default function OriginalHero() {
                         {/* Right side ROLLINSX Logo */}
                         <div className="relative w-28 h-28 rotate-12 flex items-center justify-center">
                           {/* Background glow */}
-                          <div className="absolute inset-0 rounded-full bg-white/10 border border-white/40 shadow-[0_0_10px_rgba(255,255,255,0.4)]"></div>
+                          <div className="absolute inset-0 rounded-full bg-[#0066cc]/10 border border-[#0066cc]/30 shadow-[0_0_10px_rgba(0,102,204,0.2)]"></div>
                           
                           {/* Logo image */}
                           <Logo width={80} height={80} className="z-10" />
                           
                           {/* Accent dot */}
-                          <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-white/90 animate-pulse"></div>
+                          <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-[#0066cc]/90 animate-pulse"></div>
                         </div>
                       </div>
                       
                       {/* Left side */}
-                      <div className="absolute inset-0 w-full h-full bg-[#1E3A8A] rounded-xl flex items-center justify-center"
+                      <div className="absolute inset-0 w-full h-full bg-white rounded-xl flex items-center justify-center"
                            style={{ 
                              transform: "rotateY(-90deg) translateZ(24px)",
                              transformOrigin: "left"
