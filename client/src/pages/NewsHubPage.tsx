@@ -65,6 +65,24 @@ const NewsHubPage: React.FC = () => {
   // Make sure we have an array of posts
   const allPosts: ArticlePost[] = Array.isArray(postsData) ? postsData : [];
   
+  // Force query refresh when no articles are loaded but generation is happening
+  useEffect(() => {
+    if (allPosts.length === 0) {
+      // If we don't have any articles yet, refresh more frequently
+      const interval = setInterval(() => {
+        console.log('Checking for new articles...');
+        if (window.location.pathname.includes('/news')) {
+          // Only refresh if we're still on the news page
+          window.location.reload();
+        } else {
+          clearInterval(interval);
+        }
+      }, 10000); // Check every 10 seconds
+      
+      return () => clearInterval(interval);
+    }
+  }, [allPosts.length]);
+  
   useEffect(() => {
     if (postsData) {
       console.log('Posts data:', postsData);
@@ -389,22 +407,50 @@ const NewsHubPage: React.FC = () => {
         </div>
       ) : filteredPosts.length === 0 ? (
         <div className="text-center py-16 bg-blue-50 rounded-lg border border-blue-100">
-          <h3 className="text-xl font-medium mb-2 text-blue-600">No articles found</h3>
-          <p className="text-muted-foreground mb-4">
-            {searchQuery ? 
-              `We couldn't find any articles matching "${searchQuery}".` : 
-              "No articles match the selected filters."
-            }
-          </p>
-          <Button 
-            onClick={() => {
-              setSearchQuery('');
-              setActiveTab('all');
-            }}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            Clear Filters
-          </Button>
+          {allPosts.length === 0 ? (
+            // No articles are loaded yet but they're being generated
+            <div className="flex flex-col items-center">
+              <div className="relative w-16 h-16 mb-6">
+                <div className="absolute inset-0 bg-blue-200 rounded-full animate-ping opacity-75"></div>
+                <div className="relative bg-blue-100 rounded-full p-4">
+                  <svg className="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+              </div>
+              <h3 className="text-2xl font-medium mb-3 text-blue-600">Generating Articles</h3>
+              <p className="text-muted-foreground mb-4 max-w-lg">
+                RXAI is currently generating professional-quality AI articles. This process takes a few minutes as we create comprehensive, well-researched content.
+              </p>
+              <div className="w-full max-w-md mx-auto bg-white rounded-full h-2.5 mb-6 overflow-hidden">
+                <div className="bg-blue-600 h-2.5 rounded-full animate-progress"></div>
+              </div>
+              <p className="text-sm text-blue-600">
+                Your articles will automatically appear once they are ready. The page will refresh automatically.
+              </p>
+            </div>
+          ) : (
+            // No articles match the filters
+            <div>
+              <h3 className="text-xl font-medium mb-2 text-blue-600">No articles found</h3>
+              <p className="text-muted-foreground mb-4">
+                {searchQuery ? 
+                  `We couldn't find any articles matching "${searchQuery}".` : 
+                  "No articles match the selected filters."
+                }
+              </p>
+              <Button 
+                onClick={() => {
+                  setSearchQuery('');
+                  setActiveTab('all');
+                }}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                Clear Filters
+              </Button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="space-y-12">
@@ -419,18 +465,14 @@ const NewsHubPage: React.FC = () => {
               </h2>
               
               <div className="grid grid-cols-1 gap-8">
-                {filteredPosts
-                  .filter(post => post.featuredPost)
-                  .slice(0, 1)
-                  .map(post => (
-                    <ArticleCard key={post.id} post={post} featured={true} />
-                  ))}
-                  
-                {filteredPosts.filter(post => post.featuredPost).length === 0 && (
-                  // If no featured posts, use the most recent post
-                  filteredPosts.slice(0, 1).map(post => (
-                    <ArticleCard key={post.id} post={post} featured={true} />
-                  ))
+                {/* Show a featured article if at least one exists */}
+                {filteredPosts.length > 0 && (
+                  <ArticleCard 
+                    key={filteredPosts[0].id} 
+                    post={filteredPosts.find(post => post.featuredPost) || filteredPosts[0]} 
+                    featured={true} 
+                    className="scale-in"
+                  />
                 )}
               </div>
             </section>
