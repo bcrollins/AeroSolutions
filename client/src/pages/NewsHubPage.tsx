@@ -14,6 +14,7 @@ import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import ArticleReactionBar from '@/components/articles/ArticleReactionBar';
 import AIArticleInsights from '@/components/articles/AIArticleInsights';
+import ArticleGenerationProgress from '@/components/ui/ArticleGenerationProgress';
 import { useToast } from "@/hooks/use-toast";
 
 // Add custom keyframes animations
@@ -497,19 +498,28 @@ const NewsHubPage: React.FC = () => {
         <meta name="description" content="Stay up to date with the latest AI technology news, research breakthroughs, and industry insights." />
       </Helmet>
       
-      <div className="mb-10">
-        <h1 className="text-3xl font-bold mb-2 text-gray-900 dark:text-gray-50 group">
-          News Hub
-          <div className="relative inline-flex ml-2">
-            <span className="absolute -right-1 -top-1 flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/40 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
-            </span>
-          </div>
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 max-w-3xl">
-          Stay up to date with the latest AI technology news, research breakthroughs, and industry insights.
-        </p>
+      {/* Hero section with our custom SVG */}
+      <div className="mb-10 relative rounded-xl overflow-hidden shadow-md">
+        <img 
+          src="/img/news-hero.svg" 
+          alt="AI News Hub"
+          className="w-full h-auto object-cover"
+        />
+        
+        <div className="absolute inset-0 flex flex-col justify-center items-start px-8 md:px-16">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 drop-shadow-lg">
+            AI News Hub
+            <div className="relative inline-flex ml-3">
+              <span className="absolute -right-1 -top-1 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white/60 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+              </span>
+            </div>
+          </h1>
+          <p className="text-xl text-white/90 max-w-xl drop-shadow-md">
+            Stay up to date with the latest AI technology news, research breakthroughs, and industry insights.
+          </p>
+        </div>
       </div>
       
       {/* Floating Quick Action Buttons */}
