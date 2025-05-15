@@ -1,5 +1,5 @@
 import React, { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { useLocation, useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 import { Command as CommandPrimitive } from 'cmdk';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -85,8 +85,7 @@ export function CommandPaletteProvider({
 }: CommandPaletteProviderProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [commands, setCommands] = useState<CommandAction[]>(defaultCommands);
-  const [, navigate] = useNavigate();
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
 
   // Effect to handle keyboard shortcut
   useEffect(() => {
@@ -113,7 +112,7 @@ export function CommandPaletteProvider({
         section: 'navigation',
         keywords: ['home', 'main', 'start', 'landing'],
         action: () => {
-          navigate('/');
+          setLocation('/');
           setIsOpen(false);
         },
       },
@@ -125,7 +124,7 @@ export function CommandPaletteProvider({
         section: 'navigation',
         keywords: ['dashboard', 'stats', 'overview', 'analytics'],
         action: () => {
-          navigate('/dashboard');
+          setLocation('/dashboard');
           setIsOpen(false);
         },
       },
@@ -137,7 +136,7 @@ export function CommandPaletteProvider({
         section: 'navigation',
         keywords: ['courses', 'classes', 'learning', 'catalog'],
         action: () => {
-          navigate('/courses');
+          setLocation('/courses');
           setIsOpen(false);
         },
       },
@@ -149,7 +148,7 @@ export function CommandPaletteProvider({
         section: 'navigation',
         keywords: ['articles', 'blog', 'resources', 'news', 'read'],
         action: () => {
-          navigate('/articles');
+          setLocation('/articles');
           setIsOpen(false);
         },
       },
@@ -161,7 +160,7 @@ export function CommandPaletteProvider({
         section: 'navigation',
         keywords: ['community', 'forum', 'chat', 'discuss', 'questions'],
         action: () => {
-          navigate('/community');
+          setLocation('/community');
           setIsOpen(false);
         },
       },
@@ -176,7 +175,7 @@ export function CommandPaletteProvider({
         section: 'courses',
         keywords: ['my courses', 'enrolled', 'learning', 'progress'],
         action: () => {
-          navigate('/dashboard/courses');
+          setLocation('/dashboard/courses');
           setIsOpen(false);
         },
       },
@@ -188,7 +187,7 @@ export function CommandPaletteProvider({
         keywords: ['continue', 'resume', 'last', 'course'],
         action: () => {
           // This would typically navigate to the last accessed course
-          navigate('/dashboard/courses/continue');
+          setLocation('/dashboard/courses/continue');
           setIsOpen(false);
         },
       },
@@ -199,7 +198,7 @@ export function CommandPaletteProvider({
         section: 'courses',
         keywords: ['ai', 'fundamentals', 'basics', 'introduction'],
         action: () => {
-          navigate('/courses/ai-fundamentals');
+          setLocation('/courses/ai-fundamentals');
           setIsOpen(false);
         },
       },
@@ -210,7 +209,7 @@ export function CommandPaletteProvider({
         section: 'courses',
         keywords: ['certificates', 'achievements', 'completion', 'awards'],
         action: () => {
-          navigate('/dashboard/certificates');
+          setLocation('/dashboard/certificates');
           setIsOpen(false);
         },
       },
@@ -238,7 +237,7 @@ export function CommandPaletteProvider({
         section: 'tools',
         keywords: ['notes', 'annotations', 'save', 'highlights'],
         action: () => {
-          navigate('/dashboard/notes');
+          setLocation('/dashboard/notes');
           setIsOpen(false);
         },
       },
@@ -249,7 +248,7 @@ export function CommandPaletteProvider({
         section: 'tools',
         keywords: ['calendar', 'schedule', 'events', 'dates'],
         action: () => {
-          navigate('/dashboard/calendar');
+          setLocation('/dashboard/calendar');
           setIsOpen(false);
         },
       },
@@ -264,7 +263,7 @@ export function CommandPaletteProvider({
         section: 'account',
         keywords: ['profile', 'account', 'me', 'personal'],
         action: () => {
-          navigate('/dashboard/profile');
+          setLocation('/dashboard/profile');
           setIsOpen(false);
         },
       },
@@ -275,7 +274,7 @@ export function CommandPaletteProvider({
         section: 'account',
         keywords: ['subscription', 'billing', 'plan', 'payment'],
         action: () => {
-          navigate('/dashboard/subscription');
+          setLocation('/dashboard/subscription');
           setIsOpen(false);
         },
       },
@@ -287,7 +286,7 @@ export function CommandPaletteProvider({
         section: 'account',
         keywords: ['settings', 'preferences', 'options', 'config'],
         action: () => {
-          navigate('/settings');
+          setLocation('/settings');
           setIsOpen(false);
         },
       },
@@ -314,7 +313,7 @@ export function CommandPaletteProvider({
         section: 'help',
         keywords: ['help', 'support', 'assistance', 'docs'],
         action: () => {
-          navigate('/help');
+          setLocation('/help');
           setIsOpen(false);
         },
       },
@@ -325,7 +324,7 @@ export function CommandPaletteProvider({
         section: 'help',
         keywords: ['contact', 'support', 'assistance', 'ticket'],
         action: () => {
-          navigate('/support');
+          setLocation('/support');
           setIsOpen(false);
         },
       },
@@ -349,7 +348,7 @@ export function CommandPaletteProvider({
         section: 'help',
         keywords: ['faq', 'questions', 'answers', 'common'],
         action: () => {
-          navigate('/faq');
+          setLocation('/faq');
           setIsOpen(false);
         },
       },
@@ -363,7 +362,7 @@ export function CommandPaletteProvider({
       ...accountCommands,
       ...helpCommands
     ]);
-  }, [navigate, location]);
+  }, [setLocation, location]);
 
   // Register and unregister custom commands
   const registerCommand = (command: CommandAction) => {
