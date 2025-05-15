@@ -1,0 +1,36 @@
+Create a landing page for AeroLink, an advanced aviation learning platform for professional pilots, student pilots, aviation enthusiasts, flight schools, and aviation businesses. The page must be the most dynamic, interactive, visually appealing, and professional landing page ever designed, with a clean, minimalistic, and dynamic Apple-inspired theme optimized for the best user interface and user experience. It should serve as the entry point to AeroLink’s ecosystem, which combines flight planning, social networking, and educational resources, and include a clear link to the main platform (to be developed later).
+
+Platform Context: AeroLink offers interactive flight planning with real-time weather and terrain-aware routes, a social network with aviation-focused feeds and pilot profiles, and educational resources like structured courses and an AI instructor named Orville. The brand uses a modern, minimalist wing logo, a primary Aero blue color (#4995FD) for the logo and key elements, with accent colors teal (#14B8A6) for innovation and amber (#F59E0B) for energy, and clean sans-serif typography (similar to the current platform’s font, likely Inter or Roboto). Its tagline is “Elevate Your Aviation Journey,” with a professional yet approachable voice targeting North American users initially. The landing page should feel like a natural extension of the current platform’s clean, minimalist design while being more visually striking and conversion-focused.
+
+Landing Page Requirements:
+
+Design a full-screen hero section with an animated aviation-themed background (e.g., a subtle flying plane or drifting clouds against a sky backdrop) and the tagline “Elevate Your Aviation Journey” animating in with a typewriter effect. Use the Aero blue (#4995FD) for the tagline and primary CTAs. Include a large, prominent “Sign up” button (styled in #4995FD with white text) and a secondary “Learn More” button (styled in white with a #4995FD border), ensuring a clear CTA hierarchy.
+Create a responsive, mobile-first layout with smooth scrolling, parallax effects on the hero and feature sections, and micro-interactions (e.g., hover animations on buttons and cards, subtle scaling effects) for an engaging experience across devices.
+Use the Aero blue (#4995FD) as the primary color for key elements (e.g., buttons, headings, links), paired with teal (#14B8A6) and amber (#F59E0B) accents, a white background, and subtle gradients for depth, maintaining a clean, minimalist aesthetic with ample white space.
+Include a sticky navigation bar with the AeroLink wing logo (in #4995FD) and links to “Home,” “Features,” “Testimonials,” “Pricing,” and “Contact,” styled with a minimalist design, subtle shadow, and Aero blue hover effects.
+Add a feature section with interactive cards showcasing AeroLink’s core offerings: flight planning (teaser of an interactive map with a plane icon), social networking (mock social feed with a sample post), and education (preview of Orville AI or a course module). Cards should have hover-to-reveal details and use aviation-themed icons (e.g., minimalist plane, chat bubble, book) styled in #4995FD.
+Incorporate a gamification teaser, such as animated achievement badges (e.g., “First Flight Logged” badge in amber #F59E0B), to hint at user progression.
+Include a testimonial section with quotes from pilots and flight schools, styled as sleek cards with a subtle Aero blue border, animated transitions, and trust signals (e.g., “Trusted by 1,000+ Pilots” in #4995FD).
+Add an email capture form with a single field (email) to collect leads, styled with Aero blue accents, client-side validation, and a “Join the Journey” CTA button in #4995FD.
+Create a footer with quick links (e.g., “Features,” “Pricing,” “Contact”), social media icons, and the AeroLink wing logo in #4995FD, maintaining the minimalist aesthetic.
+Ensure the page is SEO-optimized with meta tags (e.g., title: “AeroLink: Elevate Your Aviation Journey”), schema markup for organization and testimonials, and a custom favicon/touch icon featuring the wing logo in #4995FD.
+Implement accessibility features (e.g., ARIA labels, keyboard navigation, high-contrast text) to meet WCAG 2.1 standards.
+Optimize for performance with lazy-loaded aviation images (e.g., planes, skies) in WebP format, a page load time under 2 seconds, and a preloader animation featuring the AeroLink wing logo in #4995FD.
+Support Progressive Web App (PWA) capabilities for offline access and add-to-home-screen prompts, ensuring usability for pilots in low-connectivity scenarios.
+Include a dark mode toggle (switching to a dark background with #4995FD accents) and optional subtle sound effects for interactions (e.g., a soft “click” on button hover, with a toggle to disable).
+Add an exit-intent popup offering a “Join Now for Free” incentive, styled in Aero blue with a plane icon, to retain users and drive sign-ups.
+Create a custom 404 page with an aviation theme (e.g., “Lost in the Skies? Fly Back Home” with a plane graphic in #4995FD).
+Integrate high-quality aviation imagery (e.g., planes taking off, clear skies) and subtle iconography (e.g., minimalist wings, compasses) throughout, styled in #4995FD or grayscale.
+Include animated counters for stats (e.g., “15,000+ Flights Planned” in #4995FD) and an interactive timeline showcasing AeroLink’s ecosystem (e.g., “Plan Flights → Connect with Pilots → Learn with Orville”).
+Add a cookie consent popup for GDPR compliance and privacy-focused analytics setup to track user engagement.
+Ensure the design supports A/B testing for CTAs (e.g., “Sign up” button variations) and localized content for future expansion (e.g., Europe, Asia).
+Link to the main AeroLink platform (placeholder URL: /platform) in the hero (“Sign up”), features, and footer sections, styled as prominent Aero blue CTAs.
+Technical Requirements:
+
+Use React with TypeScript and TailwindCSS for the frontend, ensuring the design aligns with the current platform’s clean, minimalist style.
+Set up a PostgreSQL database for storing email signups, using Drizzle ORM for schema management.
+Configure a .env file with a PostgreSQL connection string (e.g., DATABASE_URL=postgresql://user:password@localhost:5432/aerolink).
+Ensure the server runs on host 0.0.0.0 and port 8080, with a minimal app testable via a simple route (e.g., / returns “AeroLink Landing Page Live”).
+Verify connectivity to PostgreSQL using a library like pgx (Node.js) or psycopg2 (Python), with a table for email signups (columns: id, email, created_at).
+Optimize for browser compatibility (Chrome, Safari, Firefox, Edge) and include a .replit file with the correct run command (e.g., run = "node index.js").
+Deliver a landing page that feels premium, intuitive, and aviation-focused, positioning AeroLink as the ultimate all-in-one platform for aviation professionals and enthusiasts, while driving sign-ups through a conversion-optimized design.

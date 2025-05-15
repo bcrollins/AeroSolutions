@@ -1,212 +1,209 @@
 import React, { useState } from 'react';
-import { ThumbsUp, ThumbsDown, Bookmark, Share2, MessageSquare } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Bookmark, Share2, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useSoundEffects } from '@/hooks/use-sound-effects';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
+import { useSoundEffects } from '@/hooks/use-sound-effects';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface ArticleReactionBarProps {
-  articleId: number;
+  articleId: number | string;
+  compact?: boolean;
   className?: string;
-  variant?: 'compact' | 'full';
 }
 
 const ArticleReactionBar: React.FC<ArticleReactionBarProps> = ({ 
   articleId, 
-  className = '',
-  variant = 'full'
+  compact = false,
+  className = '' 
 }) => {
-  // State for tracking user reactions
+  const { toast } = useToast();
+  const { playSound } = useSoundEffects();
+  const { getCurrentTheme } = useTheme();
+  const isDarkMode = getCurrentTheme() === 'dark';
+  
+  // Local state for reactions
   const [liked, setLiked] = useState(false);
   const [disliked, setDisliked] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [likeCount, setLikeCount] = useState(Math.floor(Math.random() * 50) + 5);
   
-  // Sound effects
-  const { playSound } = useSoundEffects();
-  const { toast } = useToast();
-  
-  // Handle like click with debounce
+  // Handle like action
   const handleLike = () => {
-    if (disliked) {
-      setDisliked(false);
+    if (disliked) setDisliked(false);
+    setLiked(!liked);
+    playSound('tap');
+    
+    // API call would go here
+    // fetch('/api/articles/like', { method: 'POST', body: JSON.stringify({ articleId, like: !liked }) })
+    
+    if (!liked) {
+      toast({
+        title: "Article liked",
+        description: "Thank you for your feedback!",
+        variant: "default",
+      });
     }
-    
-    setLiked(prev => !prev);
-    setLikeCount(prev => liked ? prev - 1 : prev + 1);
-    playSound('click');
-    
-    // Here we would also call the API to update the reaction in the database
-    // apiRequest('POST', `/api/articles/${articleId}/react`, { reaction: liked ? 'none' : 'like' });
   };
   
+  // Handle dislike action
   const handleDislike = () => {
-    if (liked) {
-      setLiked(false);
-      setLikeCount(prev => prev - 1);
+    if (liked) setLiked(false);
+    setDisliked(!disliked);
+    playSound('tap');
+    
+    // API call would go here
+    // fetch('/api/articles/dislike', { method: 'POST', body: JSON.stringify({ articleId, dislike: !disliked }) })
+    
+    if (!disliked) {
+      toast({
+        title: "Article disliked",
+        description: "Thank you for your feedback!",
+        variant: "default",
+      });
     }
-    
-    setDisliked(prev => !prev);
-    playSound('click');
-    
-    // Here we would also call the API to update the reaction in the database
-    // apiRequest('POST', `/api/articles/${articleId}/react`, { reaction: disliked ? 'none' : 'dislike' });
   };
   
+  // Handle save action
   const handleSave = () => {
-    setSaved(prev => !prev);
-    playSound('click');
+    setSaved(!saved);
+    playSound(saved ? 'click' : 'success');
+    
+    // API call would go here
+    // fetch('/api/articles/save', { method: 'POST', body: JSON.stringify({ articleId, save: !saved }) })
     
     toast({
-      title: saved ? 'Article removed from bookmarks' : 'Article saved to bookmarks',
-      description: saved ? 'You can add it again anytime.' : 'You can find it in your saved articles.',
-      variant: saved ? 'default' : 'default',
+      title: saved ? "Article removed from saved items" : "Article saved",
+      description: saved ? "The article has been removed from your saved items." : "You can find this article in your saved items.",
+      variant: "default",
     });
-    
-    // Here we would also call the API to update the bookmark in the database
-    // apiRequest('POST', `/api/articles/${articleId}/bookmark`, { bookmarked: !saved });
   };
   
+  // Handle share action
   const handleShare = () => {
-    playSound('click');
+    playSound('notification');
     
-    // Copy article URL to clipboard
-    const articleUrl = `${window.location.origin}/articles/${articleId}`;
-    navigator.clipboard.writeText(articleUrl);
-    
-    toast({
-      title: 'Link copied to clipboard',
-      description: 'You can now share this article with others.',
-    });
+    // Check if Web Share API is available
+    if (navigator.share) {
+      navigator.share({
+        title: document.title,
+        url: window.location.href,
+      }).then(() => {
+        console.log('Thanks for sharing!');
+      }).catch(console.error);
+    } else {
+      // Fallback: copy link to clipboard
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        toast({
+          title: "Link copied",
+          description: "Article link copied to clipboard",
+          variant: "default",
+        });
+      }).catch(err => {
+        console.error('Could not copy text: ', err);
+        toast({
+          title: "Sharing failed",
+          description: "Could not copy link to clipboard",
+          variant: "destructive",
+        });
+      });
+    }
   };
-  
-  const handleComment = () => {
-    playSound('click');
+
+  // Apply different styles based on compact mode
+  const containerClasses = compact 
+    ? `flex items-center space-x-2 ${className}`
+    : `flex items-center justify-center space-x-4 px-4 py-2 ${className}`;
     
-    // This would typically open a comment form or navigate to comments section
-    toast({
-      title: 'Comments feature',
-      description: 'Comments will be available in the next update!',
-      variant: 'default',
-    });
-  };
+  const buttonSize = compact ? "sm" : "default";
+  const iconSize = compact ? 16 : 20;
   
-  // For compact variant, show only the essentials
-  if (variant === 'compact') {
-    return (
-      <div className={`flex items-center gap-2 text-gray-400 ${className}`}>
-        <button 
-          onClick={handleLike}
-          className={`p-1 rounded-full transition-colors ${liked ? 'text-blue-500' : 'hover:text-gray-600'}`}
-          aria-label="Like article"
-        >
-          <ThumbsUp className="h-3.5 w-3.5" />
-        </button>
-        
-        <span className="text-xs font-medium text-gray-500">{likeCount}</span>
-        
-        <button 
-          onClick={handleSave}
-          className={`p-1 rounded-full transition-colors ${saved ? 'text-blue-500' : 'hover:text-gray-600'}`}
-          aria-label="Save article"
-        >
-          <Bookmark className="h-3.5 w-3.5" />
-        </button>
-      </div>
-    );
-  }
-  
-  // Full variant with all reaction options
   return (
-    <TooltipProvider delayDuration={300}>
-      <div className={`flex items-center gap-3 ${className}`}>
-        <div className="flex items-center">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <motion.button 
+    <TooltipProvider>
+      <div className={containerClasses}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <motion.div whileTap={{ scale: 0.9 }}>
+              <Button 
+                variant="ghost" 
+                size={buttonSize}
+                className={`rounded-full group ${liked ? 'text-blue-500 dark:text-blue-400' : ''}`}
                 onClick={handleLike}
-                className={`p-1.5 rounded-full transition-colors ${liked ? 'text-blue-500' : 'text-gray-400 hover:text-gray-600'}`}
-                whileTap={{ scale: 0.9 }}
                 aria-label="Like article"
               >
-                <ThumbsUp className="h-4 w-4" />
-              </motion.button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-xs bg-gray-800 text-white">
-              {liked ? 'Unlike' : 'Like'}
-            </TooltipContent>
-          </Tooltip>
-          
-          <span className="text-xs font-medium text-gray-500 mr-2">{likeCount}</span>
-          
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <motion.button 
+                <ThumbsUp size={iconSize} className={`${liked ? 'fill-blue-500 dark:fill-blue-400' : 'group-hover:text-blue-500 dark:group-hover:text-blue-400'}`} />
+                {!compact && <span className="ml-2">Like</span>}
+              </Button>
+            </motion.div>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="bg-gray-800 text-white dark:bg-gray-700">
+            <p>Like this article</p>
+          </TooltipContent>
+        </Tooltip>
+        
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <motion.div whileTap={{ scale: 0.9 }}>
+              <Button 
+                variant="ghost" 
+                size={buttonSize}
+                className={`rounded-full group ${disliked ? 'text-red-500 dark:text-red-400' : ''}`}
                 onClick={handleDislike}
-                className={`p-1.5 rounded-full transition-colors ${disliked ? 'text-red-500' : 'text-gray-400 hover:text-gray-600'}`}
-                whileTap={{ scale: 0.9 }}
                 aria-label="Dislike article"
               >
-                <ThumbsDown className="h-4 w-4" />
-              </motion.button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-xs bg-gray-800 text-white">
-              {disliked ? 'Remove dislike' : 'Dislike'}
-            </TooltipContent>
-          </Tooltip>
-        </div>
+                <ThumbsDown size={iconSize} className={`${disliked ? 'fill-red-500 dark:fill-red-400' : 'group-hover:text-red-500 dark:group-hover:text-red-400'}`} />
+                {!compact && <span className="ml-2">Dislike</span>}
+              </Button>
+            </motion.div>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="bg-gray-800 text-white dark:bg-gray-700">
+            <p>Dislike this article</p>
+          </TooltipContent>
+        </Tooltip>
         
-        <div className="flex-1" />
-        
-        <div className="flex items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <motion.button 
-                onClick={handleComment}
-                className="p-1.5 text-gray-400 hover:text-gray-600 rounded-full transition-colors"
-                whileTap={{ scale: 0.9 }}
-                aria-label="Comment on article"
-              >
-                <MessageSquare className="h-4 w-4" />
-              </motion.button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-xs bg-gray-800 text-white">
-              Comment
-            </TooltipContent>
-          </Tooltip>
-          
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <motion.button 
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <motion.div whileTap={{ scale: 0.9 }}>
+              <Button 
+                variant="ghost" 
+                size={buttonSize}
+                className={`rounded-full group ${saved ? 'text-amber-500 dark:text-amber-400' : ''}`}
                 onClick={handleSave}
-                className={`p-1.5 rounded-full transition-colors ${saved ? 'text-blue-500' : 'text-gray-400 hover:text-gray-600'}`}
-                whileTap={{ scale: 0.9 }}
-                aria-label="Save article"
+                aria-label={saved ? "Unsave article" : "Save article"}
               >
-                <Bookmark className="h-4 w-4" />
-              </motion.button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-xs bg-gray-800 text-white">
-              {saved ? 'Unsave' : 'Save'}
-            </TooltipContent>
-          </Tooltip>
-          
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <motion.button 
+                {saved ? (
+                  <Check size={iconSize} className="text-amber-500 dark:text-amber-400" />
+                ) : (
+                  <Bookmark size={iconSize} className="group-hover:text-amber-500 dark:group-hover:text-amber-400" />
+                )}
+                {!compact && <span className="ml-2">{saved ? "Saved" : "Save"}</span>}
+              </Button>
+            </motion.div>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="bg-gray-800 text-white dark:bg-gray-700">
+            <p>{saved ? "Remove from saved" : "Save for later"}</p>
+          </TooltipContent>
+        </Tooltip>
+        
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <motion.div whileTap={{ scale: 0.9 }}>
+              <Button 
+                variant="ghost" 
+                size={buttonSize}
+                className="rounded-full group"
                 onClick={handleShare}
-                className="p-1.5 text-gray-400 hover:text-gray-600 rounded-full transition-colors"
-                whileTap={{ scale: 0.9 }}
                 aria-label="Share article"
               >
-                <Share2 className="h-4 w-4" />
-              </motion.button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-xs bg-gray-800 text-white">
-              Share
-            </TooltipContent>
-          </Tooltip>
-        </div>
+                <Share2 size={iconSize} className="group-hover:text-green-500 dark:group-hover:text-green-400" />
+                {!compact && <span className="ml-2">Share</span>}
+              </Button>
+            </motion.div>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="bg-gray-800 text-white dark:bg-gray-700">
+            <p>Share this article</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
     </TooltipProvider>
   );
