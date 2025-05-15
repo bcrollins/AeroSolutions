@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, useAnimation, AnimatePresence } from 'framer-motion';
+import { motion, useAnimation, AnimatePresence, Variants } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -14,6 +14,24 @@ const slideUp = {
   hidden: { y: 20, opacity: 0 },
   visible: { y: 0, opacity: 1, transition: { duration: 0.4 } },
   exit: { y: -20, opacity: 0, transition: { duration: 0.3 } }
+};
+
+const slideInLeft: Variants = {
+  hidden: { x: -50, opacity: 0 },
+  visible: { x: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" } },
+  exit: { x: -50, opacity: 0, transition: { duration: 0.3 } }
+};
+
+const slideInRight: Variants = {
+  hidden: { x: 50, opacity: 0 },
+  visible: { x: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" } },
+  exit: { x: 50, opacity: 0, transition: { duration: 0.3 } }
+};
+
+const scaleIn: Variants = {
+  hidden: { scale: 0.8, opacity: 0 },
+  visible: { scale: 1, opacity: 1, transition: { duration: 0.4, ease: "easeOut" } },
+  exit: { scale: 0.8, opacity: 0, transition: { duration: 0.3 } }
 };
 
 /**
