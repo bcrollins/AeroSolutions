@@ -1,8 +1,17 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { CommandPalette } from './CommandPalette';
 import { useCommandPalette } from '@/hooks/use-command-palette';
-import { ScaleIn } from './MicroInteractions';
+import { ScaleIn, FadeIn } from './MicroInteractions';
 import { cn } from '@/lib/utils';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import {
   Search,
   Settings,
@@ -62,6 +71,7 @@ export const EnhancedCommandPalette: React.FC = () => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<CommandCategory | null>(null);
   const [recentCommands, setRecentCommands] = useState<Command[]>([]);
+  const [showKeyboardShortcutsModal, setShowKeyboardShortcutsModal] = useState(false);
   const commandsRef = useRef<Command[]>([]);
   
   // Simulated global commands (would be registered from various parts of the app)
@@ -181,7 +191,7 @@ export const EnhancedCommandPalette: React.FC = () => {
       description: 'See all available keyboard shortcuts',
       category: 'help',
       icon: <Keyboard size={18} />,
-      action: () => { /* Show keyboard shortcuts */ },
+      action: () => { setShowKeyboardShortcutsModal(true); },
       keywords: ['keyboard', 'shortcuts', 'hotkeys', 'keys'],
       shortcut: '?'
     },
@@ -288,7 +298,7 @@ export const EnhancedCommandPalette: React.FC = () => {
     setSelectedIndex(0);
   }, [searchTerm, selectedCategory]);
   
-  // Handle keyboard navigation
+  // Handle keyboard navigation within command palette
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (!isOpen) return;
     
@@ -316,10 +326,57 @@ export const EnhancedCommandPalette: React.FC = () => {
     }
   }, [isOpen, filteredCommands, selectedIndex, setIsOpen]);
   
+  // Handle global keyboard shortcuts to open command palette or execute commands
+  const handleGlobalKeyPress = useCallback((e: KeyboardEvent) => {
+    // Skip if inside input, textarea or other editable elements
+    if (
+      e.target instanceof HTMLInputElement ||
+      e.target instanceof HTMLTextAreaElement ||
+      (e.target as HTMLElement)?.isContentEditable
+    ) {
+      return;
+    }
+    
+    // Command Palette activation with Cmd/Ctrl+K
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      setIsOpen(true);
+      return;
+    }
+    
+    // Keyboard shortcut handling for shortcut keys
+    if (!isOpen && !e.metaKey && !e.ctrlKey) {
+      const pressedKey = e.key.toLowerCase();
+      
+      // Handle single-key shortcuts
+      if (pressedKey === '?') {
+        e.preventDefault();
+        const helpCommand = commandsRef.current.find(cmd => cmd.id === 'keyboard-shortcuts');
+        if (helpCommand) executeCommand(helpCommand);
+        return;
+      }
+      
+      // Check all command shortcuts
+      for (const command of commandsRef.current) {
+        if (command.shortcut && command.shortcut.toLowerCase() === pressedKey) {
+          e.preventDefault();
+          executeCommand(command);
+          return;
+        }
+      }
+    }
+  }, [isOpen, setIsOpen]);
+  
   useEffect(() => {
+    // Add both event listeners for command palette navigation and global shortcuts
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleKeyDown]);
+    window.addEventListener('keydown', handleGlobalKeyPress);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keydown', handleGlobalKeyPress);
+    };
+  }, [handleKeyDown, handleGlobalKeyPress]);
   
   // Execute a command and add to recent list
   const executeCommand = (command: Command) => {
@@ -375,14 +432,104 @@ export const EnhancedCommandPalette: React.FC = () => {
     {} as Record<CommandCategory, Command[]>
   );
   
+  // Group commands by category for the keyboard shortcuts modal
+  const groupedCommands = commandsRef.current.reduce<Record<CommandCategory, Command[]>>(
+    (acc, command) => {
+      if (!acc[command.category]) {
+        acc[command.category] = [];
+      }
+      if (command.shortcut) {
+        acc[command.category].push(command);
+      }
+      return acc;
+    },
+    {} as Record<CommandCategory, Command[]>
+  );
+  
+  // Format shortcut key for display
+  const formatShortcut = (shortcut: string) => {
+    return shortcut.split(' ').map(part => (
+      <kbd key={part} className="px-2 py-1 mx-0.5 text-xs font-semibold bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700 shadow-sm">
+        {part}
+      </kbd>
+    ));
+  };
+
   return (
-    <CommandPalette
-      isOpen={isOpen}
-      setIsOpen={setIsOpen}
-      searchTerm={searchTerm}
-      setSearchTerm={setSearchTerm}
-      placeholder="Search commands, navigation, and more..."
-      extraContent={
+    <>
+      {/* Keyboard Shortcuts Modal */}
+      <Dialog open={showKeyboardShortcutsModal} onOpenChange={setShowKeyboardShortcutsModal}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl flex items-center">
+              <Keyboard className="mr-2" /> Keyboard Shortcuts
+            </DialogTitle>
+            <DialogDescription>
+              Use these keyboard shortcuts to navigate quickly through the RXAI platform
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {Object.entries(groupedCommands).map(([category, commands]) => (
+                <FadeIn key={category}>
+                  <div className="border rounded-lg overflow-hidden">
+                    <div className="bg-gray-50 dark:bg-gray-800 px-4 py-2 border-b">
+                      <h3 className="font-medium flex items-center">
+                        {getCategoryIcon(category as CommandCategory)}
+                        <span className="ml-2 capitalize">{category}</span>
+                      </h3>
+                    </div>
+                    <div className="divide-y">
+                      {commands.map(command => (
+                        <div key={command.id} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800">
+                          <div className="flex items-center">
+                            {command.icon && <span className="mr-2 text-gray-500">{command.icon}</span>}
+                            <div>
+                              <div>{command.title}</div>
+                              {command.description && (
+                                <div className="text-xs text-gray-500 mt-0.5">{command.description}</div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center">
+                            {command.shortcut && formatShortcut(command.shortcut)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </FadeIn>
+              ))}
+            </div>
+            
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mt-4">
+              <h3 className="font-medium mb-2 flex items-center">
+                <Lightbulb className="w-4 h-4 mr-2 text-blue-500" />
+                Pro Tip
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                Press <kbd className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-800 rounded border">Ctrl</kbd> + <kbd className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-800 rounded border">K</kbd> or <kbd className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-800 rounded border">⌘</kbd> + <kbd className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-800 rounded border">K</kbd> anytime to open the command palette.
+              </p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setShowKeyboardShortcutsModal(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Command Palette */}
+      <CommandPalette
+        isOpen={isOpen}
+        setIsOpen={setIsOpen}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        placeholder="Search commands, navigation, and more..."
+        extraContent={
         <div className="p-1 mt-2">
           {!searchTerm && !selectedCategory && recentCommands.length > 0 && (
             <div className="mb-4">
