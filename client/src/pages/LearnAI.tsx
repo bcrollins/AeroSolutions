@@ -1102,7 +1102,7 @@ const LearnAI: React.FC = () => {
                       <select 
                         value={location}
                         onChange={(e) => setLocation(e.target.value)}
-                        className="w-full bg-[#333] text-white border-[#444] rounded-md px-3 py-2 focus:border-[#007bff] focus:ring-[#007bff]"
+                        className="w-full bg-white text-gray-800 border-gray-200 rounded-md px-3 py-2 focus:border-[#007bff] focus:ring-[#007bff]"
                       >
                         <option value="us-average">US Average</option>
                         <option value="us-coast">US Coastal Cities</option>
@@ -1111,17 +1111,17 @@ const LearnAI: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="md:col-span-2 bg-[#1e1e1e] p-6 rounded-lg">
+                  <div className="md:col-span-2 bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
                     <div className="mb-6">
-                      <div className="text-sm text-gray-400 mb-1">Selected Career Path</div>
+                      <div className="text-sm text-gray-500 mb-1">Selected Career Path</div>
                       <h3 className="text-xl font-semibold text-[#007bff]">{currentCareer.role}</h3>
-                      <div className="text-sm text-gray-400 mt-2">Top Companies: {currentCareer.companies.join(', ')}</div>
-                      <div className="text-sm text-gray-400">Year-over-Year Demand Growth: <span className="text-green-400">+{currentCareer.demandGrowth}%</span></div>
+                      <div className="text-sm text-gray-600 mt-2">Top Companies: {currentCareer.companies.join(', ')}</div>
+                      <div className="text-sm text-gray-600">Year-over-Year Demand Growth: <span className="text-green-600">+{currentCareer.demandGrowth}%</span></div>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-8">
                       <div>
-                        <div className="text-sm text-gray-400 mb-2">Current Average Salary</div>
+                        <div className="text-sm text-gray-600 mb-2">Current Average Salary</div>
                         <div className="text-3xl font-bold">${calculatedSalaryBefore.toLocaleString()}</div>
                       </div>
                       <div>
@@ -1130,11 +1130,11 @@ const LearnAI: React.FC = () => {
                       </div>
                     </div>
                     
-                    <div className="mt-8 pt-4 border-t border-[#444]">
+                    <div className="mt-8 pt-4 border-t border-gray-200">
                       <div className="text-center">
-                        <div className="text-sm text-gray-400 mb-2">Potential Salary Increase</div>
-                        <div className="text-2xl font-bold text-green-400">+${(calculatedSalaryAfter - calculatedSalaryBefore).toLocaleString()} per year</div>
-                        <div className="text-sm text-gray-400 mt-2">
+                        <div className="text-sm text-gray-600 mb-2">Potential Salary Increase</div>
+                        <div className="text-2xl font-bold text-green-600">+${(calculatedSalaryAfter - calculatedSalaryBefore).toLocaleString()} per year</div>
+                        <div className="text-sm text-gray-600 mt-2">
                           That's a {Math.round((calculatedSalaryAfter - calculatedSalaryBefore) / calculatedSalaryBefore * 100)}% increase!
                         </div>
                       </div>
@@ -1966,7 +1966,7 @@ const LearnAI: React.FC = () => {
                           id="enrollment-experience"
                           value={enrollmentForm.experience}
                           onChange={(e) => updateEnrollmentForm('experience', e.target.value)}
-                          className="w-full bg-[#333] text-white border-[#444] rounded-md px-3 py-2 focus:border-[#007bff] focus:ring-[#007bff]"
+                          className="w-full bg-white text-gray-800 border-gray-200 rounded-md px-3 py-2 focus:border-[#007bff] focus:ring-[#007bff]"
                         >
                           <option value="">Select your experience level</option>
                           <option value="beginner">Beginner (No Programming Experience)</option>
