@@ -1,544 +1,594 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, useAnimation, AnimatePresence, Variants } from 'framer-motion';
-import { Check } from 'lucide-react';
+import React, { ReactNode, forwardRef } from 'react';
+import { motion, AnimatePresence, MotionProps, Variants } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
-// Common animation variants
-const fadeIn = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.3 } },
-  exit: { opacity: 0, transition: { duration: 0.2 } }
-};
-
-const slideUp = {
-  hidden: { y: 20, opacity: 0 },
-  visible: { y: 0, opacity: 1, transition: { duration: 0.4 } },
-  exit: { y: -20, opacity: 0, transition: { duration: 0.3 } }
-};
-
-const slideInLeft: Variants = {
-  hidden: { x: -50, opacity: 0 },
-  visible: { x: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" } },
-  exit: { x: -50, opacity: 0, transition: { duration: 0.3 } }
-};
-
-const slideInRight: Variants = {
-  hidden: { x: 50, opacity: 0 },
-  visible: { x: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" } },
-  exit: { x: 50, opacity: 0, transition: { duration: 0.3 } }
-};
-
-const scaleIn: Variants = {
-  hidden: { scale: 0.8, opacity: 0 },
-  visible: { scale: 1, opacity: 1, transition: { duration: 0.4, ease: "easeOut" } },
-  exit: { scale: 0.8, opacity: 0, transition: { duration: 0.3 } }
-};
-
-/**
- * ButtonPress - Adds a subtle press animation to buttons
- */
-export const ButtonPress: React.FC<React.ComponentProps<typeof motion.div>> = ({ 
-  children, 
-  className,
-  ...props 
-}) => {
-  return (
-    <motion.div
-      className={cn("inline-block", className)}
-      whileTap={{ scale: 0.97 }}
-      {...props}
-    >
-      {children}
-    </motion.div>
-  );
-};
-
-/**
- * HoverScale - Adds a subtle scale effect on hover
- */
-export const HoverScale: React.FC<React.ComponentProps<typeof motion.div> & { scale?: number }> = ({ 
-  children, 
-  className,
-  scale = 1.03,
-  ...props 
-}) => {
-  return (
-    <motion.div
-      className={cn("inline-block", className)}
-      whileHover={{ scale }}
-      transition={{ type: "spring", stiffness: 400, damping: 17 }}
-      {...props}
-    >
-      {children}
-    </motion.div>
-  );
-};
-
-/**
- * Float - Creates a subtle floating animation
- */
-export const Float: React.FC<React.ComponentProps<typeof motion.div> & { 
-  amplitude?: number;
+// Fade In animation
+interface FadeInProps extends MotionProps {
+  children: ReactNode;
+  className?: string;
+  delay?: number;
   duration?: number;
-}> = ({ 
-  children, 
-  className,
-  amplitude = 10,
-  duration = 4,
-  ...props 
-}) => {
-  return (
-    <motion.div
-      className={cn(className)}
-      animate={{ 
-        y: [0, -amplitude, 0], 
-      }}
-      transition={{ 
-        duration, 
-        repeat: Infinity,
-        ease: "easeInOut"
-      }}
-      {...props}
-    >
-      {children}
-    </motion.div>
-  );
-};
-
-/**
- * Pulse - Creates a pulse animation
- */
-export const Pulse: React.FC<React.ComponentProps<typeof motion.div>> = ({ 
-  children, 
-  className,
-  ...props 
-}) => {
-  return (
-    <motion.div
-      className={cn(className)}
-      animate={{ 
-        scale: [1, 1.05, 1],
-        opacity: [0.8, 1, 0.8]
-      }}
-      transition={{ 
-        duration: 2, 
-        repeat: Infinity,
-        ease: "easeInOut"
-      }}
-      {...props}
-    >
-      {children}
-    </motion.div>
-  );
-};
-
-/**
- * StaggerChildren - Parent component that staggers animations of children
- */
-export const StaggerChildren: React.FC<React.ComponentProps<typeof motion.div> & {
-  staggerDelay?: number;
-}> = ({ 
-  children, 
-  className,
-  staggerDelay = 0.1,
-  ...props 
-}) => {
-  return (
-    <motion.div
-      className={cn(className)}
-      initial="hidden"
-      animate="visible"
-      variants={{
-        visible: {
-          transition: {
-            staggerChildren: staggerDelay
-          }
-        }
-      }}
-      {...props}
-    >
-      {children}
-    </motion.div>
-  );
-};
-
-/**
- * StaggerItem - Child item to be used within StaggerChildren
- */
-export const StaggerItem: React.FC<React.ComponentProps<typeof motion.div>> = ({ 
-  children, 
-  className,
-  ...props 
-}) => {
-  return (
-    <motion.div
-      className={cn(className)}
-      variants={slideUp}
-      {...props}
-    >
-      {children}
-    </motion.div>
-  );
-};
-
-/**
- * RevealText - Reveals text one character at a time
- */
-export const RevealText: React.FC<{
-  text: string;
-  className?: string;
-  charDelay?: number;
+  direction?: 'up' | 'down' | 'left' | 'right' | 'none';
+  distance?: number;
+  once?: boolean;
   style?: React.CSSProperties;
-}> = ({ 
-  text, 
-  className,
-  charDelay = 0.05,
-  style
-}) => {
-  return (
-    <span className={cn(className)} style={style}>
-      <StaggerChildren staggerDelay={charDelay}>
-        {text.split('').map((char, index) => (
-          <motion.span
-            key={`${char}-${index}`}
-            variants={{
-              hidden: { opacity: 0, y: 5 },
-              visible: { opacity: 1, y: 0 }
-            }}
-            style={{ display: 'inline-block', whiteSpace: 'pre' }}
-          >
-            {char}
-          </motion.span>
-        ))}
-      </StaggerChildren>
-    </span>
-  );
-};
+}
 
-/**
- * Skeleton component for loading states
- */
-export const Skeleton: React.FC<{
-  className?: string;
-  width?: string | number;
-  height?: string | number;
-  circle?: boolean;
-  pulsate?: boolean;
-}> = ({ 
+export const FadeIn: React.FC<FadeInProps> = ({
+  children,
   className,
-  width,
-  height,
-  circle = false,
-  pulsate = true
+  delay = 0,
+  duration = 0.3,
+  direction = 'none',
+  distance = 20,
+  once = true,
+  style,
+  ...props
 }) => {
-  const style: React.CSSProperties = {
-    width,
-    height,
-    borderRadius: circle ? '50%' : '0.25rem',
+  const getDirectionOffset = () => {
+    switch (direction) {
+      case 'up':
+        return { y: distance };
+      case 'down':
+        return { y: -distance };
+      case 'left':
+        return { x: distance };
+      case 'right':
+        return { x: -distance };
+      default:
+        return {};
+    }
   };
 
   return (
-    <div 
-      className={cn(
-        "bg-neutral-200 dark:bg-neutral-800",
-        pulsate && "animate-pulse",
-        className
-      )} 
+    <motion.div
+      initial={{ opacity: 0, ...getDirectionOffset() }}
+      animate={{ opacity: 1, x: 0, y: 0 }}
+      exit={{ opacity: 0, ...getDirectionOffset() }}
+      transition={{ 
+        duration, 
+        delay,
+        ease: 'easeOut'
+      }}
+      viewport={{ once }}
+      className={className}
       style={style}
-    />
+      {...props}
+    >
+      {children}
+    </motion.div>
   );
 };
 
-/**
- * Animated checkmark component
- */
-export const Checkmark: React.FC<{
+// Scale In animation
+interface ScaleInProps extends MotionProps {
+  children: ReactNode;
   className?: string;
-  checked?: boolean;
-  size?: number;
-}> = ({ 
+  delay?: number;
+  duration?: number;
+  initialScale?: number;
+  once?: boolean;
+  style?: React.CSSProperties;
+}
+
+export const ScaleIn: React.FC<ScaleInProps> = ({
+  children,
   className,
-  checked = true,
-  size = 20
+  delay = 0,
+  duration = 0.3,
+  initialScale = 0.95,
+  once = true,
+  style,
+  ...props
 }) => {
   return (
-    <div className={cn("relative", className)}>
-      <AnimatePresence>
-        {checked && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0 }}
-            transition={{ type: "spring", stiffness: 400, damping: 10 }}
-            className="bg-primary rounded-full flex items-center justify-center"
-            style={{ width: size, height: size }}
-          >
-            <Check 
-              className="text-white" 
-              size={size * 0.6} 
-              strokeWidth={3} 
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <motion.div
+      initial={{ opacity: 0, scale: initialScale }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: initialScale }}
+      transition={{ 
+        duration, 
+        delay,
+        ease: [0.23, 1, 0.32, 1] // Ease out cubic
+      }}
+      viewport={{ once }}
+      className={className}
+      style={style}
+      {...props}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+// Button Press animation (for interactive elements)
+interface ButtonPressProps extends MotionProps {
+  children: ReactNode;
+  className?: string;
+  scale?: number;
+  style?: React.CSSProperties;
+  as?: React.ElementType;
+}
+
+export const ButtonPress = forwardRef<HTMLDivElement, ButtonPressProps>(({
+  children,
+  className,
+  scale = 0.97,
+  style,
+  as = motion.div,
+  ...props
+}, ref) => {
+  const Component = as as any;
+  
+  return (
+    <Component
+      ref={ref}
+      whileTap={{ scale }}
+      whileHover={{ scale: 1.02 }}
+      transition={{ 
+        duration: 0.15,
+        ease: 'easeInOut'
+      }}
+      className={className}
+      style={style}
+      {...props}
+    >
+      {children}
+    </Component>
+  );
+});
+
+ButtonPress.displayName = 'ButtonPress';
+
+// Hover Scale animation
+interface HoverScaleProps extends MotionProps {
+  children: ReactNode;
+  className?: string;
+  scale?: number;
+  style?: React.CSSProperties;
+  as?: React.ElementType;
+}
+
+export const HoverScale = forwardRef<HTMLDivElement, HoverScaleProps>(({
+  children,
+  className,
+  scale = 1.05,
+  style,
+  as = motion.div,
+  ...props
+}, ref) => {
+  const Component = as as any;
+  
+  return (
+    <Component
+      ref={ref}
+      whileHover={{ scale }}
+      transition={{ 
+        duration: 0.2,
+        ease: 'easeInOut'
+      }}
+      className={className}
+      style={style}
+      {...props}
+    >
+      {children}
+    </Component>
+  );
+});
+
+HoverScale.displayName = 'HoverScale';
+
+// Float animation (subtle up-down movement)
+interface FloatProps extends MotionProps {
+  children: ReactNode;
+  className?: string;
+  duration?: number;
+  distance?: number;
+  delay?: number;
+  style?: React.CSSProperties;
+}
+
+export const Float: React.FC<FloatProps> = ({
+  children,
+  className,
+  duration = 3,
+  distance = 10,
+  delay = 0,
+  style,
+  ...props
+}) => {
+  return (
+    <motion.div
+      animate={{ 
+        y: [0, -distance/2, 0, distance/2, 0],
+      }}
+      transition={{ 
+        duration,
+        repeat: Infinity,
+        repeatType: 'loop',
+        ease: 'easeInOut',
+        delay,
+      }}
+      className={className}
+      style={style}
+      {...props}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+// Pulse animation
+interface PulseProps extends MotionProps {
+  children: ReactNode;
+  className?: string;
+  duration?: number;
+  scale?: number;
+  delay?: number;
+  style?: React.CSSProperties;
+}
+
+export const Pulse: React.FC<PulseProps> = ({
+  children,
+  className,
+  duration = 2,
+  scale = 1.05,
+  delay = 0,
+  style,
+  ...props
+}) => {
+  return (
+    <motion.div
+      animate={{ 
+        scale: [1, scale, 1],
+      }}
+      transition={{ 
+        duration,
+        repeat: Infinity,
+        repeatType: 'loop',
+        ease: 'easeInOut',
+        delay,
+      }}
+      className={className}
+      style={style}
+      {...props}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+// Stagger Children animation
+interface StaggerChildrenProps extends MotionProps {
+  children: ReactNode;
+  className?: string;
+  staggerDelay?: number;
+  childrenDelay?: number;
+  childrenDuration?: number;
+  direction?: 'forward' | 'reverse';
+  animation?: 'fadeIn' | 'scaleIn';
+  style?: React.CSSProperties;
+}
+
+export const StaggerChildren: React.FC<StaggerChildrenProps> = ({
+  children,
+  className,
+  staggerDelay = 0.1,
+  childrenDelay = 0,
+  childrenDuration = 0.3,
+  direction = 'forward',
+  animation = 'fadeIn',
+  style,
+  ...props
+}) => {
+  // Convert children to array to handle them individually
+  const childrenArray = React.Children.toArray(children);
+  const orderedChildren = direction === 'forward' ? childrenArray : [...childrenArray].reverse();
+  
+  return (
+    <div className={className} style={style} {...props}>
+      {orderedChildren.map((child, index) => {
+        const delay = childrenDelay + (index * staggerDelay);
+        
+        if (animation === 'fadeIn') {
+          return (
+            <FadeIn key={index} delay={delay} duration={childrenDuration}>
+              {child}
+            </FadeIn>
+          );
+        }
+        
+        return (
+          <ScaleIn key={index} delay={delay} duration={childrenDuration}>
+            {child}
+          </ScaleIn>
+        );
+      })}
     </div>
   );
 };
 
-/**
- * CountUp animation for numbers
- */
-export const CountUp: React.FC<{
-  end: number;
-  start?: number;
-  duration?: number;
-  decimals?: number;
+// Shimmer animation for loading states
+interface ShimmerProps {
   className?: string;
-  prefix?: string;
-  suffix?: string;
-  delay?: number;
-}> = ({ 
-  end, 
-  start = 0, 
-  duration = 2,
-  decimals = 0,
-  className,
-  prefix = '',
-  suffix = '',
-  delay = 0
-}) => {
-  const [count, setCount] = useState(start);
-  const requestRef = useRef<number>();
-  const startTimeRef = useRef<number>();
-  const endValue = end;
-  
-  const animate = (time: number) => {
-    if (startTimeRef.current === undefined) {
-      startTimeRef.current = time;
-    }
-    
-    const elapsed = time - startTimeRef.current;
-    const progress = Math.min(elapsed / (duration * 1000), 1);
-    
-    const currentCount = start + progress * (endValue - start);
-    setCount(currentCount);
-    
-    if (progress < 1) {
-      requestRef.current = requestAnimationFrame(animate);
-    }
-  };
-  
-  useEffect(() => {
-    let timeout: NodeJS.Timeout;
-    if (delay) {
-      timeout = setTimeout(() => {
-        requestRef.current = requestAnimationFrame(animate);
-      }, delay * 1000);
-    } else {
-      requestRef.current = requestAnimationFrame(animate);
-    }
-    
-    return () => {
-      if (timeout) clearTimeout(timeout);
-      if (requestRef.current) cancelAnimationFrame(requestRef.current);
-    };
-  }, [end]);
-  
-  return (
-    <span className={className}>
-      {prefix}{count.toFixed(decimals)}{suffix}
-    </span>
-  );
-};
+  width?: string | number;
+  height?: string | number;
+  borderRadius?: string | number;
+  gradient?: boolean;
+}
 
-/**
- * FadeIn - Fades in an element when it enters the viewport
- */
-export const FadeIn: React.FC<React.ComponentProps<typeof motion.div> & {
-  delay?: number;
-  duration?: number;
-}> = ({ 
-  children, 
+export const Shimmer: React.FC<ShimmerProps> = ({
   className,
-  delay = 0,
-  duration = 0.5,
-  ...props 
+  width = '100%',
+  height = '100%',
+  borderRadius = '0.25rem',
+  gradient = true,
 }) => {
   return (
-    <motion.div
-      className={cn(className)}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      variants={{
-        hidden: { opacity: 0 },
-        visible: { 
-          opacity: 1,
-          transition: { 
-            duration,
-            delay,
-            ease: "easeOut"
-          }
-        },
-        exit: { 
-          opacity: 0,
-          transition: { duration: 0.2 }
-        }
+    <div 
+      className={cn(
+        'relative overflow-hidden bg-gray-200 dark:bg-gray-700',
+        className
+      )}
+      style={{ 
+        width, 
+        height, 
+        borderRadius,
       }}
-      {...props}
     >
-      {children}
-    </motion.div>
-  );
-};
-
-/**
- * SlideIn - Slides in an element when it enters the viewport
- */
-export const SlideIn: React.FC<React.ComponentProps<typeof motion.div> & {
-  delay?: number;
-  duration?: number;
-  direction?: 'left' | 'right' | 'up' | 'down';
-  distance?: number;
-}> = ({ 
-  children, 
-  className,
-  delay = 0,
-  duration = 0.5,
-  direction = 'left',
-  distance = 50,
-  ...props 
-}) => {
-  const getDirectionValues = () => {
-    switch (direction) {
-      case 'left': return { x: -distance, y: 0 };
-      case 'right': return { x: distance, y: 0 };
-      case 'up': return { x: 0, y: -distance };
-      case 'down': return { x: 0, y: distance };
-      default: return { x: -distance, y: 0 };
-    }
-  };
-
-  const { x, y } = getDirectionValues();
-
-  return (
-    <motion.div
-      className={cn(className)}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      variants={{
-        hidden: { x, y, opacity: 0 },
-        visible: { 
-          x: 0, 
-          y: 0,
-          opacity: 1, 
-          transition: { 
-            duration,
-            delay,
-            ease: "easeOut" 
-          }
-        },
-        exit: { 
-          x: x / 2, 
-          y: y / 2,
-          opacity: 0, 
-          transition: { duration: 0.2 }
-        }
-      }}
-      {...props}
-    >
-      {children}
-    </motion.div>
-  );
-};
-
-/**
- * ScaleIn - Scales in an element when it enters the viewport
- */
-export const ScaleIn: React.FC<React.ComponentProps<typeof motion.div> & {
-  delay?: number;
-  duration?: number;
-  initialScale?: number;
-}> = ({ 
-  children, 
-  className,
-  delay = 0,
-  duration = 0.5,
-  initialScale = 0.8,
-  ...props 
-}) => {
-  return (
-    <motion.div
-      className={cn(className)}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      variants={{
-        hidden: { scale: initialScale, opacity: 0 },
-        visible: { 
-          scale: 1,
-          opacity: 1, 
-          transition: { 
-            duration,
-            delay,
-            ease: "easeOut" 
-          }
-        },
-        exit: { 
-          scale: initialScale,
-          opacity: 0, 
-          transition: { duration: 0.2 }
-        }
-      }}
-      {...props}
-    >
-      {children}
-    </motion.div>
-  );
-};
-
-/**
- * Shimmer - Creates a shimmer effect across an element
- */
-export const Shimmer: React.FC<React.ComponentProps<typeof motion.div> & {
-  duration?: number;
-  delay?: number;
-  angle?: number;
-  width?: number;
-}> = ({ 
-  children, 
-  className,
-  duration = 2.5,
-  delay = 0,
-  angle = 45,
-  width = 50,
-  ...props 
-}) => {
-  return (
-    <motion.div
-      className={cn("relative overflow-hidden", className)}
-      {...props}
-    >
-      {children}
-      <motion.div
-        className="absolute inset-0 -z-10"
-        initial={{
-          background: `linear-gradient(${angle}deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%)`,
-          left: `-${width * 2}%`,
-        }}
-        animate={{
-          left: `${100 + width}%`,
-          transition: {
-            duration,
-            delay,
+      {gradient && (
+        <motion.div
+          className="absolute inset-0 -translate-x-full"
+          style={{
+            background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)',
+          }}
+          animate={{ x: ['calc(-100%)', 'calc(100%)'] }}
+          transition={{ 
+            duration: 1.5, 
             repeat: Infinity,
-            repeatDelay: 1,
-            ease: "linear"
-          }
-        }}
-        style={{ width: `${width}%` }}
-      />
+            ease: 'linear',
+            repeatType: 'loop',
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+// Slide In animation
+interface SlideInProps extends MotionProps {
+  children: ReactNode;
+  className?: string;
+  delay?: number;
+  duration?: number;
+  direction?: 'up' | 'down' | 'left' | 'right';
+  distance?: number;
+  once?: boolean;
+  style?: React.CSSProperties;
+}
+
+export const SlideIn: React.FC<SlideInProps> = ({
+  children,
+  className,
+  delay = 0,
+  duration = 0.4,
+  direction = 'up',
+  distance = 50,
+  once = true,
+  style,
+  ...props
+}) => {
+  const getDirectionOffset = () => {
+    switch (direction) {
+      case 'up':
+        return { y: distance };
+      case 'down':
+        return { y: -distance };
+      case 'left':
+        return { x: distance };
+      case 'right':
+        return { x: -distance };
+      default:
+        return { y: distance };
+    }
+  };
+
+  return (
+    <motion.div
+      initial={getDirectionOffset()}
+      animate={{ x: 0, y: 0 }}
+      exit={getDirectionOffset()}
+      transition={{ 
+        duration, 
+        delay,
+        ease: [0.23, 1, 0.32, 1] // Ease out cubic
+      }}
+      viewport={{ once }}
+      className={className}
+      style={style}
+      {...props}
+    >
+      {children}
     </motion.div>
   );
+};
+
+// Expand animation (for accordions, dropdowns, etc.)
+interface ExpandProps extends MotionProps {
+  children: ReactNode;
+  className?: string;
+  isOpen: boolean;
+  duration?: number;
+  style?: React.CSSProperties;
+}
+
+export const Expand: React.FC<ExpandProps> = ({
+  children,
+  className,
+  isOpen,
+  duration = 0.3,
+  style,
+  ...props
+}) => {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ height: 0, opacity: 0, overflow: 'hidden' }}
+          animate={{ 
+            height: 'auto', 
+            opacity: 1,
+            transition: { 
+              height: { duration, ease: [0.33, 1, 0.68, 1] },
+              opacity: { duration: duration * 0.7, delay: duration * 0.3 }
+            }
+          }}
+          exit={{ 
+            height: 0, 
+            opacity: 0,
+            transition: { 
+              height: { duration, ease: [0.33, 1, 0.68, 1] },
+              opacity: { duration: duration * 0.4 }
+            }
+          }}
+          className={className}
+          style={style}
+          {...props}
+        >
+          {children}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
+// Flip animation
+interface FlipProps extends MotionProps {
+  children: ReactNode;
+  className?: string;
+  isFlipped: boolean;
+  duration?: number;
+  style?: React.CSSProperties;
+}
+
+export const Flip: React.FC<FlipProps> = ({
+  children,
+  className,
+  isFlipped,
+  duration = 0.6,
+  style,
+  ...props
+}) => {
+  return (
+    <motion.div
+      animate={{ rotateY: isFlipped ? 180 : 0 }}
+      transition={{ 
+        duration,
+        ease: [0.23, 1, 0.32, 1] // Ease out cubic
+      }}
+      className={className}
+      style={{ 
+        ...style,
+        perspective: '1200px',
+        transformStyle: 'preserve-3d',
+      }}
+      {...props}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+// Spring animation
+interface SpringProps extends MotionProps {
+  children: ReactNode;
+  className?: string;
+  delay?: number;
+  stiffness?: number;
+  damping?: number;
+  style?: React.CSSProperties;
+}
+
+export const Spring: React.FC<SpringProps> = ({
+  children,
+  className,
+  delay = 0,
+  stiffness = 100,
+  damping = 10,
+  style,
+  ...props
+}) => {
+  return (
+    <motion.div
+      initial={{ y: 30, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ 
+        type: 'spring',
+        stiffness,
+        damping,
+        delay,
+      }}
+      className={className}
+      style={style}
+      {...props}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+// Scroll progression animation
+interface ScrollProgressProps {
+  children: (progress: number) => ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+export const ScrollProgress: React.FC<ScrollProgressProps> = ({
+  children,
+  className,
+  style,
+}) => {
+  const [scrollY, setScrollY] = React.useState(0);
+  
+  React.useEffect(() => {
+    const handleScroll = () => {
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      const scrollPosition = window.scrollY;
+      
+      const totalScroll = documentHeight - windowHeight;
+      const progress = Math.min(Math.max(scrollPosition / totalScroll, 0), 1);
+      
+      setScrollY(progress);
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+  
+  return (
+    <div className={className} style={style}>
+      {children(scrollY)}
+    </div>
+  );
+};
+
+// Export all animations
+export const MicroInteractions = {
+  FadeIn,
+  ScaleIn,
+  ButtonPress,
+  HoverScale,
+  Float,
+  Pulse,
+  StaggerChildren,
+  Shimmer,
+  SlideIn,
+  Expand,
+  Flip,
+  Spring,
+  ScrollProgress,
 };
