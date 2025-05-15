@@ -1,193 +1,334 @@
-import React, { useEffect, useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { X, Check, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { SlideIn, ButtonPress } from '@/components/UI/MicroInteractions';
+import { Button } from '@/components/ui/button';
+import { Link } from 'wouter';
+import { 
+  X, 
+  Check, 
+  ChevronUp, 
+  ChevronDown,
+  Zap,
+  Star
+} from 'lucide-react';
+import { useDevice } from '@/hooks/use-device';
+import { 
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card';
+
+interface PricingFeature {
+  title: string;
+  includedIn: ('free' | 'basic' | 'pro' | 'enterprise')[];
+  highlight?: boolean;
+}
 
 interface PricingTier {
+  id: string;
   name: string;
-  price: string;
+  price: number;
+  priceUnit?: string; // "month" | "year" | "user" etc.
+  description: string;
   features: string[];
-  isPopular?: boolean;
   ctaText: string;
-  ctaLink: string;
+  ctaHref: string;
+  mostPopular?: boolean;
+  highlighted?: boolean;
+  badge?: string;
 }
 
 interface StickyPricingComparisonProps {
   title?: string;
   description?: string;
-  tiers: PricingTier[];
-  position?: 'bottom' | 'top';
+  pricing: PricingTier[];
   showAfterScroll?: number;
+  variant?: 'minimal' | 'default' | 'prominent';
+  showToggleButton?: boolean;
   dismissible?: boolean;
   className?: string;
+  expiryDays?: number; // Days to remember dismissal
+  customDismissKey?: string;
+  defaultExpanded?: boolean;
+  autoCollapseOnMobile?: boolean;
 }
 
 /**
- * StickyPricingComparison - A sticky pricing comparison component that shows tiers side by side
+ * StickyPricingComparison - A sticky pricing comparison component that appears after scrolling
  * 
  * @example
  * <StickyPricingComparison
- *   title="Compare Plans"
- *   description="Find the perfect plan for your needs"
- *   tiers={[
+ *   title="Choose the Right Plan for You"
+ *   description="Start with a free plan or upgrade for more features"
+ *   pricing={[
  *     {
- *       name: "Basic",
- *       price: "$19/mo",
- *       features: ["Feature 1", "Feature 2"],
- *       ctaText: "Get Started",
- *       ctaLink: "/pricing/basic"
+ *       id: "free",
+ *       name: "Free",
+ *       price: 0,
+ *       description: "Basic access to AI courses",
+ *       features: ["Limited course access", "Community support"],
+ *       ctaText: "Sign Up Free",
+ *       ctaHref: "/signup?plan=free"
  *     },
- *     {
- *       name: "Pro",
- *       price: "$49/mo",
- *       features: ["Feature 1", "Feature 2", "Feature 3", "Feature 4"],
- *       isPopular: true,
- *       ctaText: "Try Pro",
- *       ctaLink: "/pricing/pro"
- *     }
+ *     // More pricing tiers...
  *   ]}
- *   position="bottom"
  *   showAfterScroll={600}
  * />
  */
-export const StickyPricingComparison = ({
-  title = "Compare Our Plans",
+export const StickyPricingComparison: React.FC<StickyPricingComparisonProps> = ({
+  title = "Choose Your Plan",
   description,
-  tiers,
-  position = 'bottom',
+  pricing,
   showAfterScroll = 600,
+  variant = 'default',
+  showToggleButton = true,
   dismissible = true,
-  className
-}: StickyPricingComparisonProps) => {
+  className = '',
+  expiryDays = 7,
+  customDismissKey,
+  defaultExpanded = false,
+  autoCollapseOnMobile = true,
+}) => {
   const [isVisible, setIsVisible] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [isDismissed, setIsDismissed] = useState(false);
-
-  // Check if the component has been dismissed before
+  const { isMobile } = useDevice();
+  
+  // Generate a unique key based on title for storage
+  const dismissKey = customDismissKey || `sticky-pricing-dismissed-${title.toLowerCase().replace(/\s+/g, '-')}`;
+  
+  // Check if already dismissed on mount
   useEffect(() => {
-    const hasBeenDismissed = localStorage.getItem('pricingComparisonDismissed');
-    
-    if (hasBeenDismissed === 'true') {
-      setIsDismissed(true);
+    if (dismissible) {
+      const storedDismissalTime = localStorage.getItem(dismissKey);
+      
+      if (storedDismissalTime) {
+        const dismissalTime = parseInt(storedDismissalTime, 10);
+        const expiryTime = dismissalTime + (expiryDays * 24 * 60 * 60 * 1000);
+        
+        if (Date.now() < expiryTime) {
+          setIsDismissed(true);
+        } else {
+          // Expired, remove from storage
+          localStorage.removeItem(dismissKey);
+        }
+      }
     }
     
+    // Auto-collapse on mobile if specified
+    if (isMobile && autoCollapseOnMobile) {
+      setIsExpanded(false);
+    }
+  }, [dismissKey, dismissible, expiryDays, isMobile, autoCollapseOnMobile]);
+  
+  // Show after scrolling
+  useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY;
-      const pageHeight = document.body.scrollHeight;
-      const viewportHeight = window.innerHeight;
-      const scrollPercentage = (scrollPosition / (pageHeight - viewportHeight)) * 100;
       
-      // Show after scroll position OR when user reaches 70% of the page
-      if ((scrollPosition > showAfterScroll || scrollPercentage > 70) && !isDismissed) {
+      if (scrollPosition > showAfterScroll && !isDismissed) {
         setIsVisible(true);
+      } else if (scrollPosition <= showAfterScroll) {
+        setIsVisible(false);
       }
     };
     
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Check initial scroll position
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, [showAfterScroll, isDismissed]);
   
   const handleDismiss = () => {
     setIsDismissed(true);
-    localStorage.setItem('pricingComparisonDismissed', 'true');
+    
+    if (dismissible) {
+      localStorage.setItem(dismissKey, Date.now().toString());
+    }
   };
   
-  const positionClasses = {
-    top: 'top-0',
-    bottom: 'bottom-0'
+  const toggleExpanded = () => {
+    setIsExpanded(prev => !prev);
   };
+  
+  const getVariantStyles = () => {
+    switch (variant) {
+      case 'minimal':
+        return 'bg-background/95 border-t border-border';
+      case 'prominent':
+        return 'bg-primary/5 dark:bg-primary/10 border-t border-primary/20';
+      default:
+        return 'bg-background/95 shadow-lg border-t border-border/30';
+    }
+  };
+  
+  // Find the most popular plan to highlight
+  const mostPopularPlan = pricing.find(tier => tier.mostPopular);
   
   return (
     <AnimatePresence>
       {isVisible && !isDismissed && (
-        <SlideIn
-          direction={position === 'bottom' ? 'up' : 'down'}
+        <motion.div
           className={cn(
-            'fixed left-0 right-0 z-50 w-full bg-background/95 backdrop-blur-md border-t border-border shadow-lg',
-            positionClasses[position],
+            'fixed bottom-0 left-0 right-0 z-50 backdrop-blur-sm',
+            getVariantStyles(),
             className
           )}
+          initial={{ y: 300, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 300, opacity: 0 }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
         >
-          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-xl font-semibold tracking-tight">{title}</h3>
-                {description && (
-                  <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+          {/* Header/Toggle Area */}
+          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-semibold">
+                {title}
+                {mostPopularPlan && (
+                  <span className="ml-2 text-xs text-primary">
+                    Most Popular: {mostPopularPlan.name}
+                  </span>
                 )}
-              </div>
-              
-              {dismissible && (
-                <ButtonPress>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleDismiss}
-                    className="flex-shrink-0 opacity-70 hover:opacity-100"
-                    aria-label="Dismiss"
-                  >
-                    <X className="h-5 w-5" />
-                  </Button>
-                </ButtonPress>
+              </h3>
+              {description && (
+                <p className="text-sm text-muted-foreground max-w-md">
+                  {description}
+                </p>
               )}
             </div>
             
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {tiers.map((tier, index) => (
-                <div 
-                  key={index}
-                  className={cn(
-                    "relative rounded-lg border bg-card p-4 shadow-sm",
-                    tier.isPopular && "border-primary ring-1 ring-primary"
-                  )}
+            <div className="flex items-center gap-2">
+              {showToggleButton && (
+                <Button
+                  variant="ghost" 
+                  size="sm"
+                  onClick={toggleExpanded}
+                  aria-label={isExpanded ? "Collapse pricing comparison" : "Expand pricing comparison"}
+                  className="flex items-center gap-1"
                 >
-                  {tier.isPopular && (
-                    <div className="absolute -top-3 right-4 rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground">
-                      Popular
-                    </div>
-                  )}
-                  
-                  <div className="mb-4">
-                    <h4 className="text-lg font-medium">{tier.name}</h4>
-                    <div className="mt-2 flex items-baseline">
-                      <span className="text-2xl font-bold">{tier.price}</span>
-                    </div>
-                  </div>
-                  
-                  <ul className="mb-6 space-y-2 text-sm">
-                    {tier.features.slice(0, 3).map((feature, i) => (
-                      <li key={i} className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-primary" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                    {tier.features.length > 3 && (
-                      <li className="flex items-center gap-2 text-muted-foreground">
-                        <span>+{tier.features.length - 3} more features</span>
-                      </li>
-                    )}
-                  </ul>
-                  
-                  <ButtonPress>
-                    <Button 
-                      variant={tier.isPopular ? "default" : "outline"}
-                      className="w-full justify-between group"
-                      asChild
-                    >
-                      <a href={tier.ctaLink}>
-                        {tier.ctaText}
-                        <ChevronRight className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" />
-                      </a>
-                    </Button>
-                  </ButtonPress>
-                </div>
-              ))}
+                  <span className="hidden sm:inline">
+                    {isExpanded ? "Hide" : "Compare Plans"}
+                  </span>
+                  {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                </Button>
+              )}
+              
+              {dismissible && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8"
+                  onClick={handleDismiss}
+                  aria-label="Dismiss pricing comparison"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </div>
-        </SlideIn>
+          
+          {/* Expanded Pricing Cards */}
+          <AnimatePresence>
+            {isExpanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden"
+              >
+                <div className="container mx-auto px-4 pb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {pricing.map((tier) => (
+                      <PricingCard key={tier.id} tier={tier} variant={variant} />
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       )}
     </AnimatePresence>
+  );
+};
+
+// Pricing card component
+const PricingCard: React.FC<{ 
+  tier: PricingTier; 
+  variant: 'minimal' | 'default' | 'prominent';
+}> = ({ tier, variant }) => {
+  return (
+    <Card 
+      className={cn(
+        'flex flex-col h-full overflow-hidden transition-all duration-200',
+        tier.highlighted && 'border-primary shadow-md',
+        tier.mostPopular && 'scale-[1.02] shadow-lg border-primary/50'
+      )}
+    >
+      {tier.badge && (
+        <div className="bg-primary text-primary-foreground text-xs font-medium px-3 py-1 text-center">
+          {tier.badge}
+        </div>
+      )}
+      
+      <CardHeader className={cn(
+        tier.mostPopular && 'bg-primary/5 dark:bg-primary/10',
+        'pb-2'
+      )}>
+        <CardTitle className="flex items-center justify-between">
+          {tier.name}
+          {tier.mostPopular && (
+            <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+          )}
+        </CardTitle>
+        <CardDescription>{tier.description}</CardDescription>
+        <div className="mt-1">
+          <span className="text-2xl font-bold">
+            {tier.price === 0 ? 'Free' : `$${tier.price}`}
+          </span>
+          {tier.price > 0 && tier.priceUnit && (
+            <span className="text-sm text-muted-foreground ml-1">
+              /{tier.priceUnit}
+            </span>
+          )}
+        </div>
+      </CardHeader>
+      
+      <CardContent className="flex-grow py-3">
+        <ul className="space-y-2 text-sm">
+          {tier.features.map((feature, index) => (
+            <li 
+              key={index} 
+              className="flex items-start gap-2"
+            >
+              <Check className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+      
+      <CardFooter className="pt-2">
+        <Link href={tier.ctaHref} className="w-full">
+          <Button 
+            className={cn(
+              'w-full',
+              tier.mostPopular && 'bg-primary hover:bg-primary/90'
+            )}
+            variant={tier.mostPopular ? 'default' : 'outline'}
+          >
+            {tier.ctaText}
+            {tier.mostPopular && <Zap className="ml-1 h-4 w-4" />}
+          </Button>
+        </Link>
+      </CardFooter>
+    </Card>
   );
 };
 

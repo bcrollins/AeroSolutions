@@ -1,96 +1,162 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface LazyLoadProps {
-  children: React.ReactNode;
+  component: () => Promise<any>;
+  fallback?: React.ReactNode;
+  onLoad?: () => void;
+  onError?: (error: Error) => void;
+  delay?: number;
   className?: string;
-  height?: string | number;
-  width?: string | number;
-  threshold?: number;
-  placeholder?: React.ReactNode;
-  rootMargin?: string;
-  onVisible?: () => void;
+  props?: Record<string, any>;
+  errorComponent?: React.ReactNode;
+  skipIfMobile?: boolean;
 }
 
 /**
- * LazyLoad - Component that lazily renders its children when they enter the viewport
+ * LazyLoad - Component for lazy loading other components with fallbacks
  * 
  * @example
- * <LazyLoad height={200} placeholder={<Skeleton />}>
- *   <Image src="/large-image.jpg" alt="Large image" />
- * </LazyLoad>
+ * <LazyLoad
+ *   component={() => import('@/components/HeavyComponent').then(module => module.default)}
+ *   fallback={<Skeleton className="h-40 w-full" />}
+ * />
  */
 export const LazyLoad: React.FC<LazyLoadProps> = ({
-  children,
-  className,
-  height,
-  width,
-  threshold = 0.1,
-  placeholder,
-  rootMargin = '200px 0px',
-  onVisible
+  component,
+  fallback = <DefaultSkeleton />,
+  onLoad,
+  onError,
+  delay = 0,
+  className = '',
+  props = {},
+  errorComponent = <DefaultError />,
+  skipIfMobile = false,
 }) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [hasLoaded, setHasLoaded] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [LazyComponent, setLazyComponent] = useState<React.ComponentType<any> | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
 
+  // Skip on mobile if specified
+  const [shouldSkip, setShouldSkip] = useState(false);
+  
   useEffect(() => {
-    if (!ref.current) return;
+    setIsMounted(true);
     
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          if (onVisible) onVisible();
-          // Unobserve once visible
-          observer.unobserve(ref.current!);
-        }
-      },
-      {
-        threshold,
-        rootMargin
+    // Check if we should skip based on mobile detection
+    if (skipIfMobile) {
+      const isMobile = typeof window !== 'undefined' && 
+        window.matchMedia('(max-width: 640px)').matches;
+      setShouldSkip(isMobile);
+      
+      if (isMobile) {
+        setLoading(false);
+        return;
       }
-    );
-
-    observer.observe(ref.current);
+    }
+    
+    // Apply delay if needed
+    let timerId: ReturnType<typeof setTimeout> | undefined;
+    
+    if (delay > 0) {
+      timerId = setTimeout(() => {
+        void loadComponent();
+      }, delay);
+    } else {
+      void loadComponent();
+    }
     
     return () => {
-      if (ref.current) {
-        observer.unobserve(ref.current);
-      }
+      if (timerId) clearTimeout(timerId);
     };
-  }, [threshold, rootMargin, onVisible]);
-
-  // Set a delay to ensure smooth transition
-  useEffect(() => {
-    if (isVisible) {
-      const timer = setTimeout(() => {
-        setHasLoaded(true);
-      }, 300);
-      
-      return () => clearTimeout(timer);
+  }, []);
+  
+  const loadComponent = async () => {
+    try {
+      const importedComponent = await component();
+      setLazyComponent(() => importedComponent.default || importedComponent);
+      setLoading(false);
+      if (onLoad) onLoad();
+    } catch (err) {
+      console.error('Failed to lazy load component:', err);
+      setError(err as Error);
+      setLoading(false);
+      if (onError) onError(err as Error);
     }
-  }, [isVisible]);
-
+  };
+  
+  // Server-side rendering fallback
+  if (!isMounted) {
+    return <>{fallback}</>;
+  }
+  
+  // Skip rendering on mobile if requested
+  if (shouldSkip) {
+    return null;
+  }
+  
+  // Show error component if loading failed
+  if (error) {
+    return <>{errorComponent}</>;
+  }
+  
+  // Show loading fallback while component is loading
+  if (loading || !LazyComponent) {
+    return <>{fallback}</>;
+  }
+  
+  // Render the lazy loaded component with provided props
   return (
-    <div 
-      ref={ref}
-      className={cn(
-        'transition-opacity duration-500',
-        !hasLoaded && 'opacity-0',
-        hasLoaded && 'opacity-100',
-        className
-      )}
-      style={{
-        height: !isVisible ? height : undefined,
-        width: !isVisible ? width : undefined,
-        minHeight: !isVisible ? height : undefined,
-        minWidth: !isVisible ? width : undefined
-      }}
-    >
-      {isVisible ? children : placeholder}
-    </div>
+    <Suspense fallback={fallback}>
+      <div className={className}>
+        <LazyComponent {...props} />
+      </div>
+    </Suspense>
   );
 };
+
+// Default fallback skeleton component
+const DefaultSkeleton = () => (
+  <div className="animate-pulse space-y-2">
+    <Skeleton className="h-6 w-3/4" />
+    <Skeleton className="h-20 w-full" />
+    <Skeleton className="h-6 w-1/2" />
+  </div>
+);
+
+// Default error component
+const DefaultError = () => (
+  <div className="p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+    <p>Failed to load component. Please try refreshing the page.</p>
+  </div>
+);
+
+/**
+ * withLazyLoading - HOC for lazy loading components
+ * 
+ * @example
+ * const LazyHeavyComponent = withLazyLoading(() => 
+ *   import('@/components/HeavyComponent').then(m => m.default)
+ * );
+ * 
+ * // Later in JSX:
+ * <LazyHeavyComponent />
+ */
+export function withLazyLoading<T>(
+  importFunc: () => Promise<any>,
+  options: Omit<LazyLoadProps, 'component'> = {}
+) {
+  const LazyLoadedComponent: React.FC<T> = (props) => (
+    <LazyLoad
+      component={importFunc}
+      props={props as Record<string, any>}
+      {...options}
+    />
+  );
+  
+  return LazyLoadedComponent;
+}
 
 export default LazyLoad;

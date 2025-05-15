@@ -1,159 +1,146 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
+import React from 'react';
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger
+  TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useDevice } from '@/hooks/use-device';
 
 interface EnhancedTooltipProps {
   children: React.ReactNode;
   content: React.ReactNode;
-  description?: React.ReactNode;
+  description?: string;
   side?: 'top' | 'right' | 'bottom' | 'left';
   align?: 'start' | 'center' | 'end';
-  delayDuration?: number;
-  skipDelayDuration?: number;
-  asChild?: boolean;
-  interactive?: boolean;
-  variant?: 'default' | 'info' | 'success' | 'warning' | 'error';
-  size?: 'default' | 'large' | 'tight' | 'fit';
-  animationDuration?: number;
-  image?: string;
-  maxWidth?: number;
+  delay?: number;
+  className?: string;
+  contentClassName?: string;
+  variant?: 'default' | 'info' | 'warning' | 'error' | 'success';
+  icon?: React.ReactNode;
   showArrow?: boolean;
-  persistent?: boolean; // Keep showing after click
+  asChild?: boolean;
+  disableOnMobile?: boolean;
+  maxWidth?: string | number;
+  interactive?: boolean;
 }
 
 /**
- * Enhanced tooltip component with animations, illustrations, and interactive options
+ * EnhancedTooltip - Extended tooltip component with more styling options and animations
+ * 
+ * @example
+ * <EnhancedTooltip
+ *   content="This is a helpful tooltip"
+ *   description="It provides additional context"
+ *   variant="info"
+ *   side="top"
+ * >
+ *   <Button>Hover Me</Button>
+ * </EnhancedTooltip>
  */
-export function EnhancedTooltip({
+export const EnhancedTooltip: React.FC<EnhancedTooltipProps> = ({
   children,
   content,
   description,
   side = 'top',
   align = 'center',
-  delayDuration = 300,
-  skipDelayDuration = 500,
-  asChild = false,
-  interactive = false,
+  delay = 0,
+  className = '',
+  contentClassName = '',
   variant = 'default',
-  size = 'default', 
-  animationDuration = 0.2,
-  image,
-  maxWidth = 320,
+  icon,
   showArrow = true,
-  persistent = false
-}: EnhancedTooltipProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  asChild = false,
+  disableOnMobile = true,
+  maxWidth = 250,
+  interactive = false,
+}) => {
+  const { isMobile } = useDevice();
   
-  // Set appropriate variant styles
-  const getVariantStyles = () => {
+  // Disable tooltips on mobile devices if specified
+  if (disableOnMobile && isMobile) {
+    return <>{children}</>;
+  }
+  
+  const getVariantClasses = () => {
     switch (variant) {
       case 'info':
-        return 'bg-blue-50 text-blue-900 border-blue-200 dark:bg-blue-950/70 dark:border-blue-900 dark:text-blue-300';
-      case 'success':
-        return 'bg-green-50 text-green-900 border-green-200 dark:bg-green-950/70 dark:border-green-900 dark:text-green-300';
+        return 'bg-blue-50 text-blue-900 border border-blue-200 dark:bg-blue-950 dark:text-blue-200 dark:border-blue-900';
       case 'warning':
-        return 'bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-950/70 dark:border-amber-900 dark:text-amber-300';
+        return 'bg-amber-50 text-amber-900 border border-amber-200 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-900';
       case 'error':
-        return 'bg-red-50 text-red-900 border-red-200 dark:bg-red-950/70 dark:border-red-900 dark:text-red-300';
+        return 'bg-red-50 text-red-900 border border-red-200 dark:bg-red-950 dark:text-red-200 dark:border-red-900';
+      case 'success':
+        return 'bg-green-50 text-green-900 border border-green-200 dark:bg-green-950 dark:text-green-200 dark:border-green-900';
       default:
         return '';
     }
   };
   
-  // Set appropriate size styles
-  const getSizeStyles = () => {
-    switch (size) {
-      case 'large':
-        return 'py-3 px-4 text-sm';
-      case 'tight':
-        return 'py-1 px-2 text-xs';
-      case 'fit':
-        return 'py-1.5 px-2.5 text-xs';
-      default:
-        return 'py-2 px-3 text-sm';
-    }
-  };
-  
-  // Handle click for persistent tooltips
-  const handleClick = () => {
-    if (persistent) {
-      setIsOpen(prev => !prev);
-    }
-  };
+  const AnimatedTooltipContent = React.forwardRef<
+    HTMLDivElement,
+    React.ComponentPropsWithoutRef<typeof TooltipContent>
+  >(({ className, ...props }, ref) => (
+    <TooltipContent
+      ref={ref}
+      className={cn(
+        "px-3 py-2 shadow-md",
+        getVariantClasses(),
+        contentClassName,
+        className
+      )}
+      sideOffset={5}
+      collisionPadding={10}
+      style={{ 
+        maxWidth: typeof maxWidth === 'number' ? `${maxWidth}px` : maxWidth 
+      }}
+      {...props}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 5, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.15 }}
+      >
+        <div className="flex gap-2">
+          {icon && <div className="flex-shrink-0 mt-0.5">{icon}</div>}
+          <div>
+            <div className="font-medium">{content}</div>
+            {description && <p className="text-xs opacity-80 mt-1">{description}</p>}
+          </div>
+        </div>
+        {showArrow && <TooltipArrow className={getVariantClasses()} />}
+      </motion.div>
+    </TooltipContent>
+  ));
+  AnimatedTooltipContent.displayName = 'AnimatedTooltipContent';
   
   return (
-    <TooltipProvider 
-      delayDuration={delayDuration} 
-      skipDelayDuration={skipDelayDuration}
-    >
-      <Tooltip open={persistent ? isOpen : undefined}>
-        <TooltipTrigger
-          asChild={asChild}
-          onClick={handleClick}
-          className={asChild ? undefined : 'cursor-help'}
-        >
+    <TooltipProvider delayDuration={delay * 1000}>
+      <Tooltip>
+        <TooltipTrigger asChild={asChild} className={className}>
           {children}
         </TooltipTrigger>
-        
-        <TooltipContent
-          side={side}
-          align={align}
-          className={cn(
-            "border shadow-md",
-            getVariantStyles(),
-            getSizeStyles(),
-            interactive ? "cursor-auto select-text" : "",
-            !showArrow && "tooltip-no-arrow"
-          )}
-          style={{ maxWidth }}
-          sideOffset={5}
-        >
-          <AnimatePresence>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.96 }}
-              transition={{ duration: animationDuration }}
-            >
-              {/* Main content */}
-              <div className="flex flex-col gap-1">
-                {typeof content === 'string' ? (
-                  <div className="font-medium">{content}</div>
-                ) : (
-                  content
-                )}
-                
-                {/* Optional description */}
-                {description && (
-                  <div className={cn(
-                    "text-foreground/80 font-normal",
-                    size === 'large' ? 'text-sm' : 'text-xs'
-                  )}>
-                    {description}
-                  </div>
-                )}
-                
-                {/* Optional image */}
-                {image && (
-                  <div className="mt-2 rounded-md overflow-hidden">
-                    <img
-                      src={image}
-                      alt="Tooltip illustration"
-                      className="max-w-full h-auto object-cover"
-                    />
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        </TooltipContent>
+        <AnimatedTooltipContent side={side} align={align} />
       </Tooltip>
     </TooltipProvider>
   );
-}
+};
+
+// Custom arrow component
+const TooltipArrow = ({ className }: { className?: string }) => (
+  <div
+    className={cn(
+      "absolute h-2 w-2 rotate-45",
+      className
+    )}
+    style={{
+      left: 'calc(50% - 4px)',
+      bottom: '-4px'
+    }}
+  />
+);
+
+export default EnhancedTooltip;

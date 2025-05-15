@@ -1,130 +1,203 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { SlideIn, ButtonPress } from '@/components/UI/MicroInteractions';
+import { Link } from 'wouter';
+import { useDevice } from '@/hooks/use-device';
 
 interface StickyCTAProps {
   title: string;
   description?: string;
-  ctaText: string;
-  ctaLink: string;
+  buttonText: string;
+  buttonHref: string;
+  variant?: 'default' | 'minimal' | 'prominent';
   position?: 'bottom' | 'top';
-  showAfterScroll?: number; // Pixels scrolled before showing
   dismissible?: boolean;
-  variant?: 'primary' | 'secondary' | 'minimal';
+  showAfterScroll?: number; // Number of pixels to scroll before showing
+  expiryDays?: number; // Number of days to remember dismissal
   className?: string;
+  hideOnMobile?: boolean;
+  customDismissKey?: string; // Custom storage key for dismissal state
+  secondaryButton?: {
+    text: string;
+    href: string;
+  };
 }
-
-const variantStyles = {
-  primary: 'bg-primary text-white',
-  secondary: 'bg-secondary border border-border',
-  minimal: 'bg-background/80 backdrop-blur-md border border-border shadow-sm'
-};
 
 /**
  * StickyCTA - A sticky call-to-action component that appears after scrolling
  * 
  * @example
- * <StickyCTA 
- *   title="Get Started Today"
- *   description="Sign up for our Pro plan and save 20%"
- *   ctaText="Upgrade Now"
- *   ctaLink="/pricing"
- *   position="bottom"
+ * <StickyCTA
+ *   title="Get Started with RXAI Today"
+ *   description="Access premium AI courses and resources"
+ *   buttonText="Start Free Trial"
+ *   buttonHref="/signup"
  *   showAfterScroll={300}
- *   dismissible={true}
+ *   variant="prominent"
  * />
  */
-export const StickyCTA = ({
+export const StickyCTA: React.FC<StickyCTAProps> = ({
   title,
   description,
-  ctaText,
-  ctaLink,
+  buttonText,
+  buttonHref,
+  variant = 'default',
   position = 'bottom',
-  showAfterScroll = 300,
   dismissible = true,
-  variant = 'primary',
-  className
-}: StickyCTAProps) => {
+  showAfterScroll = 300,
+  expiryDays = 7,
+  className = '',
+  hideOnMobile = false,
+  customDismissKey,
+  secondaryButton,
+}) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
+  const { isMobile } = useDevice();
   
-  // Check if the user has dismissed this CTA before
+  // Generate a unique key based on title and expiry time
+  const dismissKey = customDismissKey || `sticky-cta-dismissed-${title.toLowerCase().replace(/\s+/g, '-')}`;
+  
+  // Check if already dismissed on mount
   useEffect(() => {
-    const hasBeenDismissed = localStorage.getItem('ctaDismissed');
-    
-    if (hasBeenDismissed === 'true') {
-      setIsDismissed(true);
+    if (dismissible) {
+      const storedDismissalTime = localStorage.getItem(dismissKey);
+      
+      if (storedDismissalTime) {
+        const dismissalTime = parseInt(storedDismissalTime, 10);
+        const expiryTime = dismissalTime + (expiryDays * 24 * 60 * 60 * 1000);
+        
+        if (Date.now() < expiryTime) {
+          setIsDismissed(true);
+        } else {
+          // Expired, remove from storage
+          localStorage.removeItem(dismissKey);
+        }
+      }
     }
-    
+  }, [dismissKey, dismissible, expiryDays]);
+  
+  // Show after scrolling
+  useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY;
+      
       if (scrollPosition > showAfterScroll && !isDismissed) {
         setIsVisible(true);
-      } else {
+      } else if (scrollPosition <= showAfterScroll) {
         setIsVisible(false);
       }
     };
     
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Check initial scroll position
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, [showAfterScroll, isDismissed]);
   
   const handleDismiss = () => {
     setIsDismissed(true);
-    localStorage.setItem('ctaDismissed', 'true');
+    
+    if (dismissible) {
+      localStorage.setItem(dismissKey, Date.now().toString());
+    }
   };
   
-  const positionClasses = {
-    top: 'top-0',
-    bottom: 'bottom-0'
+  // Hide on mobile if specified
+  if (hideOnMobile && isMobile) {
+    return null;
+  }
+  
+  const getVariantStyles = () => {
+    switch (variant) {
+      case 'minimal':
+        return 'bg-background/95 shadow-sm border-t border-border';
+      case 'prominent':
+        return 'bg-primary text-primary-foreground';
+      default:
+        return 'bg-background shadow-lg border border-border/30';
+    }
   };
   
   return (
     <AnimatePresence>
       {isVisible && !isDismissed && (
-        <SlideIn
-          direction={position === 'bottom' ? 'up' : 'down'}
+        <motion.div
           className={cn(
-            'fixed left-0 right-0 z-50 w-full px-4 py-3 sm:px-6 md:py-4',
-            positionClasses[position],
-            variantStyles[variant],
+            'fixed z-50 left-0 right-0 px-4 py-3 backdrop-blur-sm',
+            position === 'bottom' ? 'bottom-0' : 'top-0',
+            getVariantStyles(),
             className
           )}
+          initial={{ y: position === 'bottom' ? 100 : -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: position === 'bottom' ? 100 : -100, opacity: 0 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
         >
-          <div className="mx-auto flex max-w-6xl items-center justify-between">
-            <div className="mr-8">
-              <h3 className="text-base font-semibold sm:text-lg md:text-xl">{title}</h3>
+          <div className="container flex items-center justify-between gap-4 mx-auto">
+            <div className="flex-1 min-w-0">
+              <h3 className={cn(
+                'text-sm font-semibold sm:text-base',
+                variant === 'prominent' ? 'text-primary-foreground' : ''
+              )}>
+                {title}
+              </h3>
               {description && (
-                <p className="mt-1 text-sm opacity-90 md:text-base">{description}</p>
+                <p className={cn(
+                  'text-xs sm:text-sm line-clamp-1',
+                  variant === 'prominent' ? 'text-primary-foreground/80' : 'text-muted-foreground'
+                )}>
+                  {description}
+                </p>
               )}
             </div>
             
-            <div className="flex items-center gap-3">
-              <ButtonPress>
-                <Button asChild className="font-medium">
-                  <a href={ctaLink}>{ctaText}</a>
+            <div className="flex items-center gap-2 shrink-0">
+              {secondaryButton && (
+                <Link href={secondaryButton.href}>
+                  <Button
+                    variant={variant === 'prominent' ? 'secondary' : 'outline'}
+                    size="sm"
+                    className="hidden sm:inline-flex"
+                  >
+                    {secondaryButton.text}
+                  </Button>
+                </Link>
+              )}
+              
+              <Link href={buttonHref}>
+                <Button
+                  variant={variant === 'prominent' ? 'secondary' : 'default'}
+                  size="sm"
+                  className={cn(
+                    variant === 'prominent' && 'bg-background text-foreground hover:bg-background/90'
+                  )}
+                >
+                  {buttonText}
                 </Button>
-              </ButtonPress>
+              </Link>
               
               {dismissible && (
-                <ButtonPress>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleDismiss}
-                    className="ml-2 flex-shrink-0 text-current opacity-80 hover:opacity-100"
-                    aria-label="Dismiss"
-                  >
-                    <X className="h-5 w-5" />
-                  </Button>
-                </ButtonPress>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    'h-7 w-7',
+                    variant === 'prominent' ? 'text-primary-foreground hover:text-primary-foreground/80 hover:bg-primary-foreground/10' : ''
+                  )} 
+                  onClick={handleDismiss}
+                  aria-label="Dismiss"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               )}
             </div>
           </div>
-        </SlideIn>
+        </motion.div>
       )}
     </AnimatePresence>
   );
