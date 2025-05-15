@@ -1,105 +1,157 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { Shimmer } from './MicroInteractions';
+import { cn } from '@/lib/utils';
 
 interface LoadingStateProps {
-  size?: 'sm' | 'md' | 'lg';
-  color?: string;
-  message?: string;
   className?: string;
-  showProgress?: boolean;
-  progress?: number;
+  type?: 'card' | 'text' | 'image' | 'button' | 'avatar' | 'input' | 'table-row';
+  count?: number;
+  width?: string | number;
+  height?: string | number;
+  rounded?: boolean;
+  fullWidth?: boolean;
+  animate?: boolean;
 }
 
 /**
- * Apple-inspired loading state component
- * Uses subtle animations and progress indicators
+ * LoadingState - Provides elegant loading states with shimmer effect
  */
-export default function LoadingState({
-  size = 'md',
-  color = 'var(--color-primary)',
-  message,
-  className = '',
-  showProgress = false,
-  progress = 0
-}: LoadingStateProps) {
-  const sizeMap = {
-    sm: { width: '16px', height: '16px', strokeWidth: '3px' },
-    md: { width: '24px', height: '24px', strokeWidth: '2.5px' },
-    lg: { width: '40px', height: '40px', strokeWidth: '2px' }
+export const LoadingState: React.FC<LoadingStateProps> = ({
+  className,
+  type = 'text',
+  count = 1,
+  width,
+  height,
+  rounded = false,
+  fullWidth = false,
+  animate = true,
+}) => {
+  const items = Array.from({ length: count }, (_, index) => index);
+  
+  const getTypeStyles = () => {
+    switch (type) {
+      case 'card':
+        return 'w-full h-40 rounded-lg';
+      case 'text':
+        return 'h-4 rounded';
+      case 'image':
+        return 'aspect-video rounded-md';
+      case 'button':
+        return 'h-10 rounded-md';
+      case 'avatar':
+        return 'w-10 h-10 rounded-full';
+      case 'input':
+        return 'h-10 rounded-md';
+      case 'table-row':
+        return 'h-12 rounded';
+      default:
+        return '';
+    }
   };
-
-  const dimensions = sizeMap[size];
+  
+  const Wrapper = animate ? Shimmer : 'div';
   
   return (
-    <div className={`flex flex-col items-center justify-center ${className}`}>
-      <div className="relative">
-        {/* Background circle */}
-        <svg
-          width={dimensions.width}
-          height={dimensions.height}
-          viewBox="0 0 44 44"
-          xmlns="http://www.w3.org/2000/svg"
-          stroke={color}
-          className="opacity-20"
-        >
-          <circle
-            cx="22"
-            cy="22"
-            r="20"
-            fill="none"
-            strokeWidth={dimensions.strokeWidth}
-          />
-        </svg>
-        
-        {/* Animated spinner */}
-        <motion.svg
-          width={dimensions.width}
-          height={dimensions.height}
-          viewBox="0 0 44 44"
-          xmlns="http://www.w3.org/2000/svg"
-          stroke={color}
-          className="absolute top-0 left-0"
-          animate={{ rotate: 360 }}
-          transition={{
-            duration: 1.5,
-            repeat: Infinity,
-            ease: "linear"
+    <div className={cn('space-y-2', className)}>
+      {items.map((item) => (
+        <Wrapper
+          key={item}
+          className={cn(
+            'bg-slate-200 dark:bg-slate-800',
+            getTypeStyles(),
+            rounded && 'rounded-md',
+            fullWidth && 'w-full',
+            !fullWidth && !width && type === 'text' && 'w-2/3 last:w-1/2',
+          )}
+          style={{
+            width: width || undefined,
+            height: height || undefined,
           }}
-        >
-          <circle
-            cx="22"
-            cy="22"
-            r="20"
-            fill="none"
-            strokeWidth={dimensions.strokeWidth}
-            strokeLinecap="round"
-            strokeDasharray={showProgress ? '125.6' : '32'}
-            strokeDashoffset={showProgress ? 125.6 - (progress * 125.6) / 100 : 0}
-          />
-        </motion.svg>
-      </div>
-      
-      {message && (
-        <motion.p 
-          className="mt-3 text-sm text-gray-600 dark:text-gray-400 font-medium"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          {message}
-        </motion.p>
-      )}
-      
-      {showProgress && (
-        <motion.p 
-          className="mt-1 text-xs text-gray-500 font-medium"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-        >
-          {progress}%
-        </motion.p>
-      )}
+          duration={2}
+          delay={item * 0.1}
+        />
+      ))}
     </div>
   );
-}
+};
+
+/**
+ * CardSkeleton - Skeleton for card components
+ */
+export const CardSkeleton: React.FC<{ className?: string }> = ({ className }) => {
+  return (
+    <div className={cn("space-y-3", className)}>
+      <LoadingState type="image" fullWidth />
+      <LoadingState type="text" count={1} width="70%" />
+      <LoadingState type="text" count={2} width="100%" />
+      <div className="flex justify-between pt-2">
+        <LoadingState type="button" width={100} />
+        <LoadingState type="avatar" />
+      </div>
+    </div>
+  );
+};
+
+/**
+ * ProfileSkeleton - Skeleton for profile components
+ */
+export const ProfileSkeleton: React.FC<{ className?: string }> = ({ className }) => {
+  return (
+    <div className={cn("flex items-center space-x-4", className)}>
+      <LoadingState type="avatar" width={60} height={60} />
+      <div className="space-y-2">
+        <LoadingState type="text" width={120} />
+        <LoadingState type="text" width={80} />
+      </div>
+    </div>
+  );
+};
+
+/**
+ * TableSkeleton - Skeleton for table components
+ */
+export const TableSkeleton: React.FC<{ 
+  className?: string;
+  rows?: number;
+  columns?: number;
+}> = ({ 
+  className,
+  rows = 5,
+  columns = 4
+}) => {
+  return (
+    <div className={cn("space-y-3", className)}>
+      <div className="flex space-x-4 mb-6">
+        {Array.from({ length: columns }, (_, i) => (
+          <LoadingState key={i} type="text" width={`${100 / columns - 5}%`} />
+        ))}
+      </div>
+      
+      {Array.from({ length: rows }, (_, i) => (
+        <div key={i} className="flex space-x-4">
+          {Array.from({ length: columns }, (_, j) => (
+            <LoadingState key={j} type="text" width={`${100 / columns - 5}%`} />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+/**
+ * DashboardWidgetSkeleton - Skeleton for dashboard widgets
+ */
+export const DashboardWidgetSkeleton: React.FC<{ className?: string }> = ({ className }) => {
+  return (
+    <div className={cn("p-4 border rounded-lg space-y-4", className)}>
+      <div className="flex justify-between">
+        <LoadingState type="text" width={140} />
+        <LoadingState type="avatar" width={24} height={24} />
+      </div>
+      <LoadingState type="text" count={3} fullWidth />
+      <div className="pt-2">
+        <LoadingState type="button" width={100} />
+      </div>
+    </div>
+  );
+};

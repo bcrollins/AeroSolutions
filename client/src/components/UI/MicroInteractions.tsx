@@ -350,3 +350,195 @@ export const CountUp: React.FC<{
     </span>
   );
 };
+
+/**
+ * FadeIn - Fades in an element when it enters the viewport
+ */
+export const FadeIn: React.FC<React.ComponentProps<typeof motion.div> & {
+  delay?: number;
+  duration?: number;
+}> = ({ 
+  children, 
+  className,
+  delay = 0,
+  duration = 0.5,
+  ...props 
+}) => {
+  return (
+    <motion.div
+      className={cn(className)}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      variants={{
+        hidden: { opacity: 0 },
+        visible: { 
+          opacity: 1,
+          transition: { 
+            duration,
+            delay,
+            ease: "easeOut"
+          }
+        },
+        exit: { 
+          opacity: 0,
+          transition: { duration: 0.2 }
+        }
+      }}
+      {...props}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+/**
+ * SlideIn - Slides in an element when it enters the viewport
+ */
+export const SlideIn: React.FC<React.ComponentProps<typeof motion.div> & {
+  delay?: number;
+  duration?: number;
+  direction?: 'left' | 'right' | 'up' | 'down';
+  distance?: number;
+}> = ({ 
+  children, 
+  className,
+  delay = 0,
+  duration = 0.5,
+  direction = 'left',
+  distance = 50,
+  ...props 
+}) => {
+  const getDirectionValues = () => {
+    switch (direction) {
+      case 'left': return { x: -distance, y: 0 };
+      case 'right': return { x: distance, y: 0 };
+      case 'up': return { x: 0, y: -distance };
+      case 'down': return { x: 0, y: distance };
+      default: return { x: -distance, y: 0 };
+    }
+  };
+
+  const { x, y } = getDirectionValues();
+
+  return (
+    <motion.div
+      className={cn(className)}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      variants={{
+        hidden: { x, y, opacity: 0 },
+        visible: { 
+          x: 0, 
+          y: 0,
+          opacity: 1, 
+          transition: { 
+            duration,
+            delay,
+            ease: "easeOut" 
+          }
+        },
+        exit: { 
+          x: x / 2, 
+          y: y / 2,
+          opacity: 0, 
+          transition: { duration: 0.2 }
+        }
+      }}
+      {...props}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+/**
+ * ScaleIn - Scales in an element when it enters the viewport
+ */
+export const ScaleIn: React.FC<React.ComponentProps<typeof motion.div> & {
+  delay?: number;
+  duration?: number;
+  initialScale?: number;
+}> = ({ 
+  children, 
+  className,
+  delay = 0,
+  duration = 0.5,
+  initialScale = 0.8,
+  ...props 
+}) => {
+  return (
+    <motion.div
+      className={cn(className)}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      variants={{
+        hidden: { scale: initialScale, opacity: 0 },
+        visible: { 
+          scale: 1,
+          opacity: 1, 
+          transition: { 
+            duration,
+            delay,
+            ease: "easeOut" 
+          }
+        },
+        exit: { 
+          scale: initialScale,
+          opacity: 0, 
+          transition: { duration: 0.2 }
+        }
+      }}
+      {...props}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+/**
+ * Shimmer - Creates a shimmer effect across an element
+ */
+export const Shimmer: React.FC<React.ComponentProps<typeof motion.div> & {
+  duration?: number;
+  delay?: number;
+  angle?: number;
+  width?: number;
+}> = ({ 
+  children, 
+  className,
+  duration = 2.5,
+  delay = 0,
+  angle = 45,
+  width = 50,
+  ...props 
+}) => {
+  return (
+    <motion.div
+      className={cn("relative overflow-hidden", className)}
+      {...props}
+    >
+      {children}
+      <motion.div
+        className="absolute inset-0 -z-10"
+        initial={{
+          background: `linear-gradient(${angle}deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%)`,
+          left: `-${width * 2}%`,
+        }}
+        animate={{
+          left: `${100 + width}%`,
+          transition: {
+            duration,
+            delay,
+            repeat: Infinity,
+            repeatDelay: 1,
+            ease: "linear"
+          }
+        }}
+        style={{ width: `${width}%` }}
+      />
+    </motion.div>
+  );
+};
