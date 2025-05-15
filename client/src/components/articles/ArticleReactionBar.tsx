@@ -36,7 +36,7 @@ const ArticleReactionBar: React.FC<ArticleReactionBarProps> = ({
   const handleLike = () => {
     if (disliked) setDisliked(false);
     setLiked(!liked);
-    playSound('tap');
+    playSound('click');
     
     // API call would go here
     // fetch('/api/articles/like', { method: 'POST', body: JSON.stringify({ articleId, like: !liked }) })
@@ -54,7 +54,7 @@ const ArticleReactionBar: React.FC<ArticleReactionBarProps> = ({
   const handleDislike = () => {
     if (liked) setLiked(false);
     setDisliked(!disliked);
-    playSound('tap');
+    playSound('click');
     
     // API call would go here
     // fetch('/api/articles/dislike', { method: 'POST', body: JSON.stringify({ articleId, dislike: !disliked }) })
@@ -180,7 +180,7 @@ const ArticleReactionBar: React.FC<ArticleReactionBarProps> = ({
                 ) : (
                   <Bookmark size={iconSize} className="group-hover:text-amber-500 dark:group-hover:text-amber-400" />
                 )}
-                {!compact && <span className="ml-2">{saved ? "Saved" : "Save"}</span>}
+                {!isCompact && <span className="ml-2">{saved ? "Saved" : "Save"}</span>}
               </Button>
             </motion.div>
           </TooltipTrigger>
@@ -200,7 +200,7 @@ const ArticleReactionBar: React.FC<ArticleReactionBarProps> = ({
                 aria-label="Share article"
               >
                 <Share2 size={iconSize} className="group-hover:text-green-500 dark:group-hover:text-green-400" />
-                {!compact && <span className="ml-2">Share</span>}
+                {!isCompact && <span className="ml-2">Share</span>}
               </Button>
             </motion.div>
           </TooltipTrigger>
