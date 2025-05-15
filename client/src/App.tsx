@@ -397,6 +397,75 @@ export default function App() {
           )}
         </Route>
         
+        {/* Admin Routes */}
+        <Route path="/admin">
+          {() => {
+            const { isAuthenticated, isAdmin, isLoading } = useAuth();
+            
+            if (isLoading) {
+              return (
+                <div className="flex items-center justify-center h-screen">
+                  <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+                </div>
+              );
+            }
+            
+            if (!isAuthenticated) {
+              return <Redirect to="/login" />;
+            }
+            
+            if (!isAdmin) {
+              return (
+                <div className="flex flex-col items-center justify-center h-screen bg-slate-50 dark:bg-slate-900 p-4">
+                  <Shield className="h-12 w-12 text-red-500 mb-4" />
+                  <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
+                  <p className="text-muted-foreground mb-4">You don't have permission to access the admin area.</p>
+                  <Button onClick={() => window.location.href = '/'}>Return to Homepage</Button>
+                </div>
+              );
+            }
+            
+            return (
+              <>
+                <Helmet>
+                  <title>Admin Dashboard | RXAI</title>
+                  <meta name="robots" content="noindex, nofollow" />
+                </Helmet>
+                <AdminDashboardPage />
+              </>
+            );
+          }}
+        </Route>
+        
+        {/* Admin User Management */}
+        <Route path="/admin/users">
+          {() => {
+            const { isAuthenticated, isAdmin, isLoading } = useAuth();
+            
+            if (isLoading) {
+              return (
+                <div className="flex items-center justify-center h-screen">
+                  <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+                </div>
+              );
+            }
+            
+            if (!isAuthenticated || !isAdmin) {
+              return <Redirect to="/admin" />;
+            }
+            
+            return (
+              <>
+                <Helmet>
+                  <title>User Management | RXAI Admin</title>
+                  <meta name="robots" content="noindex, nofollow" />
+                </Helmet>
+                <AdminUsersPage />
+              </>
+            );
+          }}
+        </Route>
+        
         {/* Continue with rest of existing routes */}
         
         <Route>

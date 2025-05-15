@@ -5,7 +5,7 @@ import { updateArticleTitles } from '../scripts/update-article-titles';
 import { logger } from '../utils/logger';
 import { db } from '../db';
 import { users } from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 const router = express.Router();
 
