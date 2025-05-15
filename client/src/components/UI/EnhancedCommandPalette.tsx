@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { CommandPalette } from './CommandPalette';
 import { useCommandPalette } from '@/hooks/use-command-palette';
 import { ScaleIn, FadeIn } from './MicroInteractions';
 import { cn } from '@/lib/utils';
@@ -60,6 +59,19 @@ export interface Command {
   isNew?: boolean;
   isPopular?: boolean;
 }
+
+// Category labels for display
+const categoryLabels: Record<CommandCategory, string> = {
+  navigation: 'Navigation',
+  tools: 'Tools',
+  learning: 'Learning',
+  account: 'Account',
+  settings: 'Settings',
+  help: 'Help',
+  analytics: 'Analytics',
+  ai: 'AI',
+  experimental: 'Experimental'
+};
 
 /**
  * EnhancedCommandPalette - An enhanced version of the command palette with more functionality
@@ -500,167 +512,191 @@ export const EnhancedCommandPalette: React.FC = () => {
             
             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mt-4">
               <h3 className="font-medium mb-2 flex items-center">
-                <Lightbulb className="w-4 h-4 mr-2 text-blue-500" />
-                Pro Tip
+                <Keyboard className="mr-2 h-4 w-4" /> Global Shortcuts
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                Press <kbd className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-800 rounded border">Ctrl</kbd> + <kbd className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-800 rounded border">K</kbd> or <kbd className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-800 rounded border">⌘</kbd> + <kbd className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-800 rounded border">K</kbd> anytime to open the command palette.
-              </p>
+              <ul className="space-y-2">
+                <li className="flex justify-between items-center">
+                  <span>Open Command Palette</span>
+                  <div>
+                    <kbd className="px-2 py-1 text-xs font-semibold bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700 shadow-sm">
+                      {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+K
+                    </kbd>
+                  </div>
+                </li>
+                <li className="flex justify-between items-center">
+                  <span>Show Keyboard Shortcuts</span>
+                  <div>
+                    <kbd className="px-2 py-1 text-xs font-semibold bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700 shadow-sm">?</kbd>
+                  </div>
+                </li>
+              </ul>
             </div>
           </div>
           
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setShowKeyboardShortcutsModal(false)}>
+            <Button onClick={() => setShowKeyboardShortcutsModal(false)}>
               Close
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       
-      {/* Command Palette */}
-      <CommandPalette
-        open={isOpen}
-        onOpenChange={setIsOpen}
-        placeholder="Search commands, navigation, and more..."
-        actions={globalCommands.map(cmd => ({
-          id: cmd.id,
-          name: cmd.title,
-          description: cmd.description,
-          icon: cmd.icon,
-          action: close => {
-            cmd.action();
-            close();
-          },
-          section: cmd.category as any,
-          keywords: cmd.keywords,
-          shortcut: cmd.shortcut ? cmd.shortcut.split(' ') : undefined,
-          badge: cmd.isNew ? 'new' : cmd.isPopular ? 'popular' : undefined,
-          disabled: cmd.disabled
-        }))}
-        contentClassName="max-w-xl"
-      />
-          
-          {selectedCategory ? (
-            <div className="space-y-4">
-              <button
-                className="text-xs text-blue-600 dark:text-blue-400 flex items-center px-2"
-                onClick={() => setSelectedCategory(null)}
+      {/* Custom Command Palette UI */}
+      <div 
+        className={cn("fixed inset-0 z-50 bg-black/50 flex items-center justify-center", 
+          isOpen ? "block" : "hidden"
+        )} 
+        onClick={() => setIsOpen(false)}
+      >
+        <div 
+          className="bg-background border border-border rounded-lg shadow-xl w-full max-w-xl max-h-[80vh] overflow-hidden"
+          onClick={e => e.stopPropagation()}
+        >
+          {/* Search Input */}
+          <div className="flex items-center border-b p-3 sticky top-0 bg-background/90 backdrop-blur-sm z-10">
+            <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+            <input
+              type="text"
+              placeholder="Search commands, navigation, and more..."
+              className="flex h-9 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              autoFocus
+            />
+            {searchTerm && (
+              <button 
+                className="rounded text-xs px-1.5 py-0.5 hover:bg-accent text-muted-foreground"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSearchTerm('');
+                }}
               >
-                ← Back to all categories
+                Clear
               </button>
-              
-              <div className="space-y-1">
-                {(commandsByCategory[selectedCategory] || []).map((command, index) => (
-                  <ScaleIn key={command.id} delay={index * 0.03}>
-                    <button
-                      className={cn(
-                        'w-full flex items-center justify-between px-2 py-2 text-sm rounded text-left group',
-                        index === selectedIndex ? 'bg-blue-50 text-blue-900 dark:bg-blue-900/20 dark:text-blue-100' : 'hover:bg-gray-100 dark:hover:bg-gray-800',
-                        command.disabled && 'opacity-50 cursor-not-allowed'
-                      )}
-                      onClick={() => !command.disabled && executeCommand(command)}
-                    >
-                      <div className="flex items-center">
-                        {command.icon && <span className="mr-2 text-gray-500 dark:text-gray-400 group-hover:text-current">{command.icon}</span>}
-                        <div>
-                          <div className="flex items-center">
-                            <span>{command.title}</span>
-                            {command.isNew && (
-                              <span className="ml-2 px-1.5 py-0.5 text-xs rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-800 dark:text-emerald-100 font-medium">New</span>
-                            )}
-                            {command.isPopular && (
-                              <span className="ml-2 px-1.5 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 dark:bg-amber-800 dark:text-amber-100 font-medium">Popular</span>
-                            )}
-                          </div>
-                          {command.description && (
-                            <div className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">{command.description}</div>
+            )}
+          </div>
+          
+          {/* Command Content */}
+          <div className="overflow-y-auto max-h-[50vh] p-2">
+            {selectedCategory ? (
+              <div className="space-y-4">
+                <button
+                  className="text-xs text-blue-600 dark:text-blue-400 flex items-center px-2"
+                  onClick={() => setSelectedCategory(null)}
+                >
+                  ← Back to all categories
+                </button>
+                <div className="space-y-1">
+                  {Object.entries(commandsByCategory)
+                    .filter(([category]) => category === selectedCategory)
+                    .map(([, commands]) => 
+                      commands.map((command, index) => (
+                        <button
+                          key={command.id}
+                          className={cn(
+                            'w-full flex items-center px-2 py-1.5 text-sm rounded text-left',
+                            index === selectedIndex ? 'bg-blue-50 text-blue-900 dark:bg-blue-900/20 dark:text-blue-100' : 'hover:bg-gray-100 dark:hover:bg-gray-800'
                           )}
-                        </div>
-                      </div>
-                      
-                      {command.shortcut && (
-                        <div className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-gray-500 dark:text-gray-400">
-                          {command.shortcut}
-                        </div>
-                      )}
-                    </button>
-                  </ScaleIn>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {filteredCommands.length === 0 && searchTerm ? (
-                <div className="px-2 py-4 text-center text-gray-500 dark:text-gray-400">
-                  <Search className="mx-auto h-8 w-8 mb-2 opacity-40" />
-                  <p className="text-sm">No results found for "{searchTerm}"</p>
-                  <p className="text-xs mt-1">Try a different search term or browse categories</p>
+                          onClick={() => executeCommand(command)}
+                        >
+                          {command.icon && <span className="mr-2">{command.icon}</span>}
+                          <span>{command.title}</span>
+                        </button>
+                      ))
+                    )
+                  }
                 </div>
-              ) : (
-                searchTerm === '' && (
-                  <div className="grid grid-cols-2 gap-2">
-                    {Object.keys(commandsByCategory).map((category, idx) => (
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Recent Commands */}
+                {!searchTerm && recentCommands.length > 0 && (
+                  <div className="mb-4">
+                    <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Recent
+                    </div>
+                    <div className="space-y-1">
+                      {recentCommands.map((command, index) => (
+                        <button
+                          key={command.id}
+                          className={cn(
+                            'w-full flex items-center px-2 py-1.5 text-sm rounded text-left',
+                            index === selectedIndex && !selectedCategory ? 'bg-blue-50 text-blue-900 dark:bg-blue-900/20 dark:text-blue-100' : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                          )}
+                          onClick={() => executeCommand(command)}
+                        >
+                          {command.icon && <span className="mr-2">{command.icon}</span>}
+                          <span>{command.title}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Command categories */}
+                {!searchTerm && (
+                  <div className="grid grid-cols-2 gap-2 px-2 mb-4">
+                    {Object.entries(commandsByCategory).map(([category, commands]) => (
                       <button
                         key={category}
-                        className="flex items-center px-3 py-2 text-sm rounded border hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                        className="flex items-center p-2 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                         onClick={() => setSelectedCategory(category as CommandCategory)}
                       >
-                        <span className="mr-2 text-gray-500 dark:text-gray-400">
-                          {getCategoryIcon(category as CommandCategory)}
-                        </span>
-                        <span className="capitalize">{category}</span>
-                        <span className="ml-auto text-xs text-gray-500 dark:text-gray-400">
-                          {commandsByCategory[category as CommandCategory].length}
-                        </span>
+                        <span className="mr-2 text-gray-500">{getCategoryIcon(category as CommandCategory)}</span>
+                        <div className="flex-1">
+                          <div className="font-medium capitalize">{categoryLabels[category as CommandCategory] || category}</div>
+                          <div className="text-xs text-gray-500">{commands.length} command{commands.length !== 1 ? 's' : ''}</div>
+                        </div>
                       </button>
                     ))}
                   </div>
-                )
-              )}
-              
-              {searchTerm !== '' && filteredCommands.length > 0 && (
-                <div className="space-y-4">
-                  {Object.entries(commandsByCategory).map(([category, commands]) => (
-                    <div key={category}>
-                      <div className="px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                        {category}
+                )}
+                
+                {/* Filtered commands */}
+                {searchTerm && (
+                  <div className="px-2">
+                    {filteredCommands.length === 0 ? (
+                      <div className="text-center py-4 text-gray-500">
+                        No commands matching <span className="font-medium">{searchTerm}</span>
                       </div>
-                      <div className="space-y-1 mt-1">
-                        {commands.map((command, commandIndex) => {
-                          const index = filteredCommands.findIndex(cmd => cmd.id === command.id);
-                          return (
-                            <button
-                              key={command.id}
-                              className={cn(
-                                'w-full flex items-center justify-between px-2 py-2 text-sm rounded text-left group',
-                                index === selectedIndex ? 'bg-blue-50 text-blue-900 dark:bg-blue-900/20 dark:text-blue-100' : 'hover:bg-gray-100 dark:hover:bg-gray-800',
-                                command.disabled && 'opacity-50 cursor-not-allowed'
-                              )}
-                              onClick={() => !command.disabled && executeCommand(command)}
-                            >
-                              <div className="flex items-center">
-                                {command.icon && <span className="mr-2 text-gray-500 dark:text-gray-400 group-hover:text-current">{command.icon}</span>}
-                                <span>{command.title}</span>
-                              </div>
-                              
-                              {command.shortcut && (
-                                <div className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-gray-500 dark:text-gray-400">
-                                  {command.shortcut}
-                                </div>
-                              )}
-                            </button>
-                          );
-                        })}
+                    ) : (
+                      <div className="space-y-1">
+                        {filteredCommands.map((command, index) => (
+                          <button
+                            key={command.id}
+                            className={cn(
+                              'w-full flex items-center px-2 py-1.5 text-sm rounded text-left',
+                              index === selectedIndex ? 'bg-blue-50 text-blue-900 dark:bg-blue-900/20 dark:text-blue-100' : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                            )}
+                            onClick={() => executeCommand(command)}
+                          >
+                            {command.icon && <span className="mr-2">{command.icon}</span>}
+                            <span>{command.title}</span>
+                            {command.shortcut && (
+                              <span className="ml-auto text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded">
+                                {command.shortcut}
+                              </span>
+                            )}
+                          </button>
+                        ))}
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          
+          {/* Footer with keyboard shortcuts */}
+          <div className="border-t p-2 text-center text-xs text-muted-foreground">
+            <span className="flex justify-center gap-2">
+              <kbd className="px-1.5 py-0.5 bg-muted border border-border rounded text-xs">ESC</kbd> to close, 
+              <kbd className="px-1.5 py-0.5 bg-muted border border-border rounded text-xs">↑</kbd> 
+              <kbd className="px-1.5 py-0.5 bg-muted border border-border rounded text-xs">↓</kbd> to navigate
+            </span>
+          </div>
         </div>
-      }
-    />
+      </div>
     </div>
   );
 };
