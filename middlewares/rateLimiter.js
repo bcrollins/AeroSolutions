@@ -70,6 +70,13 @@ const openaiLimiter = createLimiter({
   message: 'OpenAI API rate limit exceeded. Please try again in a minute.'
 });
 
+// XAI API rate limiter (5 per minute)
+const xaiLimiter = createLimiter({
+  windowMs: 60 * 1000,
+  maxRequests: 5,
+  message: 'XAI API rate limit exceeded. Please try again in a minute.'
+});
+
 // Very restrictive limiter for auth endpoints to prevent brute force attempts
 const authLimiter = createLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -81,5 +88,6 @@ module.exports = {
   createLimiter,
   generalLimiter,
   openaiLimiter,
+  xaiLimiter,
   authLimiter
 };

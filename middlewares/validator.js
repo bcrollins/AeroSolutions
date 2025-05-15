@@ -72,7 +72,7 @@ function formatZodErrors(error) {
   };
 }
 
-// Define schemas for OpenAI API validation
+// Define schemas for AI API validation
 
 // Schema for text completion requests
 const completionSchema = z.object({
@@ -91,7 +91,7 @@ const chatSchema = z.object({
       content: z.string().min(1).max(4000)
     })
   ).min(1, 'At least one message is required'),
-  model: z.string().optional().default('gpt-4o'),
+  model: z.string().optional().default('grok-2-1212'),
   maxTokens: z.number().int().positive().max(4000).optional().default(1000),
   temperature: z.number().min(0).max(2).optional().default(0.7),
   responseFormat: z.string().optional()
