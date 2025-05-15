@@ -87,6 +87,18 @@ const NewsHubPage: React.FC = () => {
           (post.tags && Array.isArray(post.tags) && post.tags.some((tag: string) => tag.toLowerCase().includes('tech'))) || 
           (post.category && post.category.toLowerCase().includes('tech'))
         );
+      } else if (activeTab === 'tutorials') {
+        filtered = filtered.filter(post => 
+          (post.tags && Array.isArray(post.tags) && post.tags.some((tag: string) => tag.toLowerCase().includes('tutorial') || tag.toLowerCase().includes('guide') || tag.toLowerCase().includes('how-to'))) || 
+          (post.category && (post.category.toLowerCase().includes('tutorial') || post.category.toLowerCase().includes('learning'))) ||
+          (post.title && post.title.toLowerCase().includes('how to'))
+        );
+      } else if (activeTab === 'news') {
+        filtered = filtered.filter(post => 
+          (post.tags && Array.isArray(post.tags) && post.tags.some((tag: string) => tag.toLowerCase().includes('news') || tag.toLowerCase().includes('update') || tag.toLowerCase().includes('announcement'))) || 
+          (post.category && post.category.toLowerCase().includes('news')) ||
+          (post.postType && post.postType.toLowerCase() === 'news')
+        );
       }
     }
 

@@ -95,7 +95,7 @@ export default function Header() {
         { label: 'Digital Tools', path: '/digital-tools' },
       ],  
     },  
-    { label: 'AI News', path: '/news' },
+    { label: 'AI News & Articles', path: '/news' },
     { label: 'Client Preview', path: '/client-preview' }
   ];  
 

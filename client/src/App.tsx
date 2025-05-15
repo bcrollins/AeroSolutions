@@ -283,16 +283,13 @@ export default function App() {
         </Route>
 
         <Route path="/articles/:slug">
-          {() => (
-            <>
-              <Helmet>
-                <meta name="robots" content="index, follow" />
-                <html lang={i18n.language.split('-')[0]} />
-                <meta httpEquiv="Content-Language" content={i18n.language} />
-              </Helmet>
-              <ArticleDetailPage />
-            </>
-          )}
+          {({ params }) => {
+            // Redirect to /news/:slug
+            useEffect(() => {
+              setLocation(`/news/${params.slug}`);
+            }, [params.slug]);
+            return null;
+          }}
         </Route>
         
         <Route path="/privacy-policy">
