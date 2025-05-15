@@ -94,6 +94,7 @@ import ContactPage from "@/pages/ContactPage";
 import LearnAI from "@/pages/LearnAI";
 import CoursesDashboard from "@/pages/CoursesDashboard";
 import MicroInteractionsDemo from "@/pages/MicroInteractionsDemo";
+import ComponentShowcase from "@/pages/ComponentShowcase";
 
 export default function App() {
   const { t, i18n } = useTranslation();
@@ -430,6 +431,22 @@ export default function App() {
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
               <MicroInteractionsDemo />
+            </>
+          )}
+        </Route>
+        
+        <Route path="/components">
+          {() => (
+            <>
+              <Helmet>
+                <title>UI Component Showcase | RXAI Design System</title>
+                <meta name="description" content="Explore RXAI's comprehensive UI component library featuring Apple-inspired design elements, animations, and interactive controls." />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href="https://rollinsx.dev/components" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <ComponentShowcase />
             </>
           )}
         </Route>
