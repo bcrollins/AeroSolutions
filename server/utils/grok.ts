@@ -60,7 +60,7 @@ class XAIApi {
 
       return response.choices[0].message.content || '';
     } catch (error: any) {
-      console.error('Error generating text with OpenAI API:', error);
+      console.error('Error generating text with xAI API:', error);
       throw new Error(`Failed to generate text: ${error?.message || 'Unknown error'}`);
     }
   }
@@ -96,7 +96,7 @@ class XAIApi {
       const content = response.choices[0].message.content || '{}';
       return JSON.parse(content) as T;
     } catch (error: any) {
-      console.error('Error generating JSON with OpenAI API:', error);
+      console.error('Error generating JSON with xAI API:', error);
       
       // Return empty object structure for graceful fallback
       if (error?.message?.includes('parse')) {
@@ -139,13 +139,14 @@ class XAIApi {
 
       return response.choices[0].message.content || '';
     } catch (error: any) {
-      console.error('Error analyzing image with OpenAI API:', error);
+      console.error('Error analyzing image with xAI API:', error);
       throw new Error(`Failed to analyze image: ${error?.message || 'Unknown error'}`);
     }
   }
 }
 
 // Export singleton instance
-export const openaiApi = new OpenAIApi();
-// For backward compatibility, also export as grokApi
-export const grokApi = openaiApi;
+export const xaiApi = new XAIApi();
+// For backward compatibility, also export as openaiApi and grokApi
+export const openaiApi = xaiApi;
+export const grokApi = xaiApi;

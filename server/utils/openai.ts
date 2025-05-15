@@ -2,8 +2,11 @@ import OpenAI from "openai";
 import { performance } from 'node:perf_hooks';
 import NodeCache from 'node-cache';
 
-// The newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Initialize the xAI client
+const openai = new OpenAI({ 
+  baseURL: "https://api.x.ai/v1",
+  apiKey: process.env.XAI_API_KEY 
+});
 
 // Cache configuration: 
 // - stdTTL: 3600 seconds (1 hour) default TTL
@@ -42,10 +45,10 @@ function generateCacheKey(message: string): string {
  * @returns A response from the AI assistant
  */
 export async function generateCopilotResponse(userMessage: string): Promise<string> {
-  // Ensure OpenAI API key is available
-  if (!process.env.OPENAI_API_KEY) {
-    console.error("Missing OPENAI_API_KEY in environment variables");
-    throw new Error("OpenAI API key not configured");
+  // Ensure XAI API key is available
+  if (!process.env.XAI_API_KEY) {
+    console.error("Missing XAI_API_KEY in environment variables");
+    throw new Error("XAI API key not configured");
   }
   
   try {
@@ -82,7 +85,7 @@ export async function generateCopilotResponse(userMessage: string): Promise<stri
     // Make the API call with appropriate error handling
     try {
       const response = await openai.chat.completions.create({
-        model: "gpt-4o",
+        model: "grok-2-1212",
         messages: [
           {
             role: "system",
@@ -119,19 +122,19 @@ export async function generateCopilotResponse(userMessage: string): Promise<stri
     } catch (apiError: any) {
       // Enhanced error handling with more specific error messages
       if (apiError.status === 429) {
-        console.error("OpenAI rate limit exceeded:", apiError);
+        console.error("xAI rate limit exceeded:", apiError);
         throw new Error("AI service is currently handling many requests. Please try again in a moment.");
       } else if (apiError.status === 401) {
-        console.error("OpenAI authentication error:", apiError);
+        console.error("xAI authentication error:", apiError);
         throw new Error("AI service authentication failed. Please contact support.");
       } else if (apiError.status === 403) {
-        console.error("OpenAI permission error:", apiError);
+        console.error("xAI permission error:", apiError);
         throw new Error("Request blocked by AI service policy. Please try a different query.");
       } else if (apiError.status === 500 || apiError.status === 503) {
-        console.error("OpenAI server error:", apiError);
+        console.error("xAI server error:", apiError);
         throw new Error("AI service is temporarily unavailable. Please try again later.");
       } else if (apiError.code === 'ECONNRESET' || apiError.code === 'ETIMEDOUT') {
-        console.error("OpenAI connection error:", apiError);
+        console.error("xAI connection error:", apiError);
         throw new Error("Connection to AI service timed out. Please check your network and try again.");
       }
       
