@@ -68,8 +68,13 @@ const NewsHubPage: React.FC = () => {
     if (postsData) {
       console.log('Posts data:', postsData);
       console.log(`Successfully loaded ${allPosts.length} articles`);
+      
+      // Play a success sound when articles load
+      if (allPosts.length > 0) {
+        playSound('success');
+      }
     }
-  }, [postsData, allPosts.length]);
+  }, [postsData, allPosts.length, playSound]);
 
   // Filter posts based on active tab
   const filteredPosts = React.useMemo(() => {
@@ -511,6 +516,17 @@ const ArticleCard = ({ post, featured = false }: { post: ArticlePost, featured?:
                 src={post.imageUrl} 
                 alt={safeTitle} 
                 className="h-full w-full object-cover" 
+                onError={(e) => {
+                  // Replace broken image with a fallback gradient and icon
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  target.parentElement!.classList.add('bg-gradient-to-br', 'from-blue-600/20', 'to-indigo-600/20', 'flex', 'items-center', 'justify-center');
+                  
+                  // Create and append an icon element
+                  const icon = document.createElement('div');
+                  icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-16 w-16 text-blue-500/30"><path d="M12 2v1m0 18v1m9-9h-1M4 12H3m15.364 6.364-.7071-.7071M6.34315 6.34315l-.70711-.70711m12.72796.00003-.7071.70708M6.3432 17.6569l-.70711.7071M16 12c0 2.2091-1.7909 4-4 4-2.20914 0-4-1.7909-4-4 0-2.20914 1.79086-4 4-4 2.2091 0 4 1.79086 4 4Z"></path></svg>`;
+                  target.parentElement!.appendChild(icon);
+                }}
               />
             ) : (
               <div className="h-full w-full bg-gradient-to-br from-blue-600/20 to-indigo-600/20 flex items-center justify-center">
@@ -534,7 +550,10 @@ const ArticleCard = ({ post, featured = false }: { post: ArticlePost, featured?:
             )}
             
             <div>
-              <Link href={`/news/${safeSlug}`}>
+              <Link 
+                href={`/news/${safeSlug}`} 
+                onClick={() => playSound('click')}
+              >
                 <h3 className="text-xl md:text-2xl font-bold mb-3 line-clamp-3 group-hover:text-blue-600 transition-colors">
                   {safeTitle}
                 </h3>
@@ -570,6 +589,25 @@ const ArticleCard = ({ post, featured = false }: { post: ArticlePost, featured?:
             src={post.imageUrl} 
             alt={safeTitle} 
             className="h-full w-full object-cover" 
+            onError={(e) => {
+              // Replace broken image with a fallback gradient and icon
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+              target.parentElement!.classList.add('bg-gradient-to-br', 'from-blue-600/10', 'to-indigo-600/10', 'flex', 'items-center', 'justify-center');
+              
+              // Create and append an icon element based on article category
+              const icon = document.createElement('div');
+              
+              if (post.category?.toLowerCase().includes('ai')) {
+                icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-10 w-10 text-blue-500/30"><path d="M12 2v1m0 18v1m9-9h-1M4 12H3m15.364 6.364-.7071-.7071M6.34315 6.34315l-.70711-.70711m12.72796.00003-.7071.70708M6.3432 17.6569l-.70711.7071M16 12c0 2.2091-1.7909 4-4 4-2.20914 0-4-1.7909-4-4 0-2.20914 1.79086-4 4-4 2.2091 0 4 1.79086 4 4Z"></path></svg>`;
+              } else if (post.category?.toLowerCase().includes('business')) {
+                icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-10 w-10 text-blue-500/30"><path d="M3 12H5M5 12C7.76142 12 10 9.76142 10 7C10 4.23858 7.76142 2 5 2H3V22H5C7.76142 22 10 19.7614 10 17C10 14.2386 7.76142 12 5 12Z"></path><path d="M21 12H19M19 12C16.2386 12 14 9.76142 14 7C14 4.23858 16.2386 2 19 2H21V22H19C16.2386 22 14 19.7614 14 17C14 14.2386 16.2386 12 19 12Z"></path></svg>`;
+              } else {
+                icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-10 w-10 text-blue-500/30"><path d="M21 12a9 9.00001 0 11-18 0 9 9.00001 0 0118 0z"></path><path d="M12 8v4l2.5 2.5"></path></svg>`;
+              }
+              
+              target.parentElement!.appendChild(icon);
+            }}
           />
         ) : (
           <div className="h-full w-full bg-gradient-to-br from-blue-600/10 to-indigo-600/10 flex items-center justify-center">
@@ -594,7 +632,10 @@ const ArticleCard = ({ post, featured = false }: { post: ArticlePost, featured?:
           </div>
         )}
         
-        <Link href={`/news/${safeSlug}`}>
+        <Link 
+          href={`/news/${safeSlug}`}
+          onClick={() => playSound('click')}
+        >
           <h3 className="text-lg font-bold mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
             {safeTitle}
           </h3>
