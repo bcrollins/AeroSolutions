@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, createContext, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'wouter';
 import { Command } from 'cmdk';
@@ -548,10 +548,18 @@ export default function CommandPalette({
   );
 }
 
+// Create a context for the command palette
+interface CommandPaletteContextType {
+  isOpen: boolean;
+  setIsOpen: (value: boolean | ((prev: boolean) => boolean)) => void;
+}
+
+const CommandPaletteContext = createContext<CommandPaletteContextType | undefined>(undefined);
+
 /**
- * Hook to use the command palette
+ * Command Palette Provider component
  */
-export function useCommandPalette() {
+export function CommandPaletteProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   
   useEffect(() => {
@@ -567,5 +575,24 @@ export function useCommandPalette() {
     return () => document.removeEventListener('keydown', down);
   }, []);
   
-  return { isOpen, setIsOpen };
+  const value = { isOpen, setIsOpen };
+  
+  return (
+    <CommandPaletteContext.Provider value={value}>
+      {children}
+    </CommandPaletteContext.Provider>
+  );
+}
+
+/**
+ * Hook to use the command palette
+ */
+export function useCommandPalette() {
+  const context = useContext(CommandPaletteContext);
+  
+  if (context === undefined) {
+    return { isOpen: false, setIsOpen: () => {} };
+  }
+  
+  return context;
 }

@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import ContentProtection from "@/components/ContentProtection";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { CommandPaletteProvider } from "@/components/UI/CommandPalette";
 import ABTestClient from "@/components/ABTestClient";
 import { initGA } from "@/lib/analytics";
 import { useAnalytics } from "@/hooks/use-analytics";
@@ -181,50 +182,51 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      <NotificationProvider>
-        {/* A/B Testing Client - applied to all routes */}
-        <ABTestClient />
-        
-        {/* WebSocket Listener for forum notifications - only for authenticated users */}
-        {isAuthenticated && <WebSocketListener />}
-        
-        {/* Global App Metadata - applied to all routes */}
-      <Helmet>
-        {/* Languages support */}
-        <html lang="en" />
-        <meta httpEquiv="Content-Language" content="en" />
-        
-        {/* Essential for SPAs and search engine crawling */}
-        <meta name="fragment" content="!" />
-        
-        {/* Mobile optimization */}
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
-        <meta name="format-detection" content="telephone=no" />
-        
-        {/* Google verification - replace with actual code when available */}
-        <meta name="google-site-verification" content="verification_token" />
-        
-        {/* Apple specific */}
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-        <meta name="apple-mobile-web-app-title" content="ROLLINSX" />
-        
-        {/* Microsoft specific */}
-        <meta name="msapplication-TileColor" content="#3B5B9D" />
-        <meta name="msapplication-config" content="/browserconfig.xml" />
-        <meta name="theme-color" content="#3B5B9D" />
-        
-        {/* Application manifest */}
-        <link rel="manifest" href="/manifest.json" />
-        
-        {/* Links for SEO */}
-        <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
-      </Helmet>
-      
-      {/* Add language meta tags for the current path */}
-      <LanguageMetaTags currentPath={currentPath} />
-      
-      <Switch>
+      <CommandPaletteProvider>
+        <NotificationProvider>
+          {/* A/B Testing Client - applied to all routes */}
+          <ABTestClient />
+          
+          {/* WebSocket Listener for forum notifications - only for authenticated users */}
+          {isAuthenticated && <WebSocketListener />}
+          
+          {/* Global App Metadata - applied to all routes */}
+          <Helmet>
+            {/* Languages support */}
+            <html lang="en" />
+            <meta httpEquiv="Content-Language" content="en" />
+            
+            {/* Essential for SPAs and search engine crawling */}
+            <meta name="fragment" content="!" />
+            
+            {/* Mobile optimization */}
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
+            <meta name="format-detection" content="telephone=no" />
+            
+            {/* Google verification - replace with actual code when available */}
+            <meta name="google-site-verification" content="verification_token" />
+            
+            {/* Apple specific */}
+            <meta name="apple-mobile-web-app-capable" content="yes" />
+            <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+            <meta name="apple-mobile-web-app-title" content="ROLLINSX" />
+            
+            {/* Microsoft specific */}
+            <meta name="msapplication-TileColor" content="#3B5B9D" />
+            <meta name="msapplication-config" content="/browserconfig.xml" />
+            <meta name="theme-color" content="#3B5B9D" />
+            
+            {/* Application manifest */}
+            <link rel="manifest" href="/manifest.json" />
+            
+            {/* Links for SEO */}
+            <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+          </Helmet>
+          
+          {/* Add language meta tags for the current path */}
+          <LanguageMetaTags currentPath={currentPath} />
+          
+          <Switch>
         <Route path="/">
           {() => (
             <>
@@ -538,6 +540,7 @@ export default function App() {
       {/* Global toast notifications */}
       <Toaster />
       </NotificationProvider>
+      </CommandPaletteProvider>
     </ThemeProvider>
   );
 }
