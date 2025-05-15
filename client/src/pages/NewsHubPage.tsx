@@ -422,10 +422,61 @@ const NewsHubPage: React.FC = () => {
       </Helmet>
       
       <div className="mb-10">
-        <h1 className="text-3xl font-bold mb-2 text-gray-900 dark:text-gray-50">News Hub</h1>
+        <h1 className="text-3xl font-bold mb-2 text-gray-900 dark:text-gray-50 group">
+          News Hub
+          <div className="relative inline-flex ml-2">
+            <span className="absolute -right-1 -top-1 flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/40 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+            </span>
+          </div>
+        </h1>
         <p className="text-gray-600 dark:text-gray-400 max-w-3xl">
           Stay up to date with the latest AI technology news, research breakthroughs, and industry insights.
         </p>
+      </div>
+      
+      {/* Floating Quick Action Buttons */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 items-end">
+        {/* Reading List Quick Access */}
+        <button 
+          className="bg-white dark:bg-gray-800 text-primary shadow-lg rounded-full p-3 flex items-center justify-center 
+            transition-all duration-300 hover:bg-primary hover:text-white transform hover:scale-110 
+            border border-primary/20"
+          onMouseEnter={() => playSound('focus')}
+          onClick={() => {
+            playSound('click');
+            toast({
+              title: "Coming Soon!",
+              description: "Reading list feature will be available soon.",
+            });
+          }}
+          aria-label="View reading list"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </button>
+        
+        {/* Quick Filter Button */}
+        <button 
+          className="bg-primary text-white shadow-lg rounded-full p-4 flex items-center justify-center 
+            transition-all duration-300 hover:bg-primary/90 transform hover:scale-110"
+          onMouseEnter={() => playSound('focus')}
+          onClick={() => {
+            playSound('navigation');
+            // Toggle filter visibility here
+            toast({
+              title: "Quick Filters",
+              description: "Advanced filtering options coming soon!",
+            });
+          }}
+          aria-label="Show quick filters"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+          </svg>
+        </button>
       </div>
       
       {/* Search and Filters */}
