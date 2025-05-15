@@ -183,29 +183,29 @@ const PersonalizedContent: React.FC = () => {
       transition={{ duration: 0.5, delay: 0.5 }}
       className="my-8"
     >
-      <Card className="bg-[#2a2a2a] border-electric-cyan-400/30 overflow-hidden">
+      <Card className="bg-white border border-gray-200 shadow-sm overflow-hidden rounded-xl">
         <div className="flex flex-col md:flex-row">
           <div className="flex-1 p-6">
-            <div className="text-sm text-electric-cyan-400 mb-2">Based on your interests</div>
-            <h3 className="text-xl font-bold text-white mb-2">
+            <div className="text-sm text-[#0066cc] mb-2 font-medium">Based on your interests</div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2 tracking-tight">
               Recommended for you: {recommendedCategory.name}
             </h3>
-            <p className="text-gray-300 mb-4">
+            <p className="text-gray-700 mb-4">
               {recommendedCategory.description}
             </p>
             <div className="mt-4">
               <Button 
                 onClick={handleRecommendationClick}
-                className="bg-electric-cyan-600 hover:bg-electric-cyan-700 text-white"
+                className="bg-[#0066cc] hover:bg-[#0055b3] text-white font-medium px-5 py-2.5 rounded-lg transition-all duration-300 shadow-sm hover:shadow-md"
               >
                 Explore {recommendedCategory.recommendedCourse}
               </Button>
             </div>
           </div>
-          <div className="w-full md:w-1/3 bg-gradient-to-r from-[#2a2a2a] to-[#1a1a1a] flex items-center justify-center p-6">
+          <div className="w-full md:w-1/3 bg-gradient-to-r from-[#f8f9fa] to-[#f0f0f0] flex items-center justify-center p-6">
             <div className="text-center">
               <div className="text-4xl mb-2">🎯</div>
-              <div className="text-sm text-gray-400">Personalized Recommendation</div>
+              <div className="text-sm text-gray-500 font-medium">Personalized Recommendation</div>
             </div>
           </div>
         </div>
