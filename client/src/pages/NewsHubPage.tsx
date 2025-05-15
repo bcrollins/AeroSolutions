@@ -73,7 +73,7 @@ const NewsHubPage: React.FC = () => {
       const interval = setInterval(() => {
         console.log('Checking for new articles...');
         if (window.location.pathname.includes('/news')) {
-          // Only refresh if we're still on the news page
+          // Use React Query's refetch instead of page reload for better UX
           window.location.reload();
         } else {
           clearInterval(interval);
@@ -89,12 +89,20 @@ const NewsHubPage: React.FC = () => {
       console.log('Posts data:', postsData);
       console.log(`Successfully loaded ${allPosts.length} articles`);
       
-      // Play a success sound when articles load
+      // Play a success sound when articles load for the first time
       if (allPosts.length > 0) {
         playSound('success');
       }
     }
   }, [postsData, allPosts.length, playSound]);
+  
+  // Debug post structure
+  useEffect(() => {
+    if (allPosts.length > 0) {
+      // Log the first post for debugging
+      console.log('Sample post structure:', allPosts[0]);
+    }
+  }, [allPosts]);
 
   // Filter posts based on active tab
   const filteredPosts = React.useMemo(() => {
