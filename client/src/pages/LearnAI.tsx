@@ -1708,7 +1708,7 @@ const LearnAI: React.FC = () => {
                   <Progress value={progressPercentage} className="h-2 bg-gray-100" />
                 </div>
                 
-                <h3 className="text-xl font-medium mb-6">{currentQuestionData.question}</h3>
+                <h3 className="text-xl font-medium mb-6 text-gray-800">{currentQuestionData.question}</h3>
                 
                 <RadioGroup 
                   value={answers[currentQuestionData.id] || ""} 
@@ -1721,9 +1721,9 @@ const LearnAI: React.FC = () => {
                   className="space-y-4 mb-8"
                 >
                   {currentQuestionData.options.map((option) => (
-                    <div key={option.id} className="flex items-center space-x-2 p-3 rounded-md hover:bg-[#444] transition-colors">
-                      <RadioGroupItem value={option.id} id={option.id} />
-                      <Label htmlFor={option.id} className="flex-1 cursor-pointer">{option.text}</Label>
+                    <div key={option.id} className="flex items-center space-x-2 p-3 rounded-md hover:bg-gray-100 transition-colors border border-gray-200">
+                      <RadioGroupItem value={option.id} id={option.id} className="text-[#0066cc]" />
+                      <Label htmlFor={option.id} className="flex-1 cursor-pointer text-gray-700">{option.text}</Label>
                     </div>
                   ))}
                 </RadioGroup>
@@ -1733,33 +1733,34 @@ const LearnAI: React.FC = () => {
                     variant="outline" 
                     onClick={handlePreviousQuestion}
                     disabled={currentQuestion === 0}
+                    className="border-gray-300 text-gray-700 hover:bg-gray-50"
                   >
                     Previous
                   </Button>
                   <Button 
                     onClick={handleNextQuestion}
                     disabled={!answers[currentQuestionData.id]}
-                    className="bg-[#007bff] hover:bg-blue-600"
+                    className="bg-[#0066cc] hover:bg-[#004c99] text-white shadow-sm"
                   >
                     {currentQuestion === quizQuestions.length - 1 ? "See Results" : "Next"}
                   </Button>
                 </div>
               </Card>
             ) : (
-              <Card className="bg-[#333] border-none p-6">
+              <Card className="bg-white border border-gray-200 shadow-sm p-6">
                 <div className="text-center mb-6">
-                  <h3 className="text-2xl font-bold text-[#007bff]">{result.title}</h3>
+                  <h3 className="text-2xl font-bold text-[#0066cc]">{result.title}</h3>
                   <div className="flex justify-center my-4">
-                    <div className="inline-flex items-center justify-center p-4 bg-[#2a2a2a] rounded-full">
-                      <span className="text-2xl font-bold">{score}/{quizQuestions.length * 10}</span>
+                    <div className="inline-flex items-center justify-center p-4 bg-gray-50 border border-gray-200 rounded-full shadow-inner">
+                      <span className="text-2xl font-bold text-gray-900 tabular-nums">{score}/{quizQuestions.length * 10}</span>
                     </div>
                   </div>
-                  <p className="text-gray-300 mb-4">{result.description}</p>
-                  <p className="font-medium mb-6">{result.recommendation}</p>
+                  <p className="text-gray-600 mb-4">{result.description}</p>
+                  <p className="font-medium text-gray-800 mb-6">{result.recommendation}</p>
                   
                   <div className="flex flex-col sm:flex-row justify-center gap-4">
                     <Button 
-                      className="bg-[#007bff] hover:bg-blue-600"
+                      className="bg-[#0066cc] hover:bg-[#004c99] text-white shadow-sm"
                       onClick={() => window.location.href = '/ai-courses/catalog'}
                     >
                       {result.cta}
@@ -1767,6 +1768,7 @@ const LearnAI: React.FC = () => {
                     <Button 
                       variant="outline" 
                       onClick={handleResetQuiz}
+                      className="border-gray-300 text-gray-700 hover:bg-gray-50"
                     >
                       Retake Quiz
                     </Button>
