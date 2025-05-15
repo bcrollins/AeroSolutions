@@ -14,10 +14,7 @@ const xai = new OpenAI({
   apiKey: process.env.XAI_API_KEY 
 });
 
-// Initialize OpenAI client as fallback
-const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY 
-});
+// No fallback - use XAI exclusively
 
 /**
  * Generate content using AI
@@ -36,27 +33,14 @@ async function generateAIContent(options) {
     // Create a prompt based on content type
     const prompt = createPrompt(options);
     
-    // Try with xAI first
-    try {
-      const xaiResponse = await generateWithXAI(prompt, type);
-      return {
-        ...xaiResponse,
-        generator: 'xai'
-      };
-    } catch (xaiError) {
-      logger.warn('xAI generation failed, falling back to OpenAI', { 
-        error: xaiError.message 
-      });
-      
-      // Fall back to OpenAI if xAI fails
-      const openaiResponse = await generateWithOpenAI(prompt, type);
-      return {
-        ...openaiResponse,
-        generator: 'openai'
-      };
-    }
+    // Use XAI exclusively - no fallback
+    const xaiResponse = await generateWithXAI(prompt, type);
+    return {
+      ...xaiResponse,
+      generator: 'xai'
+    };
   } catch (error) {
-    logger.error('Content generation failed with both xAI and OpenAI', { 
+    logger.error('Content generation failed with XAI', { 
       error: error.message, title, type 
     });
     throw error;
@@ -221,51 +205,7 @@ async function generateWithXAI(prompt, type) {
   }
 }
 
-/**
- * Generate content using OpenAI as a fallback
- * @param {string} prompt - Generation prompt
- * @param {string} type - Content type
- * @returns {Promise<Object>} Generated content and metadata
- */
-async function generateWithOpenAI(prompt, type) {
-  try {
-    // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: "You are an expert content creator specializing in creating high-quality, professional articles, blog posts, and Q&A content. You write in a clear, engaging style that balances authority with accessibility."
-        },
-        {
-          role: "user",
-          content: prompt
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 4000,
-      response_format: { type: "json_object" }
-    });
-    
-    // Parse the JSON response
-    const result = JSON.parse(response.choices[0].message.content);
-    
-    return {
-      content: result.content,
-      summary: result.summary,
-      seoDescription: result.seoDescription,
-      seoKeywords: result.seoKeywords,
-      tags: result.tags,
-      readTimeMinutes: result.readTimeMinutes
-    };
-  } catch (error) {
-    logger.error('OpenAI content generation failed', { 
-      error: error.message, 
-      contentType: type 
-    });
-    throw error;
-  }
-}
+// No OpenAI fallback function - we use XAI exclusively
 
 module.exports = {
   generateAIContent
