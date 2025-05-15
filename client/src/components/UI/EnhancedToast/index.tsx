@@ -62,7 +62,7 @@ export const EnhancedToast: React.FC<EnhancedToastProps> = ({
   };
   
   return (
-    <Toast
+    <ShadcnToast
       className={cn(
         'enhanced-toast group flex items-start p-4 border',
         `enhanced-toast-${type}`,
@@ -98,7 +98,7 @@ export const EnhancedToast: React.FC<EnhancedToastProps> = ({
       </button>
       
       <div className="enhanced-toast-progress-bar"></div>
-    </Toast>
+    </ShadcnToast>
   );
 };
 
@@ -133,13 +133,22 @@ export const useEnhancedToast = () => {
   const { toast, dismiss } = useToast();
   
   const showToast = (props: Omit<EnhancedToastProps, 'id'>) => {
+    // Convert toast type to variant
+    let variant: "default" | "destructive" = "default";
+    if (props.type === 'error') {
+      variant = "destructive";
+    }
+    
+    // Prepare props for shadcn toast
+    const { type, autoClose, autoCloseDelay, ...restProps } = props;
+    
     return toast({
-      ...props,
-      variant: props.type === 'success' ? 'default' : (props.type as any),
+      ...restProps,
+      variant
     });
   };
   
-  const success = (title: React.ReactNode, description?: React.ReactNode, action?: React.ReactNode) => {
+  const success = (title: string, description?: string, action?: React.ReactNode) => {
     return showToast({ 
       title, 
       description, 
@@ -148,7 +157,7 @@ export const useEnhancedToast = () => {
     });
   };
   
-  const error = (title: React.ReactNode, description?: React.ReactNode, action?: React.ReactNode) => {
+  const error = (title: string, description?: string, action?: React.ReactNode) => {
     return showToast({ 
       title, 
       description, 
@@ -158,7 +167,7 @@ export const useEnhancedToast = () => {
     });
   };
   
-  const warning = (title: React.ReactNode, description?: React.ReactNode, action?: React.ReactNode) => {
+  const warning = (title: string, description?: string, action?: React.ReactNode) => {
     return showToast({ 
       title, 
       description, 
@@ -167,7 +176,7 @@ export const useEnhancedToast = () => {
     });
   };
   
-  const info = (title: React.ReactNode, description?: React.ReactNode, action?: React.ReactNode) => {
+  const info = (title: string, description?: string, action?: React.ReactNode) => {
     return showToast({ 
       title, 
       description, 

@@ -21,32 +21,38 @@ const DataVizDemo: React.FC = () => {
   
   // Function to show demo toasts
   const showDemoToast = (type: 'success' | 'error' | 'warning' | 'info') => {
-    switch (type) {
-      case 'success':
-        toast.success('Operation Completed', {
-          description: 'Your data has been successfully processed.',
-          action: <Button variant="outline" size="sm">View Details</Button>
-        });
-        break;
-      case 'error':
-        toast.error('Error Occurred', {
-          description: 'There was a problem processing your request. Please try again.',
-          action: <Button variant="outline" size="sm">Retry</Button>
-        });
-        break;
-      case 'warning':
-        toast.warning('Limited Access', {
-          description: 'You have limited permissions for this feature.',
-          action: <Button variant="outline" size="sm">Upgrade</Button>
-        });
-        break;
-      case 'info':
-        toast.info('New Feature Available', {
-          description: 'Check out our new AI-powered analytics tools.',
-          action: <Button variant="outline" size="sm">Learn More</Button>
-        });
-        break;
-    }
+    const button = {
+      success: <Button variant="outline" size="sm">View Details</Button>,
+      error: <Button variant="outline" size="sm">Retry</Button>,
+      warning: <Button variant="outline" size="sm">Upgrade</Button>,
+      info: <Button variant="outline" size="sm">Learn More</Button>
+    };
+    
+    const messages = {
+      success: {
+        title: 'Operation Completed',
+        description: 'Your data has been successfully processed.'
+      },
+      error: {
+        title: 'Error Occurred',
+        description: 'There was a problem processing your request. Please try again.'
+      },
+      warning: {
+        title: 'Limited Access',
+        description: 'You have limited permissions for this feature.'
+      },
+      info: {
+        title: 'New Feature Available',
+        description: 'Check out our new AI-powered analytics tools.'
+      }
+    };
+    
+    toast.toast({
+      title: messages[type].title,
+      description: messages[type].description,
+      action: button[type],
+      type: type
+    });
   };
   
   return (
