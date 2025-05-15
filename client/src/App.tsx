@@ -205,6 +205,9 @@ export default function App() {
           {/* A/B Testing Client - applied to all routes */}
           <ABTestClient />
           
+          {/* Apple-inspired keyboard shortcuts guide */}
+          <KeyboardShortcutsGuide />
+          
           {/* WebSocket Listener for forum notifications - only for authenticated users */}
           {isAuthenticated && <WebSocketListener />}
           

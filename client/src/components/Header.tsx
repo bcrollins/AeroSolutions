@@ -4,6 +4,7 @@ import { Menu, X, ChevronDown, UserCircle, ShieldCheck, LayoutDashboard } from '
 import ClientPreviewModal from "./ClientPreviewModal";
 import Logo from "./Logo";
 import ThemeToggle from "./ThemeToggle";
+import SoundToggle from "./UI/SoundToggle";
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import { initMagneticButtons } from '@/utils/appleEffects';
@@ -190,6 +191,7 @@ export default function Header() {
               Client Preview
             </button>
             <ThemeToggle />
+            <SoundToggle />
             
             <div className="flex items-center space-x-3">
               {isAuthenticated ? (
@@ -320,6 +322,11 @@ export default function Header() {
                 <div className="flex items-center py-2 justify-between glass-effect px-3 rounded-md subtle-shadow">
                   <span className="text-white text-sm font-medium">Toggle Theme</span>
                   <ThemeToggle />
+                </div>
+                
+                <div className="flex items-center py-2 justify-between glass-effect px-3 rounded-md subtle-shadow">
+                  <span className="text-white text-sm font-medium">Sound Effects</span>
+                  <SoundToggle />
                 </div>
                 
                 {/* Mobile menu training button removed from here since it's now at the top */}
