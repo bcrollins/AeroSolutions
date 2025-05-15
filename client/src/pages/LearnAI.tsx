@@ -1,13 +1,59 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, lazy, Suspense, useRef } from 'react';
 import { Helmet } from 'react-helmet';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Skeleton } from '@/components/ui/skeleton';
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Input } from '@/components/ui/input';
 import { trackEvent } from '@/lib/analytics';
+import { 
+  Play, 
+  Zap, 
+  Star, 
+  Users, 
+  Award, 
+  DollarSign, 
+  Check, 
+  ChevronRight, 
+  Clock, 
+  BarChart3,
+  Share2,
+  CalendarClock,
+  Sparkles,
+  Briefcase,
+  Building,
+  Calculator,
+  Trophy
+} from 'lucide-react';
 
 // Lazy loaded components for better performance
 const PersonalizedContent = lazy(() => import('@/components/PersonalizedContent'));
