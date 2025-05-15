@@ -19,7 +19,8 @@ export async function generateArticleSummary(text: string): Promise<string> {
       temperature: 0.3,
     });
 
-    return response.choices[0].message.content || "Summary not available";
+    const content = response.choices[0].message.content;
+    return content ? content : "Summary not available";
   } catch (error) {
     console.error("Error generating article summary:", error);
     return "Unable to generate summary at this time.";
@@ -135,7 +136,8 @@ export async function generateImagePrompt(articleTitle: string, articleContent: 
       max_tokens: 100,
     });
 
-    return response.choices[0].message.content || "A futuristic digital landscape with abstract technology elements";
+    const content = response.choices[0].message.content;
+    return content ? content : "A futuristic digital landscape with abstract technology elements";
   } catch (error) {
     console.error("Error generating image prompt:", error);
     return "A futuristic digital landscape with abstract technology elements";

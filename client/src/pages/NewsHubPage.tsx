@@ -6,13 +6,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
-import { Search, BrainCircuit, ChevronRight, ChevronLeft, Clock, X, BookOpen, Newspaper, Cpu, Briefcase } from 'lucide-react';
+import { Search, BrainCircuit, ChevronRight, ChevronLeft, Clock, X, BookOpen, Newspaper, Cpu, Briefcase, Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import ArticleReactionBar from '@/components/articles/ArticleReactionBar';
+import AIArticleInsights from '@/components/articles/AIArticleInsights';
 import { useToast } from "@/hooks/use-toast";
 
 // Add custom keyframes animations
@@ -1099,27 +1100,49 @@ const NewsHubPage: React.FC = () => {
                     </div>
                   </CardContent>
                   
-                  <CardFooter className="p-4 flex justify-between items-center border-t border-gray-100 dark:border-gray-800
-                    group-hover:bg-gray-50/50 dark:group-hover:bg-gray-800/30 transition-colors duration-300 rounded-b-lg">
-                    <ArticleReactionBar 
-                      articleId={post.id}
-                      compact={true}
-                      variant="compact"
-                      likeCount={post.likeCount || 0}
-                      viewCount={post.viewCount || 0}
-                    />
+                  <CardFooter className="p-4 flex flex-col gap-3">
+                    {/* AI Insights Expandable Panel */}
+                    <div className="w-full">
+                      <details className="text-sm">
+                        <summary className="cursor-pointer text-primary flex items-center">
+                          <div className="flex items-center bg-primary/10 text-primary px-2 py-1 rounded-md">
+                            <Sparkles className="w-3.5 h-3.5 mr-1" />
+                            <span className="font-medium">AI Insights</span>
+                          </div>
+                        </summary>
+                        <div className="mt-2">
+                          <AIArticleInsights 
+                            articleId={post.id}
+                            articleTitle={post.title}
+                            articleContent={post.content}
+                            tags={post.tags || []}
+                          />
+                        </div>
+                      </details>
+                    </div>
                     
-                    <Link href={`/articles/${post.id}`}>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-primary hover:text-primary/80 hover:bg-primary/10 group/button"
-                        onClick={() => playSound('navigation')}
-                      >
-                        Read more
-                        <ChevronRight className="h-4 w-4 ml-1 transition-transform duration-300 group-hover/button:translate-x-0.5" />
-                      </Button>
-                    </Link>
+                    {/* Actions Bar */}
+                    <div className="flex justify-between items-center border-t border-gray-100 dark:border-gray-800
+                      group-hover:bg-gray-50/50 dark:group-hover:bg-gray-800/30 transition-colors duration-300 rounded-b-lg pt-3">
+                      <ArticleReactionBar 
+                        articleId={post.id}
+                        compact={true}
+                        variant="compact"
+                        className="text-gray-600 dark:text-gray-400"
+                      />
+                      
+                      <Link href={`/articles/${post.id}`}>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-primary hover:text-primary/80 hover:bg-primary/10 group/button"
+                          onClick={() => playSound('navigation')}
+                        >
+                          Read more
+                          <ChevronRight className="h-4 w-4 ml-1 transition-transform duration-300 group-hover/button:translate-x-0.5" />
+                        </Button>
+                      </Link>
+                    </div>
                   </CardFooter>
                 </Card>
               );

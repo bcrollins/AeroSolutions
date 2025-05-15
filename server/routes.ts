@@ -69,6 +69,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register Analytics routes (for subscription analytics)
   app.use("/api/analytics", analyticsRoutes);
+  
+  // Register AI Insights routes (AI-powered content analysis)
+  app.use("/api/ai-insights", aiInsightsRoutes);
 
   // API route to fetch active subscription plans
   app.get("/api/subscription-plans", async (req, res) => {
