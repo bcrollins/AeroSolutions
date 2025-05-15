@@ -115,6 +115,14 @@ export default function App() {
   
   // Use analytics hook for page tracking
   useAnalytics();
+  
+  // Check for privacy consent in local storage
+  useEffect(() => {
+    const storedConsent = localStorage.getItem('privacy-consent');
+    if (storedConsent === 'accepted' || storedConsent === 'declined') {
+      setConsentAccepted(true);
+    }
+  }, []);
 
   // Listen for messages from the ClientPreviewModal
   useEffect(() => {
@@ -574,6 +582,9 @@ export default function App() {
           onDecline={() => setConsentAccepted(true)} 
         />
       )}
+      
+      {/* Interactive Onboarding Tour */}
+      <OnboardingTour />
       
       {/* Global toast notifications */}
       <Toaster />
