@@ -333,7 +333,7 @@ export default function OriginalHero() {
                         {/* Back side ROLLINSX Logo */}
                         <div className="relative w-32 h-32 flex items-center justify-center">
                           {/* Background glow */}
-                          <div className="absolute inset-0 rounded-full bg-[#3B82F6]/20 border border-white/40 shadow-[0_0_10px_rgba(255,255,255,0.4)]"></div>
+                          <div className="absolute inset-0 rounded-full bg-[#0066cc]/10 border border-[#0066cc]/20 shadow-[0_0_10px_rgba(0,102,204,0.15)]"></div>
                           
                           {/* Logo image */}
                           <Logo width={88} height={88} className="z-10" />
