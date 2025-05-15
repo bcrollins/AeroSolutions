@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { ThumbsUp, ThumbsDown, Bookmark, Share2, Check } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,8 @@ interface ArticleReactionBarProps {
   compact?: boolean;
   variant?: 'compact' | 'full';
   className?: string;
+  likeCount?: number;
+  viewCount?: number;
 }
 
 const ArticleReactionBar: React.FC<ArticleReactionBarProps> = ({ 
@@ -121,52 +122,29 @@ const ArticleReactionBar: React.FC<ArticleReactionBarProps> = ({
     
   const buttonSize = isCompact ? "sm" : "default";
   const iconSize = isCompact ? 16 : 20;
-  
-  // Apple-inspired animation variants
-  const buttonVariants = {
-    initial: { opacity: 0.8, y: 5 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
-    tap: { scale: 0.95, transition: { duration: 0.1 } },
-    hover: { scale: 1.05, transition: { duration: 0.2 } }
-  };
-  
-  const iconVariants = {
-    initial: { rotate: 0 },
-    like: { rotate: [0, -15, 0], transition: { duration: 0.4 } },
-    save: { scale: [1, 1.2, 1], transition: { duration: 0.4 } },
-    share: { rotate: [0, 15, 0], transition: { duration: 0.4 } }
-  };
 
   return (
     <TooltipProvider>
       <div className={containerClasses}>
         <Tooltip>
           <TooltipTrigger asChild>
-            <motion.div 
-              whileTap={buttonVariants.tap}
-              whileHover={buttonVariants.hover}
-              initial={buttonVariants.initial}
-              animate={buttonVariants.animate}
-            >
+            <div>
               <Button 
                 variant="ghost" 
                 size={buttonSize}
-                className={`rounded-full group ${liked ? 'text-blue-600 dark:text-blue-500' : ''} transition-colors duration-300`}
+                className={`rounded-full group ${liked ? 'text-blue-600 dark:text-blue-500' : ''}`}
                 onClick={handleLike}
                 aria-label="Like article"
               >
-                <motion.div
-                  animate={liked ? "like" : "initial"}
-                  variants={iconVariants}
-                >
+                <div>
                   <ThumbsUp 
                     size={iconSize} 
-                    className={`${liked ? 'fill-blue-600 dark:fill-blue-500' : 'group-hover:text-blue-600 dark:group-hover:text-blue-500'} transition-all duration-300`} 
+                    className={`${liked ? 'fill-blue-600 dark:fill-blue-500' : 'group-hover:text-blue-600 dark:group-hover:text-blue-500'}`} 
                   />
-                </motion.div>
+                </div>
                 {!isCompact && <span className="ml-2 text-sm font-medium">Like</span>}
               </Button>
-            </motion.div>
+            </div>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="bg-gray-800 text-white dark:bg-gray-700 rounded-xl text-xs py-1 px-2 shadow-lg">
             <p>Like this article</p>
@@ -175,32 +153,23 @@ const ArticleReactionBar: React.FC<ArticleReactionBarProps> = ({
         
         <Tooltip>
           <TooltipTrigger asChild>
-            <motion.div 
-              whileTap={buttonVariants.tap}
-              whileHover={buttonVariants.hover}
-              initial={buttonVariants.initial}
-              animate={buttonVariants.animate}
-              transition={{ delay: 0.05 }}
-            >
+            <div>
               <Button 
                 variant="ghost" 
                 size={buttonSize}
-                className={`rounded-full group ${disliked ? 'text-red-600 dark:text-red-500' : ''} transition-colors duration-300`}
+                className={`rounded-full group ${disliked ? 'text-red-600 dark:text-red-500' : ''}`}
                 onClick={handleDislike}
                 aria-label="Dislike article"
               >
-                <motion.div
-                  animate={disliked ? "like" : "initial"}
-                  variants={iconVariants}
-                >
+                <div>
                   <ThumbsDown 
                     size={iconSize} 
-                    className={`${disliked ? 'fill-red-600 dark:fill-red-500' : 'group-hover:text-red-600 dark:group-hover:text-red-500'} transition-all duration-300`} 
+                    className={`${disliked ? 'fill-red-600 dark:fill-red-500' : 'group-hover:text-red-600 dark:group-hover:text-red-500'}`} 
                   />
-                </motion.div>
+                </div>
                 {!isCompact && <span className="ml-2 text-sm font-medium">Dislike</span>}
               </Button>
-            </motion.div>
+            </div>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="bg-gray-800 text-white dark:bg-gray-700 rounded-xl text-xs py-1 px-2 shadow-lg">
             <p>Dislike this article</p>
@@ -209,48 +178,26 @@ const ArticleReactionBar: React.FC<ArticleReactionBarProps> = ({
         
         <Tooltip>
           <TooltipTrigger asChild>
-            <motion.div 
-              whileTap={buttonVariants.tap}
-              whileHover={buttonVariants.hover}
-              initial={buttonVariants.initial}
-              animate={buttonVariants.animate}
-              transition={{ delay: 0.1 }}
-            >
+            <div>
               <Button 
                 variant="ghost" 
                 size={buttonSize}
-                className={`rounded-full group ${saved ? 'text-amber-600 dark:text-amber-500' : ''} transition-colors duration-300`}
+                className={`rounded-full group ${saved ? 'text-amber-600 dark:text-amber-500' : ''}`}
                 onClick={handleSave}
                 aria-label={saved ? "Unsave article" : "Save article"}
               >
-                <AnimatePresence mode="wait">
-                  {saved ? (
-                    <motion.div
-                      key="check"
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0, opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <Check size={iconSize} className="text-amber-600 dark:text-amber-500" />
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="bookmark"
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0, opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                      variants={iconVariants}
-                      whileHover="save"
-                    >
-                      <Bookmark size={iconSize} className="group-hover:text-amber-600 dark:group-hover:text-amber-500 transition-colors duration-300" />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                {saved ? (
+                  <div>
+                    <Check size={iconSize} className="text-amber-600 dark:text-amber-500" />
+                  </div>
+                ) : (
+                  <div>
+                    <Bookmark size={iconSize} className="group-hover:text-amber-600 dark:group-hover:text-amber-500" />
+                  </div>
+                )}
                 {!isCompact && <span className="ml-2 text-sm font-medium">{saved ? "Saved" : "Save"}</span>}
               </Button>
-            </motion.div>
+            </div>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="bg-gray-800 text-white dark:bg-gray-700 rounded-xl text-xs py-1 px-2 shadow-lg">
             <p>{saved ? "Remove from saved" : "Save for later"}</p>
@@ -259,32 +206,23 @@ const ArticleReactionBar: React.FC<ArticleReactionBarProps> = ({
         
         <Tooltip>
           <TooltipTrigger asChild>
-            <motion.div 
-              whileTap={buttonVariants.tap}
-              whileHover={buttonVariants.hover}
-              initial={buttonVariants.initial}
-              animate={buttonVariants.animate}
-              transition={{ delay: 0.15 }}
-            >
+            <div>
               <Button 
                 variant="ghost" 
                 size={buttonSize}
-                className="rounded-full group transition-colors duration-300"
+                className="rounded-full group"
                 onClick={handleShare}
                 aria-label="Share article"
               >
-                <motion.div
-                  variants={iconVariants}
-                  whileHover="share"
-                >
+                <div>
                   <Share2 
                     size={iconSize} 
-                    className="group-hover:text-green-600 dark:group-hover:text-green-500 transition-colors duration-300" 
+                    className="group-hover:text-green-600 dark:group-hover:text-green-500" 
                   />
-                </motion.div>
+                </div>
                 {!isCompact && <span className="ml-2 text-sm font-medium">Share</span>}
               </Button>
-            </motion.div>
+            </div>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="bg-gray-800 text-white dark:bg-gray-700 rounded-xl text-xs py-1 px-2 shadow-lg">
             <p>Share this article</p>
