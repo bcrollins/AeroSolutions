@@ -23,8 +23,8 @@ if (!process.env.XAI_API_KEY) {
   console.warn('No XAI_API_KEY found in environment. AI-powered features will not work.');
 }
 
-// Initialize the xAI client
-const openai = new OpenAI({
+// Initialize the xAI client (using OpenAI SDK with xAI endpoint)
+const xai = new OpenAI({
   baseURL: "https://api.x.ai/v1",
   apiKey: process.env.XAI_API_KEY,
 });
@@ -51,7 +51,7 @@ class XAIApi {
         },
       ];
 
-      const response = await openai.chat.completions.create({
+      const response = await xai.chat.completions.create({
         model,
         messages,
         max_tokens: maxTokens,

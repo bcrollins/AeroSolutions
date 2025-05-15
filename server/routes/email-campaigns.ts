@@ -7,8 +7,8 @@ import { OpenAI } from 'openai';
 import { grokApi } from '../utils/grok';
 import * as authUtils from '../utils/auth';
 
-// Setup xAI client
-const openai = new OpenAI({
+// Setup xAI client (using OpenAI SDK with xAI endpoint)
+const xai = new OpenAI({
   baseURL: "https://api.x.ai/v1",
   apiKey: process.env.XAI_API_KEY,
 });
@@ -235,7 +235,7 @@ router.delete('/:id', authUtils.authMiddleware, async (req: Request, res: Respon
 });
 
 /**
- * Generate campaign suggestions using OpenAI
+ * Generate campaign suggestions using xAI
  */
 async function generateCampaignSuggestions(industry: string, campaignType: string) {
   try {
@@ -266,7 +266,7 @@ async function generateCampaignSuggestions(industry: string, campaignType: strin
     Format the response as a JSON array with objects containing fields: subjectLine, content, callToAction, bestTimeToSend`;
     
     // Use xAI API
-    const completion = await openai.chat.completions.create({
+    const completion = await xai.chat.completions.create({
       model: "grok-2-1212",
       messages: [
         {
