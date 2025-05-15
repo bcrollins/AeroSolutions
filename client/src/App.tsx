@@ -98,6 +98,7 @@ import CoursesDashboard from "@/pages/CoursesDashboard";
 import MicroInteractionsDemo from "@/pages/MicroInteractionsDemo";
 import ComponentShowcase from "@/pages/ComponentShowcase";
 import DataVizDemo from "@/pages/DataVizDemo";
+import ThemePreferencesDemo from "@/pages/ThemePreferencesDemo";
 
 export default function App() {
   const { t, i18n } = useTranslation();
@@ -467,6 +468,22 @@ export default function App() {
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
               <DataVizDemo />
+            </>
+          )}
+        </Route>
+        
+        <Route path="/theme-preferences-demo">
+          {() => (
+            <>
+              <Helmet>
+                <title>Theme Preferences | RXAI Design System</title>
+                <meta name="description" content="Explore RXAI's comprehensive theme customization system featuring accessibility options, color themes, font sizing, and motion preferences." />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href="https://rollinsx.dev/theme-preferences-demo" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <ThemePreferencesDemo />
             </>
           )}
         </Route>
