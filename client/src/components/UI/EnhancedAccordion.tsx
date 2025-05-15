@@ -190,23 +190,26 @@ export function EnhancedAccordion(props: EnhancedAccordionProps) {
             return React.cloneElement(child, {
               ...child.props,
               // Override AccordionTrigger with a custom animated version
-              children: React.Children.map(child.props.children, (itemChild) => {
+              children: React.Children.map(child.props.children as React.ReactNode, (itemChild) => {
                 if (!React.isValidElement(itemChild)) return itemChild;
+                
+                // Type cast for props access
+                const itemProps = itemChild.props as Record<string, any>;
                 
                 if (itemChild.type === AccordionTrigger) {
                   // Replace trigger with animated version
                   return React.cloneElement(itemChild, {
-                    ...itemChild.props,
+                    ...itemProps,
                     className: cn(
-                      itemChild.props.className,
+                      itemProps.className,
                       'group flex flex-1 justify-between py-4 px-4 transition-all hover:underline [&[data-state=open]>svg]:rotate-180'
                     ),
                     children: (
                       <>
-                        {itemChild.props.children}
+                        {itemProps.children}
                         <motion.div
                           initial={{ rotate: 0 }}
-                          animate={{ rotate: itemChild.props['data-state'] === 'open' ? 180 : 0 }}
+                          animate={{ rotate: itemProps['data-state'] === 'open' ? 180 : 0 }}
                           transition={{ duration: 0.2 }}
                           className="flex-shrink-0 ml-2"
                         >
@@ -220,21 +223,21 @@ export function EnhancedAccordion(props: EnhancedAccordionProps) {
                 if (itemChild.type === AccordionContent) {
                   // Replace content with animated version
                   return React.cloneElement(itemChild, {
-                    ...itemChild.props,
+                    ...itemProps,
                     className: cn(
-                      itemChild.props.className, 
+                      itemProps.className, 
                       'overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down'
                     ),
                     children: (
                       <AnimatePresence initial={false}>
-                        {itemChild.props['data-state'] === 'open' && (
+                        {itemProps['data-state'] === 'open' && (
                           <motion.div
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
                             transition={{ duration: 0.3 }}
                           >
-                            {itemChild.props.children}
+                            {itemProps.children}
                           </motion.div>
                         )}
                       </AnimatePresence>

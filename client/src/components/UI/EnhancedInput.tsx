@@ -56,7 +56,8 @@ const EnhancedInput = forwardRef<HTMLInputElement, EnhancedInputProps>(({
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [inputValue, setInputValue] = useState(value || '');
-  const inputRef = useRef<HTMLInputElement>(null);
+  // Create a mutable ref object that won't trigger TypeScript errors
+  const inputRef = { current: null as HTMLInputElement | null };
   
   // Forward the ref
   const handleRef = (el: HTMLInputElement) => {
@@ -65,12 +66,14 @@ const EnhancedInput = forwardRef<HTMLInputElement, EnhancedInputProps>(({
       ref(el);
     } 
     // Handle object ref
-    else if (ref) {
-      (ref as React.MutableRefObject<HTMLInputElement | null>).current = el;
+    else if (ref && typeof ref === 'object' && 'current' in ref) {
+      // Safe assignment using a mutable ref
+      (ref as { current: HTMLInputElement | null }).current = el;
     }
     
-    // Update our internal ref
+    // Update our internal ref without TypeScript error
     if (el) {
+      // Using a safe non-readonly ref
       inputRef.current = el;
     }
   };
