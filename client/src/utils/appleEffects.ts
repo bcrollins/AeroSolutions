@@ -11,10 +11,11 @@ export function initMagneticButtons() {
   const buttons = document.querySelectorAll('.btn-magnetic');
   
   buttons.forEach(button => {
-    button.addEventListener('mousemove', (e: MouseEvent) => {
-      const rect = (button as HTMLElement).getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+    button.addEventListener('mousemove', function(this: Element, e: Event) {
+      const mouseEvent = e as MouseEvent;
+      const rect = (this as HTMLElement).getBoundingClientRect();
+      const x = mouseEvent.clientX - rect.left;
+      const y = mouseEvent.clientY - rect.top;
       
       // Calculate position relative to the button's dimensions
       const centerX = rect.width / 2;
@@ -25,15 +26,15 @@ export function initMagneticButtons() {
       const distanceY = (y - centerY) / centerY;
       
       // Apply subtle transform based on cursor position
-      (button as HTMLElement).style.transform = `translate(${distanceX * 4}px, ${distanceY * 4}px)`;
+      (this as HTMLElement).style.transform = `translate(${distanceX * 4}px, ${distanceY * 4}px)`;
       
       // Update radial gradient position for hover effect
-      (button as HTMLElement).style.setProperty('--x', `${(x / rect.width) * 100}%`);
-      (button as HTMLElement).style.setProperty('--y', `${(y / rect.height) * 100}%`);
+      (this as HTMLElement).style.setProperty('--x', `${(x / rect.width) * 100}%`);
+      (this as HTMLElement).style.setProperty('--y', `${(y / rect.height) * 100}%`);
     });
 
-    button.addEventListener('mouseleave', () => {
-      (button as HTMLElement).style.transform = 'translate(0, 0)';
+    button.addEventListener('mouseleave', function(this: Element) {
+      (this as HTMLElement).style.transform = 'translate(0, 0)';
     });
   });
 }
@@ -91,10 +92,11 @@ export function init3DTransform() {
     const parent = card.closest('.transform-3d') as HTMLElement;
     if (!parent) return;
     
-    parent.addEventListener('mousemove', (e: MouseEvent) => {
-      const rect = parent.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+    parent.addEventListener('mousemove', function(this: Element, e: Event) {
+      const mouseEvent = e as MouseEvent;
+      const rect = (this as HTMLElement).getBoundingClientRect();
+      const x = mouseEvent.clientX - rect.left;
+      const y = mouseEvent.clientY - rect.top;
       
       // Calculate position as percentage
       const posX = (x / rect.width - 0.5) * 2; // -1 to 1
@@ -108,7 +110,7 @@ export function init3DTransform() {
       `;
     });
     
-    parent.addEventListener('mouseleave', () => {
+    parent.addEventListener('mouseleave', function(this: Element) {
       (card as HTMLElement).style.transform = 'translateZ(0) rotateX(0) rotateY(0)';
     });
   });

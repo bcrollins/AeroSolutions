@@ -142,11 +142,24 @@ export default function App() {
     };
   }, []);
   
-  // Initialize Analytics
+  // Initialize Analytics and Apple-inspired UI effects
   useEffect(() => {
     // Always initialize our custom analytics implementation
     initGA();
     console.log('RXAI Analytics initialized');
+    
+    // Initialize Apple-inspired UI effects
+    initAppleEffects();
+    console.log('Apple-inspired UI effects initialized');
+    
+    // Add click event listener to the document to enable sound effects
+    // (must be triggered by user interaction due to browser autoplay policies)
+    const enableSounds = () => {
+      initSoundEffects();
+      console.log('Apple-inspired sound effects enabled');
+      document.removeEventListener('click', enableSounds);
+    };
+    document.addEventListener('click', enableSounds, { once: true });
   }, []);
 
   // Add structured data for SPA navigation

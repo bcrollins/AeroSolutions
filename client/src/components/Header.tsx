@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';  
+import { useState, useEffect, useRef } from 'react';  
 import { Link, useLocation } from 'wouter';  
 import { Menu, X, ChevronDown, UserCircle, ShieldCheck, LayoutDashboard } from 'lucide-react';  
 import ClientPreviewModal from "./ClientPreviewModal";
@@ -6,6 +6,7 @@ import Logo from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
+import { initMagneticButtons } from '@/utils/appleEffects';
 
 export default function Header() {  
   const [location] = useLocation();
@@ -48,6 +49,23 @@ export default function Header() {
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location]);
+  
+  // Initialize Apple-inspired magnetic button effect
+  useEffect(() => {
+    // Initialize magnetic effect on header nav items
+    const navItemsRef = document.querySelectorAll('.header-nav-item');
+    navItemsRef.forEach(item => {
+      item.classList.add('btn-magnetic');
+    });
+    
+    // Initialize magnetic buttons
+    initMagneticButtons();
+    
+    // Re-initialize when mobile menu changes (to capture newly rendered elements)
+    return () => {
+      // Cleanup if needed
+    };
+  }, [isMobileMenuOpen]);
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);  
   
