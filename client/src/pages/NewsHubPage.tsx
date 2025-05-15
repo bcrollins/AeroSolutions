@@ -65,6 +65,45 @@ const NewsHubPage: React.FC = () => {
   // Enhanced with better error handling and performance optimizations
   const { data: postsData, isLoading, error } = useQuery({
     queryKey: ['/api/posts?limit=50&sort=newest'],
+    queryFn: async () => {
+      // Try direct path first
+      try {
+        const response = await fetch('/api/posts?limit=50&sort=newest');
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Posts fetched successfully:', data);
+          return data;
+        }
+      } catch (err) {
+        console.error('Error fetching from /api/posts:', err);
+      }
+      
+      // Fallback to articles endpoint
+      try {
+        const response = await fetch('/api/articles?limit=50');
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Articles fetched successfully:', data);
+          return data;
+        }
+      } catch (err) {
+        console.error('Error fetching from /api/articles:', err);
+      }
+      
+      // Last resort - try content endpoint
+      try {
+        const response = await fetch('/api/content/posts?limit=50');
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Content posts fetched successfully:', data);
+          return data;
+        }
+      } catch (err) {
+        console.error('Error fetching from /api/content/posts:', err);
+      }
+      
+      throw new Error('Failed to fetch articles from any available endpoint');
+    },
     retry: 3,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000), // Exponential backoff for better network resilience
     staleTime: 5000, // 5 seconds - refresh more frequently to get new articles
@@ -440,22 +479,52 @@ const NewsHubPage: React.FC = () => {
       
       {/* Articles grid */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, index) => (
-            <Card key={index} className="overflow-hidden h-[400px]">
-              <div className="h-40 bg-gray-200 dark:bg-gray-800 animate-pulse" />
-              <CardHeader>
-                <Skeleton className="h-6 w-3/4 mb-2" />
-                <Skeleton className="h-4 w-1/2" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-4 w-full mb-2" />
-                <Skeleton className="h-4 w-full mb-2" />
-                <Skeleton className="h-4 w-2/3" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <>
+          <div className="flex items-center justify-center mb-8">
+            <div className="relative">
+              <div className="h-12 w-12 rounded-full border-t-2 border-b-2 border-primary animate-spin"></div>
+              <BrainCircuit className="h-6 w-6 text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+            </div>
+            <div className="ml-4">
+              <h3 className="text-lg font-medium mb-1">Loading articles...</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Retrieving the latest AI content for you
+              </p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, index) => (
+              <Card key={index} className="overflow-hidden h-[400px] transition-all hover:shadow-md">
+                <div className="h-40 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-800 dark:to-gray-700 animate-pulse relative">
+                  <div className="absolute top-3 left-3">
+                    <Skeleton className="h-5 w-20 rounded-full" />
+                  </div>
+                </div>
+                <CardHeader>
+                  <Skeleton className="h-6 w-full mb-2" />
+                  <Skeleton className="h-6 w-4/5 mb-1" />
+                  <div className="flex items-center mt-2">
+                    <Skeleton className="h-4 w-4 rounded-full mr-2" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-4 w-2/3" />
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <Skeleton className="h-8 w-24 rounded-md" />
+                  <div className="flex space-x-2">
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                  </div>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </>
       ) : error ? (
         <div className="text-center p-10 bg-red-50 dark:bg-red-900/20 rounded-lg">
           <h3 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-2">
@@ -469,20 +538,35 @@ const NewsHubPage: React.FC = () => {
           </Button>
         </div>
       ) : filteredPosts.length === 0 ? (
-        <div className="text-center p-10 bg-gray-50 dark:bg-gray-800/20 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
+        <div className="text-center p-10 border border-dashed border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/20 rounded-lg">
+          <div className="mb-3">
+            <Newspaper className="h-14 w-14 mx-auto text-gray-400 dark:text-gray-600 mb-3" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
             No articles found
           </h3>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600 dark:text-gray-400 mb-2 max-w-md mx-auto">
             {searchQuery 
               ? `We couldn't find any articles matching "${searchQuery}". Try a different search term.` 
-              : `We couldn't find any articles in this category. Check back soon for new content.`}
+              : `We're generating new AI articles right now! They'll appear here soon - check back in a few moments.`}
           </p>
-          {searchQuery && (
-            <Button variant="secondary" className="mt-4" onClick={handleClearSearch}>
-              Clear search
+          <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center items-center">
+            {searchQuery ? (
+              <Button variant="secondary" onClick={handleClearSearch}>
+                <X className="h-4 w-4 mr-2" />
+                Clear search
+              </Button>
+            ) : (
+              <Button variant="secondary" onClick={() => window.location.reload()}>
+                <ChevronRight className="h-4 w-4 mr-2" />
+                Refresh page
+              </Button>
+            )}
+            <Button variant="outline" onClick={() => setActiveTab('all')}>
+              <BrainCircuit className="h-4 w-4 mr-2" />
+              View all topics
             </Button>
-          )}
+          </div>
         </div>
       ) : (
         <>
