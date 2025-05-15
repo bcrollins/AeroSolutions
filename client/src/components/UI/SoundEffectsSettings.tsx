@@ -1,8 +1,9 @@
 import React from 'react';
-import { Switch } from '@/components/ui/switch';
+import SoundToggle from '@/components/UI/SoundToggle';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
+import SoundButton from '@/components/UI/SoundButton';
 import { VolumeX, Volume2 } from 'lucide-react';
 import useSoundEffects from '@/hooks/use-sound-effects';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
@@ -42,10 +43,12 @@ export const SoundEffectsSettings: React.FC<SoundEffectsSettingsProps> = ({ clas
             {soundEnabled ? <Volume2 className="mr-2 h-4 w-4" /> : <VolumeX className="mr-2 h-4 w-4" />}
             <span>Enable sound effects</span>
           </Label>
-          <Switch 
+          <SoundToggle 
             id="sound-enabled" 
             checked={soundEnabled} 
-            onCheckedChange={setSoundEnabled}
+            onToggle={setSoundEnabled}
+            soundOnChecked="success"
+            soundOnUnchecked="click"
           />
         </div>
         
@@ -66,15 +69,16 @@ export const SoundEffectsSettings: React.FC<SoundEffectsSettingsProps> = ({ clas
           />
         </div>
         
-        <Button 
+        <SoundButton 
           variant="outline" 
           size="sm" 
           onClick={handleTestSound}
           disabled={!soundEnabled}
           className="w-full mt-2"
+          soundEffect="notification"
         >
           Test Sound
-        </Button>
+        </SoundButton>
         
         <p className="text-xs text-muted-foreground mt-4">
           Sound effects provide subtle audio feedback for actions like completing tasks, receiving notifications, and more.

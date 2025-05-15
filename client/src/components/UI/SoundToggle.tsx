@@ -1,11 +1,16 @@
 import React from 'react';
-import { Switch, SwitchProps } from '@/components/ui/switch';
+import { Switch } from '@/components/ui/switch';
 import useSoundEffects, { SoundEffectType } from '@/hooks/use-sound-effects';
 
-interface SoundToggleProps extends Omit<SwitchProps, 'onCheckedChange'> {
+interface SoundToggleProps {
+  checked?: boolean;
+  defaultChecked?: boolean;
   onToggle?: (checked: boolean) => void;
   soundOnChecked?: SoundEffectType;
   soundOnUnchecked?: SoundEffectType;
+  disabled?: boolean;
+  id?: string;
+  className?: string;
 }
 
 /**
@@ -17,7 +22,9 @@ const SoundToggle: React.FC<SoundToggleProps> = ({
   onToggle,
   soundOnChecked = 'success',
   soundOnUnchecked = 'click',
-  ...props
+  disabled,
+  id,
+  className
 }) => {
   const { playSound, soundEnabled } = useSoundEffects();
   
@@ -37,7 +44,9 @@ const SoundToggle: React.FC<SoundToggleProps> = ({
       checked={checked}
       defaultChecked={defaultChecked}
       onCheckedChange={handleToggle}
-      {...props}
+      disabled={disabled}
+      id={id}
+      className={className}
     />
   );
 };
