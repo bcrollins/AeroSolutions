@@ -117,7 +117,7 @@ export default function Header() {
             {/* Start AI Training Free button moved here */}
             <Link  
               href="/learnai"  
-              className="header-nav-item apple-btn-primary font-medium text-sm px-4 py-1.5 rounded-md transition-apple hover-lift hidden sm:block"  
+              className="header-nav-item apple-btn-primary font-medium text-sm px-3 py-1.5 rounded-md transition-apple hover-lift hidden sm:block whitespace-nowrap"  
             >  
               Start AI Training Free
             </Link>
@@ -217,7 +217,7 @@ export default function Header() {
             {/* Show Start AI Training Free button on small screens but not xs */}
             <Link  
               href="/learnai"  
-              className="header-nav-item apple-btn-primary font-medium text-xs px-3 py-1.5 rounded-md transition-apple hover-lift hidden sm:block md:hidden"  
+              className="header-nav-item apple-btn-primary font-medium text-xs px-2 py-1.5 rounded-md transition-apple hover-lift hidden sm:block md:hidden whitespace-nowrap"  
             >  
               Start AI Training
             </Link>
@@ -241,7 +241,7 @@ export default function Header() {
               <Link  
                 href="/learnai"  
                 onClick={toggleMobileMenu}  
-                className="apple-btn-primary font-medium text-sm py-2 px-4 rounded-md text-center w-full block hover-lift transition-apple"  
+                className="apple-btn-primary font-medium text-sm py-2 px-4 rounded-md text-center w-full block hover-lift transition-apple whitespace-nowrap"  
               >  
                 Start AI Training Free
               </Link>
