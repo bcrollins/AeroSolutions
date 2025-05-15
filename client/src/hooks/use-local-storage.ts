@@ -1,8 +1,19 @@
 import { useState, useEffect } from 'react';
 
-export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => void] {
-  // Get from local storage then
-  // parse stored json or return initialValue
+type SetValueFunction<T> = (value: T | ((prevValue: T) => T)) => void;
+
+/**
+ * A hook for persistent storage with localStorage
+ * 
+ * @param key The key to store the value under
+ * @param initialValue The initial value to use if no value is found in localStorage
+ * @returns A stateful value and a function to update it
+ */
+export function useLocalStorage<T>(
+  key: string,
+  initialValue: T
+): [T, SetValueFunction<T>] {
+  // Get from local storage then parse stored json or return initialValue
   const readValue = (): T => {
     // Prevent build error "window is undefined" but keep working
     if (typeof window === 'undefined') {
@@ -22,55 +33,50 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T)
   // Pass initial state function to useState so logic is only executed once
   const [storedValue, setStoredValue] = useState<T>(readValue);
 
-  // Return a wrapped version of useState's setter function that
-  // persists the new value to localStorage.
-  const setValue = (value: T) => {
-    // Prevent build error "window is undefined" but keep working
-    if (typeof window === 'undefined') {
-      console.warn(
-        `Tried setting localStorage key "${key}" even though environment is not a client`
-      );
-    }
-
+  // Return a wrapped version of useState's setter function that persists the new value to localStorage
+  const setValue: SetValueFunction<T> = (value) => {
     try {
-      // Allow value to be a function so we have the same API as useState
+      // Allow value to be a function so we have same API as useState
       const valueToStore =
         value instanceof Function ? value(storedValue) : value;
       
-      // Save to local state
+      // Save to state
       setStoredValue(valueToStore);
       
       // Save to local storage
-      window.localStorage.setItem(key, JSON.stringify(valueToStore));
-
-      // We dispatch a custom event so every useLocalStorage hook are notified
-      window.dispatchEvent(new Event('local-storage'));
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(key, JSON.stringify(valueToStore));
+      }
     } catch (error) {
       console.warn(`Error setting localStorage key "${key}":`, error);
     }
   };
 
+  // Listen for changes to the local storage in other tabs
   useEffect(() => {
-    setStoredValue(readValue());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    const handleStorageChange = () => {
-      setStoredValue(readValue());
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === key && event.newValue) {
+        // If the key is the same and there's a new value
+        setStoredValue(JSON.parse(event.newValue));
+      }
     };
 
-    // this only works for other documents, not the current one
-    window.addEventListener('storage', handleStorageChange);
-    // this is a custom event, triggered in writeValueToLocalStorage
-    window.addEventListener('local-storage', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('local-storage', handleStorageChange);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // Add listener for window storage events
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', handleStorageChange);
+      
+      // Read the value from localStorage again in case it was updated in another tab
+      const currentValue = readValue();
+      setStoredValue(currentValue);
+      
+      // Clean up
+      return () => {
+        window.removeEventListener('storage', handleStorageChange);
+      };
+    }
+  }, [key]);
 
   return [storedValue, setValue];
 }
+
+export default useLocalStorage;

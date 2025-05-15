@@ -415,6 +415,11 @@ const Navbar: React.FC = () => {
                       <Link href="/account/subscriptions" className="w-full">My Subscriptions</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={restartOnboardingTour} className="cursor-pointer">
+                      <HelpCircle className="mr-2 h-4 w-4 text-blue-600" />
+                      <span>Restart Tour</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout} className="text-red-500 cursor-pointer">
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Logout</span>
@@ -620,6 +625,16 @@ const Navbar: React.FC = () => {
                       >
                         My Subscriptions
                       </Link>
+                      <button
+                        className="block w-full text-left rounded-md px-3 py-2 text-base font-medium text-foreground hover:bg-accent hover:text-accent-foreground"
+                        onClick={() => {
+                          restartOnboardingTour();
+                          setIsOpen(false);
+                        }}
+                      >
+                        <HelpCircle className="h-4 w-4 inline mr-2 text-blue-600" />
+                        Restart Tour
+                      </button>
                       <button
                         className="block w-full text-left rounded-md px-3 py-2 text-base font-medium text-red-500 hover:bg-accent"
                         onClick={() => {
