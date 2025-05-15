@@ -406,7 +406,10 @@ export default function App() {
       
       {/* Privacy consent banner */}
       {!consentAccepted && (
-        <PrivacyConsentBanner onAccept={() => setConsentAccepted(true)} />
+        <PrivacyConsentBanner 
+          onAccept={() => setConsentAccepted(true)} 
+          onDecline={() => setConsentAccepted(true)} 
+        />
       )}
       
       {/* Global toast notifications */}
