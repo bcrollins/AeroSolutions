@@ -1564,39 +1564,39 @@ const LearnAI: React.FC = () => {
                 <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800 tracking-tight">AI Job Market Insights</h2>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-[#333] p-6 rounded-lg">
+                  <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300">
                     <div className="flex items-center justify-center mb-4">
-                      <Briefcase className="w-8 h-8 text-[#007bff]" />
+                      <Briefcase className="w-8 h-8 text-[#0066cc]" />
                     </div>
-                    <h3 className="text-xl font-bold text-center mb-2">35%</h3>
-                    <p className="text-center text-gray-400">
+                    <h3 className="text-xl font-semibold text-center mb-2 text-gray-800 tabular-nums tracking-tight">35%</h3>
+                    <p className="text-center text-gray-600">
                       Increase in AI job postings in the last year
                     </p>
                   </div>
                   
-                  <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                  <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300">
                     <div className="flex items-center justify-center mb-4">
-                      <DollarSign className="w-8 h-8 text-[#007bff]" />
+                      <DollarSign className="w-8 h-8 text-[#0066cc]" />
                     </div>
-                    <h3 className="text-xl font-bold text-center mb-2 text-gray-900">$138,500</h3>
+                    <h3 className="text-xl font-semibold text-center mb-2 text-gray-800 tabular-nums tracking-tight">$138,500</h3>
                     <p className="text-center text-gray-600">
                       Average salary for AI professionals
                     </p>
                   </div>
                   
-                  <div className="bg-[#333] p-6 rounded-lg">
+                  <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300">
                     <div className="flex items-center justify-center mb-4">
-                      <Building className="w-8 h-8 text-[#007bff]" />
+                      <Building className="w-8 h-8 text-[#0066cc]" />
                     </div>
-                    <h3 className="text-xl font-bold text-center mb-2">79%</h3>
-                    <p className="text-center text-gray-400">
+                    <h3 className="text-xl font-semibold text-center mb-2 text-gray-800 tabular-nums tracking-tight">79%</h3>
+                    <p className="text-center text-gray-600">
                       Of companies plan to increase AI hiring
                     </p>
                   </div>
                 </div>
                 
-                <div className="mt-8 text-center text-gray-300">
-                  AI skills are among the most in-demand in today's job market, with growth projected to continue accelerating over the next decade.
+                <div className="mt-8 text-center text-gray-600">
+                  <p className="text-sm">AI skills are among the most in-demand in today's job market, with growth projected to continue accelerating over the next decade.</p>
                 </div>
               </div>
             </Card>
@@ -1609,20 +1609,20 @@ const LearnAI: React.FC = () => {
             transition={{ duration: 0.5, delay: 1.3 }}
             className="w-full max-w-6xl mb-16"
           >
-            <h2 className="text-2xl font-bold mb-8 text-center">Recognized by Leading Employers</h2>
+            <h2 className="text-2xl font-semibold mb-8 text-center text-gray-800 tracking-tight">Recognized by Leading Employers</h2>
             
-            <div className="bg-[#2a2a2a] border border-[#444] rounded-lg p-8">
+            <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                  <h3 className="text-xl font-semibold mb-4">RXAI Certification is Industry-Recognized</h3>
-                  <p className="text-gray-400 mb-6">
+                  <h3 className="text-xl font-semibold mb-4 text-gray-800">RXAI Certification is Industry-Recognized</h3>
+                  <p className="text-gray-600 mb-6">
                     Our certification is recognized by leading technology companies worldwide as a mark of excellence
                     in AI education. Graduates of our programs are actively sought out by hiring managers at top companies.
                   </p>
                   
                   <div className="space-y-4">
                     <div className="flex items-start">
-                      <Trophy className="w-5 h-5 text-[#007bff] mr-3 mt-1" />
+                      <Trophy className="w-5 h-5 text-[#0066cc] mr-3 mt-1" />
                       <div>
                         <h4 className="font-semibold">Preferred Hiring Status</h4>
                         <p className="text-sm text-gray-400">
