@@ -446,40 +446,10 @@ const NewsHubPage: React.FC = () => {
     return match ? match[1] : null;
   };
   
-  // Function to get a themed placeholder image based on article ID and category
+  // Function to get a consistent placeholder image regardless of article content
   const getFallbackImage = (id: number, category?: string | null): string => {
-    // Use different placeholder images based on category if available
-    if (category) {
-      const lowerCategory = category.toLowerCase();
-      
-      if (lowerCategory.includes('business') || lowerCategory.includes('finance') || lowerCategory.includes('enterprise')) {
-        return '/img/placeholders/ai-tech-2.svg';
-      }
-      
-      if (lowerCategory.includes('green') || lowerCategory.includes('sustain') || lowerCategory.includes('environment')) {
-        return '/img/placeholders/ai-tech-3.svg';
-      }
-      
-      if (lowerCategory.includes('customer') || lowerCategory.includes('experience') || lowerCategory.includes('service')) {
-        return '/img/placeholders/ai-tech-4.svg';
-      }
-      
-      if (lowerCategory.includes('security') || lowerCategory.includes('governance') || lowerCategory.includes('compliance')) {
-        return '/img/placeholders/ai-tech-5.svg';
-      }
-    }
-    
-    // Fallback: use a placeholder based on ID
-    const imageIndex = id % 5;
-    const fallbackImages = [
-      '/img/placeholders/ai-tech-1.svg',
-      '/img/placeholders/ai-tech-2.svg',
-      '/img/placeholders/ai-tech-3.svg',
-      '/img/placeholders/ai-tech-4.svg',
-      '/img/placeholders/ai-tech-5.svg',
-    ];
-    
-    return fallbackImages[imageIndex];
+    // Always return the same placeholder image
+    return '/img/placeholders/ai-tech-1.svg';
   };
   
   // Format date for display
@@ -882,9 +852,9 @@ const NewsHubPage: React.FC = () => {
           {Array.from({ length: 6 }).map((_, idx) => (
             <Card key={idx} className="overflow-hidden border border-gray-100 dark:border-gray-800 h-full flex flex-col transition-all hover:shadow-md">
               <div className="h-48 bg-gray-100 dark:bg-gray-800 relative overflow-hidden">
-                {/* Use our themed placeholder SVGs */}
+                {/* Use consistent placeholder SVG */}
                 <img
-                  src={`/img/placeholders/ai-tech-${(idx % 5) + 1}.svg`}
+                  src="/img/placeholders/ai-tech-1.svg"
                   alt="Loading"
                   className="w-full h-full object-cover opacity-40 dark:opacity-30"
                 />
@@ -936,7 +906,7 @@ const NewsHubPage: React.FC = () => {
         <div className="bg-red-50 dark:bg-gray-900/90 border border-red-100 dark:border-red-800/30 rounded-xl p-6 text-center max-w-2xl mx-auto">
           <div className="mb-6 relative">
             <div className="w-32 h-32 mx-auto mb-2 opacity-80">
-              <img src="/img/placeholders/ai-tech-5.svg" alt="Error illustration" className="w-full h-full object-cover rounded-lg" />
+              <img src="/img/placeholders/ai-tech-1.svg" alt="Error illustration" className="w-full h-full object-cover rounded-lg" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="bg-red-500 dark:bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -973,7 +943,7 @@ const NewsHubPage: React.FC = () => {
           <div className="mb-6 relative">
             <div className="w-40 h-40 mx-auto">
               <img 
-                src={searchQuery ? "/img/placeholders/ai-tech-1.svg" : `/img/placeholders/ai-tech-${(activeTab === 'all' ? 1 : activeTab === 'ai' ? 1 : activeTab === 'business' ? 2 : activeTab === 'tech' ? 3 : 4)}.svg`} 
+                src="/img/placeholders/ai-tech-1.svg" 
                 alt="No articles found" 
                 className="w-full h-full object-cover rounded-lg opacity-60 dark:opacity-40"
               />
