@@ -93,6 +93,7 @@ import NewsHubPage from "@/pages/NewsHubPage";
 import ContactPage from "@/pages/ContactPage";
 import LearnAI from "@/pages/LearnAI";
 import CoursesDashboard from "@/pages/CoursesDashboard";
+import MicroInteractionsDemo from "@/pages/MicroInteractionsDemo";
 
 export default function App() {
   const { t, i18n } = useTranslation();
