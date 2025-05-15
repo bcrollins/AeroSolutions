@@ -10,14 +10,18 @@ import { useTheme } from '@/contexts/ThemeContext';
 interface ArticleReactionBarProps {
   articleId: number | string;
   compact?: boolean;
+  variant?: 'compact' | 'full';
   className?: string;
 }
 
 const ArticleReactionBar: React.FC<ArticleReactionBarProps> = ({ 
   articleId, 
   compact = false,
+  variant = 'full',
   className = '' 
 }) => {
+  // If variant is compact, set compact to true for backward compatibility
+  const isCompact = compact || variant === 'compact';
   const { toast } = useToast();
   const { playSound } = useSoundEffects();
   const { getCurrentTheme } = useTheme();
@@ -111,12 +115,12 @@ const ArticleReactionBar: React.FC<ArticleReactionBarProps> = ({
   };
 
   // Apply different styles based on compact mode
-  const containerClasses = compact 
+  const containerClasses = isCompact 
     ? `flex items-center space-x-2 ${className}`
     : `flex items-center justify-center space-x-4 px-4 py-2 ${className}`;
     
-  const buttonSize = compact ? "sm" : "default";
-  const iconSize = compact ? 16 : 20;
+  const buttonSize = isCompact ? "sm" : "default";
+  const iconSize = isCompact ? 16 : 20;
   
   return (
     <TooltipProvider>
@@ -132,7 +136,7 @@ const ArticleReactionBar: React.FC<ArticleReactionBarProps> = ({
                 aria-label="Like article"
               >
                 <ThumbsUp size={iconSize} className={`${liked ? 'fill-blue-500 dark:fill-blue-400' : 'group-hover:text-blue-500 dark:group-hover:text-blue-400'}`} />
-                {!compact && <span className="ml-2">Like</span>}
+                {!isCompact && <span className="ml-2">Like</span>}
               </Button>
             </motion.div>
           </TooltipTrigger>
@@ -152,7 +156,7 @@ const ArticleReactionBar: React.FC<ArticleReactionBarProps> = ({
                 aria-label="Dislike article"
               >
                 <ThumbsDown size={iconSize} className={`${disliked ? 'fill-red-500 dark:fill-red-400' : 'group-hover:text-red-500 dark:group-hover:text-red-400'}`} />
-                {!compact && <span className="ml-2">Dislike</span>}
+                {!isCompact && <span className="ml-2">Dislike</span>}
               </Button>
             </motion.div>
           </TooltipTrigger>
