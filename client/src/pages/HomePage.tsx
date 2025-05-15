@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import Header from '@/components/Header';
 import OriginalHero from '@/components/OriginalHero';
+import AICourseSection from '@/components/AICourseSection';
 import Services from '@/components/Services';
 import Ownership from '@/components/Ownership';
 import Platforms from '@/components/Platforms';
@@ -202,6 +203,7 @@ export default function HomePage() {
       <Header />
       <main>
         <OriginalHero />
+        <AICourseSection />
         <Services />
         <PortfolioGallery />
         <FreeMockupForm />

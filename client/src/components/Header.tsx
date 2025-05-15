@@ -114,7 +114,7 @@ export default function Header() {
           </Link>  
 
           {/* Desktop Menu */}  
-          <nav className="hidden md:flex space-x-4 lg:space-x-6 items-center">  
+          <nav className="hidden md:flex space-x-2 lg:space-x-4 xl:space-x-6 items-center whitespace-nowrap">  
             {menuItems.map((item) => (  
               <div key={item.label} className="relative">  
                 {item.dropdown ? (  
