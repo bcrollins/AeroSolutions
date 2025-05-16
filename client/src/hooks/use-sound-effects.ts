@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useContext, useRef } from 'react';
 import { ThemeContext } from '@/contexts/ThemeContext';
 
 // Sound types
-type SoundType = 
+export type SoundType = 
   | 'click' 
   | 'success' 
   | 'error' 

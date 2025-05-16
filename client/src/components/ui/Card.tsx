@@ -1,7 +1,7 @@
 import React from 'react';
 import { designSystem } from '@/styles/designSystem';
 
-interface CardProps {
+interface EnhancedCardProps {
   children: React.ReactNode;
   title?: string;
   subtitle?: string;
@@ -16,7 +16,7 @@ interface CardProps {
 }
 
 /**
- * Card component with Apple-inspired aesthetics
+ * Enhanced Card component with Apple-inspired aesthetics
  * 
  * Features:
  * - Clean, minimal design
@@ -25,7 +25,7 @@ interface CardProps {
  * - Glass morphism effect option
  * - Consistent spacing and radiuses
  */
-const Card: React.FC<CardProps> = ({
+export const EnhancedCard: React.FC<EnhancedCardProps> = ({
   children,
   title,
   subtitle,
@@ -141,4 +141,7 @@ const Card: React.FC<CardProps> = ({
   );
 };
 
-export default Card;
+// Re-export from shadcn
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+
+export default EnhancedCard;

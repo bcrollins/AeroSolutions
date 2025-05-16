@@ -16,11 +16,11 @@ export const SoundButton: React.FC<SoundButtonProps> = ({
   children,
   ...props
 }) => {
-  const { playSound, soundEnabled } = useSoundEffects();
+  const { playSound, settings } = useSoundEffects();
   
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     // Play sound if enabled
-    if (soundEnabled) {
+    if (settings.enabled) {
       playSound(soundEffect);
     }
     
