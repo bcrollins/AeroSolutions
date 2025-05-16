@@ -1,7 +1,8 @@
 import React, { ReactNode } from 'react';
 import { motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 
 interface EnhancedCardProps {
   children: ReactNode;
@@ -21,7 +22,7 @@ interface EnhancedCardProps {
 /**
  * Enhanced Card component with various appearance options and animations
  */
-const EnhancedCard = ({
+const EnhancedCard: React.FC<EnhancedCardProps> = ({
   children,
   className,
   title,
@@ -37,103 +38,114 @@ const EnhancedCard = ({
 }: EnhancedCardProps) => {
   // Size classes
   const sizeClasses = {
-    sm: 'p-3',
-    md: 'p-4',
-    lg: 'p-6'
+    sm: 'p-4',
+    md: 'p-6',
+    lg: 'p-8',
   };
 
   // Variant classes
   const variantClasses = {
-    default: 'bg-card',
-    glass: 'bg-white/10 backdrop-blur-lg dark:bg-gray-900/50 border border-white/20',
-    bordered: 'border-2',
+    default: 'bg-card text-card-foreground',
+    glass: 'bg-white/10 dark:bg-black/10 backdrop-blur-md border-white/20 dark:border-white/10',
+    bordered: 'border-2 border-primary/20',
     elevated: 'shadow-xl',
-    interactive: 'cursor-pointer shadow-md transition-all duration-300'
+    interactive: 'cursor-pointer transition-all hover:shadow-md'
   };
 
-  // Hover effect classes
-  const getHoverClasses = () => {
-    if (!hover) return '';
-    
+  // Hover effect styles based on the selected effect
+  const getHoverStyles = () => {
+    if (!hover) return {};
+
     switch (hoverEffect) {
       case 'lift':
-        return 'hover:-translate-y-1.5 hover:shadow-lg';
+        return { y: -5, boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)' };
       case 'glow':
-        return 'hover:shadow-[0_0_20px_rgba(0,120,255,0.3)]';
+        return { boxShadow: '0 0 15px rgba(var(--primary), 0.5)' };
       case 'scale':
-        return 'hover:scale-[1.02] origin-center';
+        return { scale: 1.02 };
       case 'highlight':
-        return 'hover:border-primary hover:border-opacity-100';
+        return { borderColor: 'rgba(var(--primary), 0.8)' };
+      case 'none':
       default:
-        return '';
+        return {};
     }
   };
 
-  const cardClasses = cn(
-    'relative overflow-hidden rounded-lg transition-all duration-300',
-    variantClasses[variant],
-    hover && getHoverClasses(),
-    onClick && 'cursor-pointer',
-    isLoading && 'pointer-events-none animate-pulse',
-    className
-  );
-
-  // Animation variants for the card when it enters the viewport
-  const cardAnimationVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { 
-        duration: 0.4,
-        ease: [0.22, 1, 0.36, 1]
-      }
-    }
-  };
-
-  // Wrap content with proper card components if title/description/footer are provided
-  const wrappedContent = (
-    <>
-      {(title || description) && (
-        <CardHeader className={cn(sizeClasses[size])}>
-          {title && <CardTitle>{title}</CardTitle>}
-          {description && <CardDescription>{description}</CardDescription>}
-        </CardHeader>
-      )}
-      <CardContent className={cn(
-        (!title && !description) && sizeClasses[size], 
-        (title || description) && 'pt-0'
-      )}>
-        {children}
-      </CardContent>
-      {footer && (
-        <CardFooter className="border-t bg-muted/10 px-6 py-4">
-          {footer}
-        </CardFooter>
-      )}
-    </>
-  );
-
-  // Return either an animated card or a regular card
-  if (noAnimation) {
+  // Render loading skeleton
+  if (isLoading) {
     return (
-      <Card className={cardClasses} onClick={onClick}>
-        {wrappedContent}
+      <Card className={cn('overflow-hidden', className, variantClasses[variant], sizeClasses[size])}>
+        {title && (
+          <CardHeader className="p-6 pb-0">
+            <Skeleton className="h-8 w-1/2 mb-2" />
+            {description && <Skeleton className="h-4 w-3/4" />}
+          </CardHeader>
+        )}
+        <CardContent className={cn('flex flex-col gap-4', sizeClasses[size])}>
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-4 w-1/2" />
+        </CardContent>
+        {footer && (
+          <CardFooter>
+            <Skeleton className="h-10 w-full" />
+          </CardFooter>
+        )}
       </Card>
     );
   }
 
+  // If animations are disabled, render a regular Card
+  if (noAnimation) {
+    return (
+      <Card 
+        className={cn(
+          'overflow-hidden transition-all duration-300', 
+          className, 
+          variantClasses[variant], 
+          onClick && 'cursor-pointer',
+          hover && hoverEffect === 'highlight' && 'hover:border-primary/80'
+        )}
+        onClick={onClick}
+      >
+        {title && (
+          <CardHeader>
+            <CardTitle>{title}</CardTitle>
+            {description && <CardDescription>{description}</CardDescription>}
+          </CardHeader>
+        )}
+        <CardContent className={sizeClasses[size]}>
+          {children}
+        </CardContent>
+        {footer && <CardFooter>{footer}</CardFooter>}
+      </Card>
+    );
+  }
+
+  // Animated card with Framer Motion
   return (
     <motion.div
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-50px" }}
-      variants={cardAnimationVariants}
-      className="w-full"
+      className={cn(
+        'overflow-hidden rounded-lg border bg-card text-card-foreground', 
+        className, 
+        variantClasses[variant],
+        onClick && 'cursor-pointer'
+      )}
+      onClick={onClick}
+      whileHover={hover ? getHoverStyles() : {}}
+      transition={{ duration: 0.2, ease: 'easeOut' }}
     >
-      <Card className={cardClasses} onClick={onClick}>
-        {wrappedContent}
-      </Card>
+      {title && (
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          {description && <CardDescription>{description}</CardDescription>}
+        </CardHeader>
+      )}
+      <CardContent className={sizeClasses[size]}>
+        {children}
+      </CardContent>
+      {footer && <CardFooter>{footer}</CardFooter>}
     </motion.div>
   );
 };

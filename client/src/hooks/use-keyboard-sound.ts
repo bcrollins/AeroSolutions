@@ -1,5 +1,18 @@
 import { useEffect } from 'react';
-import useSoundEffects, { SoundEffectType } from './use-sound-effects';
+import { useSoundEffects } from './use-sound-effects';
+
+// Sound types
+type SoundEffectType = 
+  | 'click' 
+  | 'success' 
+  | 'error' 
+  | 'notification' 
+  | 'hover' 
+  | 'navigation' 
+  | 'focus' 
+  | 'typing' 
+  | 'complete' 
+  | 'screenshot';
 
 interface KeyboardSoundOptions {
   targetKey?: string;
@@ -23,7 +36,8 @@ export function useKeyboardSound({
   onArrow,
   enabled = true
 }: KeyboardSoundOptions = {}) {
-  const { playSound, soundEnabled } = useSoundEffects();
+  const { playSound, settings } = useSoundEffects();
+  const soundEnabled = settings.enabled;
   
   useEffect(() => {
     if (!enabled || !soundEnabled) return;
