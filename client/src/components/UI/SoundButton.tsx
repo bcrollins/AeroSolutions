@@ -1,9 +1,10 @@
 import React from 'react';
 import { Button, ButtonProps } from '@/components/ui/button';
-import useSoundEffects, { SoundEffectType } from '@/hooks/use-sound-effects';
+import { useSoundEffects } from '@/hooks/use-sound-effects';
+import type { SoundType } from '@/hooks/use-sound-effects';
 
 interface SoundButtonProps extends ButtonProps {
-  soundEffect?: SoundEffectType;
+  soundEffect?: SoundType;
 }
 
 /**
