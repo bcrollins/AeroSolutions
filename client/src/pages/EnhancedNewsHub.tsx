@@ -7,7 +7,7 @@ import { debounce } from '@/utils/performanceUtils';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { usePerformance } from '@/hooks/use-performance';
 import VirtualList from '@/components/ui/VirtualList';
-import Card from '@/components/ui/Card';
+import { Card } from '@/components/ui/card';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import NavigationMenu from '@/components/ui/NavigationMenu';
 import ArticleCard from '@/components/articles/ArticleCard';
@@ -135,9 +135,9 @@ const EnhancedNewsHub: React.FC = () => {
       return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array(6).fill(0).map((_, i) => (
-            <Card 
+            <div 
               key={`skeleton-${i}`}
-              className="h-[400px] animate-pulse"
+              className="h-[400px] animate-pulse rounded-lg border bg-card text-card-foreground shadow-sm"
             >
               <div className="bg-gray-200 dark:bg-gray-700 h-48 rounded-t-lg"></div>
               <div className="p-4">
@@ -146,7 +146,7 @@ const EnhancedNewsHub: React.FC = () => {
                 <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2"></div>
                 <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       );
@@ -154,7 +154,7 @@ const EnhancedNewsHub: React.FC = () => {
     
     if (isError) {
       return (
-        <Card className="p-6 text-center">
+        <div className="p-6 text-center rounded-lg border bg-card text-card-foreground shadow-sm">
           <h3 className="text-xl font-semibold mb-2">Unable to load articles</h3>
           <p className="text-gray-600 dark:text-gray-300 mb-4">
             We encountered an error while loading the articles. Please try again later.
@@ -164,13 +164,13 @@ const EnhancedNewsHub: React.FC = () => {
           >
             Retry
           </PrimaryButton>
-        </Card>
+        </div>
       );
     }
     
     if (articles.length === 0) {
       return (
-        <Card className="p-6 text-center">
+        <div className="p-6 text-center rounded-lg border bg-card text-card-foreground shadow-sm">
           <h3 className="text-xl font-semibold mb-2">No articles found</h3>
           <p className="text-gray-600 dark:text-gray-300 mb-4">
             No articles match your current search criteria. Try adjusting your filters.
@@ -183,7 +183,7 @@ const EnhancedNewsHub: React.FC = () => {
           >
             Clear Filters
           </PrimaryButton>
-        </Card>
+        </div>
       );
     }
     

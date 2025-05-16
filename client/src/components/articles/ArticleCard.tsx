@@ -103,20 +103,16 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
           <span>{formattedDate}</span>
           <span>{readingTime} min read</span>
         </div>
-      </Card>
+      </div>
     );
   }
   
   // Render the horizontal variant
   if (variant === 'horizontal') {
     return (
-      <Card
-        variant={cardVariant}
-        padding="md"
-        hoverEffect
-        elevated={featured}
+      <div
         onClick={handleCardClick}
-        className={`${className} w-full flex flex-row h-full`}
+        className={`${className} w-full flex flex-row h-full rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-200 ${featured ? 'border-transparent bg-background/60 backdrop-blur-md' : 'border-border bg-card'} ${featured ? 'shadow-md hover:shadow-lg' : ''} p-6 cursor-pointer hover:scale-[1.01]`}
       >
         {coverImage && (
           <div className="relative w-1/3 mr-4 rounded-md overflow-hidden">
@@ -212,13 +208,9 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   
   // Default (standard) variant
   return (
-    <Card
-      variant={cardVariant}
-      padding="none"
-      hoverEffect
-      elevated={featured}
+    <div
       onClick={handleCardClick}
-      className={`${className} max-w-md h-full`}
+      className={`${className} max-w-md h-full rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-200 ${featured ? 'border-transparent bg-background/60 backdrop-blur-md' : 'border-border bg-card'} ${featured ? 'shadow-md hover:shadow-lg' : ''} cursor-pointer hover:scale-[1.01]`}
     >
       {coverImage && (
         <div className="relative aspect-video">
