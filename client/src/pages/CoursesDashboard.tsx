@@ -297,7 +297,7 @@ const CoursesDashboard = () => {
   
   // Handle claiming a reward
   const handleClaimReward = (rewardId: string) => {
-    playSuccess();
+    playSound('success');
     toast({
       title: "Reward Claimed!",
       description: `You've successfully claimed your ${rewardId === 'badge3' ? 'Bronze' : rewardId === 'badge7' ? 'Silver' : rewardId === 'badge14' ? 'Gold' : 'Special'} learning badge!`,
@@ -309,7 +309,7 @@ const CoursesDashboard = () => {
   
   // Handle sharing streak
   const handleShareStreak = () => {
-    playClick();
+    playSound('click');
     toast({
       title: "Streak Shared!",
       description: "Your learning streak has been shared to your connected social accounts.",
@@ -321,14 +321,14 @@ const CoursesDashboard = () => {
   
   // Handle assessment start
   const handleStartAssessment = () => {
-    playClick();
+    playSound('click');
     setLocation('/assessment');
     trackEvent('assessment_started', 'engagement', 'learning_path_assessment');
   };
   
   // Handle learning path selection
   const handleSelectPath = (pathId: string) => {
-    playClick();
+    playSound('click');
     toast({
       title: "Learning Path Selected",
       description: `You've selected the ${pathId} learning path. Your dashboard and recommendations will be updated accordingly.`,
@@ -540,13 +540,32 @@ const CoursesDashboard = () => {
                   <Button 
                     variant="outline"
                     className="w-full border-electric-cyan-400 text-white hover:bg-electric-cyan-400/20"
-                    onClick={() => trackEvent('event_signup', 'conversion', `event_${upcomingEvents[0].id}`)}
+                    onClick={() => {
+                      playSound('click');
+                      trackEvent('event_signup', 'conversion', `event_${upcomingEvents[0].id}`);
+                    }}
                   >
                     Add to Calendar
                   </Button>
                 </div>
               )}
             </Card>
+          </motion.div>
+          
+          {/* Interactive Progress Chart */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="mb-8"
+          >
+            <InteractiveProgressChart 
+              totalCourseProgress={overallProgress}
+              weeklyData={weeklyData}
+              metrics={learningMetrics}
+              streakCount={streakCount}
+              onTabChange={(tab) => trackEvent('progress_tab_changed', 'engagement', tab)}
+            />
           </motion.div>
         </div>
 
@@ -886,18 +905,30 @@ const CoursesDashboard = () => {
             <TabsContent value="achievements" className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="md:col-span-2">
-                  <BadgesDisplay />
+                  <LearningStreakTracker
+                    currentStreak={streakCount}
+                    longestStreak={7}
+                    totalMinutesLearned={totalHoursCompleted * 60}
+                    lastWeekStreak={lastWeekStreak}
+                    onShareStreak={handleShareStreak}
+                    onClaimReward={handleClaimReward}
+                  />
                 </div>
                 <div>
                   <LeaderboardDisplay />
                 </div>
               </div>
+              <div className="mt-6">
+                <BadgesDisplay />
+              </div>
             </TabsContent>
             
             <TabsContent value="learning-path" className="space-y-6">
-              <LearningPathSelector 
-                initialAssessmentCompleted={false} 
-                onPathSelect={(pathId) => console.log(`Selected path: ${pathId}`)} 
+              <PersonalizedLearningPath
+                userPreferences={userPreferences}
+                hasCompletedAssessment={hasCompletedAssessment}
+                onStartAssessment={handleStartAssessment}
+                onSelectPath={handleSelectPath}
               />
             </TabsContent>
             
