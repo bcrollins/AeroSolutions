@@ -123,8 +123,10 @@ export default function Header() {
   return (  
     <>
       <header className={cn(
-        "header bg-gradient-to-r from-gray-900 to-black text-white py-4 px-4 sm:px-6 sticky top-0 z-50 shadow-lg",
-        isScrolled && "scrolled"
+        "header text-white py-4 px-4 sm:px-6 sticky top-0 z-50 transition-all duration-300",
+        isScrolled 
+          ? "bg-background/80 backdrop-blur-md border-b border-border/40 shadow-lg" 
+          : "bg-transparent"
       )} data-branding="rxai">  
         <div className="max-w-7xl mx-auto flex justify-between items-center">  
           {/* Logo and Training CTA Button */}  

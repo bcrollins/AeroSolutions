@@ -5,8 +5,8 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import SoundButton from '@/components/UI/SoundButton';
 import { VolumeX, Volume2 } from 'lucide-react';
-import useSoundEffects from '@/hooks/use-sound-effects';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
+import { useSoundEffects } from '@/hooks/use-sound-effects';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 interface SoundEffectsSettingsProps {
   className?: string;
@@ -17,12 +17,13 @@ interface SoundEffectsSettingsProps {
  */
 export const SoundEffectsSettings: React.FC<SoundEffectsSettingsProps> = ({ className }) => {
   const { 
-    soundEnabled, 
-    setSoundEnabled, 
-    volume, 
+    settings, 
+    toggleSounds, 
     setVolume, 
     playSound 
   } = useSoundEffects();
+  
+  const soundEnabled = settings.enabled;
 
   // Play a test sound with current volume
   const handleTestSound = () => {

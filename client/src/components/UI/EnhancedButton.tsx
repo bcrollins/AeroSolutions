@@ -1,176 +1,184 @@
-import React, { ReactNode, ButtonHTMLAttributes } from 'react';
-import { Button } from '@/components/ui/button';
+import React, { forwardRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
+import { useSoundEffects } from '@/hooks/use-sound-effects';
 
-interface EnhancedButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  children: ReactNode;
-  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link' | 'premium' | 'success' | 'warning';
-  size?: 'default' | 'sm' | 'lg' | 'icon';
+// Define button variants using CVA
+const buttonVariants = cva(
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline: "border border-input bg-transparent hover:bg-accent hover:text-accent-foreground",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+        premium: "bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700",
+        glass: "bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20",
+        apple: "bg-white/5 backdrop-blur-md border border-white/10 text-white shadow-sm hover:bg-white/10 dark:bg-black/5 dark:border-white/5 dark:hover:bg-black/10",
+      },
+      size: {
+        default: "h-10 px-4 py-2",
+        sm: "h-9 rounded-md px-3 py-1.5",
+        lg: "h-11 rounded-md px-8 py-3",
+        icon: "h-10 w-10",
+      },
+      animation: {
+        none: "",
+        pulse: "animate-pulse",
+        bounce: "animate-bounce",
+        spin: "animate-spin",
+      },
+      rounded: {
+        default: "rounded-md",
+        full: "rounded-full",
+        lg: "rounded-lg",
+        xl: "rounded-xl",
+      },
+      glow: {
+        default: "",
+        subtle: "shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)]",
+        strong: "shadow-[0_0_25px_rgba(var(--primary-rgb),0.5)]",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+      animation: "none",
+      rounded: "default",
+      glow: "default",
+    },
+  }
+);
+
+export interface EnhancedButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
   isLoading?: boolean;
   loadingText?: string;
-  icon?: ReactNode;
-  iconPosition?: 'left' | 'right';
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
+  soundEffect?: 'click' | 'success' | 'error' | 'navigation';
   withRipple?: boolean;
-  animated?: boolean;
-  withHaptic?: boolean;
-  className?: string;
-  fullWidth?: boolean;
-  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  hoverScale?: number;
+  hoverRotate?: number;
+  hoverLift?: boolean;
 }
 
-/**
- * Enhanced button component with loading states, animations and haptic feedback
- */
-export default function EnhancedButton({
-  children,
-  variant = 'default',
-  size = 'default',
-  isLoading = false,
-  loadingText,
-  icon,
-  iconPosition = 'left',
-  withRipple = true,
-  animated = true,
-  withHaptic = true,
-  className = '',
-  fullWidth = false,
-  onClick,
-  ...props
-}: EnhancedButtonProps) {
-  // Handle haptic feedback on click
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (withHaptic && navigator.vibrate && !props.disabled && !isLoading) {
-      navigator.vibrate(15); // Subtle vibration
-    }
+const EnhancedButton = forwardRef<HTMLButtonElement, EnhancedButtonProps>(
+  ({ 
+    className, 
+    variant, 
+    size, 
+    animation,
+    rounded,
+    glow,
+    children, 
+    isLoading, 
+    loadingText, 
+    leftIcon, 
+    rightIcon, 
+    soundEffect = 'click',
+    withRipple = true,
+    hoverScale = 1,
+    hoverRotate = 0,
+    hoverLift = false,
+    ...props 
+  }, ref) => {
+    // Access sound effects
+    const { playSound, settings } = useSoundEffects();
+    const soundEnabled = settings?.enabled || false;
     
-    if (onClick && !isLoading && !props.disabled) {
-      onClick(e);
-    }
-  };
-  
-  // Ripple effect state
-  const [ripples, setRipples] = React.useState<{ x: number; y: number; size: number; id: number }[]>([]);
-  let rippleCount = React.useRef(0);
-  
-  // Handle ripple effect
-  const handleRipple = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (!withRipple || props.disabled || isLoading) return;
+    // State for ripple effect
+    const [ripples, setRipples] = useState<Array<{ x: number; y: number; id: number }>>([]);
+    const [rippleCount, setRippleCount] = useState(0);
+
+    // Handle ripple effect on button click
+    const handleRipple = (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (!withRipple) return;
+      
+      const button = e.currentTarget;
+      const rect = button.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      const newRipple = { x, y, id: rippleCount };
+      setRipples([...ripples, newRipple]);
+      setRippleCount(rippleCount + 1);
+      
+      // Remove ripple after animation completes
+      setTimeout(() => {
+        setRipples(prevRipples => prevRipples.filter(r => r.id !== newRipple.id));
+      }, 1000);
+    };
     
-    const button = e.currentTarget;
-    const rect = button.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    // Handle click with sound effect
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      handleRipple(e);
+      
+      // Play sound if enabled
+      if (soundEnabled && soundEffect) {
+        playSound(soundEffect);
+      }
+      
+      // Call original onClick if provided
+      if (props.onClick) {
+        props.onClick(e);
+      }
+    };
+
+    // Hover animation variants
+    const hoverAnimation = {
+      scale: hoverScale,
+      rotate: hoverRotate,
+      y: hoverLift ? -5 : 0,
+      transition: { duration: 0.2 }
+    };
     
-    // Calculate ripple size based on button size
-    const size = Math.max(rect.width, rect.height) * 1.5;
-    
-    // Create new ripple
-    const newRipple = { x, y, size, id: rippleCount.current };
-    rippleCount.current += 1;
-    
-    setRipples((prevRipples) => [...prevRipples, newRipple]);
-    
-    // Remove ripple after animation
-    setTimeout(() => {
-      setRipples((prevRipples) => prevRipples.filter((ripple) => ripple.id !== newRipple.id));
-    }, 600);
-  };
-  
-  // Determine class name based on variant
-  let buttonClass = '';
-  
-  if (variant === 'premium') {
-    buttonClass = 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700';
-  } else if (variant === 'success') {
-    buttonClass = 'bg-green-500 text-white hover:bg-green-600';
-  } else if (variant === 'warning') {
-    buttonClass = 'bg-amber-500 text-white hover:bg-amber-600';
-  }
-  
-  return (
-    <motion.div
-      whileHover={animated && !props.disabled && !isLoading ? { scale: 1.02 } : {}}
-      whileTap={animated && !props.disabled && !isLoading ? { scale: 0.98 } : {}}
-      className={`relative inline-block ${fullWidth ? 'w-full' : ''}`}
-    >
-      <Button
-        variant={variant === 'premium' || variant === 'success' || variant === 'warning' ? 'default' : variant}
-        size={size}
+    return (
+      <motion.button
+        className={cn(buttonVariants({ variant, size, animation, rounded, glow, className }))}
+        ref={ref}
+        onClick={handleClick}
         disabled={isLoading || props.disabled}
-        className={`
-          relative overflow-hidden
-          ${fullWidth ? 'w-full' : ''}
-          ${buttonClass}
-          ${className}
-        `}
-        onClick={(e) => {
-          handleClick(e);
-          handleRipple(e);
-        }}
+        whileHover={hoverScale !== 1 || hoverRotate !== 0 || hoverLift ? hoverAnimation : undefined}
+        whileTap={{ scale: 0.98 }}
         {...props}
       >
-        {/* Ripple effects */}
-        {withRipple && ripples.map((ripple) => (
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            {loadingText || children}
+          </>
+        ) : (
+          <>
+            {leftIcon && <span className="mr-2">{leftIcon}</span>}
+            {children}
+            {rightIcon && <span className="ml-2">{rightIcon}</span>}
+          </>
+        )}
+        
+        {/* Ripple effect */}
+        {withRipple && ripples.map(ripple => (
           <span
             key={ripple.id}
-            className="absolute rounded-full bg-white/20 animate-ripple"
+            className="absolute rounded-full bg-white/30 pointer-events-none animate-ripple"
             style={{
-              top: ripple.y - ripple.size / 2,
-              left: ripple.x - ripple.size / 2,
-              width: ripple.size,
-              height: ripple.size,
+              left: ripple.x,
+              top: ripple.y,
+              transform: 'translate(-50%, -50%)'
             }}
           />
         ))}
-        
-        {/* Left icon */}
-        {icon && iconPosition === 'left' && !isLoading && (
-          <span className="mr-2 inline-flex">{icon}</span>
-        )}
-        
-        {/* Loading spinner */}
-        {isLoading && (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        )}
-        
-        {/* Button text */}
-        {isLoading && loadingText ? loadingText : children}
-        
-        {/* Right icon */}
-        {icon && iconPosition === 'right' && !isLoading && (
-          <span className="ml-2 inline-flex">{icon}</span>
-        )}
-      </Button>
-    </motion.div>
-  );
-}
-
-// Add ripple animation to tailwind.config.ts
-const addRippleAnimation = `
-@keyframes ripple {
-  0% {
-    transform: scale(0);
-    opacity: 0.5;
+      </motion.button>
+    );
   }
-  100% {
-    transform: scale(1);
-    opacity: 0;
-  }
-}
+);
 
-.animate-ripple {
-  animation: ripple 0.6s linear forwards;
-}
-`;
+EnhancedButton.displayName = "EnhancedButton";
 
-// Append styles when module loads
-try {
-  if (typeof document !== 'undefined') {
-    const styleElement = document.createElement('style');
-    styleElement.textContent = addRippleAnimation;
-    document.head.appendChild(styleElement);
-  }
-} catch (error) {
-  console.error('Failed to append ripple animation styles:', error);
-}
+export { EnhancedButton, buttonVariants };
