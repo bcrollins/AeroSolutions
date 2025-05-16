@@ -99,6 +99,7 @@ import CaseStudies from "@/pages/CaseStudies";
 import ArticlesPage from "@/pages/ArticlesPage";
 import ArticleDetailPage from "@/pages/ArticleDetailPage";
 import NewsHubPage from "@/pages/NewsHubPage";
+import EnhancedNewsHub from "@/pages/EnhancedNewsHub";
 import ContactPage from "@/pages/ContactPage";
 import LearnAI from "@/pages/LearnAI";
 import CoursesDashboard from "@/pages/CoursesDashboard";
@@ -347,6 +348,23 @@ export default function App() {
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
               <NewsHubPage />
+            </>
+          )}
+        </Route>
+
+        {/* Enhanced News Hub with Apple-inspired Design */}
+        <Route path="/enhanced-news">
+          {() => (
+            <>
+              <Helmet>
+                <title>Enhanced News Hub | RXAI - AI Innovations with Advanced Design</title>
+                <meta name="description" content="Experience our enhanced news hub with Apple-inspired design, featuring optimized performance, improved visual hierarchy, and interactive elements." />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href="https://rollinsx.dev/enhanced-news" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <EnhancedNewsHub />
             </>
           )}
         </Route>

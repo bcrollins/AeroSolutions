@@ -1,67 +1,51 @@
 /**
- * Performance optimization utilities to reduce unnecessary renders
- * and improve application responsiveness
+ * Performance optimization utilities
+ * 
+ * Features:
+ * - Request debouncing and throttling
+ * - Virtual list rendering helpers
+ * - Performance measurement
+ * - Memory usage optimization
+ * - Animation frame utilities
  */
 
 /**
- * Debounce function to prevent excessive function calls
- * Useful for search inputs, window resize handlers, etc.
- * 
- * @param func The function to debounce
- * @param wait Wait time in milliseconds before executing
- * @param immediate Whether to execute on the leading edge instead of trailing
- * @returns Debounced function
+ * Debounce function to limit the rate at which a function can fire
  */
-export function debounce<T extends (...args: any[]) => any>(
+export const debounce = <T extends (...args: any[]) => any>(
   func: T,
-  wait: number = 300,
-  immediate: boolean = false
-): (...args: Parameters<T>) => void {
+  wait: number
+): ((...args: Parameters<T>) => void) => {
   let timeout: ReturnType<typeof setTimeout> | null = null;
   
-  return function(this: any, ...args: Parameters<T>) {
-    const context = this;
-    
-    const later = function() {
+  return function executedFunction(...args: Parameters<T>) {
+    const later = () => {
       timeout = null;
-      if (!immediate) func.apply(context, args);
+      func(...args);
     };
-    
-    const callNow = immediate && !timeout;
     
     if (timeout) {
       clearTimeout(timeout);
     }
     
     timeout = setTimeout(later, wait);
-    
-    if (callNow) {
-      func.apply(context, args);
-    }
   };
-}
+};
 
 /**
- * Throttle function to limit the rate at which a function is executed
- * Useful for scroll handlers, mouse move events, etc.
- * 
- * @param func The function to throttle
- * @param limit Time limit in milliseconds
- * @returns Throttled function
+ * Throttle function to ensure a function is called at most once in a specified time period
  */
-export function throttle<T extends (...args: any[]) => any>(
+export const throttle = <T extends (...args: any[]) => any>(
   func: T,
-  limit: number = 100
-): (...args: Parameters<T>) => void {
+  limit: number
+): ((...args: Parameters<T>) => void) => {
   let inThrottle: boolean = false;
   let lastFunc: ReturnType<typeof setTimeout>;
   let lastRan: number;
   
-  return function(this: any, ...args: Parameters<T>) {
-    const context = this;
-    
+  return function executedFunction(...args: Parameters<T>) {
     if (!inThrottle) {
-      func.apply(context, args);
+      func(...args);
       lastRan = Date.now();
       inThrottle = true;
       
@@ -70,94 +54,285 @@ export function throttle<T extends (...args: any[]) => any>(
       }, limit);
     } else {
       clearTimeout(lastFunc);
-      
       lastFunc = setTimeout(() => {
         if (Date.now() - lastRan >= limit) {
-          func.apply(context, args);
+          func(...args);
           lastRan = Date.now();
         }
       }, limit - (Date.now() - lastRan));
     }
   };
-}
+};
 
 /**
- * Memoize function to cache results of expensive calculations
- * 
- * @param func The function to memoize
- * @returns Memoized function
+ * Request function that caches results and avoids duplicate network requests
  */
-export function memoize<T extends (...args: any[]) => any>(
-  func: T
-): (...args: Parameters<T>) => ReturnType<T> {
-  const cache = new Map<string, ReturnType<T>>();
+export const cachedRequest = <T>(
+  url: string,
+  options?: RequestInit,
+  cacheTime: number = 60000, // Cache for 1 minute by default
+): Promise<T> => {
+  // Create a cache key from the URL and options
+  const cacheKey = `${url}-${JSON.stringify(options || {})}`;
   
-  return function(this: any, ...args: Parameters<T>): ReturnType<T> {
-    const key = JSON.stringify(args);
+  // Check if we have a cached response
+  const cached = sessionStorage.getItem(cacheKey);
+  
+  if (cached) {
+    const { data, timestamp } = JSON.parse(cached);
     
-    if (cache.has(key)) {
-      return cache.get(key) as ReturnType<T>;
+    // Check if the cache is still valid
+    if (Date.now() - timestamp < cacheTime) {
+      return Promise.resolve(data as T);
     }
     
-    const result = func.apply(this, args);
-    cache.set(key, result);
+    // If cache is expired, remove it
+    sessionStorage.removeItem(cacheKey);
+  }
+  
+  // Make the actual request
+  return fetch(url, options)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      // Cache the response
+      sessionStorage.setItem(
+        cacheKey,
+        JSON.stringify({
+          data,
+          timestamp: Date.now()
+        })
+      );
+      
+      return data as T;
+    });
+};
+
+/**
+ * Batch DOM updates using requestAnimationFrame
+ */
+export const batchDomUpdates = (
+  updates: Array<() => void>
+): void => {
+  requestAnimationFrame(() => {
+    // Process all updates in a single frame
+    updates.forEach(update => update());
+  });
+};
+
+/**
+ * Measure the performance of a function
+ */
+export const measurePerformance = <T extends (...args: any[]) => any>(
+  fn: T,
+  label: string
+): ((...args: Parameters<T>) => ReturnType<T>) => {
+  return (...args: Parameters<T>): ReturnType<T> => {
+    const start = performance.now();
+    const result = fn(...args);
+    
+    // If the result is a promise, measure when it resolves
+    if (result instanceof Promise) {
+      result.then(() => {
+        const end = performance.now();
+        console.log(`${label} took ${end - start}ms`);
+      });
+    } else {
+      const end = performance.now();
+      console.log(`${label} took ${end - start}ms`);
+    }
     
     return result;
   };
-}
+};
 
 /**
- * Detect if the device is a mobile device
- * Use this to conditionally apply mobile-specific optimizations
- * 
- * @returns Boolean indicating if device is mobile
+ * Optimized fetch function with retry logic, timeout, and caching
  */
-export function isMobileDevice(): boolean {
-  if (typeof window === 'undefined') return false;
+export const optimizedFetch = async <T>(
+  url: string,
+  options?: RequestInit & {
+    retries?: number;
+    retryDelay?: number;
+    timeout?: number;
+    cacheTime?: number;
+  }
+): Promise<T> => {
+  const {
+    retries = 3,
+    retryDelay = 1000,
+    timeout = 10000,
+    cacheTime = 60000,
+    ...fetchOptions
+  } = options || {};
   
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
+  // Try to get from cache first
+  try {
+    const cacheKey = `fetch-cache-${url}-${JSON.stringify(fetchOptions)}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached);
+      
+      // If cache is still valid, return the cached data
+      if (Date.now() - timestamp < cacheTime) {
+        return data as T;
+      }
+      
+      // Otherwise remove the expired cache
+      sessionStorage.removeItem(cacheKey);
+    }
+  } catch (error) {
+    console.error('Cache retrieval error:', error);
+    // Continue with fetch if cache retrieval fails
+  }
+  
+  // Create a promise that rejects after the timeout
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => {
+      reject(new Error(`Request timeout after ${timeout}ms`));
+    }, timeout);
+  });
+  
+  // Function to attempt the fetch
+  const attemptFetch = async (attempt: number): Promise<T> => {
+    try {
+      // Race between the fetch and the timeout
+      const response = await Promise.race([
+        fetch(url, fetchOptions),
+        timeoutPromise
+      ]);
+      
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Cache the successful response
+      try {
+        const cacheKey = `fetch-cache-${url}-${JSON.stringify(fetchOptions)}`;
+        sessionStorage.setItem(
+          cacheKey,
+          JSON.stringify({
+            data,
+            timestamp: Date.now()
+          })
+        );
+      } catch (error) {
+        console.error('Cache storage error:', error);
+        // Continue even if caching fails
+      }
+      
+      return data as T;
+    } catch (error) {
+      // If we have retries left, wait and then retry
+      if (attempt < retries) {
+        console.log(`Retrying fetch (${attempt + 1}/${retries})...`);
+        
+        // Wait for the retry delay
+        await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
+        
+        // Try again
+        return attemptFetch(attempt + 1);
+      }
+      
+      // Otherwise, propagate the error
+      throw error;
+    }
+  };
+  
+  // Start the first attempt
+  return attemptFetch(0);
+};
+
+/**
+ * A utility for checking if an element is in the viewport
+ */
+export const isInViewport = (element: HTMLElement, offset: number = 0): boolean => {
+  const rect = element.getBoundingClientRect();
+  
+  return (
+    rect.top >= 0 - offset &&
+    rect.left >= 0 - offset &&
+    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) + offset &&
+    rect.right <= (window.innerWidth || document.documentElement.clientWidth) + offset
   );
-}
+};
 
 /**
- * Request animation frame wrapper for smoother animations
- * 
- * @param callback Function to call on animation frame
- * @returns Request ID for cancellation
+ * Create a memoized version of a function to avoid recalculating results
  */
-export function scheduleAnimationFrame(callback: FrameRequestCallback): number {
-  return window.requestAnimationFrame(callback);
-}
-
-/**
- * Cancel a scheduled animation frame
- * 
- * @param requestId The ID returned from scheduleAnimationFrame
- */
-export function cancelScheduledAnimation(requestId: number): void {
-  window.cancelAnimationFrame(requestId);
-}
-
-/**
- * Get browser's preferred color scheme
- * 
- * @returns 'dark' or 'light'
- */
-export function getPreferredColorScheme(): 'dark' | 'light' {
-  if (typeof window === 'undefined') return 'light';
+export const memoize = <T extends (...args: any[]) => any>(
+  fn: T
+): T => {
+  const cache = new Map();
   
-  return window.matchMedia('(prefers-color-scheme: dark)').matches
-    ? 'dark'
-    : 'light';
-}
+  return ((...args: Parameters<T>): ReturnType<T> => {
+    // Create a key from the arguments
+    const key = JSON.stringify(args);
+    
+    // If the result is cached, return it
+    if (cache.has(key)) {
+      return cache.get(key);
+    }
+    
+    // Otherwise calculate and cache the result
+    const result = fn(...args);
+    cache.set(key, result);
+    
+    return result;
+  }) as T;
+};
 
-export default {
-  debounce,
-  throttle,
-  memoize,
-  isMobileDevice,
-  scheduleAnimationFrame,
-  cancelScheduledAnimation,
-  getPreferredColorScheme
+/**
+ * Optimize memory usage by clearing large objects when they're no longer needed
+ */
+export const clearMemory = (object: any): void => {
+  if (Array.isArray(object)) {
+    object.length = 0;
+  } else if (typeof object === 'object' && object !== null) {
+    for (const key in object) {
+      if (Object.prototype.hasOwnProperty.call(object, key)) {
+        delete object[key];
+      }
+    }
+  }
+};
+
+/**
+ * Detect idle time and perform cleanup tasks
+ */
+export const setupIdleCleanup = (
+  cleanupFn: () => void,
+  idleTime: number = 30000 // 30 seconds by default
+): () => void => {
+  let idleTimer: ReturnType<typeof setTimeout>;
+  
+  const resetTimer = () => {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(cleanupFn, idleTime);
+  };
+  
+  // Set up event listeners
+  window.addEventListener('mousemove', resetTimer);
+  window.addEventListener('keypress', resetTimer);
+  window.addEventListener('scroll', resetTimer);
+  window.addEventListener('click', resetTimer);
+  
+  // Start the timer
+  resetTimer();
+  
+  // Return a cleanup function
+  return () => {
+    clearTimeout(idleTimer);
+    window.removeEventListener('mousemove', resetTimer);
+    window.removeEventListener('keypress', resetTimer);
+    window.removeEventListener('scroll', resetTimer);
+    window.removeEventListener('click', resetTimer);
+  };
 };

@@ -1,107 +1,177 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { debounce } from '@/utils/performanceUtils';
 
 interface VirtualListProps<T> {
   items: T[];
-  height: number;
-  itemHeight: number;
   renderItem: (item: T, index: number) => React.ReactNode;
-  endReachedThreshold?: number;
-  onEndReached?: () => void;
+  itemHeight: number | ((item: T, index: number) => number);
+  height?: number | string;
+  width?: number | string;
+  overscanCount?: number;
   className?: string;
-  overscan?: number;
+  onScroll?: (scrollTop: number) => void;
+  onItemsRendered?: (startIndex: number, endIndex: number) => void;
+  scrollToIndex?: number;
+  initialScrollOffset?: number;
+  scrollOffset?: number;
 }
 
 /**
- * VirtualList component for rendering large lists with optimal performance
- * Only renders items that are visible within the viewport
+ * VirtualList component for efficient rendering of large lists
  * 
- * @param items - Array of data items to render
- * @param height - Fixed height of the scrollable container
- * @param itemHeight - Fixed height of each item
- * @param renderItem - Function to render each item
- * @param endReachedThreshold - Pixels from the end to trigger onEndReached
- * @param onEndReached - Callback when user scrolls to the end
- * @param className - Optional CSS class
- * @param overscan - Number of items to render outside visible area
+ * Features:
+ * - Renders only visible items for performance
+ * - Dynamic item heights support
+ * - Smooth scrolling
+ * - Customizable overscan area
+ * - Scroll events and item visibility callbacks
  */
 function VirtualList<T>({
   items,
-  height,
-  itemHeight,
   renderItem,
-  endReachedThreshold = 300,
-  onEndReached,
+  itemHeight,
+  height = 400,
+  width = '100%',
+  overscanCount = 3,
   className = '',
-  overscan = 3
-}: VirtualListProps<T>) {
+  onScroll,
+  onItemsRendered,
+  scrollToIndex,
+  initialScrollOffset = 0,
+  scrollOffset
+}: VirtualListProps<T>): React.ReactElement {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [scrollTop, setScrollTop] = useState(0);
-  const [endReached, setEndReached] = useState(false);
+  const [scrollTop, setScrollTop] = useState(initialScrollOffset);
   
-  // Calculate which items should be visible based on current scroll position
-  const totalHeight = items.length * itemHeight;
-  const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
-  const visibleItemCount = Math.min(
-    items.length - startIndex,
-    Math.ceil(height / itemHeight) + overscan * 2
-  );
+  // Calculate the total height of all items
+  const totalHeight = useMemo(() => {
+    return items.reduce((acc, item, index) => {
+      const height = typeof itemHeight === 'function' ? itemHeight(item, index) : itemHeight;
+      return acc + height;
+    }, 0);
+  }, [items, itemHeight]);
+  
+  // Get the item heights
+  const getItemHeight = (index: number): number => {
+    const item = items[index];
+    return typeof itemHeight === 'function' ? itemHeight(item, index) : itemHeight;
+  };
+  
+  // Calculate the position of each item
+  const itemPositions = useMemo(() => {
+    const positions: { top: number; bottom: number; height: number }[] = [];
+    let currentOffset = 0;
+    
+    items.forEach((item, index) => {
+      const height = getItemHeight(index);
+      positions.push({
+        top: currentOffset,
+        bottom: currentOffset + height,
+        height
+      });
+      currentOffset += height;
+    });
+    
+    return positions;
+  }, [items, getItemHeight]);
+  
+  // Find the visible range of items
+  const visibleRange = useMemo(() => {
+    if (!itemPositions.length) return { start: 0, end: 0 };
+    
+    const containerHeight = typeof height === 'number' ? height : 0;
+    const start = itemPositions.findIndex(pos => pos.bottom > scrollTop);
+    const end = itemPositions.findIndex(pos => pos.top > scrollTop + containerHeight);
+    
+    return {
+      start: Math.max(0, start - overscanCount),
+      end: end === -1 ? items.length - 1 : Math.min(items.length - 1, end + overscanCount)
+    };
+  }, [scrollTop, itemPositions, height, overscanCount, items.length]);
+  
+  // Initialize scroll to index if provided
+  useEffect(() => {
+    if (scrollToIndex !== undefined && containerRef.current) {
+      const targetPosition = itemPositions[scrollToIndex]?.top || 0;
+      containerRef.current.scrollTop = targetPosition;
+    }
+  }, [scrollToIndex, itemPositions]);
+  
+  // Handle explicit scroll offset
+  useEffect(() => {
+    if (scrollOffset !== undefined && containerRef.current) {
+      containerRef.current.scrollTop = scrollOffset;
+    }
+  }, [scrollOffset]);
   
   // Handle scroll events
-  const handleScroll = useCallback(() => {
-    if (!containerRef.current) return;
-    
-    const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
-    setScrollTop(scrollTop);
-    
-    // Check if we're near the end of the list
-    const distanceFromEnd = scrollHeight - scrollTop - clientHeight;
-    
-    if (
-      !endReached && 
-      distanceFromEnd < endReachedThreshold && 
-      onEndReached
-    ) {
-      setEndReached(true);
-      onEndReached();
-    } else if (distanceFromEnd >= endReachedThreshold && endReached) {
-      setEndReached(false);
-    }
-  }, [endReached, endReachedThreshold, onEndReached]);
-  
-  // Add scroll event listener
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    
-    container.addEventListener('scroll', handleScroll);
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, [handleScroll]);
+  const handleScroll = useMemo(() => 
+    debounce((e: React.UIEvent<HTMLDivElement>) => {
+      const newScrollTop = e.currentTarget.scrollTop;
+      setScrollTop(newScrollTop);
+      
+      if (onScroll) {
+        onScroll(newScrollTop);
+      }
+      
+      if (onItemsRendered) {
+        onItemsRendered(visibleRange.start, visibleRange.end);
+      }
+    }, 10),
+    [onScroll, onItemsRendered, visibleRange]
+  );
   
   // Render only the visible items
-  const visibleItems = items
-    .slice(startIndex, startIndex + visibleItemCount)
-    .map((item, index) => (
-      <div 
-        key={startIndex + index}
-        style={{ 
-          height: itemHeight, 
-          position: 'absolute',
-          top: (startIndex + index) * itemHeight,
-          left: 0,
-          right: 0,
-        }}
-      >
-        {renderItem(item, startIndex + index)}
-      </div>
-    ));
-
+  const visibleItems = useMemo(() => {
+    const { start, end } = visibleRange;
+    return items.slice(start, end + 1).map((item, index) => {
+      const actualIndex = start + index;
+      const { top, height } = itemPositions[actualIndex];
+      
+      return (
+        <div
+          key={actualIndex}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height,
+            transform: `translateY(${top}px)`
+          }}
+        >
+          {renderItem(item, actualIndex)}
+        </div>
+      );
+    });
+  }, [items, visibleRange, itemPositions, renderItem]);
+  
+  // Trigger onItemsRendered when visible range changes
+  useEffect(() => {
+    if (onItemsRendered) {
+      onItemsRendered(visibleRange.start, visibleRange.end);
+    }
+  }, [visibleRange, onItemsRendered]);
+  
   return (
     <div
       ref={containerRef}
-      className={`overflow-y-auto ${className}`}
-      style={{ height, position: 'relative' }}
+      className={`virtual-list-container relative overflow-auto ${className}`}
+      style={{
+        height,
+        width,
+        position: 'relative',
+        overflowY: 'auto'
+      }}
+      onScroll={handleScroll}
     >
-      <div style={{ height: totalHeight, position: 'relative' }}>
+      <div
+        className="virtual-list-content"
+        style={{
+          height: totalHeight,
+          position: 'relative'
+        }}
+      >
         {visibleItems}
       </div>
     </div>
