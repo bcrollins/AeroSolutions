@@ -9,11 +9,18 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
+import { toast } from '@/hooks/use-toast';
+import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { BadgesDisplay, LeaderboardDisplay } from '@/components/course/GamificationElements';
 import CodeEnvironment from '@/components/course/CodeEnvironment';
 import LearningPathSelector from '@/components/course/LearningPathSelector';
 import LearningAnalytics from '@/components/course/LearningAnalytics';
 import CollaborationTools from '@/components/course/CollaborationTools';
+import InteractiveProgressChart from '@/components/course/InteractiveProgressChart';
+import PersonalizedLearningPath from '@/components/course/PersonalizedLearningPath';
+import LearningStreakTracker from '@/components/course/LearningStreakTracker';
 import { 
   ChevronRight, 
   CheckCircle2, 
@@ -33,7 +40,12 @@ import {
   Terminal,
   Play,
   Download,
-  Share2
+  Share2,
+  Brain,
+  Sparkles,
+  Target,
+  Zap,
+  Star
 } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics';
 
@@ -195,6 +207,69 @@ const CoursesDashboard = () => {
   const [overallProgress, setOverallProgress] = useState(0);
   const [totalHoursCompleted, setTotalHoursCompleted] = useState(0);
 
+  // Sample mock data for our enhanced components
+  const [streakCount, setStreakCount] = useState(5);
+  const [learningMetrics, setLearningMetrics] = useState([
+    { 
+      label: 'Focus Time', 
+      value: 42, 
+      previousValue: 35, 
+      icon: <Target className="w-4 h-4 text-white" />, 
+      color: 'bg-electric-cyan-500/30' 
+    },
+    { 
+      label: 'Completion Rate', 
+      value: 85, 
+      previousValue: 75, 
+      icon: <CheckCircle2 className="w-4 h-4 text-white" />, 
+      color: 'bg-green-500/30' 
+    },
+    { 
+      label: 'Daily Streak', 
+      value: 5, 
+      previousValue: 3, 
+      icon: <Zap className="w-4 h-4 text-white" />, 
+      color: 'bg-orange-500/30' 
+    },
+    { 
+      label: 'Knowledge Points', 
+      value: 425, 
+      previousValue: 380, 
+      icon: <Brain className="w-4 h-4 text-white" />, 
+      color: 'bg-purple-500/30' 
+    }
+  ]);
+  
+  const [weeklyData, setWeeklyData] = useState([
+    { day: '2025-05-09', minutes: 25, lessons: 1, streak: true },
+    { day: '2025-05-10', minutes: 40, lessons: 2, streak: true },
+    { day: '2025-05-11', minutes: 0, lessons: 0, streak: false },
+    { day: '2025-05-12', minutes: 35, lessons: 1, streak: true },
+    { day: '2025-05-13', minutes: 45, lessons: 2, streak: true },
+    { day: '2025-05-14', minutes: 20, lessons: 1, streak: true },
+    { day: '2025-05-15', minutes: 30, lessons: 1, streak: true }
+  ]);
+  
+  const [lastWeekStreak, setLastWeekStreak] = useState([
+    { date: '2025-05-09', isCompleted: true, minutesLearned: 25 },
+    { date: '2025-05-10', isCompleted: true, minutesLearned: 40 },
+    { date: '2025-05-11', isCompleted: false, minutesLearned: 0 },
+    { date: '2025-05-12', isCompleted: true, minutesLearned: 35 },
+    { date: '2025-05-13', isCompleted: true, minutesLearned: 45 },
+    { date: '2025-05-14', isCompleted: true, minutesLearned: 20 },
+    { date: '2025-05-15', isCompleted: true, minutesLearned: 30 }
+  ]);
+  
+  const [userPreferences, setUserPreferences] = useState({
+    interests: ['Machine Learning', 'Computer Vision', 'Neural Networks'],
+    goals: ['Build AI Products', 'Career Advancement'],
+    currentSkillLevel: 'Intermediate',
+    timeCommitment: '5-10 hours/week'
+  });
+  
+  const [hasCompletedAssessment, setHasCompletedAssessment] = useState(true);
+  const { playSound } = useSoundEffects();
+
   // Calculate overall course progress
   useEffect(() => {
     const totalLessons = courseModules.reduce((acc, module) => acc + module.totalLessons, 0);
@@ -219,6 +294,49 @@ const CoursesDashboard = () => {
     // Track dashboard view for analytics
     trackEvent('course_dashboard_view', 'engagement', 'course_dashboard');
   }, []);
+  
+  // Handle claiming a reward
+  const handleClaimReward = (rewardId: string) => {
+    playSuccess();
+    toast({
+      title: "Reward Claimed!",
+      description: `You've successfully claimed your ${rewardId === 'badge3' ? 'Bronze' : rewardId === 'badge7' ? 'Silver' : rewardId === 'badge14' ? 'Gold' : 'Special'} learning badge!`,
+      variant: "default",
+    });
+    
+    trackEvent('reward_claimed', 'engagement', rewardId);
+  };
+  
+  // Handle sharing streak
+  const handleShareStreak = () => {
+    playClick();
+    toast({
+      title: "Streak Shared!",
+      description: "Your learning streak has been shared to your connected social accounts.",
+      variant: "default",
+    });
+    
+    trackEvent('streak_shared', 'social', `streak_${streakCount}`);
+  };
+  
+  // Handle assessment start
+  const handleStartAssessment = () => {
+    playClick();
+    setLocation('/assessment');
+    trackEvent('assessment_started', 'engagement', 'learning_path_assessment');
+  };
+  
+  // Handle learning path selection
+  const handleSelectPath = (pathId: string) => {
+    playClick();
+    toast({
+      title: "Learning Path Selected",
+      description: `You've selected the ${pathId} learning path. Your dashboard and recommendations will be updated accordingly.`,
+      variant: "default",
+    });
+    
+    trackEvent('path_selected', 'engagement', `path_${pathId}`);
+  };
 
   // Handle module expansion
   const toggleModule = (moduleId: number) => {
@@ -267,8 +385,15 @@ const CoursesDashboard = () => {
           </Button>
           <Button 
             variant="outline"
-            onClick={() => setLocation("/learnai")}
+            onClick={() => window.location.href = "https://buy.stripe.com/28o9AN95oczIb724gj"}
             className="border-electric-cyan-400 text-white hover:bg-electric-cyan-400/20"
+          >
+            Claim Free Trial
+          </Button>
+          <Button 
+            variant="ghost"
+            onClick={() => setLocation("/learnai")}
+            className="text-gray-300 hover:text-white"
           >
             Learn More
           </Button>
