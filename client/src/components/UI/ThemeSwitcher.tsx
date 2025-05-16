@@ -1,186 +1,376 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Sun, Moon, Monitor } from 'lucide-react';
-import { useTheme } from '@/contexts/ThemeContext';
-import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-
-type Theme = 'light' | 'dark' | 'system';
+import { Sun, Moon, Monitor, Check } from 'lucide-react';
+import { useTheme } from '@/hooks/use-theme';
+import { cn } from '@/lib/utils';
+import { useSoundEffects } from '@/hooks/use-sound-effects';
 
 interface ThemeSwitcherProps {
-  variant?: 'icon' | 'toggle' | 'dropdown';
-  showLabels?: boolean;
+  variant?: 'icon' | 'toggle' | 'dropdown' | 'sidebar';
+  size?: 'sm' | 'md' | 'lg';
   className?: string;
-  iconSize?: number;
-  tooltips?: boolean;
-  additionalThemes?: { name: string; value: Theme; icon: React.ReactNode }[];
+  showLabels?: boolean;
+  autoCollapse?: boolean;
 }
 
 /**
- * Enhanced theme switcher with animations and multiple display options
+ * An enhanced theme switcher with animations and different variants
  */
-export default function ThemeSwitcher({
+const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({
   variant = 'icon',
+  size = 'md',
+  className,
   showLabels = false,
-  className = '',
-  iconSize = 18,
-  tooltips = true,
-  additionalThemes = []
-}: ThemeSwitcherProps) {
+  autoCollapse = true
+}) => {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  
-  // After mounting, we have access to the theme
-  useEffect(() => setMounted(true), []);
-  
-  if (!mounted) return null;
-  
-  const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  const currentTheme = theme === 'system' ? systemTheme : theme;
-  
-  // Theme icons with animations
-  const themeIcons = {
-    light: (
-      <motion.div
-        initial={{ rotate: 0 }}
-        animate={{ rotate: 360 }}
-        transition={{ duration: 0.5, type: 'spring' }}
+  const { playSound, settings } = useSoundEffects();
+  const soundEnabled = settings?.enabled || false;
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Icon sizes based on the size prop
+  const iconSizes = {
+    sm: 16,
+    md: 20,
+    lg: 24
+  };
+
+  // Toggle menu open/close
+  const toggleMenu = () => {
+    setIsOpen(!isOpen);
+    if (soundEnabled) playSound('click');
+  };
+
+  // Close the menu when clicking outside
+  useEffect(() => {
+    if (!isOpen || !autoCollapse) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!(e.target as Element).closest('.theme-switcher')) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [isOpen, autoCollapse]);
+
+  // Change theme with animation and sound
+  const changeTheme = (newTheme: 'light' | 'dark' | 'system') => {
+    setTheme(newTheme);
+    if (soundEnabled) playSound('success');
+    if (autoCollapse) setIsOpen(false);
+  };
+
+  // Icon-only variant with hover tooltip
+  if (variant === 'icon') {
+    return (
+      <motion.button
+        className={cn(
+          "relative rounded-full bg-accent/20 p-2 transition-colors hover:bg-accent/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          size === 'sm' ? 'p-1.5' : size === 'lg' ? 'p-2.5' : 'p-2',
+          className
+        )}
+        onClick={() => {
+          if (soundEnabled) playSound('click');
+          setTheme(theme === 'dark' ? 'light' : 'dark');
+        }}
+        whileTap={{ scale: 0.95 }}
+        aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
       >
-        <Sun size={iconSize} className="text-amber-500" />
-      </motion.div>
-    ),
-    dark: (
-      <motion.div
-        initial={{ scale: 0.5 }}
-        animate={{ scale: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <Moon size={iconSize} className="text-indigo-400" />
-      </motion.div>
-    ),
-    system: <Monitor size={iconSize} className="text-gray-500" />
-  };
-  
-  // Labels for each theme
-  const themeLabels = {
-    light: 'Light',
-    dark: 'Dark',
-    system: 'System'
-  };
-  
-  // All theme options
-  const themeOptions = [
-    { name: 'Light', value: 'light' as Theme, icon: themeIcons.light },
-    { name: 'Dark', value: 'dark' as Theme, icon: themeIcons.dark },
-    { name: 'System', value: 'system' as Theme, icon: themeIcons.system },
-    ...additionalThemes
-  ];
-  
-  // Toggle between dark and light mode
-  const toggleTheme = () => {
-    if (currentTheme === 'dark') {
-      setTheme('light' as Theme);
-    } else {
-      setTheme('dark' as Theme);
-    }
-  };
-  
-  // Render different variants
+        {theme === 'dark' ? (
+          <Sun size={iconSizes[size]} className="text-yellow-400" />
+        ) : (
+          <Moon size={iconSizes[size]} className="text-slate-800" />
+        )}
+
+        {/* Tooltip */}
+        {showLabels && (
+          <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-xs font-medium py-1 px-2 rounded-md bg-popover border border-border shadow-sm whitespace-nowrap z-10">
+            {theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          </span>
+        )}
+      </motion.button>
+    );
+  }
+
+  // Toggle switch variant
   if (variant === 'toggle') {
     return (
-      <div className={`flex items-center ${className}`}>
-        <label className="relative inline-flex items-center cursor-pointer">
-          <input
-            type="checkbox"
-            value=""
-            className="sr-only peer"
-            checked={currentTheme === 'dark'}
-            onChange={toggleTheme}
-          />
-          <motion.div
-            className={`w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary-200 rounded-full peer 
-              peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] 
-              after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 
-              after:border after:rounded-full after:h-5 after:w-5 after:shadow-sm after:transition-all 
-              dark:border-gray-600 peer-checked:bg-primary`}
-            animate={{ backgroundColor: currentTheme === 'dark' ? 'var(--color-primary)' : '' }}
-          />
-          <span className="ml-3 text-sm font-medium">
-            {currentTheme === 'dark' ? 'Dark Mode' : 'Light Mode'}
-          </span>
-        </label>
+      <motion.button
+        className={cn(
+          "relative inline-flex h-6 rounded-full bg-accent/20 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          size === 'sm' ? 'w-11' : size === 'lg' ? 'w-14 h-7' : 'w-12',
+          className
+        )}
+        onClick={() => {
+          if (soundEnabled) playSound('click');
+          setTheme(theme === 'dark' ? 'light' : 'dark');
+        }}
+        whileTap={{ scale: 0.97 }}
+        aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+      >
+        <span className="sr-only">Toggle theme</span>
+        <motion.span
+          className={cn(
+            "pointer-events-none absolute top-1/2 flex -translate-y-1/2 items-center justify-center rounded-full bg-background shadow-sm",
+            theme === 'dark' ? 'right-1' : 'left-1',
+            size === 'sm' ? 'h-4 w-4' : size === 'lg' ? 'h-5 w-5' : 'h-4 w-4'
+          )}
+          animate={{ 
+            x: theme === 'dark' 
+              ? size === 'sm' ? 16 : size === 'lg' ? 28 : 20 
+              : 0 
+          }}
+          transition={{ type: 'spring', bounce: 0.3, duration: 0.4 }}
+        >
+          {theme === 'dark' ? (
+            <Moon size={iconSizes[size] - 8} className="text-slate-700" />
+          ) : (
+            <Sun size={iconSizes[size] - 8} className="text-yellow-500" />
+          )}
+        </motion.span>
+      </motion.button>
+    );
+  }
+
+  // Dropdown variant
+  if (variant === 'dropdown') {
+    return (
+      <div className="relative theme-switcher">
+        <motion.button
+          className={cn(
+            "flex items-center gap-2 rounded-md bg-accent/20 px-3 py-2 text-sm font-medium transition-colors hover:bg-accent/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            size === 'sm' ? 'text-xs py-1.5 px-2.5' : size === 'lg' ? 'text-base py-2.5 px-4' : 'text-sm py-2 px-3',
+            className
+          )}
+          onClick={toggleMenu}
+          whileTap={{ scale: 0.97 }}
+          aria-expanded={isOpen}
+          aria-haspopup="true"
+        >
+          {theme === 'dark' ? (
+            <Moon size={iconSizes[size] - 4} className="text-slate-200" />
+          ) : theme === 'light' ? (
+            <Sun size={iconSizes[size] - 4} className="text-yellow-500" />
+          ) : (
+            <Monitor size={iconSizes[size] - 4} className="text-foreground" />
+          )}
+          {showLabels && (
+            <span>
+              {theme === 'dark' ? 'Dark' : theme === 'light' ? 'Light' : 'System'}
+            </span>
+          )}
+        </motion.button>
+
+        <AnimatedMenu 
+          isOpen={isOpen} 
+          theme={theme} 
+          changeTheme={changeTheme} 
+          size={size} 
+          iconSizes={iconSizes} 
+        />
       </div>
     );
   }
-  
-  if (variant === 'dropdown') {
+
+  // Sidebar variant - full-width buttons in a list
+  if (variant === 'sidebar') {
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className={className}>
-            {currentTheme === 'dark' ? themeIcons.dark : currentTheme === 'light' ? themeIcons.light : themeIcons.system}
-            {showLabels && (
-              <span className="ml-2">{themeLabels[theme as keyof typeof themeLabels]}</span>
-            )}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {themeOptions.map((option) => (
-            <DropdownMenuItem 
-              key={option.value}
-              onClick={() => setTheme(option.value as Theme)}
-              className="cursor-pointer flex items-center"
-            >
-              <div className="mr-2">{option.icon}</div>
-              <span>{option.name}</span>
-              {theme === option.value && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="ml-auto"
-                >
-                  <div className="h-2 w-2 rounded-full bg-primary" />
-                </motion.div>
-              )}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className={cn("rounded-md border border-border overflow-hidden", className)}>
+        <ThemeOption
+          theme="light"
+          currentTheme={theme}
+          onChange={changeTheme}
+          label="Light"
+          icon={<Sun size={iconSizes[size]} className="text-yellow-500" />}
+          size={size}
+        />
+        <ThemeOption
+          theme="dark"
+          currentTheme={theme}
+          onChange={changeTheme}
+          label="Dark"
+          icon={<Moon size={iconSizes[size]} className="text-slate-200" />}
+          size={size}
+        />
+        <ThemeOption
+          theme="system"
+          currentTheme={theme}
+          onChange={changeTheme}
+          label="System"
+          icon={<Monitor size={iconSizes[size]} className="text-foreground" />}
+          size={size}
+        />
+      </div>
     );
   }
-  
-  // Default icon variant
+
+  // Default fallback to icon variant
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={toggleTheme}
-            className={className}
-          >
-            <motion.div
-              key={currentTheme}
-              initial={{ y: -20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 20, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              {currentTheme === 'dark' ? themeIcons.dark : themeIcons.light}
-            </motion.div>
-            <span className="sr-only">
-              Toggle {currentTheme === 'dark' ? 'Light' : 'Dark'} Mode
-            </span>
-          </Button>
-        </TooltipTrigger>
-        {tooltips && (
-          <TooltipContent>
-            <p>Switch to {currentTheme === 'dark' ? 'Light' : 'Dark'} Mode</p>
-          </TooltipContent>
-        )}
-      </Tooltip>
-    </TooltipProvider>
+    <button
+      className={cn(
+        "rounded-full p-2 bg-accent/20 transition-colors hover:bg-accent/40",
+        className
+      )}
+      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+      aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+    >
+      {theme === 'dark' ? (
+        <Sun size={iconSizes[size]} />
+      ) : (
+        <Moon size={iconSizes[size]} />
+      )}
+    </button>
   );
-}
+};
+
+// Animated dropdown menu component
+const AnimatedMenu = ({ 
+  isOpen, 
+  theme, 
+  changeTheme, 
+  size, 
+  iconSizes 
+}: { 
+  isOpen: boolean;
+  theme: string;
+  changeTheme: (theme: 'light' | 'dark' | 'system') => void;
+  size: 'sm' | 'md' | 'lg';
+  iconSizes: Record<'sm' | 'md' | 'lg', number>;
+}) => {
+  const menuVariants = {
+    hidden: { opacity: 0, y: -5, scale: 0.95 },
+    visible: { opacity: 1, y: 0, scale: 1 }
+  };
+
+  return (
+    <>
+      {isOpen && (
+        <motion.div
+          className="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-popover shadow-lg border border-border ring-1 ring-black ring-opacity-5 focus:outline-none z-10"
+          initial="hidden"
+          animate="visible"
+          exit="hidden"
+          variants={menuVariants}
+          transition={{ duration: 0.2, ease: [0.4, 0.0, 0.2, 1] }}
+        >
+          <div className="py-1">
+            <ThemeMenuItem
+              theme="light"
+              currentTheme={theme}
+              onChange={changeTheme}
+              label="Light"
+              icon={<Sun size={iconSizes[size]} className="text-yellow-500" />}
+              size={size}
+            />
+            <ThemeMenuItem
+              theme="dark"
+              currentTheme={theme}
+              onChange={changeTheme}
+              label="Dark"
+              icon={<Moon size={iconSizes[size]} className="text-slate-200" />}
+              size={size}
+            />
+            <ThemeMenuItem
+              theme="system"
+              currentTheme={theme}
+              onChange={changeTheme}
+              label="System"
+              icon={<Monitor size={iconSizes[size]} className="text-foreground" />}
+              size={size}
+            />
+          </div>
+        </motion.div>
+      )}
+    </>
+  );
+};
+
+// Menu item for dropdown
+const ThemeMenuItem = ({ 
+  theme, 
+  currentTheme, 
+  onChange, 
+  label, 
+  icon,
+  size
+}: { 
+  theme: 'light' | 'dark' | 'system';
+  currentTheme: string;
+  onChange: (theme: 'light' | 'dark' | 'system') => void;
+  label: string;
+  icon: React.ReactNode;
+  size: 'sm' | 'md' | 'lg';
+}) => {
+  const isActive = theme === currentTheme;
+  
+  const sizeClasses = {
+    sm: 'py-1.5 px-2.5 text-xs',
+    md: 'py-2 px-3 text-sm',
+    lg: 'py-2.5 px-4 text-base'
+  };
+  
+  return (
+    <button
+      className={cn(
+        "flex w-full items-center justify-between",
+        sizeClasses[size],
+        isActive ? "bg-accent/50 text-accent-foreground" : "text-foreground hover:bg-accent/20"
+      )}
+      onClick={() => onChange(theme)}
+    >
+      <div className="flex items-center gap-2">
+        {icon}
+        <span>{label}</span>
+      </div>
+      {isActive && <Check size={16} className="text-primary" />}
+    </button>
+  );
+};
+
+// Theme option for sidebar variant
+const ThemeOption = ({ 
+  theme, 
+  currentTheme, 
+  onChange, 
+  label, 
+  icon,
+  size
+}: { 
+  theme: 'light' | 'dark' | 'system';
+  currentTheme: string;
+  onChange: (theme: 'light' | 'dark' | 'system') => void;
+  label: string;
+  icon: React.ReactNode;
+  size: 'sm' | 'md' | 'lg';
+}) => {
+  const isActive = theme === currentTheme;
+  
+  const sizeClasses = {
+    sm: 'py-1.5 px-2.5 text-xs',
+    md: 'py-2 px-3 text-sm',
+    lg: 'py-2.5 px-4 text-base'
+  };
+  
+  return (
+    <button
+      className={cn(
+        "flex w-full items-center justify-between transition-colors",
+        sizeClasses[size],
+        isActive 
+          ? "bg-accent text-accent-foreground" 
+          : "text-foreground hover:bg-accent/20"
+      )}
+      onClick={() => onChange(theme)}
+    >
+      <div className="flex items-center gap-2">
+        {icon}
+        <span>{label}</span>
+      </div>
+      {isActive && <Check size={16} className="text-primary" />}
+    </button>
+  );
+};
+
+export default ThemeSwitcher;

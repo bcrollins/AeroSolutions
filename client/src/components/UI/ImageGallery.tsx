@@ -1,280 +1,560 @@
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog';
-import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Download } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronLeft, ChevronRight, X, Maximize2, Download, Info } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useSoundEffects } from '@/hooks/use-sound-effects';
+
+interface ImageGalleryProps {
+  images: GalleryImage[];
+  className?: string;
+  aspectRatio?: 'auto' | 'square' | 'video' | 'portrait' | 'wide';
+  lightbox?: boolean;
+  masonry?: boolean;
+  columns?: number;
+  gap?: 'none' | 'sm' | 'md' | 'lg';
+  rounded?: 'none' | 'sm' | 'md' | 'lg' | 'full';
+  withThumbnails?: boolean;
+  initialIndex?: number;
+  withGestures?: boolean;
+  thumbnailPosition?: 'bottom' | 'top' | 'left' | 'right';
+  onImageChange?: (index: number) => void;
+}
 
 export interface GalleryImage {
-  id: string | number;
   src: string;
   alt: string;
-  thumbnail?: string;
+  thumb?: string;
   caption?: string;
   width?: number;
   height?: number;
 }
 
-interface ImageGalleryProps {
-  images: GalleryImage[];
-  columns?: number;
-  gap?: number;
-  aspectRatio?: string;
-  className?: string;
-  lightboxEnabled?: boolean;
-  masonry?: boolean;
-  thumbnailClassName?: string;
-  imageClassName?: string;
-  enableDownload?: boolean;
-  enableZoom?: boolean;
-  rounded?: string;
-  withCaptions?: boolean;
-  captionClassName?: string;
-  animated?: boolean;
-}
-
 /**
- * Responsive image gallery with lightbox functionality
+ * A beautiful, responsive image gallery with lightbox support and animations
  */
-export default function ImageGallery({
+const ImageGallery: React.FC<ImageGalleryProps> = ({
   images,
-  columns = 3,
-  gap = 4,
-  aspectRatio = '1/1',
-  className = '',
-  lightboxEnabled = true,
+  className,
+  aspectRatio = 'auto',
+  lightbox = true,
   masonry = false,
-  thumbnailClassName = '',
-  imageClassName = '',
-  enableDownload = true,
-  enableZoom = true,
-  rounded = 'rounded-lg',
-  withCaptions = false,
-  captionClassName = '',
-  animated = true
-}: ImageGalleryProps) {
-  const [isLightboxOpen, setLightboxOpen] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [zoomLevel, setZoomLevel] = useState(1);
-  
-  // Handle image click
-  const openLightbox = (index: number) => {
-    if (lightboxEnabled) {
-      setCurrentImageIndex(index);
-      setLightboxOpen(true);
-      setZoomLevel(1); // Reset zoom when opening lightbox
+  columns = 3,
+  gap = 'md',
+  rounded = 'md',
+  withThumbnails = true,
+  initialIndex = 0,
+  withGestures = true,
+  thumbnailPosition = 'bottom',
+  onImageChange,
+}) => {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [isInfoVisible, setIsInfoVisible] = useState(false);
+
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+  const { playSound, settings } = useSoundEffects();
+  const soundEnabled = settings?.enabled || false;
+
+  // Update image when currentIndex changes
+  useEffect(() => {
+    if (onImageChange) {
+      onImageChange(currentIndex);
     }
+  }, [currentIndex, onImageChange]);
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    if (!isLightboxOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsLightboxOpen(false);
+        if (soundEnabled) playSound('click');
+      } else if (e.key === 'ArrowLeft') {
+        navigatePrev();
+      } else if (e.key === 'ArrowRight') {
+        navigateNext();
+      } else if (e.key === 'i') {
+        setIsInfoVisible(!isInfoVisible);
+        if (soundEnabled) playSound('click');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isLightboxOpen, currentIndex, isInfoVisible]);
+
+  // Navigate to the next image
+  const navigateNext = () => {
+    if (images.length <= 1) return;
+    
+    setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+    if (soundEnabled) playSound('navigation');
   };
-  
-  // Navigation
-  const goToPrevious = () => {
-    setCurrentImageIndex((prevIndex) => 
-      prevIndex === 0 ? images.length - 1 : prevIndex - 1
-    );
-    setZoomLevel(1); // Reset zoom when changing images
+
+  // Navigate to the previous image
+  const navigatePrev = () => {
+    if (images.length <= 1) return;
+    
+    setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+    if (soundEnabled) playSound('navigation');
   };
-  
-  const goToNext = () => {
-    setCurrentImageIndex((prevIndex) => 
-      prevIndex === images.length - 1 ? 0 : prevIndex + 1
-    );
-    setZoomLevel(1); // Reset zoom when changing images
+
+  // Open the lightbox
+  const openLightbox = (index: number) => {
+    setCurrentIndex(index);
+    setIsLightboxOpen(true);
+    if (soundEnabled) playSound('click');
   };
-  
-  // Handle zoom
-  const zoomIn = () => {
-    setZoomLevel((prevZoom) => Math.min(prevZoom + 0.5, 3));
+
+  // Close the lightbox
+  const closeLightbox = () => {
+    setIsLightboxOpen(false);
+    if (soundEnabled) playSound('click');
   };
-  
-  const zoomOut = () => {
-    setZoomLevel((prevZoom) => Math.max(prevZoom - 0.5, 1));
+
+  // Toggle image info
+  const toggleInfo = () => {
+    setIsInfoVisible(!isInfoVisible);
+    if (soundEnabled) playSound('click');
   };
-  
-  // Handle download
-  const downloadImage = (src: string, alt: string) => {
+
+  // Download the current image
+  const downloadImage = () => {
+    const image = images[currentIndex];
     const link = document.createElement('a');
-    link.href = src;
-    link.download = alt.replace(/\\s+/g, '-').toLowerCase() || 'image';
+    link.href = image.src;
+    link.download = image.alt.replace(/\s+/g, '-').toLowerCase() || 'image';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    if (soundEnabled) playSound('success');
   };
-  
-  // Animation variants
-  const containerVariants = {
-    hidden: {},
-    visible: {
-      transition: {
-        staggerChildren: 0.1
+
+  // Handle touch events for swipe gestures
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd || !withGestures) return;
+    
+    const distance = touchStart - touchEnd;
+    const isSwipe = Math.abs(distance) > 50;
+    
+    if (isSwipe) {
+      if (distance > 0) {
+        navigateNext();
+      } else {
+        navigatePrev();
       }
     }
   };
-  
-  const imageVariants = {
-    hidden: { opacity: 0, scale: 0.8 },
-    visible: { 
-      opacity: 1, 
-      scale: 1,
-      transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
+
+  // Get aspect ratio classes
+  const getAspectRatioClass = () => {
+    switch (aspectRatio) {
+      case 'square':
+        return 'aspect-square';
+      case 'video':
+        return 'aspect-video';
+      case 'portrait':
+        return 'aspect-[3/4]';
+      case 'wide':
+        return 'aspect-[16/9]';
+      case 'auto':
+      default:
+        return '';
     }
   };
-  
-  return (
-    <div className={className}>
-      {/* Gallery grid */}
-      <motion.div 
-        className={`grid gap-${gap} ${
-          masonry 
-            ? `columns-${columns} space-y-${gap}` 
-            : `grid-cols-1 sm:grid-cols-2 md:grid-cols-${columns}`
-        }`}
-        variants={animated ? containerVariants : undefined}
-        initial={animated ? "hidden" : undefined}
-        animate={animated ? "visible" : undefined}
-      >
-        {images.map((image, index) => (
-          <motion.div
-            key={image.id}
-            className={`${masonry ? 'break-inside-avoid mb-4' : ''} overflow-hidden ${rounded} ${thumbnailClassName}`}
-            onClick={() => openLightbox(index)}
-            style={{ cursor: lightboxEnabled ? 'pointer' : 'default' }}
-            variants={animated ? imageVariants : undefined}
-          >
-            <div className={`relative overflow-hidden ${rounded}`}>
+
+  // Get gap classes
+  const getGapClass = () => {
+    switch (gap) {
+      case 'none':
+        return 'gap-0';
+      case 'sm':
+        return 'gap-1';
+      case 'md':
+        return 'gap-2';
+      case 'lg':
+        return 'gap-4';
+      default:
+        return 'gap-2';
+    }
+  };
+
+  // Get rounded classes
+  const getRoundedClass = () => {
+    switch (rounded) {
+      case 'none':
+        return 'rounded-none';
+      case 'sm':
+        return 'rounded-sm';
+      case 'md':
+        return 'rounded-md';
+      case 'lg':
+        return 'rounded-lg';
+      case 'full':
+        return 'rounded-full';
+      default:
+        return 'rounded-md';
+    }
+  };
+
+  // Render a grid of images
+  const renderGrid = () => {
+    if (masonry) {
+      return (
+        <div 
+          className={cn(
+            "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3",
+            getGapClass(),
+            className
+          )}
+          style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+        >
+          {images.map((image, index) => (
+            <div 
+              key={index} 
+              className="overflow-hidden group relative"
+              style={{ 
+                gridRow: `span ${Math.ceil((image.height || 1) / (image.width || 1))}` 
+              }}
+            >
               <img
-                src={image.thumbnail || image.src}
+                src={image.src}
                 alt={image.alt}
-                className={`w-full transition-transform duration-300 hover:scale-105 object-cover ${imageClassName}`}
-                style={{ aspectRatio: masonry ? undefined : aspectRatio }}
+                className={cn(
+                  "w-full h-auto object-cover transition-all duration-300 group-hover:scale-105",
+                  getRoundedClass(),
+                  lightbox && "cursor-pointer"
+                )}
+                onClick={() => lightbox && openLightbox(index)}
                 loading="lazy"
               />
-              
-              {withCaptions && image.caption && (
-                <div className={`absolute bottom-0 left-0 right-0 p-2 bg-black/50 text-white text-sm ${captionClassName}`}>
+              {image.caption && (
+                <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   {image.caption}
                 </div>
               )}
             </div>
-          </motion.div>
-        ))}
-      </motion.div>
-      
-      {/* Lightbox */}
-      <Dialog open={isLightboxOpen} onOpenChange={setLightboxOpen}>
-        <DialogContent className="max-w-screen-lg w-[95vw] p-0 bg-black/90 border-none h-[90vh]">
-          <div className="h-full flex flex-col relative">
-            {/* Close button */}
-            <DialogClose className="absolute right-2 top-2 z-50">
-              <div className="p-2 bg-black/50 rounded-full text-white hover:bg-black/70">
-                <X className="h-5 w-5" />
-                <span className="sr-only">Close</span>
-              </div>
-            </DialogClose>
-            
-            {/* Main image container */}
-            <div className="flex-1 flex items-center justify-center overflow-hidden">
-              <div
-                className="h-full w-full flex items-center justify-center"
-                style={{ 
-                  overflow: 'auto', 
-                  cursor: zoomLevel > 1 ? 'move' : 'default'
-                }}
-              >
-                <img
-                  src={images[currentImageIndex].src}
-                  alt={images[currentImageIndex].alt}
-                  className="max-h-full object-contain transition-transform duration-300"
-                  style={{ 
-                    transform: `scale(${zoomLevel})`,
-                    maxWidth: zoomLevel === 1 ? '100%' : 'none',
-                    maxHeight: zoomLevel === 1 ? '100%' : 'none'
-                  }}
-                />
-              </div>
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div 
+        className={cn(
+          "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3",
+          getGapClass(),
+          className
+        )}
+        style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+      >
+        {images.map((image, index) => (
+          <div key={index} className="group relative overflow-hidden">
+            <div className={cn(getAspectRatioClass())}>
+              <img
+                src={image.src}
+                alt={image.alt}
+                className={cn(
+                  "w-full h-full object-cover transition-all duration-300 group-hover:scale-105",
+                  getRoundedClass(),
+                  lightbox && "cursor-pointer"
+                )}
+                onClick={() => lightbox && openLightbox(index)}
+                loading="lazy"
+              />
             </div>
-            
-            {/* Caption */}
-            {images[currentImageIndex].caption && (
-              <div className="absolute bottom-14 left-0 right-0 text-center p-2 bg-black/50 text-white">
-                {images[currentImageIndex].caption}
+            {image.caption && (
+              <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                {image.caption}
               </div>
             )}
-            
-            {/* Controls */}
-            <div className="p-4 bg-black/70 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {/* Left pagination */}
-                <button
-                  onClick={goToPrevious}
-                  className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
-                  aria-label="Previous image"
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </button>
-                
-                {/* Right pagination */}
-                <button
-                  onClick={goToNext}
-                  className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
-                  aria-label="Next image"
-                >
-                  <ChevronRight className="h-5 w-5" />
-                </button>
-                
-                {/* Image counter */}
-                <span className="text-white text-sm ml-2">
-                  {currentImageIndex + 1} / {images.length}
-                </span>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                {/* Zoom controls */}
-                {enableZoom && (
-                  <>
-                    <button
-                      onClick={zoomOut}
-                      disabled={zoomLevel <= 1}
-                      className={`p-2 rounded-full ${
-                        zoomLevel <= 1 
-                          ? 'bg-white/5 text-white/40 cursor-not-allowed' 
-                          : 'bg-white/10 hover:bg-white/20 text-white'
-                      }`}
-                      aria-label="Zoom out"
-                    >
-                      <ZoomOut className="h-5 w-5" />
-                    </button>
-                    
-                    <button
-                      onClick={zoomIn}
-                      disabled={zoomLevel >= 3}
-                      className={`p-2 rounded-full ${
-                        zoomLevel >= 3 
-                          ? 'bg-white/5 text-white/40 cursor-not-allowed' 
-                          : 'bg-white/10 hover:bg-white/20 text-white'
-                      }`}
-                      aria-label="Zoom in"
-                    >
-                      <ZoomIn className="h-5 w-5" />
-                    </button>
-                  </>
-                )}
-                
-                {/* Download button */}
-                {enableDownload && (
-                  <button
-                    onClick={() => downloadImage(
-                      images[currentImageIndex].src, 
-                      images[currentImageIndex].alt
-                    )}
-                    className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
-                    aria-label="Download image"
-                  >
-                    <Download className="h-5 w-5" />
-                  </button>
-                )}
-              </div>
-            </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        ))}
+      </div>
+    );
+  };
+
+  // Render main gallery view
+  const renderMainView = () => (
+    <div className={cn("w-full", className)}>
+      {/* If not a grid, show the main image */}
+      {!masonry && columns === 1 && (
+        <div 
+          ref={imageContainerRef}
+          className="relative overflow-hidden mb-2"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div className={cn(getAspectRatioClass())}>
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={currentIndex}
+                src={images[currentIndex].src}
+                alt={images[currentIndex].alt}
+                className={cn(
+                  "w-full h-full object-cover",
+                  getRoundedClass(),
+                  lightbox && "cursor-pointer"
+                )}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                onClick={() => lightbox && openLightbox(currentIndex)}
+                loading="lazy"
+              />
+            </AnimatePresence>
+          </div>
+
+          {/* Navigation arrows */}
+          {images.length > 1 && (
+            <>
+              <button
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigatePrev();
+                }}
+                aria-label="Previous image"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigateNext();
+                }}
+                aria-label="Next image"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </>
+          )}
+          
+          {/* Image caption */}
+          {images[currentIndex].caption && (
+            <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-sm">
+              {images[currentIndex].caption}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* If showing thumbnails and more than one image */}
+      {withThumbnails && images.length > 1 && !masonry && (
+        <div className={cn(
+          "flex overflow-x-auto scrollbar-thin gap-2",
+          thumbnailPosition === 'left' || thumbnailPosition === 'right' 
+            ? "flex-col max-h-[400px] overflow-y-auto" 
+            : "flex-row"
+        )}>
+          {images.map((image, index) => (
+            <motion.div
+              key={index}
+              className={cn(
+                "flex-shrink-0 cursor-pointer overflow-hidden",
+                thumbnailPosition === 'left' || thumbnailPosition === 'right' ? "w-20" : "w-24",
+                getRoundedClass(),
+                currentIndex === index ? "ring-2 ring-primary" : "opacity-70 hover:opacity-100"
+              )}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                setCurrentIndex(index);
+                if (soundEnabled) playSound('click');
+              }}
+            >
+              <img
+                src={image.thumb || image.src}
+                alt={`Thumbnail ${index + 1}`}
+                className="w-full h-full object-cover aspect-square"
+                loading="lazy"
+              />
+            </motion.div>
+          ))}
+        </div>
+      )}
+
+      {/* If it's a grid layout */}
+      {(masonry || columns > 1) && renderGrid()}
     </div>
   );
-}
+
+  // Render lightbox
+  const renderLightbox = () => (
+    <AnimatePresence>
+      {isLightboxOpen && (
+        <motion.div
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={closeLightbox}
+        >
+          {/* Close button */}
+          <button
+            className="absolute top-4 right-4 z-10 p-2 text-white bg-black/30 rounded-full hover:bg-black/50 transition-colors"
+            onClick={closeLightbox}
+            aria-label="Close lightbox"
+          >
+            <X size={24} />
+          </button>
+
+          {/* Info button */}
+          <button
+            className="absolute top-4 left-4 z-10 p-2 text-white bg-black/30 rounded-full hover:bg-black/50 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleInfo();
+            }}
+            aria-label="Image information"
+          >
+            <Info size={24} />
+          </button>
+
+          {/* Download button */}
+          <button
+            className="absolute top-4 left-16 z-10 p-2 text-white bg-black/30 rounded-full hover:bg-black/50 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              downloadImage();
+            }}
+            aria-label="Download image"
+          >
+            <Download size={24} />
+          </button>
+
+          {/* Main image container */}
+          <div 
+            className="relative w-full max-w-6xl h-full max-h-screen p-8 flex items-center justify-center"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentIndex}
+                className="relative max-w-full max-h-full"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.3 }}
+              >
+                <img
+                  src={images[currentIndex].src}
+                  alt={images[currentIndex].alt}
+                  className="max-w-full max-h-[80vh] object-contain mx-auto"
+                />
+                
+                {/* Image caption or info */}
+                <AnimatePresence>
+                  {isInfoVisible && (
+                    <motion.div
+                      className="absolute bottom-0 left-0 right-0 bg-black/70 text-white p-4 backdrop-blur-sm"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 20 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <h3 className="text-lg font-semibold mb-1">{images[currentIndex].alt}</h3>
+                      {images[currentIndex].caption && (
+                        <p className="text-sm opacity-90">{images[currentIndex].caption}</p>
+                      )}
+                      <div className="text-xs opacity-70 mt-2">
+                        {images[currentIndex].width && images[currentIndex].height && (
+                          <span className="mr-4">
+                            Dimensions: {images[currentIndex].width} x {images[currentIndex].height}px
+                          </span>
+                        )}
+                        <span>Image {currentIndex + 1} of {images.length}</span>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Navigation arrows */}
+            {images.length > 1 && (
+              <>
+                <button
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center backdrop-blur-sm hover:bg-black/60 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigatePrev();
+                  }}
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft size={24} />
+                </button>
+                <button
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center backdrop-blur-sm hover:bg-black/60 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigateNext();
+                  }}
+                  aria-label="Next image"
+                >
+                  <ChevronRight size={24} />
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Thumbnails at the bottom */}
+          {withThumbnails && images.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 overflow-x-auto max-w-screen-lg p-2">
+              {images.map((image, index) => (
+                <motion.div
+                  key={index}
+                  className={cn(
+                    "w-16 h-16 flex-shrink-0 cursor-pointer overflow-hidden rounded-md",
+                    currentIndex === index ? "ring-2 ring-primary" : "opacity-60 hover:opacity-100"
+                  )}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentIndex(index);
+                    if (soundEnabled) playSound('click');
+                  }}
+                >
+                  <img
+                    src={image.thumb || image.src}
+                    alt={`Thumbnail ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  return (
+    <>
+      {renderMainView()}
+      {renderLightbox()}
+    </>
+  );
+};
+
+export default ImageGallery;
