@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation } from 'wouter';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
-import Card from '@/components/ui/Card';
+import { Card } from '@/components/ui/card';
 import OptimizedImage from '@/components/ui/OptimizedImage';
 import { formatDistanceToNow } from 'date-fns';
 import { designSystem } from '@/styles/designSystem';
@@ -70,13 +70,9 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   // Render the compact variant
   if (variant === 'compact') {
     return (
-      <Card
-        variant={cardVariant}
-        padding="sm"
-        hoverEffect
-        elevated={featured}
+      <div
         onClick={handleCardClick}
-        className={`${className} max-w-xs h-full`}
+        className={`${className} max-w-xs h-full rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-200 ${featured ? 'border-transparent bg-background/60 backdrop-blur-md' : 'border-border bg-card'} ${featured ? 'shadow-md hover:shadow-lg' : ''} p-4 cursor-pointer hover:scale-[1.01]`}
       >
         {coverImage && (
           <div className="relative aspect-video mb-3 rounded-md overflow-hidden">
