@@ -164,7 +164,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
             </div>
           </div>
         </div>
-      </Card>
+      </div>
     );
   }
   
@@ -272,7 +272,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
           </div>
         </div>
       </div>
-    </Card>
+    </div>
   );
 };
 
