@@ -1,210 +1,397 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { debounce, throttle } from '@/utils/performanceUtils';
 
-/**
- * Types of performance metrics we can track
- */
-export type PerformanceMetric = 
-  | 'FCP' // First Contentful Paint
-  | 'LCP' // Largest Contentful Paint
-  | 'FID' // First Input Delay
-  | 'CLS' // Cumulative Layout Shift
-  | 'TTFB' // Time to First Byte
-  | 'TTI'; // Time to Interactive
+interface PerformanceOptions {
+  /**
+   * The time in milliseconds to debounce input events
+   */
+  debounceTime?: number;
+  
+  /**
+   * The time in milliseconds to throttle render events
+   */
+  throttleTime?: number;
+  
+  /**
+   * Enable or disable all performance optimizations
+   */
+  enabled?: boolean;
+  
+  /**
+   * Log performance metrics to console
+   */
+  debug?: boolean;
+}
 
-/**
- * Performance metrics object containing all web vital metrics
- */
-export interface PerformanceMetrics {
-  FCP?: number;
-  LCP?: number;
-  FID?: number;
-  CLS?: number;
-  TTFB?: number;
-  TTI?: number;
+interface PerformanceMetrics {
+  /**
+   * First Contentful Paint in milliseconds
+   */
+  fcp: number | null;
+  
+  /**
+   * Largest Contentful Paint in milliseconds
+   */
+  lcp: number | null;
+  
+  /**
+   * First Input Delay in milliseconds
+   */
+  fid: number | null;
+  
+  /**
+   * Cumulative Layout Shift score
+   */
+  cls: number | null;
+  
+  /**
+   * Time to Interactive in milliseconds
+   */
+  tti: number | null;
+  
+  /**
+   * Total Blocking Time in milliseconds
+   */
+  tbt: number | null;
+}
+
+interface UsePerformanceReturn {
+  /**
+   * Debounce an input handler to prevent excessive renders
+   */
+  debounceInput: <T extends (...args: any[]) => any>(
+    callback: T,
+    customDebounceTime?: number
+  ) => (...args: Parameters<T>) => void;
+  
+  /**
+   * Throttle a render function to limit the number of updates
+   */
+  throttleRender: <T extends (...args: any[]) => any>(
+    callback: T,
+    customThrottleTime?: number
+  ) => (...args: Parameters<T>) => void;
+  
+  /**
+   * Current performance metrics
+   */
+  metrics: PerformanceMetrics;
+  
+  /**
+   * Check if the browser is idle
+   */
+  isIdle: boolean;
+  
+  /**
+   * Measure the execution time of a function
+   */
+  measureExecution: <T extends (...args: any[]) => any>(
+    fn: T,
+    label?: string
+  ) => (...args: Parameters<T>) => ReturnType<T>;
+  
+  /**
+   * Run a function during browser idle time
+   */
+  runWhenIdle: (
+    callback: () => void,
+    options?: { timeout?: number }
+  ) => void;
 }
 
 /**
- * Hook for monitoring performance metrics and improving component rendering
+ * Hook for various performance optimizations
  * 
- * This hook provides utilities to:
- * 1. Track performance metrics during runtime
- * 2. Optimize heavy components with automatic throttling
- * 3. Prioritize important components while deferring non-critical renders
+ * Features:
+ * - Input debouncing
+ * - Render throttling
+ * - Performance metrics
+ * - Idle detection
+ * - Execution timing
  */
-export function usePerformance() {
-  const [metrics, setMetrics] = useState<PerformanceMetrics>({});
-  const renderCount = useRef<number>(0);
-  const componentLoadStart = useRef<number>(performance.now());
+export const usePerformance = (
+  options: PerformanceOptions = {}
+): UsePerformanceReturn => {
+  const {
+    debounceTime = 300,
+    throttleTime = 100,
+    enabled = true,
+    debug = false
+  } = options;
   
-  // Track component rendering performance
-  useEffect(() => {
-    renderCount.current += 1;
-    return () => {
-      // This runs on unmount
-      const renderTime = performance.now() - componentLoadStart.current;
-      // Log if render time exceeds threshold
-      if (renderTime > 100) {
-        console.warn(`Component rendered slowly: ${renderTime.toFixed(2)}ms after ${renderCount.current} renders`);
+  const [isIdle, setIsIdle] = useState<boolean>(false);
+  const [metrics, setMetrics] = useState<PerformanceMetrics>({
+    fcp: null,
+    lcp: null,
+    fid: null,
+    cls: null,
+    tti: null,
+    tbt: null
+  });
+  
+  // Debounce input handler
+  const debounceInput = useCallback(
+    <T extends (...args: any[]) => any>(
+      callback: T,
+      customDebounceTime?: number
+    ): ((...args: Parameters<T>) => void) => {
+      if (!enabled) return callback;
+      return debounce(callback, customDebounceTime || debounceTime);
+    },
+    [enabled, debounceTime]
+  );
+  
+  // Throttle render function
+  const throttleRender = useCallback(
+    <T extends (...args: any[]) => any>(
+      callback: T,
+      customThrottleTime?: number
+    ): ((...args: Parameters<T>) => void) => {
+      if (!enabled) return callback;
+      return throttle(callback, customThrottleTime || throttleTime);
+    },
+    [enabled, throttleTime]
+  );
+  
+  // Measure execution time
+  const measureExecution = useCallback(
+    <T extends (...args: any[]) => any>(
+      fn: T,
+      label?: string
+    ): ((...args: Parameters<T>) => ReturnType<T>) => {
+      if (!enabled || !debug) return fn;
+      
+      return (...args: Parameters<T>): ReturnType<T> => {
+        const start = performance.now();
+        const result = fn(...args);
+        
+        // Handle promises
+        if (result instanceof Promise) {
+          result.then(() => {
+            const end = performance.now();
+            console.log(`${label || 'Function'} took ${end - start}ms`);
+          });
+        } else {
+          const end = performance.now();
+          console.log(`${label || 'Function'} took ${end - start}ms`);
+        }
+        
+        return result;
+      };
+    },
+    [enabled, debug]
+  );
+  
+  // Run a callback during browser idle time
+  const runWhenIdle = useCallback(
+    (callback: () => void, options?: { timeout?: number }) => {
+      if (!enabled) {
+        callback();
+        return;
       }
-    };
-  }, []);
+      
+      if ('requestIdleCallback' in window) {
+        // @ts-ignore - TypeScript doesn't have types for requestIdleCallback
+        window.requestIdleCallback(callback, options);
+      } else {
+        // Fallback for browsers that don't support requestIdleCallback
+        setTimeout(callback, 1);
+      }
+    },
+    [enabled]
+  );
   
-  // Collect web vital metrics
+  // Monitor browser idle state
   useEffect(() => {
-    // Skip if window or performance API not available
-    if (typeof window === 'undefined' || !window.performance) {
-      return;
-    }
+    if (!enabled) return;
     
-    // Measure TTFB (Time to First Byte)
-    const navigationEntries = performance.getEntriesByType('navigation');
-    if (navigationEntries.length > 0) {
-      const navEntry = navigationEntries[0] as PerformanceNavigationTiming;
-      setMetrics(prev => ({
-        ...prev,
-        TTFB: navEntry.responseStart - navEntry.requestStart
-      }));
-    }
+    let idleTimer: ReturnType<typeof setTimeout>;
+    const idleTime = 3000; // 3 seconds of inactivity to be considered idle
     
-    // Observe FCP (First Contentful Paint)
+    const handleActivity = () => {
+      setIsIdle(false);
+      clearTimeout(idleTimer);
+      
+      idleTimer = setTimeout(() => {
+        setIsIdle(true);
+      }, idleTime);
+    };
+    
+    // Set up event listeners
+    window.addEventListener('mousemove', handleActivity);
+    window.addEventListener('keypress', handleActivity);
+    window.addEventListener('scroll', handleActivity);
+    window.addEventListener('click', handleActivity);
+    
+    // Initialize
+    handleActivity();
+    
+    return () => {
+      clearTimeout(idleTimer);
+      window.removeEventListener('mousemove', handleActivity);
+      window.removeEventListener('keypress', handleActivity);
+      window.removeEventListener('scroll', handleActivity);
+      window.removeEventListener('click', handleActivity);
+    };
+  }, [enabled]);
+  
+  // Collect web vitals metrics
+  useEffect(() => {
+    if (!enabled || !debug || typeof window === 'undefined') return;
+    
+    // First Contentful Paint
     const observeFCP = () => {
-      const paintEntries = performance.getEntriesByType('paint');
-      const fcpEntry = paintEntries.find(entry => entry.name === 'first-contentful-paint');
+      if (!performance || !performance.getEntriesByType) return;
+      
+      const entries = performance.getEntriesByType('paint');
+      const fcpEntry = entries.find((entry) => entry.name === 'first-contentful-paint');
       
       if (fcpEntry) {
-        setMetrics(prev => ({
-          ...prev,
-          FCP: fcpEntry.startTime
-        }));
+        setMetrics((prev) => ({ ...prev, fcp: fcpEntry.startTime }));
       }
     };
     
-    // Use PerformanceObserver to detect metrics
-    if ('PerformanceObserver' in window) {
+    // Largest Contentful Paint
+    const observeLCP = () => {
+      if (!('PerformanceObserver' in window)) return;
+      
       try {
-        // Observe LCP (Largest Contentful Paint)
-        const lcpObserver = new PerformanceObserver(list => {
-          const entries = list.getEntries();
-          const lastEntry = entries[entries.length - 1];
-          
-          if (lastEntry) {
-            setMetrics(prev => ({
-              ...prev,
-              LCP: lastEntry.startTime
-            }));
+        const lcpObserver = new PerformanceObserver((entryList) => {
+          const entries = entryList.getEntries();
+          if (entries.length > 0) {
+            const lastEntry = entries[entries.length - 1];
+            setMetrics((prev) => ({ ...prev, lcp: lastEntry.startTime }));
           }
         });
         
         lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
         
-        // Observe FID (First Input Delay)
-        const fidObserver = new PerformanceObserver(list => {
-          const entries = list.getEntries();
-          const firstEntry = entries[0];
-          
-          if (firstEntry) {
-            setMetrics(prev => ({
+        return () => {
+          lcpObserver.disconnect();
+        };
+      } catch (e) {
+        console.error('Failed to observe LCP:', e);
+      }
+    };
+    
+    // First Input Delay
+    const observeFID = () => {
+      if (!('PerformanceObserver' in window)) return;
+      
+      try {
+        const fidObserver = new PerformanceObserver((entryList) => {
+          const entries = entryList.getEntries();
+          if (entries.length > 0) {
+            const firstInput = entries[0];
+            setMetrics((prev) => ({
               ...prev,
-              FID: firstEntry.processingStart - firstEntry.startTime
+              fid: firstInput.processingStart - firstInput.startTime
             }));
           }
         });
         
         fidObserver.observe({ type: 'first-input', buffered: true });
         
-        // Observe CLS (Cumulative Layout Shift)
-        const clsObserver = new PerformanceObserver(list => {
-          const entries = list.getEntries();
-          let clsValue = 0;
+        return () => {
+          fidObserver.disconnect();
+        };
+      } catch (e) {
+        console.error('Failed to observe FID:', e);
+      }
+    };
+    
+    // Cumulative Layout Shift
+    const observeCLS = () => {
+      if (!('PerformanceObserver' in window)) return;
+      
+      try {
+        let clsValue = 0;
+        let clsEntries: PerformanceEntry[] = [];
+        
+        const clsObserver = new PerformanceObserver((entryList) => {
+          const entries = entryList.getEntries();
           
-          entries.forEach(entry => {
-            // @ts-ignore - layout-shift properties
+          entries.forEach((entry) => {
+            // @ts-ignore - Layout shift entry
             if (!entry.hadRecentInput) {
-              // @ts-ignore - layout-shift properties
+              // @ts-ignore - Layout shift value
               clsValue += entry.value;
+              clsEntries.push(entry);
+              
+              setMetrics((prev) => ({ ...prev, cls: clsValue }));
             }
           });
-          
-          setMetrics(prev => ({
-            ...prev,
-            CLS: clsValue
-          }));
         });
         
         clsObserver.observe({ type: 'layout-shift', buffered: true });
         
-        // Clean up observers on unmount
         return () => {
-          lcpObserver.disconnect();
-          fidObserver.disconnect();
           clsObserver.disconnect();
         };
-      } catch (error) {
-        console.error('Performance observer error:', error);
+      } catch (e) {
+        console.error('Failed to observe CLS:', e);
       }
+    };
+    
+    // Total Blocking Time approximation
+    const observeTBT = () => {
+      if (!performance || !performance.getEntriesByType) return;
+      
+      const getBlockingTime = () => {
+        const longTasks = performance.getEntriesByType('longtask');
+        let totalBlockingTime = 0;
+        
+        longTasks.forEach((task) => {
+          const blockingTime = task.duration - 50; // Tasks over 50ms are considered "blocking"
+          if (blockingTime > 0) {
+            totalBlockingTime += blockingTime;
+          }
+        });
+        
+        return totalBlockingTime;
+      };
+      
+      const intervalId = setInterval(() => {
+        setMetrics((prev) => ({ ...prev, tbt: getBlockingTime() }));
+      }, 5000);
+      
+      return () => {
+        clearInterval(intervalId);
+      };
+    };
+    
+    // Collect all metrics
+    const cleanupFns: Array<(() => void) | undefined> = [
+      observeFCP(),
+      observeLCP(),
+      observeFID(),
+      observeCLS(),
+      observeTBT()
+    ];
+    
+    // Log metrics to console
+    if (debug) {
+      const metricsInterval = setInterval(() => {
+        console.log('Performance Metrics:', metrics);
+      }, 5000);
+      
+      return () => {
+        clearInterval(metricsInterval);
+        cleanupFns.forEach((fn) => fn && fn());
+      };
     }
     
-    // Fallback for FCP if PerformanceObserver not available
-    window.setTimeout(observeFCP, 1000);
-    
-    return () => {};
-  }, []);
-  
-  /**
-   * Creates a throttled version of a render-heavy function
-   * 
-   * @param func Function to throttle
-   * @param wait Throttle wait time
-   * @returns Throttled function
-   */
-  const throttleRender = useCallback(<T extends (...args: any[]) => any>(
-    func: T,
-    wait: number = 100
-  ): ((...args: Parameters<T>) => void) => {
-    return throttle(func, wait);
-  }, []);
-  
-  /**
-   * Creates a debounced version of an input handler
-   * 
-   * @param func Function to debounce
-   * @param wait Debounce wait time
-   * @returns Debounced function
-   */
-  const debounceInput = useCallback(<T extends (...args: any[]) => any>(
-    func: T,
-    wait: number = 300
-  ): ((...args: Parameters<T>) => void) => {
-    return debounce(func, wait);
-  }, []);
-  
-  /**
-   * Defers non-critical updates to avoid blocking the main thread
-   * 
-   * @param func Function to defer
-   * @param delay Optional delay in ms
-   */
-  const deferUpdate = useCallback((
-    func: () => void,
-    delay: number = 0
-  ): void => {
-    if (window.requestIdleCallback) {
-      window.requestIdleCallback(() => {
-        setTimeout(func, delay);
-      });
-    } else {
-      setTimeout(func, delay + 16);
-    }
-  }, []);
+    return () => {
+      cleanupFns.forEach((fn) => fn && fn());
+    };
+  }, [enabled, debug]);
   
   return {
-    metrics,
-    renderCount: renderCount.current,
-    throttleRender,
     debounceInput,
-    deferUpdate
+    throttleRender,
+    metrics,
+    isIdle,
+    measureExecution,
+    runWhenIdle
   };
-}
-
-export default usePerformance;
+};
