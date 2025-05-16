@@ -38,7 +38,7 @@ const defaultSoundSettings: SoundSettings = {
  * - Sound grouping to avoid overlapping sounds
  * - Accessibility integration
  */
-export const useSoundEffects = () => {
+const useSoundEffects = () => {
   const theme = useContext(ThemeContext);
   const reduceMotion = theme?.preferences?.reduceMotion;
   const soundsDisabled = reduceMotion === true;
@@ -208,3 +208,6 @@ export const useSoundEffects = () => {
     updateSettings
   };
 };
+
+export { useSoundEffects };
+export default useSoundEffects;
