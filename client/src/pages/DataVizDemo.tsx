@@ -3,7 +3,7 @@ import { DataViz } from '@/components/DataViz';
 import ExampleCharts from '@/components/DataViz/ExampleCharts';
 import { Button } from '@/components/ui/button';
 import { StaggerChildren, FadeIn } from '@/components/UI/MicroInteractions';
-import { useEnhancedToast } from '@/components/UI/EnhancedToast';
+import { useEnhancedToast } from '@/components/UI/EnhancedToast/index';
 import { LoadingState, CardSkeleton, DashboardWidgetSkeleton } from '@/components/UI/LoadingState';
 
 const DataVizDemo: React.FC = () => {
