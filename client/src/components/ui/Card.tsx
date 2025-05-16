@@ -1,124 +1,144 @@
-import { HTMLAttributes, forwardRef } from 'react'
-import { cva, type VariantProps } from 'class-variance-authority'
-import { cn } from '@/lib/utils'
-import design from '@/styles/design-system'
+import React from 'react';
+import { designSystem } from '@/styles/designSystem';
 
-const cardVariants = cva(
-  "rounded-xl transition-all", 
-  {
-    variants: {
-      variant: {
-        default: "bg-white border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700",
-        glass: "backdrop-blur-md bg-white/70 border border-white/20 shadow-lg dark:bg-gray-800/70 dark:border-gray-700/50",
-        floating: "bg-gradient-to-b from-white to-gray-50 border border-gray-100 shadow-xl dark:from-gray-800 dark:to-gray-900 dark:border-gray-700/50",
-        outline: "border border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600",
-        plain: "bg-white dark:bg-gray-800",
-      },
-      padding: {
-        none: "p-0",
-        sm: "p-3",
-        md: "p-5",
-        lg: "p-7",
-        xl: "p-9",
-      },
-      animation: {
-        none: "",
-        lift: "hover:-translate-y-2 hover:shadow-lg",
-        scale: "hover:scale-[1.03] hover:shadow-lg",
-        glow: "hover:shadow-[0_0_30px_rgba(0,102,204,0.25)] dark:hover:shadow-[0_0_30px_rgba(77,148,255,0.25)]",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      padding: "md",
-      animation: "none",
-    },
-  }
-)
-
-export interface CardProps 
-  extends HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof cardVariants> {
-  as?: React.ElementType;
+interface CardProps {
+  children: React.ReactNode;
+  title?: string;
+  subtitle?: string;
+  footer?: React.ReactNode;
+  headerAction?: React.ReactNode;
+  className?: string;
+  variant?: 'default' | 'glass' | 'flat' | 'outlined';
+  padding?: 'none' | 'sm' | 'md' | 'lg';
+  onClick?: () => void;
+  hoverEffect?: boolean;
+  elevated?: boolean;
 }
 
-const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ className, variant, padding, animation, as: Component = "div", style, ...props }, ref) => {
-    // Create card styles with design system tokens
-    const baseStyles = {
-      transition: `all ${design.animations.durations.slow} ${design.animations.easings.default}`,
-    };
+/**
+ * Card component with Apple-inspired aesthetics
+ * 
+ * Features:
+ * - Clean, minimal design
+ * - Optional header with title and action
+ * - Support for hover effects
+ * - Glass morphism effect option
+ * - Consistent spacing and radiuses
+ */
+const Card: React.FC<CardProps> = ({
+  children,
+  title,
+  subtitle,
+  footer,
+  headerAction,
+  className = '',
+  variant = 'default',
+  padding = 'md',
+  onClick,
+  hoverEffect = false,
+  elevated = false
+}) => {
+  // Base classes
+  const baseClasses = 'rounded-lg transition-all overflow-hidden';
+  
+  // Variant classes
+  const variantClasses = {
+    default: 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700',
+    glass: 'backdrop-blur-md bg-white/70 dark:bg-gray-800/70 border border-gray-200/50 dark:border-gray-700/50',
+    flat: 'bg-gray-50 dark:bg-gray-900 border-none',
+    outlined: 'bg-transparent border border-gray-200 dark:border-gray-700'
+  };
+  
+  // Padding classes
+  const paddingClasses = {
+    none: '',
+    sm: 'p-3',
+    md: 'p-4',
+    lg: 'p-6'
+  };
+  
+  // Elevation classes
+  const elevationClass = elevated 
+    ? 'shadow-md hover:shadow-lg'
+    : '';
+  
+  // Hover effect
+  const hoverClass = hoverEffect 
+    ? 'hover:translate-y-[-2px] hover:shadow-md cursor-pointer' 
+    : '';
+  
+  // Clickable
+  const clickableClass = onClick ? 'cursor-pointer' : '';
+  
+  // Combine all classes
+  const cardClasses = `
+    ${baseClasses}
+    ${variantClasses[variant]}
+    ${elevationClass}
+    ${hoverClass}
+    ${clickableClass}
+    ${className}
+  `;
+  
+  // Handle header padding differently
+  const bodyPaddingClass = padding !== 'none' ? paddingClasses[padding] : '';
+  const headerPaddingClass = padding !== 'none' 
+    ? `px-${padding === 'sm' ? '3' : padding === 'md' ? '4' : '6'} pt-${padding === 'sm' ? '3' : padding === 'md' ? '4' : '6'} pb-0` 
+    : '';
+  const footerPaddingClass = padding !== 'none' 
+    ? `px-${padding === 'sm' ? '3' : padding === 'md' ? '4' : '6'} pt-2 pb-${padding === 'sm' ? '3' : padding === 'md' ? '4' : '6'}` 
+    : '';
 
+  // Render the header if title or headerAction is provided
+  const renderHeader = () => {
+    if (!title && !headerAction) return null;
+    
     return (
-      <Component
-        className={cn(cardVariants({ variant, padding, animation, className }))}
-        ref={ref}
-        style={{ ...baseStyles, ...style }}
-        {...props}
-      />
-    )
-  }
-)
+      <div className={`flex justify-between items-center mb-4 ${headerPaddingClass}`}>
+        <div>
+          {title && (
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              {title}
+            </h3>
+          )}
+          {subtitle && (
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              {subtitle}
+            </p>
+          )}
+        </div>
+        {headerAction && (
+          <div className="flex-shrink-0">
+            {headerAction}
+          </div>
+        )}
+      </div>
+    );
+  };
+  
+  // Render the footer if provided
+  const renderFooter = () => {
+    if (!footer) return null;
+    
+    return (
+      <div className={`mt-4 border-t border-gray-100 dark:border-gray-700 ${footerPaddingClass}`}>
+        {footer}
+      </div>
+    );
+  };
 
-Card.displayName = "Card"
+  return (
+    <div 
+      className={cardClasses}
+      onClick={onClick}
+    >
+      {renderHeader()}
+      <div className={bodyPaddingClass}>
+        {children}
+      </div>
+      {renderFooter()}
+    </div>
+  );
+};
 
-const CardHeader = forwardRef<
-  HTMLDivElement,
-  HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("flex flex-col space-y-1.5 p-6", className)}
-    {...props}
-  />
-))
-CardHeader.displayName = "CardHeader"
-
-const CardTitle = forwardRef<
-  HTMLParagraphElement,
-  HTMLAttributes<HTMLHeadingElement>
->(({ className, ...props }, ref) => (
-  <h3
-    ref={ref}
-    className={cn(
-      "text-2xl font-semibold leading-none tracking-tight",
-      className
-    )}
-    {...props}
-  />
-))
-CardTitle.displayName = "CardTitle"
-
-const CardDescription = forwardRef<
-  HTMLParagraphElement,
-  HTMLAttributes<HTMLParagraphElement>
->(({ className, ...props }, ref) => (
-  <p
-    ref={ref}
-    className={cn("text-sm text-gray-500 dark:text-gray-400", className)}
-    {...props}
-  />
-))
-CardDescription.displayName = "CardDescription"
-
-const CardContent = forwardRef<
-  HTMLDivElement,
-  HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
-))
-CardContent.displayName = "CardContent"
-
-const CardFooter = forwardRef<
-  HTMLDivElement,
-  HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("flex items-center p-6 pt-0", className)}
-    {...props}
-  />
-))
-CardFooter.displayName = "CardFooter"
-
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent, cardVariants }
+export default Card;
