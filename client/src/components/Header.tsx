@@ -15,6 +15,7 @@ export default function Header() {
   const [isSolutionsDropdownOpen, setIsSolutionsDropdownOpen] = useState(false);  
   const [isSupportDropdownOpen, setIsSupportDropdownOpen] = useState(false);  
   const [clientPreviewOpen, setClientPreviewOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const { user, isAuthenticated } = useAuth();
 
   // Handle different dropdown menus
@@ -50,6 +51,25 @@ export default function Header() {
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location]);
+  
+  // Handle scroll effect for enhanced header appearance
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY;
+      if (scrollPosition > 20) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Check initial scroll position
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
   
   // Initialize Apple-inspired magnetic button effect
   useEffect(() => {
