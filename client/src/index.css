@@ -4,56 +4,112 @@
 
 @layer base {
   :root {
+    /* Core colors - refined for better consistency */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
+    
+    /* Primary blue - consistent with theme.json #3B82F6 */
+    --primary: 217 91% 60%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
+    
+    /* Secondary colors - slightly adjusted for better harmony */
+    --secondary: 214 32% 91%;
     --secondary-foreground: 222.2 47.4% 11.2%;
+    
+    /* Subtle colors for backgrounds and muted elements */
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
+    
+    /* Accent colors - refined to work with primary */
+    --accent: 210 40% 94%;
     --accent-foreground: 222.2 47.4% 11.2%;
+    
+    /* Feedback colors */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
+    --success: 142.1 76.2% 36.3%;
+    --success-foreground: 355.7 100% 97.3%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 355.7 100% 97.3%;
+    --info: 217 91% 60%;
+    --info-foreground: 210 40% 98%;
+    
+    /* UI element colors */
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
+    --ring: 217 91% 60%;
     
-    /* Custom theme colors */
+    /* Consistent border radius from theme.json */
+    --radius: 0.75rem;
+    
+    /* Custom RGB values for JavaScript use */
     --primary-rgb: 59, 130, 246;
-    --electric-cyan: 101, 255, 253;
+    --secondary-rgb: 226, 232, 240;
+    --accent-rgb: 224, 231, 255;
+    --success-rgb: 34, 197, 94;
+    --warning-rgb: 245, 158, 11;
+    --info-rgb: 59, 130, 246;
+    --destructive-rgb: 239, 68, 68;
+    
+    /* Additional brand colors */
+    --electric-cyan: 186, 230, 253;
   }
 
   .dark {
+    /* Dark mode colors - enhanced contrast while maintaining harmony */
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
+    
+    /* Primary blue - slightly brighter in dark mode */
+    --primary: 217 91% 65%;
     --primary-foreground: 222.2 47.4% 11.2%;
+    
+    /* Secondary colors - adjusted for dark mode */
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
+    
+    /* Subtle colors for dark mode */
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
+    
+    /* Accent colors for dark mode */
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
+    
+    /* Feedback colors for dark mode */
+    --destructive: 0 72% 51%;
     --destructive-foreground: 210 40% 98%;
+    --success: 142.1 70.6% 45.3%;
+    --success-foreground: 144.9 80.4% 10%;
+    --warning: 35 92% 65%;
+    --warning-foreground: 35.5 91.7% 12.8%;
+    --info: 217 91% 65%;
+    --info-foreground: 213 94% 10%;
+    
+    /* UI element colors for dark mode */
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --ring: 224.3 76.3% 60%;
     
-    /* Custom theme colors (dark mode) */
-    --primary-rgb: 93, 152, 255;
-    --electric-cyan: 43, 240, 239;
+    /* Custom RGB values for JavaScript use - dark mode */
+    --primary-rgb: 96, 165, 250;
+    --secondary-rgb: 51, 65, 85;
+    --accent-rgb: 79, 70, 229;
+    --success-rgb: 74, 222, 128;
+    --warning-rgb: 251, 191, 36;
+    --info-rgb: 96, 165, 250;
+    --destructive-rgb: 248, 113, 113;
+    
+    /* Additional brand colors - dark mode */
+    --electric-cyan: 56, 189, 248;
   }
 }
 
@@ -61,9 +117,59 @@
   * {
     @apply border-border;
   }
+  
+  html {
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+  }
+  
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1, "ss03" 1;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    letter-spacing: -0.01em;
+    line-height: 1.5;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-medium tracking-tight;
+    line-height: 1.2;
+  }
+  
+  h1 {
+    @apply text-3xl md:text-4xl lg:text-5xl mb-6;
+    letter-spacing: -0.03em;
+  }
+  
+  h2 {
+    @apply text-2xl md:text-3xl mb-4;
+    letter-spacing: -0.02em;
+  }
+  
+  h3 {
+    @apply text-xl md:text-2xl mb-3;
+    letter-spacing: -0.01em;
+  }
+  
+  h4 {
+    @apply text-lg md:text-xl mb-2;
+  }
+  
+  p {
+    @apply my-4 leading-relaxed;
+  }
+  
+  /* Focus styles for better accessibility */
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
+  }
+  
+  /* Selection styling */
+  ::selection {
+    @apply bg-primary/20 text-foreground;
   }
 }
 
@@ -135,6 +241,21 @@
   position: relative;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  border-radius: var(--radius);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.5rem;
+  padding: 0 1rem;
+  font-size: 0.875rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.enhanced-btn svg {
+  margin-right: 0.5rem;
+  width: 1rem;
+  height: 1rem;
 }
 
 .enhanced-btn::after {
@@ -146,29 +267,148 @@
   height: 100%;
   background: linear-gradient(to bottom, rgba(255,255,255,0.1), rgba(255,255,255,0));
   opacity: 0;
-  transition: opacity 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: opacity 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 .enhanced-btn:hover::after {
   opacity: 1;
 }
 
+.enhanced-btn:active {
+  transform: translateY(1px);
+}
+
 .enhanced-btn-primary {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(221 83% 51%) 100%);
   color: white;
+  border: none;
+}
+
+.enhanced-btn-primary:hover {
+  background: linear-gradient(135deg, hsl(217 91% 65%) 0%, hsl(221 83% 56%) 100%);
 }
 
 .enhanced-btn-secondary {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
+  background: hsl(214 32% 91%);
+  color: hsl(222.2 47.4% 11.2%);
+  border: 1px solid hsl(214.3 31.8% 91.4%);
 }
 
+.enhanced-btn-secondary:hover {
+  background: hsl(214 32% 89%);
+}
+
+.enhanced-btn-outline {
+  background: transparent;
+  border: 1px solid hsl(214.3 31.8% 91.4%);
+  color: hsl(217 91% 60%);
+}
+
+.enhanced-btn-outline:hover {
+  background: hsl(214 32% 97%);
+}
+
+.enhanced-btn-ghost {
+  background: transparent;
+  border: none;
+  color: hsl(217 91% 60%);
+  box-shadow: none;
+}
+
+.enhanced-btn-ghost:hover {
+  background: hsl(214 32% 97%);
+}
+
+.enhanced-btn-destructive {
+  background: hsl(0 84.2% 60.2%);
+  color: white;
+  border: none;
+}
+
+.enhanced-btn-destructive:hover {
+  background: hsl(0 84.2% 65.2%);
+}
+
+.enhanced-btn-sm {
+  height: 2rem;
+  padding: 0 0.75rem;
+  font-size: 0.75rem;
+}
+
+.enhanced-btn-lg {
+  height: 3rem;
+  padding: 0 1.5rem;
+  font-size: 1rem;
+}
+
+.enhanced-btn-icon {
+  padding: 0;
+  width: 2.5rem;
+}
+
+.enhanced-btn-icon svg {
+  margin-right: 0;
+}
+
+.enhanced-btn-icon.enhanced-btn-sm {
+  width: 2rem;
+}
+
+.enhanced-btn-icon.enhanced-btn-lg {
+  width: 3rem;
+}
+
+.enhanced-btn-loading {
+  position: relative;
+  pointer-events: none;
+}
+
+.enhanced-btn-loading span {
+  opacity: 0;
+}
+
+.enhanced-btn-loading::before {
+  content: '';
+  position: absolute;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 9999px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Dark mode button variants */
 .dark .enhanced-btn-secondary {
-  background: rgba(30, 30, 30, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: hsl(217.2 32.6% 17.5%);
+  color: hsl(210 40% 98%);
+  border-color: hsl(217.2 32.6% 17.5%);
+}
+
+.dark .enhanced-btn-secondary:hover {
+  background: hsl(217.2 32.6% 22.5%);
+}
+
+.dark .enhanced-btn-outline {
+  border-color: hsl(217.2 32.6% 17.5%);
+  color: hsl(217 91% 65%);
+}
+
+.dark .enhanced-btn-outline:hover {
+  background: hsl(217.2 32.6% 17.5%);
+}
+
+.dark .enhanced-btn-ghost {
+  color: hsl(217 91% 65%);
+}
+
+.dark .enhanced-btn-ghost:hover {
+  background: hsl(217.2 32.6% 17.5%);
 }
 
 /* Typography enhancements */
@@ -232,27 +472,175 @@
 }
 
 /* Enhanced form elements */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: hsl(222.2 84% 4.9%);
+}
+
+.dark .form-label {
+  color: hsl(210 40% 98%);
+}
+
+.form-description {
+  display: block;
+  font-size: 0.75rem;
+  color: hsl(215.4 16.3% 46.9%);
+  margin-top: 0.25rem;
+}
+
+.dark .form-description {
+  color: hsl(215 20.2% 65.1%);
+}
+
+.form-message {
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.form-message.error {
+  color: hsl(0 84.2% 60.2%);
+}
+
+.form-message.success {
+  color: hsl(142.1 76.2% 36.3%);
+}
+
 .enhanced-input {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  color: white;
-  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  display: block;
+  width: 100%;
+  font-size: 0.875rem;
+  background-color: transparent;
+  color: hsl(222.2 84% 4.9%);
+  border: 1px solid hsl(214.3 31.8% 91.4%);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.75rem;
+  transition: all 0.2s ease;
+  height: 2.5rem;
+}
+
+.enhanced-input:hover {
+  border-color: hsl(217.2 91.2% 59.8% / 0.5);
 }
 
 .enhanced-input:focus {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.25);
+  outline: none;
+  border-color: hsl(217.2 91.2% 59.8%);
+  box-shadow: 0 0 0 1px hsl(217.2 91.2% 59.8% / 0.3);
+}
+
+.enhanced-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.enhanced-input.error {
+  border-color: hsl(0 84.2% 60.2%);
+}
+
+.enhanced-input.error:focus {
+  box-shadow: 0 0 0 1px hsl(0 84.2% 60.2% / 0.3);
+}
+
+.enhanced-textarea {
+  min-height: 6rem;
+  resize: vertical;
+}
+
+.enhanced-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+  padding-right: 2.5rem;
+}
+
+.enhanced-checkbox {
+  display: flex;
+  align-items: center;
+}
+
+.enhanced-checkbox input[type="checkbox"] {
+  appearance: none;
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid hsl(214.3 31.8% 91.4%);
+  border-radius: 0.25rem;
+  margin-right: 0.5rem;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.enhanced-checkbox input[type="checkbox"]:checked {
+  background-color: hsl(217.2 91.2% 59.8%);
+  border-color: hsl(217.2 91.2% 59.8%);
+}
+
+.enhanced-checkbox input[type="checkbox"]:checked::after {
+  content: '';
+  width: 0.3rem;
+  height: 0.6rem;
+  border-right: 2px solid white;
+  border-bottom: 2px solid white;
+  transform: rotate(45deg) translate(-1px, -1px);
+  position: absolute;
+}
+
+.enhanced-radio {
+  display: flex;
+  align-items: center;
+}
+
+.enhanced-radio input[type="radio"] {
+  appearance: none;
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid hsl(214.3 31.8% 91.4%);
+  border-radius: 50%;
+  margin-right: 0.5rem;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.enhanced-radio input[type="radio"]:checked {
+  border-color: hsl(217.2 91.2% 59.8%);
+  border-width: 4px;
 }
 
 .dark .enhanced-input {
-  background: rgba(30, 30, 30, 0.5);
+  color: hsl(210 40% 98%);
+  background-color: transparent;
+  border-color: hsl(217.2 32.6% 17.5%);
+}
+
+.dark .enhanced-input:hover {
+  border-color: hsl(217 91% 65% / 0.5);
 }
 
 .dark .enhanced-input:focus {
-  background: rgba(40, 40, 40, 0.7);
+  border-color: hsl(217 91% 65%);
+  box-shadow: 0 0 0 1px hsl(217 91% 65% / 0.3);
+}
+
+.dark .enhanced-checkbox input[type="checkbox"],
+.dark .enhanced-radio input[type="radio"] {
+  border-color: hsl(217.2 32.6% 17.5%);
+}
+
+.dark .enhanced-checkbox input[type="checkbox"]:checked {
+  background-color: hsl(217 91% 65%);
+  border-color: hsl(217 91% 65%);
 }
