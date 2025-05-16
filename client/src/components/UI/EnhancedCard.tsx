@@ -1,212 +1,141 @@
 import React, { ReactNode } from 'react';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface EnhancedCardProps {
-  children?: ReactNode;
-  title?: string | ReactNode;
-  description?: string | ReactNode;
-  image?: string;
-  footer?: ReactNode;
-  variant?: 'default' | 'glass' | 'minimal' | 'floating' | 'gradient' | 'bordered' | 'interactive';
-  size?: 'sm' | 'md' | 'lg';
-  hover?: boolean;
-  clickable?: boolean;
-  onClick?: () => void;
+  children: ReactNode;
   className?: string;
-  headerClassName?: string;
-  contentClassName?: string;
-  footerClassName?: string;
-  imageHeight?: number | string;
-  aspectRatio?: string;
-  badges?: ReactNode;
-  animateEntrance?: boolean;
-  delay?: number;
-  tag?: string | ReactNode;
+  title?: string;
+  description?: string;
+  footer?: ReactNode;
+  variant?: 'default' | 'glass' | 'bordered' | 'elevated' | 'interactive';
+  size?: 'sm' | 'md' | 'lg';
+  isLoading?: boolean;
+  onClick?: () => void;
+  hover?: boolean;
+  hoverEffect?: 'lift' | 'glow' | 'scale' | 'highlight' | 'none';
+  noAnimation?: boolean; // Option to disable animations for performance/accessibility
 }
 
 /**
- * Enhanced card component with various styles and animations
+ * Enhanced Card component with various appearance options and animations
  */
-export default function EnhancedCard({
+const EnhancedCard = ({
   children,
+  className,
   title,
   description,
-  image,
   footer,
   variant = 'default',
   size = 'md',
-  hover = true,
-  clickable = false,
+  isLoading = false,
   onClick,
-  className = '',
-  headerClassName = '',
-  contentClassName = '',
-  footerClassName = '',
-  imageHeight = 200,
-  aspectRatio,
-  badges,
-  animateEntrance = false,
-  delay = 0,
-  tag
-}: EnhancedCardProps) {
+  hover = true,
+  hoverEffect = 'lift',
+  noAnimation = false
+}: EnhancedCardProps) => {
   // Size classes
   const sizeClasses = {
     sm: 'p-3',
     md: 'p-4',
     lg: 'p-6'
   };
-  
+
   // Variant classes
-  let variantClasses = '';
-  let hoverClasses = '';
-  
-  switch (variant) {
-    case 'glass':
-      variantClasses = 'bg-white/90 dark:bg-gray-900/80 backdrop-blur-md border-white/20 dark:border-white/10';
-      hoverClasses = hover ? 'hover:bg-white/95 dark:hover:bg-gray-900/90 hover:shadow-lg' : '';
-      break;
-    case 'minimal':
-      variantClasses = 'bg-white dark:bg-gray-900 shadow-sm border-gray-100 dark:border-gray-800';
-      hoverClasses = hover ? 'hover:border-gray-200 dark:hover:border-gray-700' : '';
-      break;
-    case 'floating':
-      variantClasses = 'bg-white dark:bg-gray-900 shadow-lg border-0';
-      hoverClasses = hover ? 'hover:shadow-xl hover:-translate-y-1' : '';
-      break;
-    case 'gradient':
-      variantClasses = 'bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 border-0 shadow-md';
-      hoverClasses = hover ? 'hover:shadow-lg' : '';
-      break;
-    case 'bordered':
-      variantClasses = 'bg-white dark:bg-gray-900 border-2 border-primary/20';
-      hoverClasses = hover ? 'hover:border-primary/40' : '';
-      break;
-    case 'interactive':
-      variantClasses = 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm';
-      hoverClasses = hover ? 'hover:shadow-md hover:border-primary/30 hover:bg-primary/5 dark:hover:bg-primary/10' : '';
-      break;
-    default: // default variant
-      variantClasses = 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800';
-      hoverClasses = hover ? 'hover:shadow-md' : '';
-  }
-  
-  // Animation variants
-  const cardVariants = {
+  const variantClasses = {
+    default: 'bg-card',
+    glass: 'bg-white/10 backdrop-blur-lg dark:bg-gray-900/50 border border-white/20',
+    bordered: 'border-2',
+    elevated: 'shadow-xl',
+    interactive: 'cursor-pointer shadow-md transition-all duration-300'
+  };
+
+  // Hover effect classes
+  const getHoverClasses = () => {
+    if (!hover) return '';
+    
+    switch (hoverEffect) {
+      case 'lift':
+        return 'hover:-translate-y-1.5 hover:shadow-lg';
+      case 'glow':
+        return 'hover:shadow-[0_0_20px_rgba(0,120,255,0.3)]';
+      case 'scale':
+        return 'hover:scale-[1.02] origin-center';
+      case 'highlight':
+        return 'hover:border-primary hover:border-opacity-100';
+      default:
+        return '';
+    }
+  };
+
+  const cardClasses = cn(
+    'relative overflow-hidden rounded-lg transition-all duration-300',
+    variantClasses[variant],
+    hover && getHoverClasses(),
+    onClick && 'cursor-pointer',
+    isLoading && 'pointer-events-none animate-pulse',
+    className
+  );
+
+  // Animation variants for the card when it enters the viewport
+  const cardAnimationVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { 
       opacity: 1, 
       y: 0,
       transition: { 
-        duration: 0.5,
-        ease: [0.16, 1, 0.3, 1],
-        delay
+        duration: 0.4,
+        ease: [0.22, 1, 0.36, 1]
       }
     }
   };
-  
-  // Handle click events
-  const handleClick = () => {
-    if (clickable && onClick) {
-      onClick();
-    }
-  };
-  
-  // Wrapper component that adds motion if animateEntrance is true
-  const CardWrapper = ({ children }: { children: ReactNode }) => {
-    if (animateEntrance) {
-      return (
-        <motion.div
-          variants={cardVariants}
-          initial="hidden"
-          animate="visible"
-          className="w-full h-full"
-        >
-          {children}
-        </motion.div>
-      );
-    }
-    return <>{children}</>;
-  };
-  
-  return (
-    <CardWrapper>
-      <Card 
-        className={`overflow-hidden transition-all duration-300 ${variantClasses} ${hoverClasses} ${className} ${clickable ? 'cursor-pointer' : ''}`}
-        onClick={handleClick}
-      >
-        {/* Optional image */}
-        {image && (
-          <div 
-            className="relative w-full overflow-hidden"
-            style={{ 
-              height: imageHeight,
-              aspectRatio: aspectRatio
-            }}
-          >
-            <img 
-              src={image} 
-              alt={typeof title === 'string' ? title : 'Card image'}
-              className="w-full h-full object-cover"
-            />
-            
-            {/* Optional tag overlay */}
-            {tag && (
-              <div className="absolute top-2 left-2 z-10">
-                {typeof tag === 'string' ? (
-                  <span className="inline-block bg-primary text-white text-xs px-2 py-1 rounded-md font-medium">
-                    {tag}
-                  </span>
-                ) : (
-                  tag
-                )}
-              </div>
-            )}
-            
-            {/* Optional badges overlay */}
-            {badges && (
-              <div className="absolute top-2 right-2 z-10">
-                {badges}
-              </div>
-            )}
-          </div>
-        )}
-        
-        {/* Card header */}
-        {(title || description) && (
-          <CardHeader className={`${sizeClasses[size]} ${headerClassName}`}>
-            {title && (
-              typeof title === 'string' ? (
-                <CardTitle>{title}</CardTitle>
-              ) : (
-                title
-              )
-            )}
-            
-            {description && (
-              typeof description === 'string' ? (
-                <CardDescription>{description}</CardDescription>
-              ) : (
-                description
-              )
-            )}
-          </CardHeader>
-        )}
-        
-        {/* Card content */}
-        {children && (
-          <CardContent className={`${size !== 'lg' && (title || description) ? 'pt-0' : ''} ${sizeClasses[size]} ${contentClassName}`}>
-            {children}
-          </CardContent>
-        )}
-        
-        {/* Card footer */}
-        {footer && (
-          <CardFooter className={`${sizeClasses[size]} ${footerClassName}`}>
-            {footer}
-          </CardFooter>
-        )}
-      </Card>
-    </CardWrapper>
+
+  // Wrap content with proper card components if title/description/footer are provided
+  const wrappedContent = (
+    <>
+      {(title || description) && (
+        <CardHeader className={cn(sizeClasses[size])}>
+          {title && <CardTitle>{title}</CardTitle>}
+          {description && <CardDescription>{description}</CardDescription>}
+        </CardHeader>
+      )}
+      <CardContent className={cn(
+        (!title && !description) && sizeClasses[size], 
+        (title || description) && 'pt-0'
+      )}>
+        {children}
+      </CardContent>
+      {footer && (
+        <CardFooter className="border-t bg-muted/10 px-6 py-4">
+          {footer}
+        </CardFooter>
+      )}
+    </>
   );
-}
+
+  // Return either an animated card or a regular card
+  if (noAnimation) {
+    return (
+      <Card className={cardClasses} onClick={onClick}>
+        {wrappedContent}
+      </Card>
+    );
+  }
+
+  return (
+    <motion.div
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: "-50px" }}
+      variants={cardAnimationVariants}
+      className="w-full"
+    >
+      <Card className={cardClasses} onClick={onClick}>
+        {wrappedContent}
+      </Card>
+    </motion.div>
+  );
+};
+
+export default EnhancedCard;

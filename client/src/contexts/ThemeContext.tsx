@@ -41,7 +41,7 @@ interface ThemeContextType {
   getCurrentTheme: () => 'light' | 'dark'; // Returns active theme (resolves 'system')
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 interface ThemeProviderProps {
   children: ReactNode;

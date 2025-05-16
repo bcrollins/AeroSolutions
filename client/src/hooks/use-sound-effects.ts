@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useContext } from 'react';
+import { useState, useEffect, useCallback, useContext, useRef } from 'react';
 import { ThemeContext } from '@/contexts/ThemeContext';
 
 // Sound types
@@ -39,7 +39,10 @@ const defaultSoundSettings: SoundSettings = {
  * - Accessibility integration
  */
 export const useSoundEffects = () => {
-  const { accessibility } = useContext(ThemeContext);
+  const theme = useContext(ThemeContext);
+  const reduceMotion = theme?.preferences?.reduceMotion;
+  const soundsDisabled = reduceMotion === true;
+  
   const [settings, setSettings] = useState<SoundSettings>(() => {
     // Try to load settings from localStorage
     const storedSettings = localStorage.getItem('sound-settings');
@@ -117,8 +120,7 @@ export const useSoundEffects = () => {
   const playSound = useCallback(
     (type: SoundType, forcePlay: boolean = false) => {
       // Check if sounds are enabled in both settings and accessibility
-      const soundsEnabled = settings.enabled && 
-        (accessibility?.soundEffects !== false);
+      const soundsEnabled = settings.enabled && !soundsDisabled;
       
       if (!soundsEnabled && !forcePlay) return;
       
@@ -161,7 +163,7 @@ export const useSoundEffects = () => {
         console.error('Error playing sound:', error);
       }
     },
-    [settings.enabled, settings.volume, accessibility?.soundEffects, soundUrls]
+    [settings.enabled, settings.volume, soundsDisabled, soundUrls]
   );
   
   // Update settings
@@ -206,6 +208,3 @@ export const useSoundEffects = () => {
     updateSettings
   };
 };
-
-// Add a reference for TypeScript
-import { useRef } from 'react';
