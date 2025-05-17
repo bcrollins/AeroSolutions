@@ -103,6 +103,7 @@ import EnhancedNewsHub from "@/pages/EnhancedNewsHub";
 import ContactPage from "@/pages/ContactPage";
 import LearnAI from "@/pages/LearnAI";
 import CoursesDashboard from "@/pages/CoursesDashboard";
+import CourseLearningPage from "@/pages/CourseLearningPage";
 import MicroInteractionsDemo from "@/pages/MicroInteractionsDemo";
 import ComponentShowcase from "@/pages/ComponentShowcase";
 import DataVizDemo from "@/pages/DataVizDemo";

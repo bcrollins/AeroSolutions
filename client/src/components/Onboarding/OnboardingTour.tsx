@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { X, ArrowRight, ArrowLeft, Check } from 'lucide-react';
 import useLocalStorage from '../../hooks/use-local-storage';
 import { useToast } from '@/hooks/use-toast';
-import useSoundEffects from '../../hooks/use-sound-effects';
+import { useSoundEffects } from '../../hooks/use-sound-effects';
 import useKeyboardSound from '../../hooks/use-keyboard-sound';
 
 // Define the structure of a tour step
@@ -102,7 +102,7 @@ export default function OnboardingTour({ forceTour = false }: OnboardingTourProp
   const [elementPosition, setElementPosition] = useState({ top: 0, left: 0, width: 0, height: 0 });
   const highlightedElementRef = useRef<Element | null>(null);
   const { toast } = useToast();
-  const { playSound, soundEnabled } = useSoundEffects();
+  const { playSound, isEnabled: soundEnabled } = useSoundEffects();
 
   // Show the tour if forced or if the user hasn't completed it
   useEffect(() => {
@@ -280,7 +280,7 @@ export default function OnboardingTour({ forceTour = false }: OnboardingTourProp
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showTour, isFirstStep, isLastStep, handleNextStep, handlePrevStep, soundEnabled, playSound]);
+  }, [showTour, isFirstStep, isLastStep, soundEnabled, playSound]);
 
   // Calculate tooltip position based on element position and specified position
   const getTooltipPosition = () => {
