@@ -14,7 +14,13 @@ import {
   MessageSquare,
   Settings,
   Volume2,
-  X
+  X,
+  Trophy, 
+  Lock, 
+  HelpCircle,
+  PlayCircle,
+  Zap,
+  CheckCircle as CheckCircleIcon // Renamed to avoid conflict
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -37,7 +43,7 @@ import { PremiumContentGate } from '@/components/course/PremiumContentGate';
 // Import course types from our type definitions
 import { Course, CourseModule, CourseLesson } from '@/types/course';
 
-const CourseLearningPage: React.FC = () => {
+export default function CourseLearningPage() {
   const { courseId, lessonId } = useParams();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -753,10 +759,12 @@ const CourseLearningPage: React.FC = () => {
               
               <TabsContent value="achievements" className="mt-0 p-6 h-full">
                 <h2 className="text-2xl font-bold mb-4">Your Achievements</h2>
-                <GamificationElements 
-                  userId={1} 
-                  courseId={parseInt(courseId)}
-                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <BadgesDisplay />
+                  <StreakDisplay currentStreak={3} longestStreak={7} />
+                  <ProgressTracker progress={5} total={10} />
+                  <LeaderboardDisplay />
+                </div>
               </TabsContent>
             </Tabs>
           </div>
@@ -805,15 +813,15 @@ const CourseLearningPage: React.FC = () => {
 function getLessonIcon(type: string) {
   switch (type) {
     case 'video':
-      return <PlayCircle className="h-4 w-4" />;
+      return <PlayCircle size={16} />;
     case 'quiz':
-      return <HelpCircle className="h-4 w-4" />;
+      return <HelpCircle size={16} />;
     case 'assignment':
-      return <FileText className="h-4 w-4" />;
+      return <FileText size={16} />;
     case 'interactive':
-      return <Zap className="h-4 w-4" />;
+      return <Zap size={16} />;
     default:
-      return <BookOpen className="h-4 w-4" />;
+      return <BookOpen size={16} />;
   }
 }
 
@@ -832,14 +840,3 @@ function getLessonTypeLabel(type: string) {
   }
 }
 
-// Import missing icons
-import { 
-  Trophy, 
-  Lock, 
-  HelpCircle,
-  PlayCircle,
-  Zap,
-  CheckCircle as CheckCircleIcon // Renamed to avoid conflict
-} from 'lucide-react';
-
-export default function CourseLearningPage;
