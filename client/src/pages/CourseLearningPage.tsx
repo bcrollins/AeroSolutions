@@ -32,43 +32,8 @@ import CourseResources from '@/components/course/CourseResources';
 import VideoPlayer from '@/components/course/VideoPlayer';
 import GamificationElements from '@/components/course/GamificationElements';
 
-interface CourseModule {
-  id: number;
-  title: string;
-  description: string;
-  position: number;
-  lessons: CourseLesson[];
-}
-
-interface CourseLesson {
-  id: number;
-  moduleId: number;
-  title: string;
-  type: 'video' | 'text' | 'quiz' | 'assignment' | 'interactive';
-  duration: number;
-  position: number;
-  isCompleted: boolean;
-  isLocked: boolean;
-}
-
-interface Course {
-  id: number;
-  title: string;
-  description: string;
-  coverImage: string;
-  instructor: {
-    id: number;
-    name: string;
-    bio: string;
-    avatar: string;
-  };
-  price: string;
-  duration: number;
-  modules: CourseModule[];
-  progress: number;
-  enrollmentDate: string;
-  lastAccessedDate: string;
-}
+// Import course types from our type definitions
+import { Course, CourseModule, CourseLesson } from '@/types/course';
 
 const CourseLearningPage: React.FC = () => {
   const { courseId, lessonId } = useParams();
@@ -160,8 +125,8 @@ const CourseLearningPage: React.FC = () => {
   };
 
   // Fetch course data
-  const { data: course = mockCourseData, isLoading: isLoadingCourse } = useQuery({
-    queryKey: [`/api/courses/${courseId}`],
+  const { data: course = mockCourseData, isLoading: isLoadingCourse } = useQuery<Course>({
+    queryKey: [`/api/learning/courses/${courseId}`],
     // In a real app, this would fetch from the API instead of using the mock data
   });
   

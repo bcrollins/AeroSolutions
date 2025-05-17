@@ -10,14 +10,14 @@ export const courseService = {
    * Get all published courses
    */
   async getAllCourses() {
-    return await db.select().from(courses).where(eq(courses.status, 'published'));
+    return await db.select().from(courses).where(eq(courses.status, 'published')).execute();
   },
 
   /**
    * Get a specific course by ID
    */
   async getCourseById(courseId: number) {
-    const [course] = await db.select().from(courses).where(eq(courses.id, courseId));
+    const [course] = await db.select().from(courses).where(eq(courses.id, courseId)).execute();
     return course;
   },
 
@@ -29,14 +29,15 @@ export const courseService = {
       .select()
       .from(courseModules)
       .where(eq(courseModules.courseId, courseId))
-      .orderBy(courseModules.orderIndex);
+      .orderBy(courseModules.orderIndex)
+      .execute();
   },
 
   /**
    * Get a specific module by ID
    */
   async getModuleById(moduleId: number) {
-    const [module] = await db.select().from(courseModules).where(eq(courseModules.id, moduleId));
+    const [module] = await db.select().from(courseModules).where(eq(courseModules.id, moduleId)).execute();
     return module;
   },
 
@@ -48,14 +49,15 @@ export const courseService = {
       .select()
       .from(lessons)
       .where(eq(lessons.moduleId, moduleId))
-      .orderBy(lessons.orderIndex);
+      .orderBy(lessons.orderIndex)
+      .execute();
   },
 
   /**
    * Get a specific lesson by ID
    */
   async getLessonById(lessonId: number) {
-    const [lesson] = await db.select().from(lessons).where(eq(lessons.id, lessonId));
+    const [lesson] = await db.select().from(lessons).where(eq(lessons.id, lessonId)).execute();
     return lesson;
   },
 
@@ -66,13 +68,12 @@ export const courseService = {
     return await db
       .select()
       .from(courses)
-      .where(
-        eq(courses.status, 'published')
-      )
+      .where(eq(courses.status, 'published'))
       .where(
         sql`lower(${courses.title}) LIKE lower(${'%' + term + '%'}) OR 
             lower(${courses.category}) LIKE lower(${'%' + term + '%'}) OR
             lower(${courses.description}) LIKE lower(${'%' + term + '%'})`
-      );
+      )
+      .execute();
   }
 };
