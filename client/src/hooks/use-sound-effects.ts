@@ -1,213 +1,104 @@
-import { useState, useEffect, useCallback, useContext, useRef } from 'react';
-import { ThemeContext } from '@/contexts/ThemeContext';
+import { useState, useEffect, useCallback } from 'react';
 
-// Sound types
-export type SoundType = 
-  | 'click' 
-  | 'success' 
-  | 'error' 
-  | 'notification' 
-  | 'hover' 
-  | 'navigation' 
-  | 'focus' 
-  | 'typing' 
-  | 'complete' 
-  | 'screenshot';
+type SoundEffect = 'click' | 'success' | 'error' | 'notification' | 'complete' | 'achievement';
 
-// Interface for sound settings
-interface SoundSettings {
-  enabled: boolean;
-  volume: number;
-  appleSound: boolean;
+interface SoundEffectOptions {
+  volume?: number;
+  enabled?: boolean;
 }
 
-// Sound context to share settings across components
-const defaultSoundSettings: SoundSettings = {
-  enabled: true,
-  volume: 0.5,
-  appleSound: true
+const soundUrls: Record<SoundEffect, string> = {
+  click: '/sounds/click.mp3',
+  success: '/sounds/success.mp3',
+  error: '/sounds/error.mp3',
+  notification: '/sounds/notification.mp3',
+  complete: '/sounds/complete.mp3',
+  achievement: '/sounds/achievement.mp3'
 };
 
-/**
- * Hook for using Apple-inspired sound effects throughout the application
- * 
- * Features:
- * - High-quality, subtle sound effects
- * - Volume control
- * - Enable/disable functionality
- * - Sound grouping to avoid overlapping sounds
- * - Accessibility integration
- */
-const useSoundEffects = () => {
-  const theme = useContext(ThemeContext);
-  const reduceMotion = theme?.preferences?.reduceMotion;
-  const soundsDisabled = reduceMotion === true;
-  
-  const [settings, setSettings] = useState<SoundSettings>(() => {
-    // Try to load settings from localStorage
-    const storedSettings = localStorage.getItem('sound-settings');
-    
-    if (storedSettings) {
-      try {
-        return { ...defaultSoundSettings, ...JSON.parse(storedSettings) };
-      } catch (e) {
-        console.error('Failed to parse sound settings:', e);
-      }
-    }
-    
-    return defaultSoundSettings;
+export const useSoundEffects = (options: SoundEffectOptions = {}) => {
+  const [sounds, setSounds] = useState<Record<SoundEffect, HTMLAudioElement | null>>({
+    click: null,
+    success: null,
+    error: null,
+    notification: null,
+    complete: null,
+    achievement: null
   });
   
-  // Sound effect URLs
-  const soundUrls: Record<SoundType, string> = {
-    click: '/sounds/apple-click.mp3',
-    success: '/sounds/apple-success.mp3',
-    error: '/sounds/apple-error.mp3',
-    notification: '/sounds/apple-notification.mp3',
-    hover: '/sounds/apple-hover.mp3',
-    navigation: '/sounds/apple-navigation.mp3',
-    focus: '/sounds/apple-focus.mp3',
-    typing: '/sounds/apple-typing.mp3',
-    complete: '/sounds/apple-complete.mp3',
-    screenshot: '/sounds/apple-screenshot.mp3'
-  };
+  const [isEnabled, setIsEnabled] = useState(options.enabled !== false);
+  const [volume, setVolume] = useState(options.volume || 0.5);
   
-  // Preload sounds
+  // Initialize sound effects
   useEffect(() => {
-    if (!settings.enabled) return;
+    const newSounds: Record<SoundEffect, HTMLAudioElement | null> = { ...sounds };
     
-    // Preload commonly used sounds
-    const commonSounds: SoundType[] = ['click', 'navigation', 'success', 'error', 'notification'];
-    
-    commonSounds.forEach(soundType => {
-      const audio = new Audio(soundUrls[soundType]);
-      audio.preload = 'auto';
-      
-      // Just trigger a load - we don't need to play it
-      audio.load();
-    });
-  }, [settings.enabled, soundUrls]);
-  
-  // Track last sound play time to avoid sound overlapping
-  const lastPlayedTime = useRef<Record<SoundType, number>>({
-    click: 0,
-    success: 0,
-    error: 0,
-    notification: 0,
-    hover: 0,
-    navigation: 0,
-    focus: 0,
-    typing: 0,
-    complete: 0,
-    screenshot: 0
-  });
-  
-  // Track if sounds are currently playing to avoid overlapping
-  const isPlaying = useRef<Record<SoundType, boolean>>({
-    click: false,
-    success: false,
-    error: false,
-    notification: false,
-    hover: false,
-    navigation: false,
-    focus: false,
-    typing: false,
-    complete: false,
-    screenshot: false
-  });
-  
-  // Play a sound with debouncing
-  const playSound = useCallback(
-    (type: SoundType, forcePlay: boolean = false) => {
-      // Check if sounds are enabled in both settings and accessibility
-      const soundsEnabled = settings.enabled && !soundsDisabled;
-      
-      if (!soundsEnabled && !forcePlay) return;
-      
-      // Don't play sounds that were just played
-      const now = Date.now();
-      const minTimeBetweenSounds = 100; // ms
-      
-      if (
-        !forcePlay &&
-        now - lastPlayedTime.current[type] < minTimeBetweenSounds
-      ) {
-        return;
-      }
-      
-      // Don't play if another instance of this sound is already playing
-      if (isPlaying.current[type] && !forcePlay) return;
-      
+    // Create audio elements for each sound effect
+    (Object.keys(soundUrls) as SoundEffect[]).forEach(effect => {
       try {
-        const audio = new Audio(soundUrls[type]);
-        audio.volume = settings.volume;
-        isPlaying.current[type] = true;
-        
-        // Update last played time
-        lastPlayedTime.current[type] = now;
-        
-        // Play the sound
-        audio.play()
-          .then(() => {
-            // Mark as not playing when done
-            audio.addEventListener('ended', () => {
-              isPlaying.current[type] = false;
-            });
-          })
-          .catch(e => {
-            // Autoplay might be blocked, gracefully handle the error
-            console.warn(`Sound playback failed: ${e.message}`);
-            isPlaying.current[type] = false;
-          });
+        const audio = new Audio(soundUrls[effect]);
+        audio.volume = volume;
+        audio.preload = 'auto';
+        newSounds[effect] = audio;
       } catch (error) {
-        console.error('Error playing sound:', error);
+        console.error(`Failed to load sound effect: ${effect}`, error);
+        newSounds[effect] = null;
       }
-    },
-    [settings.enabled, settings.volume, soundsDisabled, soundUrls]
-  );
-  
-  // Update settings
-  const updateSettings = useCallback((newSettings: Partial<SoundSettings>) => {
-    setSettings(prev => {
-      const updated = { ...prev, ...newSettings };
-      // Save to localStorage
-      localStorage.setItem('sound-settings', JSON.stringify(updated));
-      return updated;
     });
+    
+    setSounds(newSounds);
+    
+    // Clean up audio elements when component unmounts
+    return () => {
+      Object.values(newSounds).forEach(audio => {
+        if (audio) {
+          audio.pause();
+          audio.src = '';
+        }
+      });
+    };
   }, []);
   
-  // Toggle sound effects
-  const toggleSounds = useCallback(() => {
-    updateSettings({ enabled: !settings.enabled });
+  // Update volume when it changes
+  useEffect(() => {
+    Object.values(sounds).forEach(audio => {
+      if (audio) {
+        audio.volume = volume;
+      }
+    });
+  }, [volume, sounds]);
+  
+  // Function to play a sound effect
+  const playSound = useCallback((effect: SoundEffect) => {
+    if (!isEnabled) return;
     
-    // Play feedback when enabling
-    if (!settings.enabled) {
-      playSound('success', true);
+    const audio = sounds[effect];
+    if (audio) {
+      // Reset the audio to the beginning if it's already playing
+      audio.currentTime = 0;
+      audio.play().catch(error => {
+        console.error(`Error playing sound effect: ${effect}`, error);
+      });
     }
-  }, [settings.enabled, updateSettings, playSound]);
+  }, [isEnabled, sounds]);
   
-  // Set volume
-  const setVolume = useCallback(
-    (volume: number) => {
-      // Ensure volume is between 0 and 1
-      const normalizedVolume = Math.max(0, Math.min(1, volume));
-      updateSettings({ volume: normalizedVolume });
-      
-      // Play feedback at new volume
-      playSound('click', true);
-    },
-    [updateSettings, playSound]
-  );
+  // Toggle sound effects on/off
+  const toggleSounds = useCallback(() => {
+    setIsEnabled(prev => !prev);
+  }, []);
   
-  // Expose the API
+  // Adjust volume (value between 0 and 1)
+  const adjustVolume = useCallback((newVolume: number) => {
+    setVolume(Math.max(0, Math.min(1, newVolume)));
+  }, []);
+  
   return {
     playSound,
     toggleSounds,
-    setVolume,
-    settings,
-    updateSettings
+    isEnabled,
+    adjustVolume,
+    volume
   };
 };
 
-export { useSoundEffects };
 export default useSoundEffects;
