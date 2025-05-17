@@ -101,8 +101,14 @@ export const enrollmentService = {
       WHERE lessons.id = $1
     `;
     
-    const result = await db.execute(sql.raw(lessonQuery, [lessonId]));
-    const courseId = result.rows && result.rows[0] ? result.rows[0].course_id : null;
+    const result = await db.execute(sql`
+      SELECT cm.course_id 
+      FROM course_modules cm
+      JOIN lessons l ON l.module_id = cm.id
+      WHERE l.id = ${lessonId}
+    `);
+    
+    const courseId = result.rows && result.rows.length > 0 ? result.rows[0].course_id : null;
     
     if (courseId) {
       // Recalculate course progress
@@ -146,26 +152,21 @@ export const enrollmentService = {
    * Get a user's progress for all lessons in a course
    */
   async getCourseProgress(userId: string, courseId: number) {
-    // Query to get all lessons in the course
-    const allLessonsQuery = `
+    // Execute queries to get lesson counts
+    const allLessonsResult = await db.execute(sql`
       SELECT l.id
       FROM lessons l
       JOIN course_modules m ON l.module_id = m.id
-      WHERE m.course_id = $1
-    `;
+      WHERE m.course_id = ${courseId}
+    `);
     
-    // Query to get all completed lessons for the user in the course
-    const completedLessonsQuery = `
+    const completedLessonsResult = await db.execute(sql`
       SELECT c.lesson_id
       FROM user_lesson_completions c
       JOIN lessons l ON c.lesson_id = l.id
       JOIN course_modules m ON l.module_id = m.id
-      WHERE m.course_id = $1 AND c.user_id = $2
-    `;
-    
-    // Execute both queries
-    const allLessonsResult = await db.execute(sql.raw(allLessonsQuery, [courseId]));
-    const completedLessonsResult = await db.execute(sql.raw(completedLessonsQuery, [courseId, parseInt(userId)]));
+      WHERE m.course_id = ${courseId} AND c.user_id = ${parseInt(userId)}
+    `);
     
     const totalLessons = allLessonsResult.rows?.length || 0;
     const completedLessons = completedLessonsResult.rows?.length || 0;

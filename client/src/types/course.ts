@@ -6,7 +6,9 @@ export interface Course {
   id: number;
   title: string;
   description: string;
+  shortDescription?: string;
   coverImage: string;
+  imageUrl?: string;
   instructor: {
     id: number;
     name: string;
@@ -14,11 +16,20 @@ export interface Course {
     avatar: string;
   };
   price: string;
-  duration: number;
+  duration: string | number;
   modules: CourseModule[];
   progress: number;
-  enrollmentDate: string;
-  lastAccessedDate: string;
+  enrollmentDate?: string;
+  lastAccessedDate?: string;
+  featured?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  level?: 'beginner' | 'intermediate' | 'advanced' | 'all-levels';
+  studentsCount?: number;
+  tags?: string[];
+  category?: string;
+  prerequisites?: string[];
+  certificateAvailable?: boolean;
 }
 
 export interface CourseModule {
