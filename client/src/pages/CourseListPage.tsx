@@ -1,19 +1,88 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Link, useLocation } from 'wouter';
+import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
 import { queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { Clock, BookOpen, Users, Tag } from 'lucide-react';
-import { mockCourses } from '@/mock/courses';
+
 import type { Course } from '@/types/course';
+
+// Sample course data
+const sampleCourses: Course[] = [
+  {
+    id: 1,
+    title: "Mastering AI Prompt Engineering",
+    description: "Learn the art and science of designing effective prompts for large language models.",
+    shortDescription: "Learn to effectively communicate with AI systems",
+    coverImage: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=800&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=800&q=80",
+    instructor: {
+      id: 1,
+      name: "Dr. Sarah Chen",
+      bio: "AI Research Scientist",
+      avatar: "https://randomuser.me/api/portraits/women/44.jpg"
+    },
+    price: "$149",
+    duration: "6 weeks",
+    modules: [],
+    progress: 0,
+    level: "intermediate",
+    studentsCount: 2456,
+    tags: ["AI", "Prompt Engineering", "NLP"],
+    featured: true
+  },
+  {
+    id: 2,
+    title: "AI for Business Intelligence",
+    description: "Discover how AI can transform your business decision-making processes.",
+    shortDescription: "Harness AI for business insights",
+    coverImage: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
+    instructor: {
+      id: 2,
+      name: "Michael Rodriguez",
+      bio: "Former Chief Data Officer",
+      avatar: "https://randomuser.me/api/portraits/men/32.jpg"
+    },
+    price: "$199",
+    duration: "8 weeks",
+    modules: [],
+    progress: 0,
+    level: "beginner",
+    studentsCount: 1892,
+    tags: ["Business Intelligence", "AI Applications"],
+    featured: false
+  },
+  {
+    id: 3,
+    title: "Deep Learning Fundamentals",
+    description: "Build a strong foundation in deep learning theory and practice.",
+    shortDescription: "Master neural networks concepts",
+    coverImage: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=800&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=800&q=80",
+    instructor: {
+      id: 3,
+      name: "Prof. James Liu",
+      bio: "Computer Science professor",
+      avatar: "https://randomuser.me/api/portraits/men/52.jpg"
+    },
+    price: "$249",
+    duration: "10 weeks",
+    modules: [],
+    progress: 0,
+    level: "advanced",
+    studentsCount: 1245,
+    tags: ["Deep Learning", "Neural Networks"],
+    featured: true
+  }
+];
 
 // Simple loading spinner component
 const LoadingSpinner = ({ size = 'md', className = '' }: { size?: 'sm' | 'md' | 'lg', className?: string }) => {
@@ -29,72 +98,45 @@ const LoadingSpinner = ({ size = 'md', className = '' }: { size?: 'sm' | 'md' | 
   );
 };
 
-const CourseCatalogPage = () => {
+const CourseListPage = () => {
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const { user, isAuthenticated, isLoading: isLoadingAuth } = useAuth();
   const [activeTab, setActiveTab] = useState('all');
 
-  // Fetch all courses
-  const { data: courses = mockCourses, isLoading: isLoadingCourses } = useQuery<Course[]>({
-    queryKey: ['/api/learning/courses'],
-  });
+  // Use sample data for demo purposes
+  const courses = sampleCourses;
+  const isLoadingCourses = false;
 
-  // Fetch user enrollments if authenticated
-  const { data: enrollments = [], isLoading: isLoadingEnrollments } = useQuery<any[]>({
-    queryKey: ['/api/learning/enrollments'],
-    enabled: isAuthenticated,
-  });
+  // Mock user enrollments for demo
+  const [enrollments, setEnrollments] = useState<{userId: string; courseId: number; progress: number}[]>([]);
+  const isLoadingEnrollments = false;
 
-  // Create enrollment mutation
-  const enrollMutation = useMutation({
-    mutationFn: async (courseId: number) => {
-      const response = await fetch(`/api/learning/courses/${courseId}/enroll`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+  // Mock enrollment mutation
+  const enrollMutation = {
+    mutate: (courseId: number) => {
+      // Add the course to enrollments
+      setEnrollments(prev => [
+        ...prev,
+        { userId: 'user123', courseId, progress: 0 }
+      ]);
       
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to enroll in course');
-      }
-      
-      return response.json();
-    },
-    onSuccess: () => {
-      // Invalidate enrollments query to refresh the list
-      queryClient.invalidateQueries({ queryKey: ['/api/learning/enrollments'] });
+      // Show success toast
       toast({
         title: "Success!",
         description: "You've successfully enrolled in the course.",
       });
     },
-    onError: (error: Error) => {
-      toast({
-        title: "Enrollment Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+    isPending: false
+  };
 
   // Filter courses based on active tab
   const filteredCourses = courses.filter(course => {
     if (activeTab === 'all') return true;
-    if (activeTab === 'enrolled' && enrollments.some(e => e.courseId === course.id)) return true;
+    if (activeTab === 'enrolled' && isEnrolled(course.id)) return true;
     if (activeTab === 'featured' && course.featured) return true;
-    if (activeTab === 'new' && isNewCourse(course)) return true;
     return false;
   });
-
-  // Check if a course is new (less than 30 days old)
-  const isNewCourse = (course: Course) => {
-    const courseDate = new Date(course.createdAt || Date.now());
-    const daysAgo = Math.floor((Date.now() - courseDate.getTime()) / (1000 * 60 * 60 * 24));
-    return daysAgo < 30;
-  };
 
   // Check if user is enrolled in a course
   const isEnrolled = (courseId: number) => {
@@ -149,11 +191,10 @@ const CourseCatalogPage = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-4 sm:w-[400px]">
+          <TabsList className="grid grid-cols-3 sm:w-[400px]">
             <TabsTrigger value="all">All Courses</TabsTrigger>
             <TabsTrigger value="enrolled" disabled={!isAuthenticated}>My Courses</TabsTrigger>
             <TabsTrigger value="featured">Featured</TabsTrigger>
-            <TabsTrigger value="new">New</TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab} className="mt-6">
@@ -189,9 +230,6 @@ const CourseCatalogPage = () => {
                         <CardTitle className="text-xl">{course.title}</CardTitle>
                         {course.featured && (
                           <Badge className="ml-2">Featured</Badge>
-                        )}
-                        {isNewCourse(course) && (
-                          <Badge variant="outline" className="ml-2">New</Badge>
                         )}
                       </div>
                       <CardDescription>{course.shortDescription}</CardDescription>
@@ -283,4 +321,4 @@ const CourseCatalogPage = () => {
   );
 };
 
-export default CourseCatalogPage;
+export default CourseListPage;
