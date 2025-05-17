@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { X, ArrowRight, ArrowLeft, Check } from 'lucide-react';
 import useLocalStorage from '../../hooks/use-local-storage';
 import { useToast } from '@/hooks/use-toast';
-import { useSoundEffects } from '../../hooks/use-sound-effects';
+import useSoundEffects from '@/hooks/use-sound-effects';
 import useKeyboardSound from '../../hooks/use-keyboard-sound';
 
 // Define the structure of a tour step

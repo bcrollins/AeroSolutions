@@ -101,4 +101,6 @@ export const useSoundEffects = (options: SoundEffectOptions = {}) => {
   };
 };
 
+// Export the hook as both named and default
+// This ensures backward compatibility with existing code
 export default useSoundEffects;
