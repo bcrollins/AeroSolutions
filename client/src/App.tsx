@@ -78,7 +78,7 @@ import AiProductsPage from "@/pages/AiProductsPage";
 import AiProductDetailPage from "@/pages/AiProductDetailPage";
 import AiCoursePlatform from "@/pages/AiCoursePlatform";
 import AiCourseDetail from "@/pages/AiCourseDetail";
-import CourseCatalog from "@/pages/CourseCatalog";
+import CourseCatalogPage from "@/pages/CourseCatalogPage";
 import MemberDashboard from "@/pages/MemberDashboard";
 import PricingPage from "@/pages/PricingPage";
 import SubscriptionAnalyticsPage from "@/pages/SubscriptionAnalyticsPage";
@@ -442,6 +442,22 @@ export default function App() {
             }, []);
             return null;
           }}
+        </Route>
+        
+        {/* Course Catalog */}
+        <Route path="/courses">
+          {() => (
+            <>
+              <Helmet>
+                <title>Course Catalog | RXAI Learning Platform</title>
+                <meta name="description" content="Browse our selection of courses and start your learning journey today on the RXAI comprehensive educational platform." />
+                <meta name="robots" content="index, follow" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <CourseCatalogPage />
+            </>
+          )}
         </Route>
         
         {/* Course Dashboard for subscribers */}

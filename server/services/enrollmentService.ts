@@ -112,7 +112,7 @@ export const enrollmentService = {
     
     if (courseId) {
       // Recalculate course progress
-      await this.getCourseProgress(userId, courseId);
+      await this.getCourseProgress(userId, Number(courseId));
     }
     
     return {
