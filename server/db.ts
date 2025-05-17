@@ -12,4 +12,9 @@ if (!process.env.DATABASE_URL) {
 }
 
 export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle({ client: pool, schema });
+export const db = drizzle(pool, { schema });
+
+// Export a function to close the pool when the server is shutting down
+export const closePool = async () => {
+  await pool.end();
+};
