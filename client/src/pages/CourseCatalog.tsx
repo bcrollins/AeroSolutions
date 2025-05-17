@@ -62,7 +62,7 @@ const CourseCatalog = () => {
   const [difficultyFilter, setDifficultyFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState(localStorage.getItem("course_catalog_tab") || "all");
   const { isAuthenticated } = useAuth();
   const coursesPerPage = 9;
 
@@ -79,6 +79,12 @@ const CourseCatalog = () => {
   // Extract courses and categories from response data
   const courses = coursesData?.courses || [];
   const categories = categoriesData || [];
+  
+  // Save the active tab to localStorage when it changes
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    localStorage.setItem("course_catalog_tab", value);
+  };
 
   // Filter courses based on search query and filters
   const filteredCourses = courses.filter((course: AiCourse) => {
@@ -116,7 +122,7 @@ const CourseCatalog = () => {
         {/* Tabs Navigation */}
         <Tabs 
           defaultValue={activeTab} 
-          onValueChange={setActiveTab} 
+          onValueChange={handleTabChange} 
           className="mb-8"
         >
           <TabsList className="bg-[#252525] border border-gray-700 p-1">
@@ -150,7 +156,7 @@ const CourseCatalog = () => {
                     The more courses you engage with, the better your recommendations will become.
                   </p>
                   <button 
-                    onClick={() => setActiveTab('all')}
+                    onClick={() => handleTabChange('all')}
                     className="text-[#007bff] hover:text-[#0056b3] font-medium transition-colors"
                   >
                     View all courses →
@@ -163,143 +169,145 @@ const CourseCatalog = () => {
           {/* All Courses Tab */}
           <TabsContent value="all" className="mt-6">
             {/* Search and Filter Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="relative">
-            <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-            <Input
-              placeholder="Search courses..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-[#252525] border-[#007bff] text-white focus:ring-[#007bff] focus:border-[#007bff]"
-            />
-          </div>
-
-          <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
-            <SelectTrigger className="bg-[#252525] border-[#007bff] text-white">
-              <SelectValue placeholder="Filter by difficulty" />
-            </SelectTrigger>
-            <SelectContent className="bg-[#252525] border-[#007bff] text-white">
-              <SelectItem value="all">All Difficulties</SelectItem>
-              <SelectItem value="beginner">Beginner</SelectItem>
-              <SelectItem value="intermediate">Intermediate</SelectItem>
-              <SelectItem value="advanced">Advanced</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="bg-[#252525] border-[#007bff] text-white">
-              <SelectValue placeholder="Filter by category" />
-            </SelectTrigger>
-            <SelectContent className="bg-[#252525] border-[#007bff] text-white">
-              <SelectItem value="all">All Categories</SelectItem>
-              {categories.map((category: AiCourseCategory) => (
-                <SelectItem key={category.id} value={category.id.toString()}>
-                  {category.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Loading State */}
-        {coursesLoading && (
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#007bff]"></div>
-          </div>
-        )}
-
-        {/* No Results */}
-        {!coursesLoading && filteredCourses.length === 0 && (
-          <div className="text-center py-12">
-            <h3 className="text-xl font-semibold mb-2">No courses found</h3>
-            <p className="text-gray-400">Try adjusting your search or filters</p>
-          </div>
-        )}
-
-        {/* Courses Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {currentCourses.map((course: AiCourse) => (
-            <Card key={course.id} className="bg-[#252525] border-gray-700 overflow-hidden hover:border-[#007bff] transition-all">
-              <div className="h-[200px] overflow-hidden bg-gray-800">
-                {course.thumbnail ? (
-                  <img 
-                    src={course.thumbnail} 
-                    alt={course.title} 
-                    className="w-full h-full object-cover" 
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full bg-gray-800 text-gray-500">
-                    <Book className="w-12 h-12" />
-                  </div>
-                )}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <Input
+                  placeholder="Search courses..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 bg-[#252525] border-[#007bff] text-white focus:ring-[#007bff] focus:border-[#007bff]"
+                />
               </div>
-              
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
-                  <h3 className="text-lg font-bold text-white line-clamp-2">{course.title}</h3>
-                  <span className={`text-xs px-2 py-1 rounded-full text-white ${getDifficultyColor(course.difficulty)}`}>
-                    {course.difficulty}
-                  </span>
-                </div>
-              </CardHeader>
-              
-              <CardContent>
-                <p className="text-sm text-gray-300 line-clamp-3 mb-4">{course.description}</p>
-                <div className="flex items-center text-sm text-gray-400 mb-1">
-                  <Clock className="h-4 w-4 mr-2" />
-                  <span>{course.duration || 'Self-paced'}</span>
-                </div>
-                {course.instructorName && (
-                  <div className="flex items-center text-sm text-gray-400">
-                    <User className="h-4 w-4 mr-2" />
-                    <span>{course.instructorName}</span>
-                  </div>
-                )}
-              </CardContent>
-              
-              <CardFooter className="flex justify-between pt-0">
-                <span className="text-[#007bff] font-semibold">{course.price}</span>
-                <button className="px-3 py-1 bg-[#007bff] hover:bg-[#0056b3] text-white rounded-md transition-colors">
-                  View Course
-                </button>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2 mt-8">
-            <button 
-              onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="p-2 rounded-md bg-[#252525] border border-gray-700 hover:bg-[#333] disabled:opacity-50 disabled:hover:bg-[#252525]"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-            
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => handlePageChange(page)}
-                className={`min-w-[40px] h-10 rounded-md flex items-center justify-center transition-colors
-                  ${currentPage === page 
-                    ? 'bg-[#007bff] text-white' 
-                    : 'bg-[#252525] text-gray-300 hover:bg-[#333]'}`}
-              >
-                {page}
-              </button>
-            ))}
-            
-            <button 
-              onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
-              className="p-2 rounded-md bg-[#252525] border border-gray-700 hover:bg-[#333] disabled:opacity-50 disabled:hover:bg-[#252525]"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-          </div>
-        )}
+              <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
+                <SelectTrigger className="bg-[#252525] border-[#007bff] text-white">
+                  <SelectValue placeholder="Filter by difficulty" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#252525] border-[#007bff] text-white">
+                  <SelectItem value="all">All Difficulties</SelectItem>
+                  <SelectItem value="beginner">Beginner</SelectItem>
+                  <SelectItem value="intermediate">Intermediate</SelectItem>
+                  <SelectItem value="advanced">Advanced</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="bg-[#252525] border-[#007bff] text-white">
+                  <SelectValue placeholder="Filter by category" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#252525] border-[#007bff] text-white">
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map((category: AiCourseCategory) => (
+                    <SelectItem key={category.id} value={category.id.toString()}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Loading State */}
+            {coursesLoading && (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#007bff]"></div>
+              </div>
+            )}
+
+            {/* No Results */}
+            {!coursesLoading && filteredCourses.length === 0 && (
+              <div className="text-center py-12">
+                <h3 className="text-xl font-semibold mb-2">No courses found</h3>
+                <p className="text-gray-400">Try adjusting your search or filters</p>
+              </div>
+            )}
+
+            {/* Courses Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {currentCourses.map((course: AiCourse) => (
+                <Card key={course.id} className="bg-[#252525] border-gray-700 overflow-hidden hover:border-[#007bff] transition-all">
+                  <div className="h-[200px] overflow-hidden bg-gray-800">
+                    {course.thumbnail ? (
+                      <img 
+                        src={course.thumbnail} 
+                        alt={course.title} 
+                        className="w-full h-full object-cover" 
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full bg-gray-800 text-gray-500">
+                        <Book className="w-12 h-12" />
+                      </div>
+                    )}
+                  </div>
+                  
+                  <CardHeader className="pb-2">
+                    <div className="flex justify-between items-start">
+                      <h3 className="text-lg font-bold text-white line-clamp-2">{course.title}</h3>
+                      <span className={`text-xs px-2 py-1 rounded-full text-white ${getDifficultyColor(course.difficulty)}`}>
+                        {course.difficulty}
+                      </span>
+                    </div>
+                  </CardHeader>
+                  
+                  <CardContent>
+                    <p className="text-sm text-gray-300 line-clamp-3 mb-4">{course.description}</p>
+                    <div className="flex items-center text-sm text-gray-400 mb-1">
+                      <Clock className="h-4 w-4 mr-2" />
+                      <span>{course.duration || 'Self-paced'}</span>
+                    </div>
+                    {course.instructorName && (
+                      <div className="flex items-center text-sm text-gray-400">
+                        <User className="h-4 w-4 mr-2" />
+                        <span>{course.instructorName}</span>
+                      </div>
+                    )}
+                  </CardContent>
+                  
+                  <CardFooter className="flex justify-between pt-0">
+                    <span className="text-[#007bff] font-semibold">{course.price}</span>
+                    <button className="px-3 py-1 bg-[#007bff] hover:bg-[#0056b3] text-white rounded-md transition-colors">
+                      View Course
+                    </button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-8">
+                <button 
+                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-md bg-[#252525] border border-gray-700 hover:bg-[#333] disabled:opacity-50 disabled:hover:bg-[#252525]"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`min-w-[40px] h-10 rounded-md flex items-center justify-center transition-colors
+                      ${currentPage === page 
+                        ? 'bg-[#007bff] text-white' 
+                        : 'bg-[#252525] text-gray-300 hover:bg-[#333]'}`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                
+                <button 
+                  onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-md bg-[#252525] border border-gray-700 hover:bg-[#333] disabled:opacity-50 disabled:hover:bg-[#252525]"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
