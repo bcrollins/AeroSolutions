@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from '@/hooks/useAuth';
 import { Input } from "@/components/ui/input";
 import { 
   Select,
@@ -14,7 +15,10 @@ import {
   CardContent,
   CardFooter
 } from "@/components/ui/card";
-import { Search, Clock, User, Book, ChevronLeft, ChevronRight } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import PersonalizedRecommendations from '@/components/recommendations/PersonalizedRecommendations';
+import { Search, Clock, User, Book, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 
 // Define the types based on the shared schema
 type AiCourse = {
@@ -58,7 +62,9 @@ const CourseCatalog = () => {
   const [difficultyFilter, setDifficultyFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const coursesPerPage = 10;
+  const [activeTab, setActiveTab] = useState("all");
+  const { isAuthenticated } = useAuth();
+  const coursesPerPage = 9;
 
   // Fetch courses data
   const { data: coursesData, isLoading: coursesLoading } = useQuery({
@@ -105,9 +111,58 @@ const CourseCatalog = () => {
   return (
     <div className="min-h-screen bg-[#1a1a1a] text-white py-8 px-4 md:px-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Course Catalog</h1>
-
-        {/* Search and Filter Section */}
+        <h1 className="text-3xl font-bold mb-6">Course Catalog</h1>
+        
+        {/* Tabs Navigation */}
+        <Tabs 
+          defaultValue={activeTab} 
+          onValueChange={setActiveTab} 
+          className="mb-8"
+        >
+          <TabsList className="bg-[#252525] border border-gray-700 p-1">
+            {isAuthenticated && (
+              <TabsTrigger 
+                value="recommendations" 
+                className="data-[state=active]:bg-[#007bff] data-[state=active]:text-white"
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                Recommended For You
+              </TabsTrigger>
+            )}
+            <TabsTrigger 
+              value="all" 
+              className="data-[state=active]:bg-[#007bff] data-[state=active]:text-white"
+            >
+              <Book className="h-4 w-4 mr-2" />
+              All Courses
+            </TabsTrigger>
+          </TabsList>
+          
+          {/* Recommendations Tab */}
+          {isAuthenticated && (
+            <TabsContent value="recommendations" className="pt-6 pb-10">
+              <div className="bg-[#252525] rounded-lg border border-gray-700 p-6 mb-6">
+                <PersonalizedRecommendations limit={6} withAnimation={true} />
+                <Separator className="my-8 bg-gray-700" />
+                <div className="text-center">
+                  <p className="text-gray-400 mb-4">
+                    These recommendations are powered by AI and tailored to your learning profile.
+                    The more courses you engage with, the better your recommendations will become.
+                  </p>
+                  <button 
+                    onClick={() => setActiveTab('all')}
+                    className="text-[#007bff] hover:text-[#0056b3] font-medium transition-colors"
+                  >
+                    View all courses →
+                  </button>
+                </div>
+              </div>
+            </TabsContent>
+          )}
+          
+          {/* All Courses Tab */}
+          <TabsContent value="all" className="mt-6">
+            {/* Search and Filter Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="relative">
             <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
