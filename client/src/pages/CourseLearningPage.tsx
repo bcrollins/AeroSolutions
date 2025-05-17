@@ -131,8 +131,8 @@ const CourseLearningPage: React.FC = () => {
   });
   
   // Fetch lesson data if lessonId is provided
-  const { data: lessonData, isLoading: isLoadingLesson } = useQuery({
-    queryKey: [`/api/lessons/${lessonId}`],
+  const { data: lessonData, isLoading: isLoadingLesson } = useQuery<CourseLesson>({
+    queryKey: [`/api/learning/lessons/${lessonId}`],
     enabled: !!lessonId,
   });
   
