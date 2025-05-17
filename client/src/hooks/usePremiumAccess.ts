@@ -1,6 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
 
+// Define the shape of the API response
+interface AccessResponse {
+  hasAccess: boolean;
+  requiresSubscription: boolean;
+  currentPlanName: string | null;
+  requiredPlanId: string | null;
+  message?: string;
+}
+
 /**
  * Hook to check if the current user has access to premium content
  * @param productId - The ID of the product or course to check access for
@@ -15,7 +24,7 @@ export function usePremiumAccess(productId: number) {
     isLoading,
     isError,
     error
-  } = useQuery({
+  } = useQuery<AccessResponse>({
     queryKey: [`/api/product/${productId}/access`],
     // Disable the query if the user is not authenticated
     enabled: isAuthenticated && !!productId,

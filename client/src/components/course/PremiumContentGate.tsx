@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'wouter';
-import { usePremiumAccess } from '../../hooks/usePremiumAccess';
-import { useAuth } from '../../hooks/useAuth';
+import { usePremiumAccess } from '@/hooks/usePremiumAccess';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';

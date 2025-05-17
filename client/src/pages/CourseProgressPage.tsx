@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/useAuth';
 import { ProgressTracker, BadgesDisplay, StreakDisplay, LeaderboardDisplay } from '@/components/course/GamificationElements';
-import PremiumContentGate from '@/components/course/PremiumContentGate';
+import { PremiumContentGate } from '@/components/course/PremiumContentGate';
 import { Clock, BookOpen, Award, CheckCircle2, LockIcon, PlayCircle } from 'lucide-react';
 
 // Simple loading spinner component

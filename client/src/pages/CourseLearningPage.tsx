@@ -32,7 +32,7 @@ import LearningPathVisualizer from '@/components/course/LearningPathVisualizer';
 import CourseResources from '@/components/course/CourseResources';
 import VideoPlayer from '@/components/course/VideoPlayer';
 import { ProgressTracker, BadgesDisplay, StreakDisplay, LeaderboardDisplay } from '@/components/course/GamificationElements';
-import PremiumContentGate from '@/components/course/PremiumContentGate';
+import { PremiumContentGate } from '@/components/course/PremiumContentGate';
 
 // Import course types from our type definitions
 import { Course, CourseModule, CourseLesson } from '@/types/course';
@@ -842,4 +842,4 @@ import {
   CheckCircle as CheckCircleIcon // Renamed to avoid conflict
 } from 'lucide-react';
 
-export default CourseLearningPage;
+export default function CourseLearningPage;
