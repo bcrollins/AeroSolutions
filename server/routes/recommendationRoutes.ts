@@ -1,5 +1,6 @@
 import express from 'express';
 import { getPersonalRecommendations, getLessonBasedRecommendations } from '../controllers/recommendationController';
+import { trackCourseInteraction, getUserInteractionHistory } from '../controllers/courseInteractionController';
 import { isAuthenticated } from '../replitAuth';
 
 const router = express.Router();
@@ -31,5 +32,9 @@ router.get('/topic/:topic', async (req, res) => {
     });
   }
 });
+
+// Course interaction tracking routes
+router.post('/track', isAuthenticated, trackCourseInteraction);
+router.get('/history', isAuthenticated, getUserInteractionHistory);
 
 export default router;
