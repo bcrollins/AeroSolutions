@@ -102,7 +102,11 @@ export default function OnboardingTour({ forceTour = false }: OnboardingTourProp
   const [elementPosition, setElementPosition] = useState({ top: 0, left: 0, width: 0, height: 0 });
   const highlightedElementRef = useRef<Element | null>(null);
   const { toast } = useToast();
-  const { playSound, isEnabled: soundEnabled = false } = useSoundEffects();
+  
+  // Safe access to sound effects with fallbacks
+  const soundEffects = useSoundEffects() || { playSound: () => {}, isEnabled: false };
+  const playSound = soundEffects.playSound || (() => {});
+  const soundEnabled = soundEffects.isEnabled !== undefined ? soundEffects.isEnabled : false;
 
   // Show the tour if forced or if the user hasn't completed it
   useEffect(() => {
