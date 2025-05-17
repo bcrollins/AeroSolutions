@@ -3,7 +3,7 @@ import { OpenAI } from 'openai';
 import { isAuthenticated } from '../replitAuth';
 import { db } from '../db';
 import { courses } from '../../shared/schema';
-import { NodeCache } from 'node-cache';
+import NodeCache from 'node-cache';
 
 // Initialize OpenAI client
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -55,7 +55,7 @@ router.get('/personalized', isAuthenticated, async (req: any, res) => {
             role: "user",
             content: `Based on my profile as user ${userId}, recommend AI courses for me 
                      from the available catalog: ${JSON.stringify(allCourses.map(course => 
-                       ({ id: course.id, title: course.title, description: course.description, topics: course.topics })))}
+                       ({ id: course.id, title: course.title, description: course.description || "", category: course.category, difficulty: course.difficulty })))}
                      Recommend the courses that would most benefit my learning journey.`
           }
         ],
@@ -108,7 +108,7 @@ router.get('/topic/:topicId', async (req, res) => {
     // Get courses related to the topic
     const topicCourses = await db.select()
       .from(courses)
-      .where(course => course.topics.includes(topicId))
+      .where(course => course.category.toLowerCase().includes(topicId.toLowerCase()))
       .limit(count);
     
     if (!topicCourses || topicCourses.length === 0) {

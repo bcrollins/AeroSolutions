@@ -1977,6 +1977,45 @@ export const insertCourseModuleSchema = createInsertSchema(courseModules).omit({
 export type CourseModule = typeof courseModules.$inferSelect;
 export type InsertCourseModule = z.infer<typeof insertCourseModuleSchema>;
 
+// Course Recommendation Tracking schema for AI-powered recommendations
+export const courseInteractions = pgTable("course_interactions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  courseId: integer("course_id").notNull().references(() => courses.id, { onDelete: "cascade" }),
+  interactionType: text("interaction_type").notNull(), // view, click, enroll, complete
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  duration: integer("duration"), // For tracking view durations in seconds
+  context: text("context"), // Where interaction originated from (e.g., recommendations, search)
+  metadata: json("metadata").$type<Record<string, any>>().default({}),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertCourseInteractionSchema = createInsertSchema(courseInteractions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type CourseInteraction = typeof courseInteractions.$inferSelect;
+export type InsertCourseInteraction = z.infer<typeof insertCourseInteractionSchema>;
+
+// Course Topics schema for enhanced recommendation filtering
+export const courseTopics = pgTable("course_topics", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  parentTopicId: integer("parent_topic_id").references(() => courseTopics.id),
+  popularity: integer("popularity").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertCourseTopicSchema = createInsertSchema(courseTopics).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type CourseTopic = typeof courseTopics.$inferSelect;
+export type InsertCourseTopic = z.infer<typeof insertCourseTopicSchema>;
+
 // Lessons schema
 export const lessons = pgTable("lessons", {
   id: serial("id").primaryKey(),
