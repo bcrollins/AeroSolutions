@@ -606,11 +606,31 @@ const LearnAI: React.FC = () => {
   const handleQuickDemoSignup = (email: string) => {
     if (!email || !email.includes('@')) return;
     
+    // Create a temporary loading state
+    const loadingOverlay = document.createElement('div');
+    loadingOverlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    loadingOverlay.innerHTML = `
+      <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full text-center">
+        <div class="animate-spin mx-auto h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
+        <h3 class="text-lg font-bold mb-2">Setting up your free access...</h3>
+        <p class="text-gray-600">We're preparing your personalized learning experience.</p>
+      </div>
+    `;
+    document.body.appendChild(loadingOverlay);
+    
     // Track conversion
     trackEvent('demo_registration', 'conversion', 'quick_signup');
     
-    // Navigate to demo
-    window.location.href = `/ai-courses/demo?email=${encodeURIComponent(email)}`;
+    // Store the email in localStorage to identify user
+    localStorage.setItem('learner_email', email);
+    
+    // Simulate API call to register for free access
+    setTimeout(() => {
+      // In a real implementation, this would be an API call to register the user
+      
+      // Navigate to demo with a success parameter
+      window.location.href = `/ai-courses/demo?email=${encodeURIComponent(email)}&access_granted=true`;
+    }, 1500);
   };
   
   // Scroll to section
@@ -915,13 +935,57 @@ const LearnAI: React.FC = () => {
                   </div>
                   <Button 
                     onClick={() => {
-                      const email = (document.getElementById('quick-demo-email') as HTMLInputElement).value;
-                      handleQuickDemoSignup(email);
+                      // Track button click in analytics
+                      trackEvent('free_course_claim_started', {
+                        category: 'conversion',
+                        label: 'homepage_hero'
+                      });
+                      
+                      const emailInput = document.getElementById('quick-demo-email') as HTMLInputElement;
+                      const email = emailInput?.value;
+                      
+                      // Validate email before proceeding
+                      if (!email || !email.includes('@') || !email.includes('.')) {
+                        // Highlight the input field with error state
+                        if (emailInput) {
+                          emailInput.classList.add('border-red-500', 'ring-red-500');
+                          emailInput.focus();
+                          // Show error message below input
+                          const errorElement = document.getElementById('email-error');
+                          if (errorElement) {
+                            errorElement.textContent = 'Please enter a valid email address';
+                            errorElement.classList.remove('hidden');
+                          }
+                        }
+                        return;
+                      }
+                      
+                      // Show loading state on button
+                      const button = document.activeElement as HTMLButtonElement;
+                      if (button) {
+                        const originalText = button.innerHTML;
+                        button.disabled = true;
+                        button.innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processing...';
+                        
+                        // Restore button after processing
+                        setTimeout(() => {
+                          button.disabled = false;
+                          button.innerHTML = originalText;
+                          handleQuickDemoSignup(email);
+                        }, 800);
+                      } else {
+                        handleQuickDemoSignup(email);
+                      }
                     }}
-                    className="bg-[#0066cc] hover:bg-[#0055b3] h-12 px-6 text-base text-white shadow-sm rounded-lg transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
+                    className="bg-[#0066cc] hover:bg-[#0055b3] h-12 px-6 text-base text-white shadow-md rounded-lg
+                      transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]
+                      hover:shadow-lg hover:brightness-105 focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
                   >
-                    <Play className="w-4 h-4 mr-2" /> Claim Your Free Course Access
+                    <Play className="w-4 h-4 mr-2 animate-pulse" /> Claim Your Free Course Access
                   </Button>
+                  
+                  {/* Error message for email validation */}
+                  <div id="email-error" className="text-red-500 text-xs mt-1 hidden"></div>
                 </motion.div>
                 
                 <motion.div
