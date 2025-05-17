@@ -82,10 +82,87 @@ const CourseLearningPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('content');
   const [soundEnabled, setSoundEnabled] = useState(true);
   
+  // Sample course data until our API is connected
+  const mockCourseData: Course = {
+    id: 1,
+    title: "Advanced AI Development with GPT-4o",
+    description: "Learn how to build sophisticated AI applications using OpenAI's GPT-4o model",
+    coverImage: "/images/courses/ai-development.jpg",
+    instructor: {
+      id: 101,
+      name: "Dr. Sarah Chen",
+      bio: "AI researcher with 10+ years of experience",
+      avatar: "/images/instructors/sarah-chen.jpg"
+    },
+    price: "$129.99",
+    duration: 2400, // 40 hours in minutes
+    modules: [
+      {
+        id: 1,
+        title: "Introduction to GPT-4o",
+        description: "Understanding the capabilities and limitations of GPT-4o",
+        position: 1,
+        lessons: [
+          {
+            id: 101,
+            moduleId: 1,
+            title: "What is GPT-4o?",
+            type: "video",
+            duration: 15,
+            position: 1,
+            isCompleted: true,
+            isLocked: false
+          },
+          {
+            id: 102,
+            moduleId: 1,
+            title: "Key differences from previous models",
+            type: "text",
+            duration: 10,
+            position: 2,
+            isCompleted: false,
+            isLocked: false
+          }
+        ]
+      },
+      {
+        id: 2,
+        title: "Prompt Engineering for GPT-4o",
+        description: "Learn advanced prompt techniques specific to GPT-4o",
+        position: 2,
+        lessons: [
+          {
+            id: 201,
+            moduleId: 2,
+            title: "Basics of Prompt Engineering",
+            type: "video",
+            duration: 20,
+            position: 1,
+            isCompleted: false,
+            isLocked: false
+          },
+          {
+            id: 202,
+            moduleId: 2,
+            title: "Advanced Context Setting",
+            type: "interactive",
+            duration: 25,
+            position: 2,
+            isCompleted: false,
+            isLocked: true
+          }
+        ]
+      }
+    ],
+    progress: 15,
+    enrollmentDate: "2025-01-15",
+    lastAccessedDate: "2025-05-17"
+  };
+
   // Fetch course data
-  const { data: course, isLoading: isLoadingCourse } = useQuery({
+  const { data: course = mockCourse, isLoading: isLoadingCourse } = useQuery({
     queryKey: [`/api/courses/${courseId}`],
-    // In a real app, you'd get this from the API, but here we're using mock data
+    // In a real app, this would fetch from the API instead of using the mock data
   });
   
   // Fetch lesson data if lessonId is provided
@@ -100,7 +177,7 @@ const CourseLearningPage: React.FC = () => {
       // Find the module containing the current lesson
       for (const module of course.modules) {
         const lessonExists = module.lessons.some(
-          lesson => lesson.id === parseInt(lessonId)
+          (lesson: CourseLesson) => lesson.id === parseInt(lessonId)
         );
         
         if (lessonExists) {
