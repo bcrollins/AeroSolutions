@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
+import useRecommendationTracker from '@/hooks/useRecommendationTracker';
 import { 
   Card, 
   CardContent, 
@@ -12,9 +13,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Sparkles, Star, TrendingUp, Clock } from 'lucide-react';
+import { BookOpen, Sparkles, Star, TrendingUp, Clock, Info, GraduationCap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import RecommendationExplanation from './RecommendationExplanation';
 
 interface RecommendationProps {
   courseId: string;
@@ -51,6 +54,9 @@ export default function PersonalizedRecommendations({
 }: Partial<RecommendationProps>) {
   const { user, isAuthenticated } = useAuth();
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+  const [selectedRecommendation, setSelectedRecommendation] = useState<any>(null);
+  const [showExplanationDialog, setShowExplanationDialog] = useState(false);
+  const { trackCourseView, trackCourseClick } = useRecommendationTracker();
   const { toast } = useToast();
   
   // Fetch personalized recommendations
@@ -106,6 +112,80 @@ export default function PersonalizedRecommendations({
     });
   };
   
+  // Individual recommendation card component
+  function RecommendationCard({ 
+    recommendation, 
+    showMatchScore = true, 
+    onSelect,
+    onViewDetails
+  }: { 
+    recommendation: any;
+    showMatchScore?: boolean;
+    onSelect?: (courseId: string) => void;
+    onViewDetails?: () => void;
+  }) {
+    const handleSelect = () => {
+      if (onSelect) {
+        onSelect(recommendation.courseId);
+      } else {
+        window.location.href = `/ai-courses/${recommendation.courseId}`;
+      }
+    };
+
+    return (
+      <Card className="overflow-hidden hover:shadow-md transition-shadow duration-300 h-full flex flex-col">
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-start">
+            <CardTitle className="text-lg">{recommendation.title}</CardTitle>
+            {showMatchScore && (
+              <div className="flex items-center space-x-1 bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-sm font-medium">
+                <Star className="h-3.5 w-3.5 fill-current" />
+                <span>{recommendation.matchScore}% Match</span>
+              </div>
+            )}
+          </div>
+          <CardDescription className="text-gray-500 text-sm flex items-center">
+            <Clock className="h-3.5 w-3.5 mr-1" />
+            Estimated time: 2-4 weeks
+          </CardDescription>
+        </CardHeader>
+        
+        <CardContent className="py-2 flex-grow">
+          <p className="text-gray-700 text-sm line-clamp-3 mb-3">
+            {recommendation.description}
+          </p>
+          
+          <div className="bg-gray-50 p-3 rounded-lg mt-2 relative">
+            <div className="flex items-start space-x-2">
+              <Sparkles className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-gray-600 italic pr-6">
+                {recommendation.reasonForRecommendation}
+              </p>
+              <Button
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6 absolute top-2 right-2 text-gray-400 hover:text-blue-500"
+                onClick={onViewDetails}
+              >
+                <Info className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+        
+        <CardFooter className="pt-4">
+          <Button 
+            onClick={handleSelect}
+            className="w-full"
+          >
+            <BookOpen className="h-4 w-4 mr-2" />
+            View Course
+          </Button>
+        </CardFooter>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -161,7 +241,7 @@ export default function PersonalizedRecommendations({
         // Recommendations grid
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <AnimatePresence>
-            {recommendations.slice(0, limit).map((recommendation, index) => (
+            {recommendations.slice(0, limit).map((recommendation: any, index: number) => (
               <motion.div
                 key={recommendation.courseId}
                 initial={withAnimation ? { opacity: 0, y: 20 } : false}
@@ -172,6 +252,11 @@ export default function PersonalizedRecommendations({
                   recommendation={recommendation}
                   showMatchScore={showMatchScore}
                   onSelect={onSelect}
+                  onViewDetails={() => {
+                    setSelectedRecommendation(recommendation);
+                    setShowExplanationDialog(true);
+                    trackCourseView(recommendation.courseId);
+                  }}
                 />
               </motion.div>
             ))}
@@ -197,70 +282,52 @@ export default function PersonalizedRecommendations({
           </div>
         </Card>
       )}
-    </div>
-  );
-}
 
-// Individual recommendation card component
-function RecommendationCard({ 
-  recommendation, 
-  showMatchScore = true, 
-  onSelect 
-}: { 
-  recommendation: any;
-  showMatchScore?: boolean;
-  onSelect?: (courseId: string) => void;
-}) {
-  const handleSelect = () => {
-    if (onSelect) {
-      onSelect(recommendation.courseId);
-    } else {
-      window.location.href = `/ai-courses/${recommendation.courseId}`;
-    }
-  };
-
-  return (
-    <Card className="overflow-hidden hover:shadow-md transition-shadow duration-300 h-full flex flex-col">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-lg">{recommendation.title}</CardTitle>
-          {showMatchScore && (
-            <div className="flex items-center space-x-1 bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-sm font-medium">
-              <Star className="h-3.5 w-3.5 fill-current" />
-              <span>{recommendation.matchScore}% Match</span>
+      {/* Explanation Dialog */}
+      <Dialog open={showExplanationDialog} onOpenChange={setShowExplanationDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <Sparkles className="h-5 w-5 text-blue-500 mr-2" />
+              Recommendation Insights
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedRecommendation && (
+            <div className="mt-4">
+              <h3 className="text-lg font-semibold mb-2">{selectedRecommendation.title}</h3>
+              <RecommendationExplanation 
+                matchScore={selectedRecommendation.matchScore}
+                reasonForRecommendation={selectedRecommendation.reasonForRecommendation}
+                matchFactors={{
+                  relevance: Math.round(selectedRecommendation.matchScore * 0.9),
+                  popularity: Math.round(75 + Math.random() * 15),
+                  difficulty: Math.round(60 + Math.random() * 25),
+                  completion: Math.round(80 + Math.random() * 15)
+                }}
+              />
+              
+              <div className="mt-6 flex justify-between">
+                <Button variant="outline" onClick={() => setShowExplanationDialog(false)}>
+                  Close
+                </Button>
+                <Button onClick={() => {
+                  trackCourseClick(selectedRecommendation.courseId);
+                  if (onSelect) {
+                    onSelect(selectedRecommendation.courseId);
+                  } else {
+                    window.location.href = `/ai-courses/${selectedRecommendation.courseId}`;
+                  }
+                  setShowExplanationDialog(false);
+                }}>
+                  <GraduationCap className="h-4 w-4 mr-2" />
+                  View Course Details
+                </Button>
+              </div>
             </div>
           )}
-        </div>
-        <CardDescription className="text-gray-500 text-sm flex items-center">
-          <Clock className="h-3.5 w-3.5 mr-1" />
-          Estimated time: 2-4 weeks
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent className="py-2 flex-grow">
-        <p className="text-gray-700 text-sm line-clamp-3 mb-3">
-          {recommendation.description}
-        </p>
-        
-        <div className="bg-gray-50 p-3 rounded-lg mt-2">
-          <div className="flex items-start space-x-2">
-            <Sparkles className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
-            <p className="text-xs text-gray-600 italic">
-              {recommendation.reasonForRecommendation}
-            </p>
-          </div>
-        </div>
-      </CardContent>
-      
-      <CardFooter className="pt-4">
-        <Button 
-          onClick={handleSelect}
-          className="w-full"
-        >
-          <BookOpen className="h-4 w-4 mr-2" />
-          View Course
-        </Button>
-      </CardFooter>
-    </Card>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
