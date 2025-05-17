@@ -31,7 +31,7 @@ import InteractiveLessonPlayer from '@/components/course/InteractiveLessonPlayer
 import LearningPathVisualizer from '@/components/course/LearningPathVisualizer';
 import CourseResources from '@/components/course/CourseResources';
 import VideoPlayer from '@/components/course/VideoPlayer';
-import GamificationElements from '@/components/course/GamificationElements';
+import { ProgressTracker, BadgesDisplay, StreakDisplay, LeaderboardDisplay } from '@/components/course/GamificationElements';
 import PremiumContentGate from '@/components/course/PremiumContentGate';
 
 // Import course types from our type definitions
@@ -60,6 +60,9 @@ const CourseLearningPage: React.FC = () => {
       name: "Dr. Sarah Chen",
       bio: "AI researcher with 10+ years of experience",
       avatar: "/images/instructors/sarah-chen.jpg"
+    },
+    isPremium: true,
+    requiredSubscription: "pro"
     },
     price: "$129.99",
     duration: 2400, // 40 hours in minutes
