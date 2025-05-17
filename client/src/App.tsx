@@ -78,7 +78,7 @@ import AiProductsPage from "@/pages/AiProductsPage";
 import AiProductDetailPage from "@/pages/AiProductDetailPage";
 import AiCoursePlatform from "@/pages/AiCoursePlatform";
 import AiCourseDetail from "@/pages/AiCourseDetail";
-import CourseCatalogPage from "@/pages/CourseCatalogPage";
+import CourseListPage from "@/pages/CourseListPage";
 import MemberDashboard from "@/pages/MemberDashboard";
 import PricingPage from "@/pages/PricingPage";
 import SubscriptionAnalyticsPage from "@/pages/SubscriptionAnalyticsPage";
@@ -455,7 +455,7 @@ export default function App() {
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
-              <CourseCatalogPage />
+              <CourseListPage />
             </>
           )}
         </Route>
