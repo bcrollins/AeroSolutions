@@ -477,18 +477,18 @@ export default function App() {
           )}
         </Route>
         
-        {/* Course detail page */}
+        {/* Course progress tracking page */}
         <Route path="/courses/:courseId">
           {(params) => (
             <>
               <Helmet>
-                <title>Course Details | RXAI Learning Platform</title>
-                <meta name="description" content="Explore course details, curriculum, and reviews for our expert-led AI and technology courses." />
+                <title>Course Progress | RXAI Learning Platform</title>
+                <meta name="description" content="Track your progress, view achievements, and continue learning with our AI and technology courses." />
                 <meta name="robots" content="index, follow" />
                 <html lang={i18n.language.split('-')[0]} />
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
-              <CourseLearningPage />
+              <CourseProgressPage />
             </>
           )}
         </Route>
