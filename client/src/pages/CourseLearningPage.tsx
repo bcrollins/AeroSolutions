@@ -24,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 import EnhancedCourseDetail from '@/components/course/EnhancedCourseDetail';
 import InteractiveLessonPlayer from '@/components/course/InteractiveLessonPlayer';
@@ -31,6 +32,7 @@ import LearningPathVisualizer from '@/components/course/LearningPathVisualizer';
 import CourseResources from '@/components/course/CourseResources';
 import VideoPlayer from '@/components/course/VideoPlayer';
 import GamificationElements from '@/components/course/GamificationElements';
+import PremiumContentGate from '@/components/course/PremiumContentGate';
 
 // Import course types from our type definitions
 import { Course, CourseModule, CourseLesson } from '@/types/course';

@@ -146,8 +146,69 @@ export const StreakDisplay = ({
   );
 };
 
+// Leaderboard display component
+export const LeaderboardDisplay = ({
+  leaderboard,
+  currentUserId
+}: {
+  leaderboard: Array<{
+    userId: string;
+    name: string;
+    avatar?: string;
+    score: number;
+    rank: number;
+  }>;
+  currentUserId?: string;
+}) => {
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-12 text-sm font-medium px-4 py-2 bg-muted/50 rounded-md">
+        <div className="col-span-1">Rank</div>
+        <div className="col-span-7">Student</div>
+        <div className="col-span-4 text-right">Points</div>
+      </div>
+      
+      <div className="space-y-2">
+        {leaderboard.map((entry) => (
+          <div 
+            key={entry.userId}
+            className={`grid grid-cols-12 items-center p-2 rounded-md ${
+              entry.userId === currentUserId ? 'bg-primary/10 border border-primary/20' : ''
+            }`}
+          >
+            <div className="col-span-1 font-bold">{entry.rank}</div>
+            <div className="col-span-7 flex items-center gap-2">
+              {entry.avatar ? (
+                <div className="h-8 w-8 rounded-full overflow-hidden">
+                  <img 
+                    src={entry.avatar} 
+                    alt={entry.name} 
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-xs font-bold">{entry.name.charAt(0).toUpperCase()}</span>
+                </div>
+              )}
+              <span>
+                {entry.name} 
+                {entry.userId === currentUserId && (
+                  <span className="ml-1 text-xs text-muted-foreground">(You)</span>
+                )}
+              </span>
+            </div>
+            <div className="col-span-4 text-right font-semibold">{entry.score.toLocaleString()}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export default {
   ProgressTracker,
   BadgesDisplay,
-  StreakDisplay
+  StreakDisplay,
+  LeaderboardDisplay
 };

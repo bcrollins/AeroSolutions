@@ -30,6 +30,8 @@ export interface Course {
   category?: string;
   prerequisites?: string[];
   certificateAvailable?: boolean;
+  isPremium?: boolean;
+  requiredSubscription?: 'basic' | 'pro' | 'enterprise';
 }
 
 export interface CourseModule {

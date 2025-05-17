@@ -36,7 +36,9 @@ const sampleCourses: Course[] = [
     level: "intermediate",
     studentsCount: 2456,
     tags: ["AI", "Prompt Engineering", "NLP"],
-    featured: true
+    featured: true,
+    isPremium: true,
+    requiredSubscription: "pro"
   },
   {
     id: 2,
@@ -58,7 +60,8 @@ const sampleCourses: Course[] = [
     level: "beginner",
     studentsCount: 1892,
     tags: ["Business Intelligence", "AI Applications"],
-    featured: false
+    featured: false,
+    isPremium: false
   },
   {
     id: 3,
@@ -80,7 +83,9 @@ const sampleCourses: Course[] = [
     level: "advanced",
     studentsCount: 1245,
     tags: ["Deep Learning", "Neural Networks"],
-    featured: true
+    featured: true,
+    isPremium: true,
+    requiredSubscription: "pro"
   }
 ];
 
@@ -228,9 +233,14 @@ const CourseListPage = () => {
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <CardTitle className="text-xl">{course.title}</CardTitle>
-                        {course.featured && (
-                          <Badge className="ml-2">Featured</Badge>
-                        )}
+                        <div className="flex gap-2">
+                          {course.isPremium && (
+                            <Badge variant="secondary" className="bg-amber-100 text-amber-800 hover:bg-amber-200">Premium</Badge>
+                          )}
+                          {course.featured && (
+                            <Badge className="ml-2">Featured</Badge>
+                          )}
+                        </div>
                       </div>
                       <CardDescription>{course.shortDescription}</CardDescription>
                     </CardHeader>
