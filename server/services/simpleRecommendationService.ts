@@ -1,6 +1,5 @@
 import OpenAI from 'openai';
 import { db } from '../db';
-import * as schema from '@shared/schema';
 
 // The newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -40,7 +39,7 @@ export async function getPersonalizedRecommendations({
   }
 
   try {
-    // Direct SQL query to handle potential schema differences
+    // Direct SQL query to fetch courses from the database
     const { rows: allCourses } = await db.$client.query(`
       SELECT * FROM courses LIMIT 100
     `);
@@ -137,7 +136,7 @@ function generateBasicRecommendations(allCourses: any[], count: number): CourseR
     return [];
   }
   
-  // Sort by newest courses first (assuming createdAt field exists)
+  // Sort by newest courses first (assuming created_at field exists)
   const sortedCourses = [...allCourses].sort((a, b) => {
     const dateA = a.created_at || a.createdAt || new Date(0);
     const dateB = b.created_at || b.createdAt || new Date(0);
