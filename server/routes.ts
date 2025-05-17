@@ -20,6 +20,7 @@ import certificatesRoutes from "./routes/certificates";
 import contentCalendarRoutes from "./routes/contentCalendar";
 import aiInsightsRoutes from "./routes/ai-insights";
 import courseApiRoutes from "./routes/api";
+import accessRoutes from "./routes/accessRoutes";
 import { storage } from "./storage";
 import { logger } from "./utils/logger";
 import { setupAuth } from "./replitAuth";
@@ -76,6 +77,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register Course API routes (for enhanced learning platform)
   app.use("/api/learning", courseApiRoutes);
+  
+  // Register Premium Access Control routes
+  app.use(accessRoutes);
 
   // API route to fetch active subscription plans
   app.get("/api/subscription-plans", async (req, res) => {
