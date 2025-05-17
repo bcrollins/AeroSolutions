@@ -62,8 +62,7 @@ const CourseLearningPage: React.FC = () => {
       avatar: "/images/instructors/sarah-chen.jpg"
     },
     isPremium: true,
-    requiredSubscription: "pro"
-    },
+    requiredSubscription: "pro",
     price: "$129.99",
     duration: 2400, // 40 hours in minutes
     modules: [
