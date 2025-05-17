@@ -16,7 +16,9 @@ import {
   AlertCircle,
   Flame,
   BookMarked,
-  GraduationCap
+  GraduationCap,
+  Trophy,
+  Star
 } from 'lucide-react';
 
 import {

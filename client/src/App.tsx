@@ -459,6 +459,38 @@ export default function App() {
           )}
         </Route>
         
+        {/* Course detail page */}
+        <Route path="/courses/:courseId">
+          {(params) => (
+            <>
+              <Helmet>
+                <title>Course Details | RXAI Learning Platform</title>
+                <meta name="description" content="Explore course details, curriculum, and reviews for our expert-led AI and technology courses." />
+                <meta name="robots" content="index, follow" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <CourseLearningPage />
+            </>
+          )}
+        </Route>
+        
+        {/* Course learning experience */}
+        <Route path="/courses/:courseId/learn/:lessonId?">
+          {(params) => (
+            <>
+              <Helmet>
+                <title>Learning Experience | RXAI Learning Platform</title>
+                <meta name="description" content="Interactive learning experience with videos, quizzes, and hands-on exercises to master AI and technology skills." />
+                <meta name="robots" content="noindex, follow" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <CourseLearningPage />
+            </>
+          )}
+        </Route>
+        
         {/* Micro-interactions Demo Page */}
         <Route path="/micro-interactions">
           {() => (
