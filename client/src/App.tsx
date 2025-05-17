@@ -659,7 +659,8 @@ export default function App() {
       )}
       
       {/* Interactive Onboarding Tour */}
-      <OnboardingTour />
+      {/* Temporarily disabled until sound effects issue is resolved */}
+      {/* <OnboardingTour /> */}
       
       {/* Apple-inspired keyboard shortcuts guide */}
       <KeyboardShortcutsGuide />
