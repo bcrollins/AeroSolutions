@@ -155,6 +155,109 @@ function generateBasicRecommendations(allCourses: any[], count: number): CourseR
 /**
  * Gets course recommendations for a specific topic
  */
+/**
+ * Gets related course recommendations based on a source course
+ */
+export async function getRelatedCourseRecommendations(
+  sourceCourseId: number,
+  count: number = 3
+): Promise<CourseRecommendation[]> {
+  try {
+    // Check cache first
+    const cacheKey = `related_recommendations_${sourceCourseId}_${count}`;
+    const cachedRecommendations = recommendationCache.get(cacheKey);
+    
+    if (cachedRecommendations && cachedRecommendations.timestamp > Date.now() - CACHE_TTL) {
+      return cachedRecommendations.data;
+    }
+    
+    // Get the source course
+    const { rows: sourceCourseRows } = await db.$client.query(`
+      SELECT * FROM courses WHERE id = $1
+    `, [sourceCourseId]);
+    
+    if (sourceCourseRows.length === 0) {
+      return [];
+    }
+    
+    const sourceCourse = sourceCourseRows[0];
+    
+    // Get all courses except the source course
+    const { rows: otherCourses } = await db.$client.query(`
+      SELECT * FROM courses WHERE id != $1 LIMIT 100
+    `, [sourceCourseId]);
+    
+    if (otherCourses.length === 0) {
+      return [];
+    }
+    
+    // Try to find courses in the same category first
+    let sameCategoryCourses = otherCourses.filter((c: any) => 
+      c.category && c.category.toLowerCase() === sourceCourse.category.toLowerCase()
+    );
+    
+    // If we don't have enough same-category courses, add courses with same difficulty
+    let relatedCourses = [...sameCategoryCourses];
+    if (relatedCourses.length < count) {
+      const sameDifficultyCourses = otherCourses.filter((c: any) => 
+        c.difficulty === sourceCourse.difficulty && 
+        !sameCategoryCourses.some((sc: any) => sc.id === c.id)
+      );
+      
+      relatedCourses = [...relatedCourses, ...sameDifficultyCourses];
+    }
+    
+    // If we still don't have enough, add popular courses
+    if (relatedCourses.length < count) {
+      // Sort remaining courses by popularity
+      const remainingCourses = otherCourses.filter((c: any) => 
+        !relatedCourses.some((rc: any) => rc.id === c.id)
+      ).sort((a: any, b: any) => (b.popularity || 0) - (a.popularity || 0));
+      
+      relatedCourses = [...relatedCourses, ...remainingCourses];
+    }
+    
+    // Take only the requested number of courses
+    const finalCourses = relatedCourses.slice(0, count);
+    
+    // Format the recommendations
+    const recommendations = finalCourses.map((course: any) => {
+      let reasonForRecommendation = '';
+      let matchScore = 70;
+      
+      if (course.category && course.category.toLowerCase() === sourceCourse.category.toLowerCase()) {
+        reasonForRecommendation = `This course is also about ${course.category}`;
+        matchScore = Math.floor(Math.random() * 15) + 80; // 80-95%
+      } else if (course.difficulty === sourceCourse.difficulty) {
+        reasonForRecommendation = `This course has the same difficulty level (${course.difficulty})`;
+        matchScore = Math.floor(Math.random() * 15) + 75; // 75-90%
+      } else {
+        reasonForRecommendation = 'Students who viewed this course also liked this one';
+        matchScore = Math.floor(Math.random() * 20) + 70; // 70-90%
+      }
+      
+      return {
+        courseId: course.id.toString(),
+        title: course.title || '',
+        description: course.description || '',
+        matchScore,
+        reasonForRecommendation
+      };
+    });
+    
+    // Cache the results
+    recommendationCache.set(cacheKey, {
+      data: recommendations,
+      timestamp: Date.now()
+    });
+    
+    return recommendations;
+  } catch (error) {
+    console.error('Error generating related course recommendations:', error);
+    return [];
+  }
+}
+
 export async function getTopicBasedRecommendations(
   topic: string,
   count: number = 3

@@ -4,6 +4,7 @@ import { isAuthenticated } from '../replitAuth';
 import { db } from '../db';
 import { courses } from '../../shared/schema';
 import NodeCache from 'node-cache';
+import { eq, not, sql } from 'drizzle-orm';
 
 // Initialize OpenAI client
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });

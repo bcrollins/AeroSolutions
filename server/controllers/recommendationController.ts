@@ -20,10 +20,20 @@ export async function getPersonalRecommendations(req: Request, res: Response) {
     // Parse optional query parameters
     const count = req.query.count ? parseInt(req.query.count as string) : 3;
     const topic = req.query.topic as string;
+    const sourceId = req.query.sourceId as string;
     
     // If a specific topic is provided, use topic-based recommendations
     if (topic) {
       const recommendations = await getTopicBasedRecommendations(topic, count);
+      return res.json({
+        success: true,
+        recommendations
+      });
+    }
+    
+    // If a source course ID is provided, use related course recommendations
+    if (sourceId) {
+      const recommendations = await getRelatedCourseRecommendations(parseInt(sourceId), count);
       return res.json({
         success: true,
         recommendations

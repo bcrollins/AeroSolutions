@@ -37,4 +37,32 @@ router.get('/topic/:topic', async (req, res) => {
 router.post('/track', isAuthenticated, trackCourseInteraction);
 router.get('/history', isAuthenticated, getUserInteractionHistory);
 
+// Get related courses based on the current course
+router.get('/related/:courseId', async (req, res) => {
+  try {
+    const courseId = parseInt(req.params.courseId);
+    const limit = parseInt(req.query.count as string) || 3;
+    
+    if (isNaN(courseId)) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Invalid course ID'
+      });
+    }
+    
+    // Forward to controller with current course ID
+    req.query.sourceId = courseId.toString();
+    req.query.limit = limit.toString();
+    
+    return getPersonalRecommendations(req, res);
+  } catch (error) {
+    console.error('Error getting related courses:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to get related courses',
+      error: (error as Error).message
+    });
+  }
+});
+
 export default router;
