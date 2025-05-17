@@ -160,7 +160,7 @@ const CourseLearningPage: React.FC = () => {
   };
 
   // Fetch course data
-  const { data: course = mockCourse, isLoading: isLoadingCourse } = useQuery({
+  const { data: course = mockCourseData, isLoading: isLoadingCourse } = useQuery({
     queryKey: [`/api/courses/${courseId}`],
     // In a real app, this would fetch from the API instead of using the mock data
   });
