@@ -516,7 +516,9 @@ const ComprehensiveCourseLearningPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('content');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const [showStudyRoom, setShowStudyRoom] = useState(false);
+  const [showLearningInsights, setShowLearningInsights] = useState(false);
+  const { isAuthenticated, user } = useAuth();
   const { toast } = useToast();
   
   // Find current module and lesson
@@ -1102,13 +1104,13 @@ const ComprehensiveCourseLearningPage: React.FC = () => {
             </div>
             
             {/* Collaborative Study Room Modal */}
-            {showStudyRoom && (
+            {showStudyRoom && moduleId && lessonId && (
               <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                 <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-auto">
                   <CollaborativeStudyRoom 
                     courseId={moduleId}
                     lessonId={lessonId}
-                    onClose={handleCloseStudyRoom}
+                    onClose={() => setShowStudyRoom(false)}
                   />
                 </div>
               </div>
@@ -1123,11 +1125,11 @@ const ComprehensiveCourseLearningPage: React.FC = () => {
                       <Brain className="h-5 w-5 mr-2 text-blue-600" />
                       Your Learning Insights
                     </h2>
-                    <Button variant="ghost" size="sm" onClick={handleCloseLearningInsights}>
+                    <Button variant="ghost" size="sm" onClick={() => setShowLearningInsights(false)}>
                       <X className="h-5 w-5" />
                     </Button>
                   </div>
-                  <LearningInsights userId={user?.id} />
+                  <LearningInsights userId={user?.id || "guest-user"} />
                 </div>
               </div>
             )}

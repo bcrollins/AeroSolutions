@@ -225,7 +225,7 @@ const CollaborativeStudyRoom: React.FC<StudyRoomProps> = ({
       const currentUser: ActiveUser = {
         id: user.id || 'current-user',
         name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'You',
-        avatar: user.profileImageUrl,
+        avatar: user.profileImageUrl || undefined,
         status: 'online',
         role: 'student'
       };
