@@ -28,7 +28,9 @@ import {
   ChevronDown,
   Bookmark,
   Star,
-  BarChart4
+  BarChart4,
+  Users,
+  Brain
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
@@ -37,6 +39,8 @@ import { aiCourseStructure, CourseModule, Lesson } from '@/data/courseStructure'
 import InteractiveQuizComponent from '@/components/course/InteractiveQuizComponent';
 import InteractiveCodingLab from '@/components/course/InteractiveCodingLab';
 import CourseProgressTracker from '@/components/course/CourseProgressTracker';
+import CollaborativeStudyRoom from '@/components/collaboration/CollaborativeStudyRoom';
+import LearningInsights from '@/components/course/LearningInsights';
 
 const NotesEditor = ({ lessonId }: { lessonId: string }) => {
   const [notes, setNotes] = useState('');
