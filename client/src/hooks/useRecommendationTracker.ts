@@ -1,114 +1,124 @@
-import { useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
 
+// Interface for course interactions
+interface CourseInteraction {
+  courseId: string;
+  interactionType: 'view' | 'click' | 'enroll' | 'complete';
+  timestamp: number;
+  duration?: number; // For tracking view durations
+}
+
 /**
- * Hook for tracking and analyzing user course interactions
- * to improve recommendation quality
+ * Hook for tracking user interactions with courses to improve recommendations
  */
-export default function useRecommendationTracker() {
-  const { isAuthenticated, user } = useAuth();
-
-  /**
-   * Track when a user views a course detail page
-   */
-  const trackCourseView = useCallback((courseId: string) => {
-    if (!courseId) return;
-
+export function useRecommendationTracker() {
+  const { user, isAuthenticated } = useAuth();
+  const [interactionHistory, setInteractionHistory] = useState<CourseInteraction[]>([]);
+  const localStorageKey = 'course_interaction_history';
+  
+  // Load interaction history from localStorage on mount
+  useEffect(() => {
     try {
-      // For authenticated users, store view in database
-      if (isAuthenticated && user) {
-        // In a real implementation, this would be an API call
-        console.log(`[Tracking] User ${user.id} viewed course ${courseId}`);
-        
-        // Store this interaction in localStorage as well for cross-session recommendations
-        const recentlyViewed = JSON.parse(localStorage.getItem('recently_viewed_courses') || '[]');
-        
-        // Remove if already exists (to move to top)
-        const filteredHistory = recentlyViewed.filter((id: string) => id !== courseId);
-        
-        // Add to beginning of array
-        filteredHistory.unshift(courseId);
-        
-        // Keep only the 10 most recent
-        const limitedHistory = filteredHistory.slice(0, 10);
-        
-        // Save back to localStorage
-        localStorage.setItem('recently_viewed_courses', JSON.stringify(limitedHistory));
-      } else {
-        // For anonymous users, just store in localStorage
-        const anonymousHistory = JSON.parse(localStorage.getItem('anonymous_course_history') || '[]');
-        
-        // Remove if already exists (to move to top)
-        const filteredHistory = anonymousHistory.filter((id: string) => id !== courseId);
-        
-        // Add to beginning of array
-        filteredHistory.unshift(courseId);
-        
-        // Keep only the 10 most recent
-        const limitedHistory = filteredHistory.slice(0, 10);
-        
-        // Save back to localStorage
-        localStorage.setItem('anonymous_course_history', JSON.stringify(limitedHistory));
+      const savedHistory = localStorage.getItem(localStorageKey);
+      if (savedHistory) {
+        setInteractionHistory(JSON.parse(savedHistory));
       }
     } catch (error) {
-      console.error('Error tracking course view:', error);
+      console.error('Error loading course interaction history:', error);
     }
-  }, [isAuthenticated, user]);
-
-  /**
-   * Track when a user clicks on a recommendation
-   */
-  const trackRecommendationClick = useCallback((recommendedCourseId: string, sourceCourseId: string, recommendationType: string) => {
-    if (!recommendedCourseId || !sourceCourseId) return;
-
-    try {
-      // For authenticated users, store in database
-      if (isAuthenticated && user) {
-        // In a real implementation, this would be an API call
-        console.log(`[Tracking] User ${user.id} clicked recommendation ${recommendedCourseId} from ${sourceCourseId} (${recommendationType})`);
+  }, []);
+  
+  // Save interaction history to localStorage when it changes
+  useEffect(() => {
+    if (interactionHistory.length > 0) {
+      try {
+        localStorage.setItem(localStorageKey, JSON.stringify(interactionHistory));
+        
+        // If user is authenticated, sync with server
+        if (isAuthenticated && user) {
+          syncInteractionsWithServer(interactionHistory);
+        }
+      } catch (error) {
+        console.error('Error saving course interaction history:', error);
       }
+    }
+  }, [interactionHistory, isAuthenticated, user]);
+  
+  // Sync interaction data with server
+  const syncInteractionsWithServer = async (interactions: CourseInteraction[]) => {
+    try {
+      // Only sync if we have interactions to report
+      if (interactions.length === 0) return;
       
-      // Track click for all users
-      const allClicks = JSON.parse(localStorage.getItem('recommendation_clicks') || '[]');
-      
-      // Add click data
-      allClicks.push({
-        timestamp: new Date().toISOString(),
-        recommendedCourseId,
-        sourceCourseId,
-        recommendationType,
-        userId: user?.id || 'anonymous'
+      // Send interactions to server
+      const response = await fetch('/api/recommendations/track', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ interactions }),
       });
       
-      // Keep only recent history (last 50 clicks)
-      const limitedClicks = allClicks.slice(-50);
-      
-      // Save back to localStorage
-      localStorage.setItem('recommendation_clicks', JSON.stringify(limitedClicks));
-    } catch (error) {
-      console.error('Error tracking recommendation click:', error);
-    }
-  }, [isAuthenticated, user]);
-
-  /**
-   * Get recently viewed courses
-   */
-  const getRecentlyViewedCourses = useCallback(() => {
-    try {
-      if (isAuthenticated) {
-        return JSON.parse(localStorage.getItem('recently_viewed_courses') || '[]');
-      } else {
-        return JSON.parse(localStorage.getItem('anonymous_course_history') || '[]');
+      if (response.ok) {
+        console.log('Successfully synced course interactions with server');
       }
     } catch (error) {
-      console.error('Error getting recently viewed courses:', error);
-      return [];
+      console.error('Error syncing course interactions with server:', error);
     }
-  }, [isAuthenticated]);
-
+  };
+  
+  // Track a course view
+  const trackCourseView = (courseId: string) => {
+    const interaction: CourseInteraction = {
+      courseId,
+      interactionType: 'view',
+      timestamp: Date.now()
+    };
+    
+    setInteractionHistory(prev => [...prev, interaction]);
+  };
+  
+  // Track a course click (like on a recommendation card)
+  const trackCourseClick = (courseId: string) => {
+    const interaction: CourseInteraction = {
+      courseId,
+      interactionType: 'click',
+      timestamp: Date.now()
+    };
+    
+    setInteractionHistory(prev => [...prev, interaction]);
+  };
+  
+  // Track course enrollment
+  const trackCourseEnroll = (courseId: string) => {
+    const interaction: CourseInteraction = {
+      courseId,
+      interactionType: 'enroll',
+      timestamp: Date.now()
+    };
+    
+    setInteractionHistory(prev => [...prev, interaction]);
+  };
+  
+  // Track course completion
+  const trackCourseComplete = (courseId: string) => {
+    const interaction: CourseInteraction = {
+      courseId,
+      interactionType: 'complete',
+      timestamp: Date.now()
+    };
+    
+    setInteractionHistory(prev => [...prev, interaction]);
+  };
+  
   return {
     trackCourseView,
-    trackRecommendationClick,
-    getRecentlyViewedCourses
+    trackCourseClick,
+    trackCourseEnroll,
+    trackCourseComplete,
+    interactionHistory,
   };
 }
+
+export default useRecommendationTracker;
