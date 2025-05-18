@@ -25,6 +25,7 @@ import recommendationRoutes from "./routes/recommendationRoutes";
 import { storage } from "./storage";
 import { logger } from "./utils/logger";
 import { setupAuth } from "./replitAuth";
+import { setupStudyRoomWebSockets } from "./websockets/studyRoomHandler";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
@@ -173,6 +174,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Setup forum WebSocket functionality
   setupForumWebSocket(wss);
+  
+  // Setup collaborative study room WebSocket functionality
+  setupStudyRoomWebSockets(wss);
   
   logger.info('WebSocket server initialized');
 
