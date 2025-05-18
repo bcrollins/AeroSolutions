@@ -109,9 +109,6 @@ import MicroInteractionsDemo from "@/pages/MicroInteractionsDemo";
 import CourseLandingPage from "@/pages/CourseLandingPage";
 import UserSettings from "@/pages/UserSettings";
 import ComprehensiveCourseView from "@/components/course/ComprehensiveCourseView";
-import AIMasteryCourse from "@/pages/AIMasteryCourse";
-import AICourseLessonPage from "@/pages/AICourseLessonPage";
-import UserAchievementsPage from "@/pages/UserAchievementsPage";
 import ComponentShowcase from "@/pages/ComponentShowcase";
 import DataVizDemo from "@/pages/DataVizDemo";
 import ThemePreferencesDemo from "@/pages/ThemePreferencesDemo";
@@ -449,71 +446,6 @@ export default function App() {
             }, []);
             return null;
           }}
-        </Route>
-        
-        {/* AI Mastery Course - Main AI learning path */}
-        <Route path="/ai-mastery">
-          {() => (
-            <>
-              <Helmet>
-                <title>AI Mastery Course | Complete AI Learning Path</title>
-                <meta name="description" content="Master AI from fundamentals to advanced applications with our comprehensive learning path covering machine learning, deep learning, NLP, and more." />
-                <meta name="robots" content="index, follow" />
-                <link rel="canonical" href="https://rollinsx.dev/ai-mastery" />
-                <html lang={i18n.language.split('-')[0]} />
-                <meta httpEquiv="Content-Language" content={i18n.language} />
-              </Helmet>
-              <AIMasteryCourse />
-            </>
-          )}
-        </Route>
-        
-        {/* AI Course Module Page */}
-        <Route path="/ai-mastery/modules/:moduleId">
-          {() => (
-            <>
-              <Helmet>
-                <title>AI Course Module | RXAI Learning Platform</title>
-                <meta name="description" content="Study a specific AI learning module with our comprehensive curriculum, interactive lessons, and hands-on exercises." />
-                <meta name="robots" content="index, follow" />
-                <html lang={i18n.language.split('-')[0]} />
-                <meta httpEquiv="Content-Language" content={i18n.language} />
-              </Helmet>
-              <AIMasteryCourse />
-            </>
-          )}
-        </Route>
-        
-        {/* AI Course Lesson Page */}
-        <Route path="/ai-mastery/modules/:moduleId/lessons/:lessonId">
-          {() => (
-            <>
-              <Helmet>
-                <title>AI Course Lesson | RXAI Learning Platform</title>
-                <meta name="description" content="Access interactive AI course lessons with videos, quizzes, and hands-on projects to master artificial intelligence concepts." />
-                <meta name="robots" content="index, follow" />
-                <html lang={i18n.language.split('-')[0]} />
-                <meta httpEquiv="Content-Language" content={i18n.language} />
-              </Helmet>
-              <AICourseLessonPage />
-            </>
-          )}
-        </Route>
-        
-        {/* User Achievements Page */}
-        <Route path="/achievements">
-          {() => (
-            <>
-              <Helmet>
-                <title>Your Achievements | RXAI Learning Platform</title>
-                <meta name="description" content="Track your learning progress, earned badges, and achievements on your AI learning journey." />
-                <meta name="robots" content="index, follow" />
-                <html lang={i18n.language.split('-')[0]} />
-                <meta httpEquiv="Content-Language" content={i18n.language} />
-              </Helmet>
-              <UserAchievementsPage />
-            </>
-          )}
         </Route>
         
         {/* Course Catalog */}

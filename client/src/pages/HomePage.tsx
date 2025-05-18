@@ -112,55 +112,9 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* AI Mastery Course Feature Section */}
+      {/* Recently viewed courses section (only for logged in users or those with view history) */}
       <section className="py-12 bg-white">
         <div className="container mx-auto px-4">
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100 mb-8">
-            <div className="flex flex-col md:flex-row items-center gap-6">
-              <div className="md:w-7/12">
-                <h2 className="text-2xl md:text-3xl font-bold mb-3">
-                  Master AI: From Fundamentals to Advanced Applications
-                </h2>
-                <p className="text-gray-700 mb-4">
-                  Our comprehensive AI curriculum takes you from beginner to expert with interactive lessons, 
-                  quizzes, and hands-on projects across 9 carefully crafted modules.
-                </p>
-                <div className="flex flex-wrap gap-4 mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                      <BookOpen className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <span>9 Modules</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                      <Sparkles className="h-4 w-4 text-green-600" />
-                    </div>
-                    <span>70+ Lessons</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
-                      <TrendingUp className="h-4 w-4 text-purple-600" />
-                    </div>
-                    <span>Interactive Quizzes</span>
-                  </div>
-                </div>
-                <Link href="/ai-mastery">
-                  <Button size="lg" className="gap-2">
-                    Explore the Course <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
-              <div className="md:w-5/12 flex justify-center">
-                <img 
-                  src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80" 
-                  alt="AI Mastery Course" 
-                  className="rounded-lg object-cover h-64 w-full md:h-auto shadow-lg"
-                  style={{ maxWidth: '400px' }}
-                />
-              </div>
-            </div>
-          </div>
           <RecentlyViewedCourses limit={4} />
         </div>
       </section>
