@@ -335,13 +335,13 @@ const Navbar: React.FC = () => {
                         </Link>
                       </li>
                       <li>
-                        <Link href="/courses" legacyBehavior passHref>
-                          <NavigationMenuLink className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+                        <Link href="/courses">
+                          <a className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
                             <div className="text-sm font-medium leading-none">All Courses</div>
                             <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
                               Browse our complete catalog of AI and technology courses
                             </p>
-                          </NavigationMenuLink>
+                          </a>
                         </Link>
                       </li>
                     </ul>
