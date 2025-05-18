@@ -110,6 +110,7 @@ import CourseLandingPage from "@/pages/CourseLandingPage";
 import UserSettings from "@/pages/UserSettings";
 import ComprehensiveCourseView from "@/components/course/ComprehensiveCourseView";
 import AIMasteryCourse from "@/pages/AIMasteryCourse";
+import AICourseLessonPage from "@/pages/AICourseLessonPage";
 import ComponentShowcase from "@/pages/ComponentShowcase";
 import DataVizDemo from "@/pages/DataVizDemo";
 import ThemePreferencesDemo from "@/pages/ThemePreferencesDemo";
@@ -462,6 +463,38 @@ export default function App() {
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
               <AIMasteryCourse />
+            </>
+          )}
+        </Route>
+        
+        {/* AI Course Module Page */}
+        <Route path="/ai-mastery/modules/:moduleId">
+          {() => (
+            <>
+              <Helmet>
+                <title>AI Course Module | RXAI Learning Platform</title>
+                <meta name="description" content="Study a specific AI learning module with our comprehensive curriculum, interactive lessons, and hands-on exercises." />
+                <meta name="robots" content="index, follow" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <AIMasteryCourse />
+            </>
+          )}
+        </Route>
+        
+        {/* AI Course Lesson Page */}
+        <Route path="/ai-mastery/modules/:moduleId/lessons/:lessonId">
+          {() => (
+            <>
+              <Helmet>
+                <title>AI Course Lesson | RXAI Learning Platform</title>
+                <meta name="description" content="Access interactive AI course lessons with videos, quizzes, and hands-on projects to master artificial intelligence concepts." />
+                <meta name="robots" content="index, follow" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <AICourseLessonPage />
             </>
           )}
         </Route>
