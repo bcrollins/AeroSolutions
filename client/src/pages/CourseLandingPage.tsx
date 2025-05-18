@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'wouter';
-import { Helmet } from 'react-helmet';
+import CourseLayout from '@/components/course/CourseLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -240,14 +240,13 @@ const CourseLandingPage = () => {
   };
   
   return (
-    <>
-      <Helmet>
-        <title>{courseMetadata.title} | AI Learning Platform</title>
-        <meta name="description" content={courseMetadata.description} />
-      </Helmet>
-      
+    <CourseLayout
+      title={courseMetadata.title}
+      description={courseMetadata.description}
+      showSidebar={false}
+    >
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-50 to-indigo-50 py-20">
+      <section className="bg-gradient-to-r from-blue-50 to-indigo-50 py-20 -mx-4 px-4">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -673,7 +672,7 @@ const CourseLandingPage = () => {
           </motion.div>
         </div>
       </section>
-    </>
+    </CourseLayout>
   );
 };
 
