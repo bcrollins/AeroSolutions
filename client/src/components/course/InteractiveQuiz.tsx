@@ -64,7 +64,7 @@ const InteractiveQuiz: React.FC<QuizProps> = ({
     if (timeLimit && timeRemaining && !quizCompleted) {
       const timer = setInterval(() => {
         setTimeRemaining(prev => {
-          if (prev <= 1) {
+          if (!prev || prev <= 1) {
             clearInterval(timer);
             if (!quizCompleted && !reviewMode) {
               handleQuizComplete();
