@@ -111,6 +111,7 @@ import UserSettings from "@/pages/UserSettings";
 import ComprehensiveCourseView from "@/components/course/ComprehensiveCourseView";
 import AIMasteryCourse from "@/pages/AIMasteryCourse";
 import AICourseLessonPage from "@/pages/AICourseLessonPage";
+import UserAchievementsPage from "@/pages/UserAchievementsPage";
 import ComponentShowcase from "@/pages/ComponentShowcase";
 import DataVizDemo from "@/pages/DataVizDemo";
 import ThemePreferencesDemo from "@/pages/ThemePreferencesDemo";
@@ -495,6 +496,22 @@ export default function App() {
                 <meta httpEquiv="Content-Language" content={i18n.language} />
               </Helmet>
               <AICourseLessonPage />
+            </>
+          )}
+        </Route>
+        
+        {/* User Achievements Page */}
+        <Route path="/achievements">
+          {() => (
+            <>
+              <Helmet>
+                <title>Your Achievements | RXAI Learning Platform</title>
+                <meta name="description" content="Track your learning progress, earned badges, and achievements on your AI learning journey." />
+                <meta name="robots" content="index, follow" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <UserAchievementsPage />
             </>
           )}
         </Route>
