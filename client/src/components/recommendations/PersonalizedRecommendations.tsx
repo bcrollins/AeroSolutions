@@ -1,333 +1,302 @@
-import { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
-import useRecommendationTracker from '@/hooks/useRecommendationTracker';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Sparkles, Star, TrendingUp, Clock, Info, GraduationCap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { BookOpen, BookmarkPlus, History, ArrowRight, Sparkles, Lightbulb } from 'lucide-react';
+import { motion } from 'framer-motion';
+import CourseCard from '@/components/course/CourseCard';
 import RecommendationExplanation from './RecommendationExplanation';
 
-interface RecommendationProps {
-  courseId: string;
-  title: string;
-  description: string;
-  matchScore: number;
-  reasonForRecommendation: string;
-  onSelect?: (courseId: string) => void;
+interface PersonalizedRecommendationsProps {
   limit?: number;
-  showMatchScore?: boolean;
+  showExplanations?: boolean;
   className?: string;
-  withAnimation?: boolean;
 }
 
-interface Topic {
-  id: string;
-  name: string;
-}
-
-const popularTopics: Topic[] = [
-  { id: 'ai-fundamentals', name: 'AI Fundamentals' },
-  { id: 'machine-learning', name: 'Machine Learning' },
-  { id: 'data-science', name: 'Data Science' },
-  { id: 'natural-language-processing', name: 'NLP' },
-  { id: 'computer-vision', name: 'Computer Vision' }
-];
-
-export default function PersonalizedRecommendations({
+const PersonalizedRecommendations = ({
   limit = 3,
-  showMatchScore = true,
-  className = '',
-  withAnimation = true,
-  onSelect,
-}: Partial<RecommendationProps>) {
+  showExplanations = true,
+  className = ''
+}: PersonalizedRecommendationsProps) => {
   const { user, isAuthenticated } = useAuth();
-  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
-  const [selectedRecommendation, setSelectedRecommendation] = useState<any>(null);
-  const [showExplanationDialog, setShowExplanationDialog] = useState(false);
-  const { trackCourseView, trackCourseClick } = useRecommendationTracker();
   const { toast } = useToast();
+  const [expandedExplanation, setExpandedExplanation] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('for-you');
   
-  // Fetch personalized recommendations
+  // Fetch personalized recommendations based on the user's interests and history
   const { 
-    data: recommendationsData, 
-    isLoading,
-    error,
-    refetch
+    data: personalizedData,
+    isLoading: isLoadingPersonalized,
+    error: personalizedError
   } = useQuery({
-    queryKey: ['/api/recommendations/personalized', selectedTopic],
+    queryKey: [`/api/recommendations/personalized`],
     queryFn: async () => {
-      if (selectedTopic) {
-        // If topic is selected, get topic-based recommendations
-        const response = await fetch(`/api/recommendations/topic/${selectedTopic}?count=${limit}`);
-        if (!response.ok) throw new Error('Failed to fetch topic recommendations');
-        return response.json();
-      } else {
-        // Otherwise get personalized recommendations based on user history
-        const response = await fetch('/api/recommendations/personalized');
-        if (!response.ok) throw new Error('Failed to fetch recommendations');
-        return response.json();
-      }
+      const response = await fetch(`/api/recommendations/personalized?count=${limit}`);
+      if (!response.ok) throw new Error('Failed to fetch personalized recommendations');
+      return response.json();
     },
-    enabled: isAuthenticated || !!selectedTopic,
+    enabled: isAuthenticated,
     retry: 1
   });
   
-  // Define the recommendations to display
-  const recommendations = recommendationsData?.recommendations || [];
+  // Fetch user's learning history for history-based recommendations
+  const { 
+    data: historyData,
+    isLoading: isLoadingHistory,
+    error: historyError
+  } = useQuery({
+    queryKey: [`/api/recommendations/history`],
+    queryFn: async () => {
+      const response = await fetch(`/api/recommendations/history`);
+      if (!response.ok) throw new Error('Failed to fetch learning history');
+      return response.json();
+    },
+    enabled: isAuthenticated,
+    retry: 1
+  });
   
-  // Handle when a user selects a topic
-  const handleTopicSelect = (topicId: string) => {
-    setSelectedTopic(topicId === selectedTopic ? null : topicId);
-  };
+  // Extract recommendations and history
+  const personalizedRecommendations = personalizedData?.recommendations || [];
+  const userHistory = historyData?.history || [];
   
-  // Handle error states
-  useEffect(() => {
-    if (error) {
-      toast({
-        title: "Couldn't load recommendations",
-        description: "We're having trouble personalizing your experience. Please try again later.",
-        variant: "destructive"
-      });
+  // Calculate if we can show the history tab
+  const showHistoryTab = userHistory.length > 0;
+  
+  // Functions to handle expanding/collapsing explanations
+  const toggleExplanation = (courseId: string) => {
+    if (expandedExplanation === courseId) {
+      setExpandedExplanation(null);
+    } else {
+      setExpandedExplanation(courseId);
     }
-  }, [error, toast]);
-  
-  // Get fresh recommendations
-  const handleRefresh = () => {
-    refetch();
-    toast({
-      title: "Refreshing recommendations",
-      description: "Finding the best courses for you...",
-    });
   };
   
-  // Individual recommendation card component
-  function RecommendationCard({ 
-    recommendation, 
-    showMatchScore = true, 
-    onSelect,
-    onViewDetails
-  }: { 
-    recommendation: any;
-    showMatchScore?: boolean;
-    onSelect?: (courseId: string) => void;
-    onViewDetails?: () => void;
-  }) {
-    const handleSelect = () => {
-      if (onSelect) {
-        onSelect(recommendation.courseId);
-      } else {
-        window.location.href = `/ai-courses/${recommendation.courseId}`;
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
       }
-    };
-
+    }
+  };
+  
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: 'spring',
+        stiffness: 100,
+        damping: 15
+      }
+    }
+  };
+  
+  // Handle errors
+  if (!isAuthenticated) {
     return (
-      <Card className="overflow-hidden hover:shadow-md transition-shadow duration-300 h-full flex flex-col">
-        <CardHeader className="pb-2">
-          <div className="flex justify-between items-start">
-            <CardTitle className="text-lg">{recommendation.title}</CardTitle>
-            {showMatchScore && (
-              <div className="flex items-center space-x-1 bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-sm font-medium">
-                <Star className="h-3.5 w-3.5 fill-current" />
-                <span>{recommendation.matchScore}% Match</span>
-              </div>
-            )}
-          </div>
-          <CardDescription className="text-gray-500 text-sm flex items-center">
-            <Clock className="h-3.5 w-3.5 mr-1" />
-            Estimated time: 2-4 weeks
-          </CardDescription>
+      <Card className={`${className}`}>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Lightbulb className="h-5 w-5 mr-2 text-blue-500" />
+            Personalized Learning
+          </CardTitle>
         </CardHeader>
-        
-        <CardContent className="py-2 flex-grow">
-          <p className="text-gray-700 text-sm line-clamp-3 mb-3">
-            {recommendation.description}
-          </p>
-          
-          <div className="bg-gray-50 p-3 rounded-lg mt-2 relative">
-            <div className="flex items-start space-x-2">
-              <Sparkles className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
-              <p className="text-xs text-gray-600 italic pr-6">
-                {recommendation.reasonForRecommendation}
-              </p>
-              <Button
-                variant="ghost" 
-                size="icon" 
-                className="h-6 w-6 absolute top-2 right-2 text-gray-400 hover:text-blue-500"
-                onClick={onViewDetails}
-              >
-                <Info className="h-4 w-4" />
-              </Button>
-            </div>
+        <CardContent>
+          <div className="text-center py-6">
+            <BookmarkPlus className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+            <h3 className="text-lg font-medium mb-2">Sign in to get personalized recommendations</h3>
+            <p className="text-gray-500 mb-4">We'll suggest courses based on your interests and learning history</p>
+            <Button onClick={() => window.location.href = '/api/login'}>
+              Sign In
+            </Button>
           </div>
         </CardContent>
-        
-        <CardFooter className="pt-4">
-          <Button 
-            onClick={handleSelect}
-            className="w-full"
-          >
-            <BookOpen className="h-4 w-4 mr-2" />
-            View Course
-          </Button>
-        </CardFooter>
       </Card>
     );
   }
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">
-          {selectedTopic 
-            ? `Courses on ${popularTopics.find(t => t.id === selectedTopic)?.name}` 
-            : isAuthenticated 
-              ? "Recommended for You" 
-              : "Popular Courses"}
-        </h2>
-        <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
-          <TrendingUp className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
-      </div>
-      
-      {/* Topic selection */}
-      <div className="flex flex-wrap gap-2 pb-2">
-        {popularTopics.map(topic => (
-          <Badge 
-            key={topic.id}
-            variant={selectedTopic === topic.id ? "default" : "outline"} 
-            className="cursor-pointer text-sm py-1 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            onClick={() => handleTopicSelect(topic.id)}
-          >
-            {topic.name}
-          </Badge>
-        ))}
-      </div>
-      
-      {/* Recommendations */}
-      {isLoading ? (
-        // Loading state
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...Array(limit)].map((_, i) => (
-            <Card key={i} className="overflow-hidden">
-              <CardHeader className="pb-4">
-                <Skeleton className="h-6 w-2/3 mb-2" />
-                <Skeleton className="h-4 w-1/2" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-24 w-full mb-4" />
-                <Skeleton className="h-4 w-2/3 mb-2" />
-                <Skeleton className="h-4 w-3/4" />
-              </CardContent>
-              <CardFooter>
-                <Skeleton className="h-10 w-full" />
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
-      ) : recommendations.length > 0 ? (
-        // Recommendations grid
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <AnimatePresence>
-            {recommendations.slice(0, limit).map((recommendation: any, index: number) => (
-              <motion.div
-                key={recommendation.courseId}
-                initial={withAnimation ? { opacity: 0, y: 20 } : false}
-                animate={withAnimation ? { opacity: 1, y: 0 } : false}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
-              >
-                <RecommendationCard 
-                  recommendation={recommendation}
-                  showMatchScore={showMatchScore}
-                  onSelect={onSelect}
-                  onViewDetails={() => {
-                    setSelectedRecommendation(recommendation);
-                    setShowExplanationDialog(true);
-                    trackCourseView(recommendation.courseId);
-                  }}
-                />
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
-      ) : (
-        // No recommendations state
-        <Card className="text-center p-6">
-          <div className="flex flex-col items-center">
-            <BookOpen className="h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium mb-2">No recommendations available</h3>
-            <p className="text-gray-500 mb-4">
-              {isAuthenticated 
-                ? "We don't have enough information to make personalized recommendations yet. Complete a course or engage with content to get started."
-                : "Log in to get personalized course recommendations based on your interests and learning history."}
-            </p>
-            <Button 
-              onClick={() => window.location.href = '/ai-courses'}
-              className="mt-2"
-            >
-              Browse All Courses
-            </Button>
+  
+  if (personalizedError && historyError) {
+    console.error('Error fetching recommendations:', personalizedError);
+    return (
+      <Card className={`${className}`}>
+        <CardHeader>
+          <CardTitle>Your Recommended Courses</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-6">
+            <p className="text-gray-500">We're having trouble loading your recommendations right now. Please try again later.</p>
           </div>
-        </Card>
-      )}
-
-      {/* Explanation Dialog */}
-      <Dialog open={showExplanationDialog} onOpenChange={setShowExplanationDialog}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center">
-              <Sparkles className="h-5 w-5 text-blue-500 mr-2" />
-              Recommendation Insights
-            </DialogTitle>
-          </DialogHeader>
-          
-          {selectedRecommendation && (
-            <div className="mt-4">
-              <h3 className="text-lg font-semibold mb-2">{selectedRecommendation.title}</h3>
-              <RecommendationExplanation 
-                matchScore={selectedRecommendation.matchScore}
-                reasonForRecommendation={selectedRecommendation.reasonForRecommendation}
-                matchFactors={{
-                  relevance: Math.round(selectedRecommendation.matchScore * 0.9),
-                  popularity: Math.round(75 + Math.random() * 15),
-                  difficulty: Math.round(60 + Math.random() * 25),
-                  completion: Math.round(80 + Math.random() * 15)
-                }}
-              />
-              
-              <div className="mt-6 flex justify-between">
-                <Button variant="outline" onClick={() => setShowExplanationDialog(false)}>
-                  Close
-                </Button>
-                <Button onClick={() => {
-                  trackCourseClick(selectedRecommendation.courseId);
-                  if (onSelect) {
-                    onSelect(selectedRecommendation.courseId);
-                  } else {
-                    window.location.href = `/ai-courses/${selectedRecommendation.courseId}`;
-                  }
-                  setShowExplanationDialog(false);
-                }}>
-                  <GraduationCap className="h-4 w-4 mr-2" />
-                  View Course Details
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  const isLoading = isLoadingPersonalized || isLoadingHistory;
+  
+  return (
+    <div className={`${className}`}>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center">
+            <Sparkles className="h-5 w-5 mr-2 text-blue-500" />
+            Personalized for You
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="for-you" value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="mb-4">
+              <TabsTrigger value="for-you">For You</TabsTrigger>
+              {showHistoryTab && <TabsTrigger value="history">Based on History</TabsTrigger>}
+            </TabsList>
+            
+            <TabsContent value="for-you">
+              {isLoadingPersonalized ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[...Array(limit)].map((_, i) => (
+                    <div key={i} className="space-y-3">
+                      <Skeleton className="h-40 w-full rounded-md" />
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  ))}
+                </div>
+              ) : personalizedRecommendations.length > 0 ? (
+                <motion.div 
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {personalizedRecommendations.map((recommendation: any) => (
+                    <motion.div key={recommendation.courseId} variants={itemVariants}>
+                      <CourseCard 
+                        course={{
+                          id: recommendation.courseId,
+                          title: recommendation.title,
+                          description: recommendation.description,
+                          category: recommendation.category,
+                          difficulty: recommendation.difficulty,
+                          price: 49.99,
+                          regularPrice: 199.99
+                        }}
+                        showSimilarity={true}
+                        similarityScore={recommendation.matchScore}
+                        reasonForRecommendation={recommendation.reasonForRecommendation}
+                      />
+                      
+                      {showExplanations && (
+                        <div className="mt-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="w-full text-xs"
+                            onClick={() => toggleExplanation(recommendation.courseId)}
+                          >
+                            {expandedExplanation === recommendation.courseId ? 'Hide Explanation' : 'Why This Course?'}
+                            <ArrowRight className={`h-3.5 w-3.5 ml-1 transition-transform duration-200 ${expandedExplanation === recommendation.courseId ? 'rotate-90' : ''}`} />
+                          </Button>
+                          
+                          {expandedExplanation === recommendation.courseId && (
+                            <RecommendationExplanation
+                              matchScore={recommendation.matchScore}
+                              reasonForRecommendation={recommendation.reasonForRecommendation}
+                              courseTitle={recommendation.title}
+                            />
+                          )}
+                        </div>
+                      )}
+                    </motion.div>
+                  ))}
+                </motion.div>
+              ) : (
+                <div className="text-center py-8">
+                  <BookmarkPlus className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+                  <h3 className="text-lg font-medium mb-2">No recommendations yet</h3>
+                  <p className="text-gray-500 mb-4">Complete courses or update your preferences to get personalized recommendations</p>
+                  <Button>
+                    Explore Popular Courses
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="history">
+              {isLoadingHistory ? (
+                <div className="space-y-4">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="space-y-2">
+                      <Skeleton className="h-6 w-3/4" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-20 w-full rounded-md" />
+                    </div>
+                  ))}
+                </div>
+              ) : userHistory.length > 0 ? (
+                <motion.div 
+                  className="space-y-6"
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {userHistory.map((historyItem: any) => (
+                    <motion.div key={historyItem.id} variants={itemVariants} className="border rounded-lg p-4">
+                      <div className="flex items-start mb-3">
+                        <History className="h-5 w-5 text-blue-500 mr-2 mt-0.5" />
+                        <div>
+                          <h3 className="font-medium">{historyItem.title || 'Course Interaction'}</h3>
+                          <p className="text-sm text-gray-500">
+                            {new Date(historyItem.timestamp).toLocaleDateString()} • 
+                            {historyItem.interactionType === 'view' ? ' Viewed' : 
+                             historyItem.interactionType === 'click' ? ' Clicked' : 
+                             historyItem.interactionType === 'complete' ? ' Completed' : ' Interacted with'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {historyItem.recommendations?.slice(0, 2).map((rec: any) => (
+                          <CourseCard 
+                            key={rec.courseId}
+                            course={{
+                              id: rec.courseId,
+                              title: rec.title,
+                              description: rec.description,
+                              category: rec.category,
+                              difficulty: rec.difficulty,
+                            }}
+                            showSimilarity={true}
+                            similarityScore={rec.matchScore}
+                            reasonForRecommendation={rec.reasonForRecommendation}
+                          />
+                        ))}
+                      </div>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              ) : (
+                <div className="text-center py-8">
+                  <History className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+                  <h3 className="text-lg font-medium mb-2">No learning history yet</h3>
+                  <p className="text-gray-500 mb-4">Start exploring courses to build your learning history</p>
+                  <Button>
+                    Browse Courses <BookOpen className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
-}
+};
+
+export default PersonalizedRecommendations;
