@@ -109,7 +109,7 @@ const CollaborativeStudyRoom: React.FC<StudyRoomProps> = ({
           type: 'join',
           userId: user.id,
           userName: `${user.firstName} ${user.lastName}`.trim() || 'Anonymous User',
-          userAvatar: user.profileImageUrl,
+          userAvatar: user.profileImageUrl || undefined,
           courseId,
           lessonId,
         };
@@ -490,7 +490,7 @@ def gradient_descent(x, y, theta, alpha, num_iters):
       content: newMessage,
       userId: user?.id || 'current-user',
       userName: `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'You',
-      userAvatar: user?.profileImageUrl,
+      userAvatar: user?.profileImageUrl || undefined,
       timestamp: new Date().toISOString()
     };
     
@@ -504,7 +504,7 @@ def gradient_descent(x, y, theta, alpha, num_iters):
       id: `msg-${Date.now()}`,
       userId: user?.id || 'current-user',
       userName: `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'You',
-      userAvatar: user?.profileImageUrl,
+      userAvatar: user?.profileImageUrl || undefined,
       content: newMessage,
       timestamp: new Date().toISOString(),
       type: 'text'
