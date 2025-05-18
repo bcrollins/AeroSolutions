@@ -195,7 +195,16 @@ const CourseDetailPage = () => {
 
           {/* Related Courses - "You might also like" section */}
           {!isLoading && courseId && (
-            <RelatedCourses courseId={courseId} limit={3} />
+            <>
+              <div className="mb-12">
+                <RelatedCourses courseId={courseId} limit={3} title="You might also like" showReasonForRecommendation={true} />
+              </div>
+              
+              {/* Show seasonal recommendations as additional discovery option */}
+              <div className="mb-6">
+                <TrendingRecommendations limit={4} />
+              </div>
+            </>
           )}
         </div>
 
