@@ -469,7 +469,7 @@ const LessonContent: React.FC<LessonContentProps> = ({
                   lessonId={lessonId}
                   title={lessonData.quiz.title}
                   description={lessonData.quiz.description}
-                  questions={lessonData.quiz.questions}
+                  questions={lessonData.quiz.questions as any}
                   onComplete={handleQuizComplete}
                   onExit={() => setActiveTab('content')}
                   passThreshold={lessonData.quiz.passThreshold}
