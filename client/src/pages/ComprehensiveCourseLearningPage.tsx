@@ -30,7 +30,8 @@ import {
   Star,
   BarChart4,
   Users,
-  Brain
+  Brain,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
@@ -666,6 +667,15 @@ const ComprehensiveCourseLearningPage: React.FC = () => {
     };
   }, []);
   
+  // Close collaborative study room and learning insights modals
+  const handleCloseStudyRoom = () => {
+    setShowStudyRoom(false);
+  };
+  
+  const handleCloseLearningInsights = () => {
+    setShowLearningInsights(false);
+  };
+  
   // If no module or lesson found, show error
   if (!currentModule || !currentLesson) {
     return (
@@ -1059,6 +1069,68 @@ const ComprehensiveCourseLearningPage: React.FC = () => {
             
             {/* Progress Tracking */}
             <CourseProgressTracker />
+            
+            {/* Collaborative Learning Tools */}
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card className="bg-blue-50 border-blue-100 hover:bg-blue-100 transition-colors cursor-pointer" onClick={() => setShowStudyRoom(true)}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center text-blue-700">
+                    <Users className="h-5 w-5 mr-2" />
+                    Study Together
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-blue-700">
+                    Join a collaborative study room to discuss course material, share resources, and learn with your peers in real-time.
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-green-50 border-green-100 hover:bg-green-100 transition-colors cursor-pointer" onClick={() => setShowLearningInsights(true)}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center text-green-700">
+                    <Brain className="h-5 w-5 mr-2" />
+                    Learning Insights
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-green-700">
+                    Get AI-powered analysis of your learning patterns, strengths, and personalized recommendations to optimize your study strategy.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+            
+            {/* Collaborative Study Room Modal */}
+            {showStudyRoom && (
+              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-auto">
+                  <CollaborativeStudyRoom 
+                    courseId={moduleId}
+                    lessonId={lessonId}
+                    onClose={handleCloseStudyRoom}
+                  />
+                </div>
+              </div>
+            )}
+            
+            {/* Learning Insights Modal */}
+            {showLearningInsights && (
+              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-auto p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold flex items-center">
+                      <Brain className="h-5 w-5 mr-2 text-blue-600" />
+                      Your Learning Insights
+                    </h2>
+                    <Button variant="ghost" size="sm" onClick={handleCloseLearningInsights}>
+                      <X className="h-5 w-5" />
+                    </Button>
+                  </div>
+                  <LearningInsights userId={user?.id} />
+                </div>
+              </div>
+            )}
           </main>
         </div>
       </div>
