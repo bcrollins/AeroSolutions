@@ -12,7 +12,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Clock, BookOpen, Play, CheckCircle, Star, Users, Calendar, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import RelatedCourses from '@/components/recommendations/RelatedCourses';
-import TrendingRecommendations from '@/components/recommendations/TrendingRecommendations';
 import useRecommendationTracker from '@/hooks/useRecommendationTracker';
 
 const CourseDetailPage = () => {
@@ -196,16 +195,7 @@ const CourseDetailPage = () => {
 
           {/* Related Courses - "You might also like" section */}
           {!isLoading && courseId && (
-            <>
-              <div className="mb-12">
-                <RelatedCourses courseId={courseId} limit={3} title="You might also like" showReasonForRecommendation={true} />
-              </div>
-              
-              {/* Show seasonal recommendations as additional discovery option */}
-              <div className="mb-6">
-                <TrendingRecommendations limit={4} />
-              </div>
-            </>
+            <RelatedCourses courseId={courseId} limit={3} />
           )}
         </div>
 
