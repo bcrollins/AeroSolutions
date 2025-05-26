@@ -111,7 +111,7 @@ export default function OriginalHero() {
               animate="visible"
               custom={1}
             >
-              <span className="text-[#0066cc]">AI & Web Development</span> Courses & Digital Tools for Modern Businesses
+              <span className="text-[#0066cc]">AI Web Development</span> Courses & Digital Tools for Modern Businesses
             </motion.h1>
             
             <motion.p 
