@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { FaLaptopCode, FaCreditCard, FaHeadset, FaCheck, FaPlane, FaServer, FaChartLine, FaDatabase, FaCloudDownloadAlt, FaGlobe, FaShieldAlt } from "react-icons/fa";
+import { FaLaptopCode, FaCreditCard, FaHeadset, FaCheck, FaPlane, FaServer, FaChartLine, FaDatabase, FaCloudDownloadAlt, FaGlobe, FaShieldAlt, FaBrain } from "react-icons/fa";
 
 export default function Services() {
   const fadeIn = {
@@ -14,26 +14,26 @@ export default function Services() {
   const services = [
     {
       icon: <FaLaptopCode className="text-4xl mb-4 text-[#3B82F6]" />,
-      title: "Web Development",
+      title: "Web Development Training",
       slug: "web-development",
-      description: "Custom website solutions built by experienced developers who understand the unique challenges of establishing an effective online presence for small businesses.",
+      description: "Master modern web development with comprehensive training in React, Node.js, TypeScript, and full-stack technologies. Learn to build professional applications.",
       features: [
-        "Responsive website design & development",
-        "E-commerce platforms & online stores",
-        "Content management systems",
-        "Performance optimization & SEO"
+        "Frontend Development (React, TypeScript)",
+        "Backend Development (Node.js, Express)",
+        "Full-Stack Project-Based Learning",
+        "Industry-Ready Portfolio Development"
       ]
     },
     {
-      icon: <FaGlobe className="text-4xl mb-4 text-[#3B82F6]" />,
-      title: "Proprietary Web Platforms",
-      slug: "web-platforms",
-      description: "Our suite of specialized web platforms—WebCraft, EcomPro, ContentHub, AnalyticEdge, and AppForge—designed to transform your digital presence.",
+      icon: <FaBrain className="text-4xl mb-4 text-[#3B82F6]" />,
+      title: "AI Training & Education",
+      slug: "ai-training",
+      description: "Comprehensive AI education covering machine learning, deep learning, and practical AI applications. Learn to build intelligent systems and leverage AI technologies.",
       features: [
-        "WebCraft: Professional website design",
-        "EcomPro: Complete e-commerce solution",
-        "ContentHub: Easy content management",
-        "AnalyticEdge: Business intelligence tools"
+        "Machine Learning Fundamentals",
+        "AI Application Development",
+        "OpenAI API Integration",
+        "Hands-on AI Project Portfolio"
       ]
     },
     {
