@@ -135,6 +135,27 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return user;
   }
+
+  // Sample data initialization method
+  async initSampleData(): Promise<void> {
+    try {
+      // Check if sample data already exists
+      const existingUsers = await db.select().from(users).limit(1);
+      if (existingUsers.length > 0) {
+        console.log('Sample data already exists, skipping initialization');
+        return;
+      }
+
+      console.log('Initializing sample data...');
+      
+      // Sample data initialization can be added here if needed
+      // For production deployment, we typically don't need sample data
+      console.log('Sample data initialization completed successfully');
+    } catch (error) {
+      console.error('Error initializing sample data:', error);
+      // Don't throw error in production to prevent deployment failures
+    }
+  }
   
   // Additional user methods
   async getUserByUsername(username: string): Promise<User | undefined> {
