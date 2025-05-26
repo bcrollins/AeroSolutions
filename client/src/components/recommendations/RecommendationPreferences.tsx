@@ -1,384 +1,564 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
-import { Sliders, Save, Star, Tags, Briefcase, Brain, Sparkles, RotateCcw, Info } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import { motion } from 'framer-motion';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { toast } from '@/hooks/use-toast';
+import { 
+  Check, 
+  Trash2, 
+  PlusCircle, 
+  Save,
+  RefreshCw,
+  BrainCircuit,
+  BookOpen,
+  Code,
+  Layers,
+  BarChart
+} from 'lucide-react';
 
-const DEFAULT_PREFERENCES = {
-  difficultyLevels: ['beginner', 'intermediate'],
-  topicPreferences: ['machine-learning', 'deep-learning', 'nlp', 'computer-vision'],
-  learningStyle: 'visual',
-  maxDuration: 8, // weeks
-  showPremiumContent: true,
-  showRecommendationReasons: true,
-};
+// Define preference types
+interface TopicPreference {
+  id: string;
+  name: string;
+  strength: number;
+}
 
-const RecommendationPreferences = () => {
-  const { user, isAuthenticated } = useAuth();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  
-  // Fetch existing preferences
-  const { data, isLoading } = useQuery({
-    queryKey: ['/api/user/recommendation-preferences'],
-    queryFn: async () => {
-      const response = await fetch('/api/user/recommendation-preferences');
-      if (!response.ok) throw new Error('Failed to fetch preferences');
-      return response.json();
+interface PreferenceState {
+  learningStyle: string;
+  topicPreferences: TopicPreference[];
+  timeAvailability: number;
+  skillLevel: string;
+  contentPreferences: {
+    videos: boolean;
+    interactive: boolean;
+    readings: boolean;
+    quizzes: boolean;
+    projects: boolean;
+  };
+  careerGoals: string[];
+  excludeCompleted: boolean;
+  showTrending: boolean;
+}
+
+const RecommendationPreferences: React.FC = () => {
+  // Default preferences
+  const defaultPreferences: PreferenceState = {
+    learningStyle: 'balanced',
+    topicPreferences: [
+      { id: 'ai-fundamentals', name: 'AI Fundamentals', strength: 90 },
+      { id: 'machine-learning', name: 'Machine Learning', strength: 75 },
+      { id: 'deep-learning', name: 'Deep Learning', strength: 80 },
+      { id: 'nlp', name: 'Natural Language Processing', strength: 65 },
+    ],
+    timeAvailability: 8, // hours per week
+    skillLevel: 'intermediate',
+    contentPreferences: {
+      videos: true,
+      interactive: true,
+      readings: true,
+      quizzes: true,
+      projects: true,
     },
-    enabled: isAuthenticated,
-    onError: () => {
-      // If there's an error fetching, use default preferences
-      setPreferences(DEFAULT_PREFERENCES);
-    }
-  });
+    careerGoals: ['data-scientist'],
+    excludeCompleted: true,
+    showTrending: true,
+  };
   
-  // Set initial preferences (from API or defaults)
-  const [preferences, setPreferences] = useState(data?.preferences || DEFAULT_PREFERENCES);
-  const [isEditing, setIsEditing] = useState(false);
-  
-  // Update the state when data is loaded
-  React.useEffect(() => {
-    if (data?.preferences) {
-      setPreferences(data.preferences);
-    }
-  }, [data]);
-  
-  // Save preferences mutation
-  const savePreferencesMutation = useMutation({
-    mutationFn: async (newPreferences: any) => {
-      const response = await fetch('/api/user/recommendation-preferences', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ preferences: newPreferences }),
-      });
-      
-      if (!response.ok) throw new Error('Failed to save preferences');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/user/recommendation-preferences'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/recommendations/personalized'] });
-      
-      toast({
-        title: "Preferences saved",
-        description: "Your recommendation preferences have been updated.",
-        duration: 3000,
-      });
-      
-      setIsEditing(false);
-    },
-    onError: (error) => {
-      toast({
-        title: "Failed to save preferences",
-        description: error.message || "Please try again later.",
-        variant: "destructive",
-        duration: 5000,
-      });
-    }
-  });
-  
-  // Local storage for non-authenticated users
-  const saveToLocalStorage = () => {
+  // Load saved preferences from localStorage or use defaults
+  const loadSavedPreferences = (): PreferenceState => {
     try {
-      localStorage.setItem('recommendation_preferences', JSON.stringify(preferences));
-      
-      toast({
-        title: "Preferences saved locally",
-        description: "Sign in to sync your preferences across devices.",
-        duration: 3000,
-      });
-      
-      setIsEditing(false);
+      const saved = localStorage.getItem('recommendation_preferences');
+      return saved ? JSON.parse(saved) : defaultPreferences;
     } catch (error) {
+      console.error('Error loading preferences:', error);
+      return defaultPreferences;
+    }
+  };
+  
+  // Component state
+  const [preferences, setPreferences] = useState<PreferenceState>(loadSavedPreferences);
+  const [newTopic, setNewTopic] = useState<string>('');
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [newCareerGoal, setNewCareerGoal] = useState<string>('');
+  
+  // Topic suggestions for dropdown
+  const topicSuggestions = [
+    'Computer Vision', 
+    'Reinforcement Learning', 
+    'MLOps', 
+    'AI Ethics', 
+    'Generative AI',
+    'Large Language Models',
+    'Edge AI',
+    'Robotics',
+    'AI for Healthcare',
+    'AI for Finance'
+  ];
+  
+  // Career goal options
+  const careerGoalOptions = [
+    { id: 'data-scientist', name: 'Data Scientist' },
+    { id: 'ml-engineer', name: 'Machine Learning Engineer' },
+    { id: 'ai-researcher', name: 'AI Researcher' },
+    { id: 'ai-product-manager', name: 'AI Product Manager' },
+    { id: 'computer-vision-engineer', name: 'Computer Vision Engineer' },
+    { id: 'nlp-specialist', name: 'NLP Specialist' },
+    { id: 'data-engineer', name: 'Data Engineer' },
+    { id: 'robotics-engineer', name: 'Robotics Engineer' },
+    { id: 'ai-consultant', name: 'AI Consultant' },
+    { id: 'ai-ethicist', name: 'AI Ethicist' }
+  ];
+  
+  // Handle topic preference strength change
+  const handleStrengthChange = (id: string, newStrength: number) => {
+    setPreferences(prev => ({
+      ...prev,
+      topicPreferences: prev.topicPreferences.map(topic => 
+        topic.id === id ? { ...topic, strength: newStrength } : topic
+      )
+    }));
+  };
+  
+  // Add new topic preference
+  const handleAddTopic = () => {
+    if (!newTopic) return;
+    
+    // Create slug-like ID
+    const id = newTopic.toLowerCase().replace(/\s+/g, '-');
+    
+    // Check if topic already exists
+    if (preferences.topicPreferences.some(topic => topic.id === id)) {
       toast({
-        title: "Failed to save preferences",
-        description: "Please try again later.",
-        variant: "destructive",
-        duration: 5000,
+        title: "Topic already exists",
+        description: `${newTopic} is already in your preferences.`,
+        variant: "destructive"
       });
+      return;
     }
-  };
-  
-  const handleSave = () => {
-    if (isAuthenticated) {
-      savePreferencesMutation.mutate(preferences);
-    } else {
-      saveToLocalStorage();
-    }
-  };
-  
-  const handleReset = () => {
-    setPreferences(DEFAULT_PREFERENCES);
+    
+    setPreferences(prev => ({
+      ...prev,
+      topicPreferences: [
+        ...prev.topicPreferences,
+        { id, name: newTopic, strength: 50 }
+      ]
+    }));
+    
+    setNewTopic('');
     
     toast({
-      title: "Preferences reset",
-      description: "Recommendation preferences have been reset to default values.",
-      duration: 3000,
+      title: "Topic added",
+      description: `${newTopic} has been added to your preferences.`
     });
   };
   
-  const handleCheckboxChange = (category: 'difficultyLevels' | 'topicPreferences', value: string) => {
-    setPreferences(prev => {
-      const current = [...prev[category]];
-      
-      if (current.includes(value)) {
-        return { ...prev, [category]: current.filter(item => item !== value) };
-      } else {
-        return { ...prev, [category]: [...current, value] };
+  // Remove topic preference
+  const handleRemoveTopic = (id: string) => {
+    setPreferences(prev => ({
+      ...prev,
+      topicPreferences: prev.topicPreferences.filter(topic => topic.id !== id)
+    }));
+  };
+  
+  // Handle toggle switches
+  const handleToggle = (key: string, value: boolean) => {
+    setPreferences(prev => ({
+      ...prev,
+      contentPreferences: {
+        ...prev.contentPreferences,
+        [key]: value
       }
+    }));
+  };
+  
+  // Handle career goal toggle
+  const handleCareerGoalToggle = (goalId: string) => {
+    setPreferences(prev => {
+      const isSelected = prev.careerGoals.includes(goalId);
+      
+      return {
+        ...prev,
+        careerGoals: isSelected
+          ? prev.careerGoals.filter(id => id !== goalId)
+          : [...prev.careerGoals, goalId]
+      };
     });
   };
   
-  // If not editing and not loading, just show a summary
-  if (!isEditing && !isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Sliders className="mr-2 h-5 w-5 text-blue-500" />
-            Recommendation Preferences
-          </CardTitle>
-          <CardDescription>
-            Customize how courses are recommended to you
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-sm font-medium mb-2 flex items-center">
-                <Tags className="h-4 w-4 mr-1.5 text-gray-400" />
-                Topics of Interest
-              </h3>
-              <div className="flex flex-wrap gap-1.5">
-                {preferences.topicPreferences.map(topic => (
-                  <Badge key={topic} variant="outline">{topic}</Badge>
-                ))}
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="text-sm font-medium mb-2 flex items-center">
-                <Brain className="h-4 w-4 mr-1.5 text-gray-400" />
-                Difficulty Levels
-              </h3>
-              <div className="flex flex-wrap gap-1.5">
-                {preferences.difficultyLevels.map(level => (
-                  <Badge key={level} variant="outline">{level}</Badge>
-                ))}
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="text-sm font-medium mb-1 flex items-center">
-                <Briefcase className="h-4 w-4 mr-1.5 text-gray-400" />
-                Learning Style
-              </h3>
-              <p className="text-sm text-gray-500">{preferences.learningStyle}</p>
-            </div>
-            
-            <div>
-              <h3 className="text-sm font-medium mb-1 flex items-center">
-                <Star className="h-4 w-4 mr-1.5 text-gray-400" />
-                Premium Content
-              </h3>
-              <p className="text-sm text-gray-500">{preferences.showPremiumContent ? 'Show premium courses' : 'Hide premium courses'}</p>
-            </div>
-          </div>
-        </CardContent>
-        <CardFooter className="flex justify-end">
-          <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-            Edit Preferences
-          </Button>
-        </CardFooter>
-      </Card>
-    );
-  }
+  // Save preferences
+  const savePreferences = () => {
+    setIsSaving(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      try {
+        localStorage.setItem('recommendation_preferences', JSON.stringify(preferences));
+        toast({
+          title: "Preferences saved",
+          description: "Your recommendation preferences have been updated.",
+        });
+      } catch (error) {
+        console.error('Error saving preferences:', error);
+        toast({
+          title: "Failed to save",
+          description: "There was an error saving your preferences. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsSaving(false);
+      }
+    }, 1000);
+  };
   
-  // Full edit mode
+  // Reset to defaults
+  const resetToDefaults = () => {
+    setPreferences(defaultPreferences);
+    toast({
+      title: "Preferences reset",
+      description: "Your recommendation preferences have been reset to defaults.",
+    });
+  };
+  
+  // Helper function to get icon for topic
+  const getTopicIcon = (topicId: string) => {
+    switch (topicId) {
+      case 'ai-fundamentals':
+        return <BrainCircuit className="h-4 w-4" />;
+      case 'machine-learning':
+        return <Layers className="h-4 w-4" />;
+      case 'deep-learning':
+        return <BrainCircuit className="h-4 w-4" />;
+      case 'nlp':
+        return <BookOpen className="h-4 w-4" />;
+      case 'computer-vision':
+        return <BookOpen className="h-4 w-4" />;
+      case 'mlops':
+        return <Code className="h-4 w-4" />;
+      default:
+        return <BrainCircuit className="h-4 w-4" />;
+    }
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <Sliders className="mr-2 h-5 w-5 text-blue-500" />
-          Customize Your Recommendations
-        </CardTitle>
-        <CardDescription>
-          Tailor your learning experience by setting your preferences
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="topics" className="w-full">
-          <TabsList className="grid grid-cols-3 mb-4">
-            <TabsTrigger value="topics">Topics</TabsTrigger>
-            <TabsTrigger value="learning">Learning Style</TabsTrigger>
-            <TabsTrigger value="display">Display Options</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="topics" className="space-y-4">
-            <div>
-              <h3 className="text-sm font-medium mb-3">Topics of Interest</h3>
-              <div className="grid grid-cols-2 gap-2">
-                {['machine-learning', 'deep-learning', 'nlp', 'computer-vision', 'reinforcement-learning', 'data-science', 'generative-ai', 'neural-networks'].map(topic => (
-                  <div key={topic} className="flex items-center space-x-2">
-                    <Checkbox 
-                      id={`topic-${topic}`}
-                      checked={preferences.topicPreferences.includes(topic)}
-                      onCheckedChange={() => handleCheckboxChange('topicPreferences', topic)}
-                    />
-                    <label htmlFor={`topic-${topic}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      {topic}
-                    </label>
-                  </div>
-                ))}
+    <div className="space-y-6">
+      {/* Learning Style */}
+      <div className="space-y-3">
+        <div className="flex justify-between">
+          <Label htmlFor="learning-style">Learning Style</Label>
+          <span className="text-sm text-gray-500">
+            {preferences.learningStyle === 'theoretical' ? 'Theory-focused' : 
+             preferences.learningStyle === 'practical' ? 'Practice-focused' : 'Balanced'}
+          </span>
+        </div>
+        <Select
+          value={preferences.learningStyle}
+          onValueChange={(value) => setPreferences(prev => ({ ...prev, learningStyle: value }))}
+        >
+          <SelectTrigger id="learning-style">
+            <SelectValue placeholder="Select your learning style" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="theoretical">Theory-focused</SelectItem>
+            <SelectItem value="balanced">Balanced</SelectItem>
+            <SelectItem value="practical">Practice-focused</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-gray-500">
+          Your preferred balance between theoretical concepts and practical applications.
+        </p>
+      </div>
+      
+      <Separator />
+      
+      {/* Topics of Interest */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium">Topics of Interest</h3>
+        <p className="text-sm text-gray-500 mb-4">
+          Adjust the sliders to indicate your level of interest in each topic.
+        </p>
+        
+        {preferences.topicPreferences.map((topic) => (
+          <div key={topic.id} className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                {getTopicIcon(topic.id)}
+                <Label className="ml-2">{topic.name}</Label>
               </div>
-              
-              <div className="mt-4">
-                <label className="text-sm font-medium">Add Custom Topic</label>
-                <div className="flex mt-1">
-                  <Input placeholder="e.g., quantum computing" className="mr-2" />
-                  <Button variant="outline" size="sm">Add</Button>
-                </div>
-              </div>
-            </div>
-            
-            <Separator />
-            
-            <div>
-              <h3 className="text-sm font-medium mb-3">Difficulty Levels</h3>
-              <div className="flex flex-col space-y-2">
-                {['beginner', 'intermediate', 'advanced'].map(level => (
-                  <div key={level} className="flex items-center space-x-2">
-                    <Checkbox 
-                      id={`level-${level}`}
-                      checked={preferences.difficultyLevels.includes(level)}
-                      onCheckedChange={() => handleCheckboxChange('difficultyLevels', level)}
-                    />
-                    <label htmlFor={`level-${level}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      {level.charAt(0).toUpperCase() + level.slice(1)}
-                    </label>
-                  </div>
-                ))}
+              <div className="flex items-center">
+                <Badge 
+                  variant={topic.strength > 80 ? "default" : 
+                         topic.strength > 50 ? "secondary" : "outline"}
+                  className="mr-2"
+                >
+                  {topic.strength}%
+                </Badge>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => handleRemoveTopic(topic.id)}
+                  className="h-6 w-6 text-gray-500 hover:text-red-500"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
             </div>
-          </TabsContent>
-          
-          <TabsContent value="learning" className="space-y-4">
-            <div>
-              <h3 className="text-sm font-medium mb-3">Preferred Learning Style</h3>
-              <div className="grid grid-cols-2 gap-y-2">
-                {['visual', 'auditory', 'reading', 'hands-on'].map(style => (
-                  <div key={style} className="flex items-center space-x-2">
-                    <Checkbox 
-                      id={`style-${style}`}
-                      checked={preferences.learningStyle === style}
-                      onCheckedChange={() => setPreferences(prev => ({ ...prev, learningStyle: style }))}
-                    />
-                    <label htmlFor={`style-${style}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      {style.charAt(0).toUpperCase() + style.slice(1)}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <Separator />
-            
-            <div>
-              <h3 className="text-sm font-medium mb-3">Maximum Course Duration</h3>
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs text-gray-500 mb-1">
-                  <span>2 weeks</span>
-                  <span>4 weeks</span>
-                  <span>8 weeks</span>
-                  <span>12+ weeks</span>
-                </div>
-                <Slider
-                  defaultValue={[preferences.maxDuration]}
-                  max={12}
-                  min={2}
-                  step={2}
-                  onValueChange={(values) => setPreferences(prev => ({ ...prev, maxDuration: values[0] }))}
-                />
-                <div className="text-center mt-2">
-                  <span className="text-sm font-medium">{preferences.maxDuration} weeks</span>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="display" className="space-y-4">
-            <div>
-              <h3 className="text-sm font-medium mb-3">Content Preferences</h3>
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="show-premium"
-                    checked={preferences.showPremiumContent}
-                    onCheckedChange={(checked) => setPreferences(prev => ({ ...prev, showPremiumContent: !!checked }))}
-                  />
-                  <label htmlFor="show-premium" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    Show premium content
-                  </label>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="show-reasons"
-                    checked={preferences.showRecommendationReasons}
-                    onCheckedChange={(checked) => setPreferences(prev => ({ ...prev, showRecommendationReasons: !!checked }))}
-                  />
-                  <label htmlFor="show-reasons" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    Show recommendation reasons
-                  </label>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-blue-50 p-3 rounded-md flex items-start mt-2">
-              <Info className="h-5 w-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
-              <p className="text-xs text-blue-700">
-                Your preferences help us personalize course recommendations. We'll use this information to suggest courses that match your interests and learning style.
-              </p>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button variant="outline" size="sm" onClick={handleReset}>
-          <RotateCcw className="mr-2 h-4 w-4" />
-          Reset to Defaults
-        </Button>
-        <div className="space-x-2">
-          <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={savePreferencesMutation.isPending}>
-            {savePreferencesMutation.isPending ? (
-              <motion.div
-                className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin"
-              />
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Save Preferences
-              </>
-            )}
+            <Slider
+              value={[topic.strength]}
+              min={0}
+              max={100}
+              step={5}
+              onValueChange={(value) => handleStrengthChange(topic.id, value[0])}
+              className="py-1"
+            />
+          </div>
+        ))}
+        
+        {/* Add new topic */}
+        <div className="flex gap-2 mt-4">
+          <Select 
+            value={newTopic} 
+            onValueChange={setNewTopic}
+          >
+            <SelectTrigger className="flex-1">
+              <SelectValue placeholder="Add a topic..." />
+            </SelectTrigger>
+            <SelectContent>
+              {topicSuggestions.map(topic => (
+                <SelectItem key={topic} value={topic}>
+                  {topic}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button 
+            onClick={handleAddTopic} 
+            disabled={!newTopic}
+            variant="outline"
+          >
+            <PlusCircle className="h-4 w-4 mr-1" />
+            Add
           </Button>
         </div>
-      </CardFooter>
-    </Card>
+      </div>
+      
+      <Separator />
+      
+      {/* Weekly Time Availability */}
+      <div className="space-y-3">
+        <div className="flex justify-between">
+          <Label htmlFor="time-availability">Weekly Time Availability</Label>
+          <span className="text-sm text-gray-500">{preferences.timeAvailability} hours/week</span>
+        </div>
+        <Slider
+          id="time-availability"
+          value={[preferences.timeAvailability]}
+          min={1}
+          max={20}
+          step={1}
+          onValueChange={(value) => setPreferences(prev => ({ ...prev, timeAvailability: value[0] }))}
+        />
+        <p className="text-xs text-gray-500">
+          How much time you can dedicate to learning each week. This helps us recommend appropriately-sized courses.
+        </p>
+      </div>
+      
+      <Separator />
+      
+      {/* Skill Level */}
+      <div className="space-y-3">
+        <div className="flex justify-between">
+          <Label htmlFor="skill-level">Skill Level</Label>
+          <span className="text-sm text-gray-500 capitalize">{preferences.skillLevel}</span>
+        </div>
+        <Select
+          value={preferences.skillLevel}
+          onValueChange={(value) => setPreferences(prev => ({ ...prev, skillLevel: value }))}
+        >
+          <SelectTrigger id="skill-level">
+            <SelectValue placeholder="Select your skill level" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="beginner">Beginner</SelectItem>
+            <SelectItem value="intermediate">Intermediate</SelectItem>
+            <SelectItem value="advanced">Advanced</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-gray-500">
+          Your current knowledge level in AI and machine learning.
+        </p>
+      </div>
+      
+      <Separator />
+      
+      {/* Content Type Preferences */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium">Content Type Preferences</h3>
+        <p className="text-sm text-gray-500 mb-4">
+          Select which types of learning content you prefer.
+        </p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex items-center justify-between space-x-2">
+            <div className="flex items-center space-x-2">
+              <BookOpen className="h-4 w-4 text-gray-500" />
+              <Label htmlFor="pref-videos">Video Lessons</Label>
+            </div>
+            <Switch
+              id="pref-videos"
+              checked={preferences.contentPreferences.videos}
+              onCheckedChange={(checked) => handleToggle('videos', checked)}
+            />
+          </div>
+          
+          <div className="flex items-center justify-between space-x-2">
+            <div className="flex items-center space-x-2">
+              <Code className="h-4 w-4 text-gray-500" />
+              <Label htmlFor="pref-interactive">Interactive Exercises</Label>
+            </div>
+            <Switch
+              id="pref-interactive"
+              checked={preferences.contentPreferences.interactive}
+              onCheckedChange={(checked) => handleToggle('interactive', checked)}
+            />
+          </div>
+          
+          <div className="flex items-center justify-between space-x-2">
+            <div className="flex items-center space-x-2">
+              <BookOpen className="h-4 w-4 text-gray-500" />
+              <Label htmlFor="pref-readings">Reading Materials</Label>
+            </div>
+            <Switch
+              id="pref-readings"
+              checked={preferences.contentPreferences.readings}
+              onCheckedChange={(checked) => handleToggle('readings', checked)}
+            />
+          </div>
+          
+          <div className="flex items-center justify-between space-x-2">
+            <div className="flex items-center space-x-2">
+              <Check className="h-4 w-4 text-gray-500" />
+              <Label htmlFor="pref-quizzes">Quizzes & Assessments</Label>
+            </div>
+            <Switch
+              id="pref-quizzes"
+              checked={preferences.contentPreferences.quizzes}
+              onCheckedChange={(checked) => handleToggle('quizzes', checked)}
+            />
+          </div>
+          
+          <div className="flex items-center justify-between space-x-2 md:col-span-2">
+            <div className="flex items-center space-x-2">
+              <Code className="h-4 w-4 text-gray-500" />
+              <Label htmlFor="pref-projects">Hands-on Projects</Label>
+            </div>
+            <Switch
+              id="pref-projects"
+              checked={preferences.contentPreferences.projects}
+              onCheckedChange={(checked) => handleToggle('projects', checked)}
+            />
+          </div>
+        </div>
+      </div>
+      
+      <Separator />
+      
+      {/* Career Goals */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium">Career Goals</h3>
+        <p className="text-sm text-gray-500 mb-4">
+          Select career paths you're interested in pursuing.
+        </p>
+        
+        <div className="flex flex-wrap gap-2">
+          {careerGoalOptions.map(goal => (
+            <Badge 
+              key={goal.id}
+              variant={preferences.careerGoals.includes(goal.id) ? "default" : "outline"}
+              className="cursor-pointer py-1.5 px-3"
+              onClick={() => handleCareerGoalToggle(goal.id)}
+            >
+              {preferences.careerGoals.includes(goal.id) && (
+                <Check className="mr-1 h-3 w-3" />
+              )}
+              {goal.name}
+            </Badge>
+          ))}
+        </div>
+      </div>
+      
+      <Separator />
+      
+      {/* Additional Options */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium">Additional Options</h3>
+        
+        <div className="space-y-4">
+          <div className="flex items-center justify-between space-x-2">
+            <div>
+              <Label htmlFor="exclude-completed" className="font-medium">Exclude completed courses</Label>
+              <p className="text-xs text-gray-500">Don't recommend courses you've already completed</p>
+            </div>
+            <Switch
+              id="exclude-completed"
+              checked={preferences.excludeCompleted}
+              onCheckedChange={(checked) => setPreferences(prev => ({ ...prev, excludeCompleted: checked }))}
+            />
+          </div>
+          
+          <div className="flex items-center justify-between space-x-2">
+            <div>
+              <Label htmlFor="show-trending" className="font-medium">Show trending courses</Label>
+              <p className="text-xs text-gray-500">Include popular and trending courses in recommendations</p>
+            </div>
+            <Switch
+              id="show-trending"
+              checked={preferences.showTrending}
+              onCheckedChange={(checked) => setPreferences(prev => ({ ...prev, showTrending: checked }))}
+            />
+          </div>
+        </div>
+      </div>
+      
+      {/* Actions */}
+      <div className="flex flex-col sm:flex-row sm:justify-between gap-3 pt-4">
+        <Button 
+          variant="outline" 
+          onClick={resetToDefaults}
+          className="sm:w-auto"
+        >
+          Reset to Defaults
+        </Button>
+        
+        <Button 
+          onClick={savePreferences} 
+          disabled={isSaving}
+          className="sm:w-auto"
+        >
+          {isSaving ? (
+            <>
+              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Save Preferences
+            </>
+          )}
+        </Button>
+      </div>
+    </div>
   );
 };
 

@@ -292,6 +292,63 @@ const Navbar: React.FC = () => {
                 </NavigationMenuItem>
                 
                 <NavigationMenuItem>
+                  <NavigationMenuTrigger
+                    className={`${location === '/ai-course' || location.startsWith('/courses/') ? 'bg-accent text-accent-foreground' : ''}`}
+                  >
+                    Courses
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid gap-3 p-4 md:w-[400px] lg:w-[500px] lg:grid-cols-2">
+                      <li className="row-span-3">
+                        <NavigationMenuLink asChild>
+                          <Link
+                            href="/ai-course"
+                            className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-blue-50 to-blue-100 p-6 no-underline outline-none focus:shadow-md"
+                          >
+                            <div className="mt-4 mb-2 text-lg font-medium">
+                              Master AI
+                            </div>
+                            <p className="text-sm leading-tight text-muted-foreground">
+                              Comprehensive AI training from fundamentals to advanced applications, with hands-on projects and expert instruction.
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                      <li>
+                        <Link href="/courses/master-ai">
+                          <a className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+                            <div className="text-sm font-medium leading-none">AI Fundamentals</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              Start your AI journey with core concepts and principles
+                            </p>
+                          </a>
+                        </Link>
+                      </li>
+                      <li>
+                        <Link href="/courses/advanced-nlp">
+                          <a className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+                            <div className="text-sm font-medium leading-none">Advanced NLP</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              Master cutting-edge natural language processing techniques
+                            </p>
+                          </a>
+                        </Link>
+                      </li>
+                      <li>
+                        <Link href="/courses">
+                          <a className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+                            <div className="text-sm font-medium leading-none">All Courses</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              Browse our complete catalog of AI and technology courses
+                            </p>
+                          </a>
+                        </Link>
+                      </li>
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+                
+                <NavigationMenuItem>
                   <Link href="/premium">
                     <NavigationMenuLink 
                       className={`group inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none ${
