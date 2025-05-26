@@ -81,18 +81,22 @@ const HomePage = () => {
               transition={{ duration: 0.5 }}
             >
               <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
-                Master AI with Personalized Learning
+                Premium Full-Stack Development Solutions
               </h1>
               <p className="text-xl text-gray-700 mb-6">
-                Our adaptive platform tailors the learning experience to your goals and pace, with AI-powered recommendations that evolve as you learn.
+                Transform your digital presence with cutting-edge web applications, custom software solutions, and expert consulting services tailored to your business needs.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" className="px-8">
-                  Explore Courses
-                </Button>
-                <Button size="lg" variant="outline">
-                  {isAuthenticated ? 'View Dashboard' : 'Sign Up Free'}
-                </Button>
+                <Link href="/service-packages">
+                  <Button size="lg" className="px-8">
+                    View Our Services
+                  </Button>
+                </Link>
+                <Link href="/contact">
+                  <Button size="lg" variant="outline">
+                    Get Free Consultation
+                  </Button>
+                </Link>
               </div>
             </motion.div>
 
@@ -103,8 +107,8 @@ const HomePage = () => {
               className="rounded-xl overflow-hidden shadow-2xl"
             >
               <img 
-                src="https://images.unsplash.com/photo-1581092334651-ddf26d9a09d0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1024&q=80" 
-                alt="AI Learning Platform" 
+                src="https://images.unsplash.com/photo-1555421689-491a97ff2040?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1024&q=80" 
+                alt="Full-Stack Development Services" 
                 className="w-full h-auto" 
               />
             </motion.div>
