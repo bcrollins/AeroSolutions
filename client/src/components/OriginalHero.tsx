@@ -101,7 +101,7 @@ export default function OriginalHero() {
               animate="visible"
               custom={0}
             >
-              <span className="text-[#0066cc] text-sm font-medium tracking-wider uppercase font-inter">Premier AI Education Platform</span>
+              <span className="text-[#0066cc] text-sm font-medium tracking-wider uppercase font-inter">Premier AI & Web Development Training Platform</span>
             </motion.div>
             
             <motion.h1 
@@ -111,7 +111,7 @@ export default function OriginalHero() {
               animate="visible"
               custom={1}
             >
-              <span className="text-[#0066cc]">AI Courses</span> & Digital Tools for Modern Creators
+              <span className="text-[#0066cc]">AI & Web Development</span> Courses & Digital Tools for Modern Businesses
             </motion.h1>
             
             <motion.p 
@@ -121,7 +121,7 @@ export default function OriginalHero() {
               animate="visible"
               custom={2}
             >
-              Master the future of artificial intelligence with our comprehensive AI courses. Learn cutting-edge techniques from industry experts and gain hands-on experience with our professional toolsets.
+              Master the future of technology with our comprehensive AI and web development courses. Learn cutting-edge techniques from industry experts and gain hands-on experience building modern applications and intelligent systems.
             </motion.p>
             
             <motion.p 
@@ -131,7 +131,7 @@ export default function OriginalHero() {
               animate="visible"
               custom={3}
             >
-              <span className="font-semibold">RXAI</span> offers flexible monthly and annual subscriptions with a 16% discount on yearly plans. Subscribers gain exclusive access to our premium AI course library, powerful AI-driven tools, and a supportive community of AI practitioners and educators.
+              <span className="font-semibold">RXAI</span> offers flexible monthly and annual subscriptions with a 16% discount on yearly plans. Subscribers gain exclusive access to our premium AI and web development course libraries, powerful development tools, and a supportive community of technology practitioners and educators.
             </motion.p>
             
             <motion.div 
