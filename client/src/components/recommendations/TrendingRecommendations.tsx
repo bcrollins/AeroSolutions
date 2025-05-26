@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TrendingUp, Flame, Calendar, ArrowRight, BarChart2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import CourseCard from '@/components/course/CourseCard';
@@ -28,7 +27,6 @@ const getCurrentSeason = () => {
 
 // Get current industry trends
 const getCurrentTrends = () => {
-  // This would ideally come from an API but for now we'll hardcode some trending topics
   const currentYear = new Date().getFullYear();
   
   return [
@@ -117,14 +115,6 @@ const TrendingRecommendations = ({
     return seasonalData?.courses || [];
   };
   
-  // If no data is available, use a fallback
-  const useFallbackData = (trendingCourses: any[], seasonalCourses: any[]) => {
-    const isDataMissing = (!isLoadingTrending && trendingCourses.length === 0) || 
-                           (!isLoadingSeasonal && seasonalCourses.length === 0);
-    
-    return isDataMissing;
-  };
-  
   // Display seasonal name with correct capitalization
   const formatSeasonName = (season: string) => {
     return season.charAt(0).toUpperCase() + season.slice(1);
@@ -132,18 +122,129 @@ const TrendingRecommendations = ({
   
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    // Track this interaction for improving recommendations
-    if (value === 'trending') {
-      // You could track this if you have a trackEvent function
-      // trackEvent('viewed_trending_tab');
-    } else if (value === 'seasonal') {
-      // trackEvent('viewed_seasonal_tab');
-    }
   };
   
   const trendingCourses = getTrendingData();
   const seasonalCourses = getSeasonalData();
-  const shouldUseFallback = useFallbackData(trendingCourses, seasonalCourses);
+  
+  const renderContent = () => {
+    if (activeTab === 'trending') {
+      if (isLoadingTrending) {
+        return (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            {[...Array(limit)].map((_, i) => (
+              <div key={i} className="space-y-3">
+                <Skeleton className="h-32 w-full rounded-md" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
+            ))}
+          </div>
+        );
+      }
+      
+      if (trendingCourses.length > 0) {
+        return (
+          <ScrollArea className="h-full w-full">
+            <motion.div 
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              {trendingCourses.map((course: any, index: number) => (
+                <motion.div key={course.id || index} variants={itemVariants}>
+                  <CourseCard 
+                    course={course}
+                    className="h-full"
+                    showSimilarity={false}
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
+          </ScrollArea>
+        );
+      }
+      
+      return (
+        <div className="text-center py-6">
+          <div className="mb-4">
+            <div className="bg-blue-50 rounded-full p-3 inline-block mb-2">
+              <TrendingUp className="h-6 w-6 text-blue-500" />
+            </div>
+            <h3 className="text-lg font-medium">Trending Topics</h3>
+          </div>
+          <div className="flex flex-wrap justify-center gap-2 max-w-lg mx-auto mb-6">
+            {currentTrends.map((trend, i) => (
+              <div 
+                key={i}
+                className="bg-gray-50 border border-gray-200 rounded-full px-3 py-1 text-sm text-gray-700 flex items-center"
+              >
+                <div className="mr-1.5 text-blue-500 text-xs font-bold">{i + 1}</div>
+                {trend}
+              </div>
+            ))}
+          </div>
+          <Button variant="outline" onClick={() => window.location.href = '/ai-courses'}>
+            Explore All Courses
+          </Button>
+        </div>
+      );
+    }
+    
+    // Seasonal content
+    if (isLoadingSeasonal) {
+      return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          {[...Array(limit)].map((_, i) => (
+            <div key={i} className="space-y-3">
+              <Skeleton className="h-32 w-full rounded-md" />
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
+          ))}
+        </div>
+      );
+    }
+    
+    if (seasonalCourses.length > 0) {
+      return (
+        <ScrollArea className="h-full w-full">
+          <motion.div 
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {seasonalCourses.map((course: any, index: number) => (
+              <motion.div key={course.id || index} variants={itemVariants}>
+                <CourseCard 
+                  course={course}
+                  className="h-full"
+                  showSimilarity={false}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        </ScrollArea>
+      );
+    }
+    
+    return (
+      <div className="text-center py-6">
+        <div className="mb-4">
+          <div className="bg-blue-50 rounded-full p-3 inline-block mb-2">
+            <Calendar className="h-6 w-6 text-blue-500" />
+          </div>
+          <h3 className="text-lg font-medium">{formatSeasonName(currentSeason)} Learning</h3>
+          <p className="text-sm text-gray-500 mt-1">Perfect courses for this season</p>
+        </div>
+        <Button variant="outline" onClick={() => window.location.href = '/ai-courses'}>
+          Browse Seasonal Courses
+        </Button>
+      </div>
+    );
+  };
   
   return (
     <div className={className}>
@@ -154,18 +255,26 @@ const TrendingRecommendations = ({
               <TrendingUp className="h-5 w-5 mr-2 text-blue-500" />
               {activeTab === 'trending' ? 'Trending Now' : `${formatSeasonName(currentSeason)} ${currentYear} Picks`}
             </CardTitle>
-            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-auto">
-              <TabsList className="h-8 px-1">
-                <TabsTrigger value="trending" className="text-xs px-3">
-                  <Flame className="h-3.5 w-3.5 mr-1" />
-                  Trending
-                </TabsTrigger>
-                <TabsTrigger value="seasonal" className="text-xs px-3">
-                  <Calendar className="h-3.5 w-3.5 mr-1" />
-                  Seasonal
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className="flex gap-2">
+              <Button 
+                variant={activeTab === 'trending' ? 'default' : 'outline'} 
+                size="sm"
+                onClick={() => handleTabChange('trending')}
+                className="text-xs px-3"
+              >
+                <Flame className="h-3.5 w-3.5 mr-1" />
+                Trending
+              </Button>
+              <Button 
+                variant={activeTab === 'seasonal' ? 'default' : 'outline'} 
+                size="sm"
+                onClick={() => handleTabChange('seasonal')}
+                className="text-xs px-3"
+              >
+                <Calendar className="h-3.5 w-3.5 mr-1" />
+                Seasonal
+              </Button>
+            </div>
           </div>
           <CardDescription>
             {activeTab === 'trending' 
@@ -174,117 +283,7 @@ const TrendingRecommendations = ({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <TabsContent value="trending" className="mt-0">
-            {isLoadingTrending ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                {[...Array(limit)].map((_, i) => (
-                  <div key={i} className="space-y-3">
-                    <Skeleton className="h-32 w-full rounded-md" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </div>
-                ))}
-              </div>
-            ) : trendingCourses.length > 0 ? (
-              <ScrollArea className="h-full w-full">
-                <motion.div 
-                  className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"
-                  variants={containerVariants}
-                  initial="hidden"
-                  animate="visible"
-                >
-                  {trendingCourses.map((course: any, index: number) => (
-                    <motion.div key={course.id || index} variants={itemVariants}>
-                      <CourseCard 
-                        course={course}
-                        className="h-full"
-                        showSimilarity={false}
-                      />
-                    </motion.div>
-                  ))}
-                </motion.div>
-              </ScrollArea>
-            ) : shouldUseFallback ? (
-              <div className="text-center py-6">
-                <div className="mb-4">
-                  <div className="bg-blue-50 rounded-full p-3 inline-block mb-2">
-                    <TrendingUp className="h-6 w-6 text-blue-500" />
-                  </div>
-                  <h3 className="text-lg font-medium">Trending Topics</h3>
-                </div>
-                <div className="flex flex-wrap justify-center gap-2 max-w-lg mx-auto mb-6">
-                  {currentTrends.map((trend, i) => (
-                    <div 
-                      key={i}
-                      className="bg-gray-50 border border-gray-200 rounded-full px-3 py-1 text-sm text-gray-700 flex items-center"
-                    >
-                      <div className="mr-1.5 text-blue-500 text-xs font-bold">{i + 1}</div>
-                      {trend}
-                    </div>
-                  ))}
-                </div>
-                <Button variant="outline" onClick={() => window.location.href = '/ai-courses'}>
-                  Explore All Courses
-                </Button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                {[...Array(limit)].map((_, i) => (
-                  <div key={i} className="space-y-3">
-                    <Skeleton className="h-32 w-full rounded-md" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </div>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="seasonal" className="mt-0">
-            {isLoadingSeasonal ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                {[...Array(limit)].map((_, i) => (
-                  <div key={i} className="space-y-3">
-                    <Skeleton className="h-32 w-full rounded-md" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </div>
-                ))}
-              </div>
-            ) : seasonalCourses.length > 0 ? (
-              <ScrollArea className="h-full w-full">
-                <motion.div 
-                  className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"
-                  variants={containerVariants}
-                  initial="hidden"
-                  animate="visible"
-                >
-                  {seasonalCourses.map((course: any, index: number) => (
-                    <motion.div key={course.id || index} variants={itemVariants}>
-                      <CourseCard 
-                        course={course}
-                        className="h-full"
-                        showSimilarity={false}
-                      />
-                    </motion.div>
-                  ))}
-                </motion.div>
-              </ScrollArea>
-            ) : (
-              <div className="text-center py-6">
-                <div className="mb-4">
-                  <div className="bg-blue-50 rounded-full p-3 inline-block mb-2">
-                    <Calendar className="h-6 w-6 text-blue-500" />
-                  </div>
-                  <h3 className="text-lg font-medium">{formatSeasonName(currentSeason)} Learning</h3>
-                  <p className="text-sm text-gray-500 mt-1">Perfect courses for this season</p>
-                </div>
-                <Button variant="outline" onClick={() => window.location.href = '/ai-courses'}>
-                  Browse Seasonal Courses
-                </Button>
-              </div>
-            )}
-          </TabsContent>
+          {renderContent()}
         </CardContent>
       </Card>
     </div>
