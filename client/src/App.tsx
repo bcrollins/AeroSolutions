@@ -543,6 +543,23 @@ export default function App() {
           )}
         </Route>
 
+        {/* Web Development Hub */}
+        <Route path="/web-development">
+          {() => (
+            <>
+              <Helmet>
+                <title>Web Development Training | RXAI - Master Frontend & Backend</title>
+                <meta name="description" content="Comprehensive web development training covering React, Node.js, TypeScript, and full-stack development. Learn to build modern web applications with expert guidance." />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href="https://rollinsx.dev/web-development" />
+                <html lang={i18n.language.split('-')[0]} />
+                <meta httpEquiv="Content-Language" content={i18n.language} />
+              </Helmet>
+              <WebDevelopmentHub />
+            </>
+          )}
+        </Route>
+
         <Route path="/data-viz-demo">
           {() => (
             <>
