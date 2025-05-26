@@ -109,6 +109,7 @@ import MicroInteractionsDemo from "@/pages/MicroInteractionsDemo";
 import ComponentShowcase from "@/pages/ComponentShowcase";
 import DataVizDemo from "@/pages/DataVizDemo";
 import ThemePreferencesDemo from "@/pages/ThemePreferencesDemo";
+import WebDevelopmentHub from "@/pages/WebDevelopmentHub";
 
 export default function App() {
   const { t, i18n } = useTranslation();

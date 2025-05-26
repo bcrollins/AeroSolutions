@@ -106,17 +106,27 @@ export default function Header() {
   const menuItems = [  
     { label: 'Home', path: '/' },  
     {  
-      label: 'AI Products',  
+      label: 'AI Training',  
       dropdown: [  
         { label: 'Learn AI', path: '/learnai' },
         { label: 'AI Courses', path: '/ai-course-platform' },
         { label: 'Course Catalog', path: '/course-catalog' },
-        { label: 'Design Tools', path: '/design-tools' },
+        { label: 'AI Tools', path: '/digital-tools' },
         { label: 'Content Generator', path: '/tools/content-generator' },
-        { label: 'Digital Tools', path: '/digital-tools' },
       ],  
-    },  
-    { label: 'AI News & Articles', path: '/news' },
+    },
+    {  
+      label: 'Web Development',  
+      dropdown: [  
+        { label: 'Frontend Development', path: '/web-dev/frontend' },
+        { label: 'Backend Development', path: '/web-dev/backend' },
+        { label: 'Full-Stack Courses', path: '/web-dev/fullstack' },
+        { label: 'JavaScript Mastery', path: '/web-dev/javascript' },
+        { label: 'React & Modern Frameworks', path: '/web-dev/react' },
+        { label: 'Web Design', path: '/design-tools' },
+      ],  
+    },
+    { label: 'Tech News & Articles', path: '/news' },
     { label: 'Client Preview', path: '/client-preview' }
   ];  
 
@@ -135,7 +145,7 @@ export default function Header() {
               <div className="flex items-center group">
                 <div className="flex flex-col">
                   <span className="font-bold tracking-wider text-xl text-white group-hover:text-electric-cyan-400 transition-colors duration-300">RXAI</span>
-                  <span className="text-xs text-gray-400">The World Leader in Artificial Intelligence Education</span>
+                  <span className="text-xs text-gray-400">AI & Web Development Training Platform</span>
                 </div>
               </div>
             </Link>
@@ -145,7 +155,7 @@ export default function Header() {
               href="/learnai"  
               className="header-nav-item enhanced-btn enhanced-btn-primary font-medium text-sm px-4 py-1.5 rounded-md transition-apple hover-lift hidden sm:block whitespace-nowrap min-w-[180px] text-center"  
             >  
-              Start AI Training Free
+              Start Free Training
             </Link>
           </div>
 
@@ -246,7 +256,7 @@ export default function Header() {
               href="/learnai"  
               className="header-nav-item apple-btn-primary font-medium text-xs px-3 py-1.5 rounded-md transition-apple hover-lift hidden sm:block md:hidden whitespace-nowrap min-w-[160px] text-center"  
             >  
-              Start AI Training Free
+              Start Free Training
             </Link>
             
             {/* Mobile Menu Toggle */}
@@ -270,7 +280,7 @@ export default function Header() {
                 onClick={toggleMobileMenu}  
                 className="apple-btn-primary font-medium text-sm py-2 px-4 rounded-md text-center w-full block hover-lift transition-apple whitespace-nowrap"  
               >  
-                Start AI Training Free
+                Start Free Training
               </Link>
             </div>
             <div className="flex flex-col space-y-4 px-6">  
