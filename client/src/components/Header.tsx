@@ -16,14 +16,14 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const { user, isAuthenticated } = useAuth();
 
-  // Navigation structure
+  // Navigation structure - exclude Home when on homepage
   const navigationItems = [
-    { 
+    ...(location !== '/' ? [{ 
       label: 'Home', 
       path: '/', 
       icon: Home,
       isActive: location === '/'
-    },
+    }] : []),
     {
       label: 'AI Training',
       icon: Cpu,
@@ -116,7 +116,7 @@ export default function Header() {
                     RXAI
                   </span>
                   <span className="text-xs text-blue-100 font-medium">
-                    AI Web Development Platform
+                    A RollinsX Technologies Company
                   </span>
                 </div>
               </Link>
@@ -131,14 +131,14 @@ export default function Header() {
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center space-x-6">
+            <nav className="hidden lg:flex items-center space-x-4">
               {navigationItems.map((item) => (
                 <div key={item.label} className="relative dropdown-container">
                   {item.dropdown ? (
                     <button
                       onClick={() => toggleDropdown(item.label)}
                       className={cn(
-                        "flex items-center space-x-2 px-3 py-2 rounded-lg font-medium text-sm transition-all duration-300",
+                        "flex items-center space-x-2 px-2 py-2 rounded-lg font-medium text-sm transition-all duration-300 whitespace-nowrap",
                         item.isActive || activeDropdown === item.label
                           ? "text-white bg-white/10 border border-white/20"
                           : "text-blue-100 hover:text-white hover:bg-white/10"
@@ -155,7 +155,7 @@ export default function Header() {
                     <Link
                       href={item.path}
                       className={cn(
-                        "flex items-center space-x-2 px-3 py-2 rounded-lg font-medium text-sm transition-all duration-300",
+                        "flex items-center space-x-2 px-2 py-2 rounded-lg font-medium text-sm transition-all duration-300 whitespace-nowrap",
                         item.isActive
                           ? "text-white bg-white/10 border border-white/20"
                           : "text-blue-100 hover:text-white hover:bg-white/10"
