@@ -1,5 +1,17 @@
-import mailgun from 'mailgun-js';
+import formData from 'form-data';
+import Mailgun, { type IMailgunClient, type MessagesSendResult } from 'mailgun.js';
 import { logger } from './logger';
+
+// Local type alias preserved for call-site stability after the
+// mailgun-js (deprecated, vulnerable) → mailgun.js v10 migration.
+export type SendResponse = MessagesSendResult;
+
+interface EmailAttachment {
+  data: Buffer | string | NodeJS.ReadableStream;
+  filename?: string;
+  contentType?: string;
+  knownLength?: number;
+}
 
 interface EmailOptions {
   to: string | string[];
@@ -8,7 +20,7 @@ interface EmailOptions {
   html?: string;
   template?: string;
   'v:templateData'?: Record<string, any>;
-  attachment?: mailgun.Attachment[];
+  attachment?: EmailAttachment | EmailAttachment[];
   cc?: string | string[];
   bcc?: string | string[];
   tags?: string[];
@@ -23,7 +35,8 @@ interface EmailOptions {
 }
 
 class EmailService {
-  private mailgunClient: mailgun.Mailgun;
+  private mailgunClient: IMailgunClient | null = null;
+  private domain: string = '';
   private isInitialized: boolean = false;
   private defaultSender: string = 'ROLLINSX <notifications@rollinsx.dev>';
 
@@ -37,10 +50,12 @@ class EmailService {
     }
 
     try {
-      this.mailgunClient = mailgun({
-        apiKey,
-        domain
+      const mailgun = new Mailgun(formData);
+      this.mailgunClient = mailgun.client({
+        username: 'api',
+        key: apiKey,
       });
+      this.domain = domain;
       this.isInitialized = true;
       logger.info('Email service initialized successfully');
     } catch (error) {
@@ -54,23 +69,59 @@ class EmailService {
    * @param options Email options including recipient, subject, and content
    * @returns Promise that resolves with Mailgun's response or rejects with an error
    */
-  async sendEmail(options: EmailOptions): Promise<mailgun.messages.SendResponse> {
-    if (!this.isInitialized) {
+  async sendEmail(options: EmailOptions): Promise<SendResponse> {
+    if (!this.isInitialized || !this.mailgunClient) {
       throw new Error('Email service not initialized. Check Mailgun configuration.');
     }
 
-    const emailData = {
-      from: this.defaultSender,
-      ...options
+    // mailgun.js v10 expects array form for to/cc/bcc and stringly-typed `o:tracking`.
+    const toMessageData = (opts: EmailOptions) => {
+      const data: Record<string, any> = {
+        from: this.defaultSender,
+        to: Array.isArray(opts.to) ? opts.to : [opts.to],
+        subject: opts.subject,
+      };
+      if (opts.text) data.text = opts.text;
+      if (opts.html) data.html = opts.html;
+      if (opts.template) data.template = opts.template;
+      if (opts['v:templateData']) {
+        data['h:X-Mailgun-Variables'] = JSON.stringify(opts['v:templateData']);
+      }
+      if (opts.cc) data.cc = Array.isArray(opts.cc) ? opts.cc : [opts.cc];
+      if (opts.bcc) data.bcc = Array.isArray(opts.bcc) ? opts.bcc : [opts.bcc];
+      if (opts.attachment) data.attachment = opts.attachment;
+      if (opts.tags) data['o:tag'] = opts.tags;
+      if (opts.campaign) data['o:campaign'] = opts.campaign;
+      if (opts['o:tracking'] !== undefined) {
+        data['o:tracking'] = opts['o:tracking'] ? 'yes' : 'no';
+      }
+      if (opts['o:tracking-clicks'] !== undefined) {
+        data['o:tracking-clicks'] =
+          typeof opts['o:tracking-clicks'] === 'boolean'
+            ? opts['o:tracking-clicks']
+              ? 'yes'
+              : 'no'
+            : opts['o:tracking-clicks'];
+      }
+      if (opts['o:tracking-opens'] !== undefined) {
+        data['o:tracking-opens'] = opts['o:tracking-opens'] ? 'yes' : 'no';
+      }
+      if (opts['o:dkim'] !== undefined) {
+        data['o:dkim'] = opts['o:dkim'] ? 'yes' : 'no';
+      }
+      if (opts['o:deliverytime']) data['o:deliverytime'] = opts['o:deliverytime'];
+      if (opts['h:Reply-To']) data['h:Reply-To'] = opts['h:Reply-To'];
+      if (opts['h:X-Mailgun-Variables']) {
+        data['h:X-Mailgun-Variables'] = opts['h:X-Mailgun-Variables'];
+      }
+      return data;
     };
 
     try {
-      const response = await new Promise<mailgun.messages.SendResponse>((resolve, reject) => {
-        this.mailgunClient.messages().send(emailData, (error, body) => {
-          if (error) reject(error);
-          else resolve(body);
-        });
-      });
+      const response = await this.mailgunClient.messages.create(
+        this.domain,
+        toMessageData(options),
+      );
 
       logger.info(`Email sent successfully to ${options.to}`);
       return response;
@@ -87,7 +138,7 @@ class EmailService {
    * @param username Username of the new user
    * @returns Promise that resolves with Mailgun's response
    */
-  async sendWelcomeEmail(to: string, username: string): Promise<mailgun.messages.SendResponse> {
+  async sendWelcomeEmail(to: string, username: string): Promise<SendResponse> {
     const subject = 'Welcome to ROLLINSX!';
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
@@ -136,7 +187,7 @@ class EmailService {
     to: string, 
     username: string, 
     verificationToken: string
-  ): Promise<mailgun.messages.SendResponse> {
+  ): Promise<SendResponse> {
     const verificationLink = `https://rollinsx.dev/verify-email?token=${verificationToken}`;
     const subject = 'Verify Your Email Address';
     const html = `
@@ -178,7 +229,7 @@ class EmailService {
     to: string, 
     username: string, 
     resetToken: string
-  ): Promise<mailgun.messages.SendResponse> {
+  ): Promise<SendResponse> {
     const resetLink = `https://rollinsx.dev/reset-password?token=${resetToken}`;
     const subject = 'Reset Your Password';
     const html = `
@@ -224,7 +275,7 @@ class EmailService {
     itemName: string,
     action: 'published' | 'purchased' | 'updated' | 'sold',
     itemId: string
-  ): Promise<mailgun.messages.SendResponse> {
+  ): Promise<SendResponse> {
     const itemLink = `https://rollinsx.dev/marketplace/item/${itemId}`;
     let subject = '';
     let actionText = '';
@@ -292,7 +343,7 @@ class EmailService {
     to: string,
     username: string,
     recommendations: Array<{ title: string; description: string; link: string; imageUrl?: string }>
-  ): Promise<mailgun.messages.SendResponse> {
+  ): Promise<SendResponse> {
     const subject = 'Your Weekly ROLLINSX Update';
 
     // Generate HTML for recommendations
