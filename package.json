@@ -140,12 +140,21 @@
     "tailwindcss": "^3.4.14",
     "tsx": "^4.19.1",
     "typescript": "5.6.3",
-    "vite": "^5.4.14"
+    "vite": "^6.4.2"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
   },
   "overrides": {
-    "on-headers": "^1.1.0"
+    "on-headers": "^1.1.0",
+    "@esbuild-kit/core-utils": {
+      "esbuild": ">=0.25.0"
+    },
+    "vite": {
+      "esbuild": ">=0.25.0"
+    },
+    "tsx": {
+      "esbuild": ">=0.25.0"
+    }
   }
 }
